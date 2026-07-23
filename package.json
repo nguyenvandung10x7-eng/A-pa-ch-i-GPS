@@ -21,6 +21,7 @@
   "devDependencies": {
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "@types/leaflet": "latest"
+    "@types/leaflet": "latest",
+    "autoprefixer": "latest"
   }
 }
