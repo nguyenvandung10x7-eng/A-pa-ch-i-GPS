@@ -13,7 +13,15 @@ export const HistoryPage = ({ language, t }: { language: LanguageCode; t: (key: 
         {history.map((item) => (
           <article key={item.id} className="rounded-3xl bg-white/10 p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div><h2 className="text-xl font-bold">{localize(item.title, language)}</h2><p className="text-slate-300">{t('history.started')} {new Date(item.startedAt).toLocaleString()}{item.completedAt ? ` • ${t('history.finished')} ${new Date(item.completedAt).toLocaleString()}` : ''}</p></div>
+              <div>
+                <h2 className="text-xl font-bold">{localize(item.title, language)}</h2>
+                <p className="text-slate-300">
+                  {t('history.started')} {new Date(item.startedAt).toLocaleString()}
+                  {item.completedAt ? ` • ${t('history.finished')} ${new Date(item.completedAt).toLocaleString()}` : ''}
+                  {item.failedAt ? ` • ${t('history.failed')} ${new Date(item.failedAt).toLocaleString()}` : ''}
+                </p>
+                <p className="mt-2 text-sm uppercase tracking-[0.2em] text-cyan-200">{t('history.status')}: {item.status}</p>
+              </div>
               <p className="rounded-2xl bg-cyan-300 px-4 py-2 font-black text-slate-950">{item.score}</p>
             </div>
           </article>
