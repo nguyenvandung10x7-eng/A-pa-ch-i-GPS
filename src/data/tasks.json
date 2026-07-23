@@ -1,0 +1,46 @@
+[
+  {
+    "id": "saigon-central-post-office",
+    "title": { "vi": "Bưu điện Trung tâm Sài Gòn", "en": "Saigon Central Post Office" },
+    "description": { "vi": "Tìm mặt tiền vàng nổi tiếng và xác nhận vị trí tại quảng trường phía trước.", "en": "Find the famous yellow facade and verify your position from the front plaza." },
+    "category": "landmark",
+    "difficulty": "easy",
+    "points": 100,
+    "gps": { "lat": 10.7798, "lng": 106.699, "radius": 60 },
+    "image": "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=1200&q=80",
+    "enabled": true
+  },
+  {
+    "id": "ben-thanh-market",
+    "title": { "vi": "Chợ Bến Thành", "en": "Ben Thanh Market" },
+    "description": { "vi": "Đến biểu tượng chợ trung tâm và check-in gần tháp đồng hồ.", "en": "Reach the central market icon and check in near the clock tower." },
+    "category": "market",
+    "difficulty": "medium",
+    "points": 140,
+    "gps": { "lat": 10.7725, "lng": 106.698, "radius": 70 },
+    "image": "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1200&q=80",
+    "enabled": true
+  },
+  {
+    "id": "nguyen-hue-walking-street",
+    "title": { "vi": "Phố đi bộ Nguyễn Huệ", "en": "Nguyen Hue Walking Street" },
+    "description": { "vi": "Hoàn thành thử thách giữa đại lộ đi bộ sôi động nhất trung tâm.", "en": "Complete the mission along the city's most energetic pedestrian boulevard." },
+    "category": "culture",
+    "difficulty": "easy",
+    "points": 120,
+    "gps": { "lat": 10.7756, "lng": 106.7039, "radius": 80 },
+    "image": "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=1200&q=80",
+    "enabled": true
+  },
+  {
+    "id": "turtle-lake",
+    "title": { "vi": "Hồ Con Rùa", "en": "Turtle Lake" },
+    "description": { "vi": "Tìm vòng xoay biểu tượng, đứng trong bán kính cho phép và xác nhận GPS.", "en": "Find the iconic roundabout, stand within range, and verify GPS." },
+    "category": "urban",
+    "difficulty": "hard",
+    "points": 180,
+    "gps": { "lat": 10.7829, "lng": 106.6955, "radius": 55 },
+    "image": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+    "enabled": true
+  }
+]
