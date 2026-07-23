@@ -78,6 +78,19 @@ npm run preview
 
 `npm run build` runs Vite's production build and writes the bundled app to `dist/`.
 
+## Package the repository
+
+Create a downloadable ZIP containing all source-controlled project files:
+
+```bash
+npm run package
+```
+
+The archive is written to `../A-pa-ch-i-GPS.zip` by default. Pass a custom path
+directly to the packaging script when needed, for example
+`bash scripts/package.sh ./release/A-pa-ch-i-GPS.zip`. Generated dependencies,
+build output, and Git metadata are intentionally excluded.
+
 ## Netlify deployment
 
 This project includes `netlify.toml`.
