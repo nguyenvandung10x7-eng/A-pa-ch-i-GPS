@@ -1,7 +1,7 @@
 {
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "node scripts/build.mjs",
+    "build": "vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
@@ -14,7 +14,7 @@
     "leaflet": "latest",
     "react-leaflet": "latest",
     "lucide-react": "latest",
-    "tailwindcss": "latest",
+    "tailwindcss": "^3.4.17",
     "i18next": "latest",
     "react-i18next": "latest"
   },

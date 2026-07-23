@@ -76,6 +76,8 @@ npm run build
 npm run preview
 ```
 
+`npm run build` runs Vite's production build and writes the bundled app to `dist/`.
+
 ## Netlify deployment
 
 This project includes `netlify.toml`.
