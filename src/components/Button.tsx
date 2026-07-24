@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 type ButtonProps = {
   children: ReactNode;
+  disabled?: boolean;
   onClick?: () => void;
   type?: 'button' | 'submit';
   variant?: 'primary' | 'secondary' | 'danger';
@@ -13,8 +14,8 @@ const variants: Record<NonNullable<ButtonProps['variant']>, string> = {
   danger: 'bg-rose-300 text-rose-950',
 };
 
-export const Button = ({ children, onClick, type = 'button', variant = 'primary' }: ButtonProps) => (
-  <button type={type} onClick={onClick} className={`rounded-full px-5 py-3 font-black transition ${variants[variant]}`}>
+export const Button = ({ children, disabled = false, onClick, type = 'button', variant = 'primary' }: ButtonProps) => (
+  <button type={type} disabled={disabled} onClick={onClick} className={`rounded-full px-5 py-3 font-black transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]}`}>
     {children}
   </button>
 );

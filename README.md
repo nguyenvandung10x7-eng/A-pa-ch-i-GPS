@@ -4,6 +4,12 @@ GPS Challenge is a configurable React, Vite, TypeScript, TailwindCSS, React Rout
 
 ## Features
 
+- A persistent game assigns enabled challenges randomly without repeating them
+  until the assignment pool is exhausted.
+- Active, completed, and skipped challenge state, assignment history, and score
+  survive page refreshes through LocalStorage.
+- GPS completion includes distinct permission, browser support, accuracy,
+  distance, and success feedback; points are awarded only after a valid check.
 - Challenges are loaded from `src/data/tasks.json` instead of React components.
 - Vietnamese and English UI translations live in `src/i18n/vi.json` and `src/i18n/en.json`.
 - Language switcher supports VI / EN and can be extended with new language resources.
@@ -69,12 +75,31 @@ npm install
 npm run dev
 ```
 
+Run static checks with `npm run lint`. Gameplay progress is browser-local; use
+**New game** on the Challenge page to clear the current assignment cycle and
+start again.
+
 ## Production build
 
 ```bash
 npm run build
 npm run preview
 ```
+
+`npm run build` runs Vite's production build and writes the bundled app to `dist/`.
+
+## Package the repository
+
+Create a downloadable ZIP containing all source-controlled project files:
+
+```bash
+npm run package
+```
+
+The archive is written to `../A-pa-ch-i-GPS.zip` by default. Pass a custom path
+directly to the packaging script when needed, for example
+`bash scripts/package.sh ./release/A-pa-ch-i-GPS.zip`. Generated dependencies,
+build output, and Git metadata are intentionally excluded.
 
 ## Netlify deployment
 

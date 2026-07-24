@@ -1,7 +1,9 @@
 {
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "node scripts/build.mjs",
+    "build": "vite build",
+    "lint": "eslint .",
+    "package": "bash scripts/package.sh",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
@@ -14,13 +16,20 @@
     "leaflet": "latest",
     "react-leaflet": "latest",
     "lucide-react": "latest",
-    "tailwindcss": "latest",
+    "tailwindcss": "^3.4.17",
     "i18next": "latest",
     "react-i18next": "latest"
   },
   "devDependencies": {
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "@types/leaflet": "latest"
+    "@types/leaflet": "latest",
+    "autoprefixer": "latest",
+    "@eslint/js": "latest",
+    "eslint": "latest",
+    "eslint-plugin-react-hooks": "latest",
+    "eslint-plugin-react-refresh": "latest",
+    "globals": "latest",
+    "typescript-eslint": "latest"
   }
 }
