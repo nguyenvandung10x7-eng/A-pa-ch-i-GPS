@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { CheckCircle2, Flag, RotateCcw, ShieldCheck, Trophy } from 'lucide-react';
+import { CheckCircle2, Flag, RotateCcw, ShieldCheck, Trophy, XCircle } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { TaskMap } from '../components/TaskMap';
@@ -10,17 +10,21 @@ import {
   failActiveChallenge,
   getProgressSummary,
   loadOrCreateProgress,
+  skipActiveChallenge,
 } from '../services/gameplay';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
-import { getCurrentPosition } from '../utils/geo';
+import { GeolocationRequestError, getCurrentPosition } from '../utils/geo';
 
 const findRunTask = (tasks: ChallengeTask[], taskId?: string) => tasks.find((task) => task.id === taskId);
 
+type GpsStatus = 'idle' | 'requestingPermission' | 'locating' | 'permissionDenied' | 'unavailable' | 'inaccurateLocation' | 'outsideTargetRadius' | 'verified';
+
 export const ChallengePage = ({ tasks, language, t }: { tasks: ChallengeTask[]; language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const activeTasks = useMemo(() => tasks.filter((task) => task.enabled), [tasks]);
-  const [progress, setProgress] = useState(loadOrCreateProgress);
+  const [progress, setProgress] = useState(() => loadOrCreateProgress(activeTasks));
   const [message, setMessage] = useState(() => t('challenge.ready'));
+  const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
   const task = findRunTask(activeTasks, progress.activeRun?.taskId);
   const summary = getProgressSummary(activeTasks, progress);
   const canPlay = activeTasks.length > 0;
@@ -28,44 +32,85 @@ export const ChallengePage = ({ tasks, language, t }: { tasks: ChallengeTask[]; 
   const isFinished = summary.enabledCount > 0 && summary.remainingCount === 0 && !canComplete;
 
   const startGame = () => {
-    const next = createNewGame();
+    const next = assignRandomChallenge(activeTasks, createNewGame());
     setProgress(next);
-    setMessage(t('challenge.newGameStarted'));
+    setGpsStatus('idle');
+    setMessage(next.activeRun?.status === 'active' ? t('challenge.active') : t('challenge.allDone'));
   };
 
   const startNextChallenge = () => {
     const next = assignRandomChallenge(activeTasks, progress.status === 'completed' && summary.remainingCount === 0 ? createNewGame() : progress);
     setProgress(next);
+    setGpsStatus('idle');
     setMessage(next.activeRun?.status === 'active' ? t('challenge.active') : t('challenge.allDone'));
   };
 
   const verifyGps = async () => {
-    if (!task) return;
+    if (!task || !canComplete) return;
+
+    setGpsStatus('requestingPermission');
+    setMessage(t('challenge.status.requestingPermission'));
 
     try {
+      setGpsStatus('locating');
+      setMessage(t('challenge.status.locating'));
       const position = await getCurrentPosition();
-      const result = completeActiveChallenge(progress, task, { lat: position.coords.latitude, lng: position.coords.longitude });
+      const result = completeActiveChallenge(progress, task, { lat: position.coords.latitude, lng: position.coords.longitude }, position.coords.accuracy);
       setProgress(result.progress);
 
       if (result.duplicate) {
+        setGpsStatus('idle');
         setMessage(t('challenge.duplicate'));
         return;
       }
 
       if (!result.completed && result.gps) {
-        setMessage(t('challenge.tooFar', { meters: result.gps.meters, radius: task.gps.radius }));
+        const nextStatus = result.gps.status === 'inaccurateLocation' ? 'inaccurateLocation' : 'outsideTargetRadius';
+        setGpsStatus(nextStatus);
+        setMessage(result.gps.status === 'inaccurateLocation' ? t('challenge.status.inaccurateLocation') : t('challenge.status.outsideTargetRadius'));
         return;
       }
 
-      setMessage(t('challenge.completed', { title: localize(task.title, language), meters: result.gps?.meters ?? 0, points: task.points }));
-    } catch {
-      setMessage(t('challenge.gpsUnavailable'));
+      const next = assignRandomChallenge(activeTasks, result.progress);
+      setProgress(next);
+      setGpsStatus('verified');
+      setMessage(t('challenge.verified', { title: localize(task.title, language), meters: result.gps?.meters ?? 0 }));
+      if (!next.activeRun) {
+        setMessage(t('challenge.allDone'));
+      }
+    } catch (error) {
+      if (error instanceof GeolocationRequestError) {
+        const nextStatus = error.code === 1 ? 'permissionDenied' : error.code === 2 ? 'unavailable' : 'unavailable';
+        setGpsStatus(nextStatus);
+        setMessage(error.code === 1 ? t('challenge.status.permissionDenied') : t('challenge.status.unavailable'));
+        return;
+      }
+      setGpsStatus('unavailable');
+      setMessage(t('challenge.status.unavailable'));
     }
+  };
+
+  const skipChallenge = () => {
+    if (!task || !canComplete) return;
+    const shouldSkip = window.confirm(t('challenge.confirmSkip'));
+    if (!shouldSkip) return;
+
+    const result = skipActiveChallenge(progress);
+    if (!result.skipped) {
+      setMessage(t('challenge.duplicate'));
+      return;
+    }
+
+    const next = assignRandomChallenge(activeTasks, result.progress);
+    setProgress(next);
+    setGpsStatus('idle');
+    setMessage(next.activeRun ? t('challenge.skipped') : t('challenge.allDone'));
   };
 
   const failChallenge = () => {
     const next = failActiveChallenge(progress);
     setProgress(next);
+    setGpsStatus('idle');
     setMessage(t('challenge.failed'));
   };
 
@@ -78,9 +123,10 @@ export const ChallengePage = ({ tasks, language, t }: { tasks: ChallengeTask[]; 
           {task?.image && <img src={task.image} alt={localize(task.title, language)} className="h-56 w-full object-cover" />}
           <div className="p-5">
             <p className="text-cyan-200">{t('challenge.title')}</p>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-3xl bg-cyan-300 px-5 py-3 text-center text-slate-950"><p className="text-xs font-bold">{t('challenge.score')}</p><p className="text-3xl font-black">{summary.score}</p></div>
-              <div className="rounded-3xl bg-white/10 px-5 py-3 text-center"><p className="text-xs font-bold text-slate-300">{t('challenge.progress')}</p><p className="text-3xl font-black">{summary.completedCount}/{summary.enabledCount}</p></div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-4">
+              <div className="rounded-3xl bg-cyan-300 px-5 py-3 text-center text-slate-950"><p className="text-xs font-bold">{t('challenge.total')}</p><p className="text-3xl font-black">{summary.enabledCount}</p></div>
+              <div className="rounded-3xl bg-white/10 px-5 py-3 text-center"><p className="text-xs font-bold text-slate-300">{t('challenge.completedCount')}</p><p className="text-3xl font-black">{summary.completedCount}</p></div>
+              <div className="rounded-3xl bg-white/10 px-5 py-3 text-center"><p className="text-xs font-bold text-slate-300">{t('challenge.skippedCount')}</p><p className="text-3xl font-black">{summary.skippedCount}</p></div>
               <div className="rounded-3xl bg-white/10 px-5 py-3 text-center"><p className="text-xs font-bold text-slate-300">{t('challenge.remaining')}</p><p className="text-3xl font-black">{summary.remainingCount}</p></div>
             </div>
 
@@ -99,11 +145,13 @@ export const ChallengePage = ({ tasks, language, t }: { tasks: ChallengeTask[]; 
             )}
 
             <p className="mt-4 rounded-2xl bg-slate-950/50 p-4 text-cyan-50">{message}</p>
+            <p className="mt-2 text-sm text-cyan-200">{gpsStatus !== 'idle' ? `${t('challenge.gpsStatus')}: ${t(`challenge.status.${gpsStatus}`)}` : t('challenge.ready')}</p>
             <div className="mt-5 flex flex-col gap-3">
               <div className="flex flex-wrap gap-3">
                 <Button onClick={startGame} variant="secondary"><RotateCcw className="mr-2 inline h-5 w-5" />{t('challenge.newGame')}</Button>
                 <Button onClick={startNextChallenge} disabled={canComplete}><Trophy className="mr-2 inline h-5 w-5" />{t('challenge.next')}</Button>
                 <Button onClick={verifyGps} disabled={!canComplete}><ShieldCheck className="mr-2 inline h-5 w-5" />{t('challenge.verifyGps')}</Button>
+                <Button onClick={skipChallenge} disabled={!canComplete} variant="secondary"><XCircle className="mr-2 inline h-5 w-5" />{t('challenge.skip')}</Button>
                 <Button onClick={failChallenge} disabled={!canComplete} variant="secondary"><Flag className="mr-2 inline h-5 w-5" />{t('challenge.fail')}</Button>
               </div>
               <div className="flex gap-3 text-sm text-slate-200">{progress.activeRun?.gpsVerified && <span><CheckCircle2 className="inline h-4 w-4 text-emerald-300" /> {t('challenge.gpsStatus')}</span>}{progress.completedTaskIds.includes(task?.id ?? '') && <span><CheckCircle2 className="inline h-4 w-4 text-cyan-300" /> {t('challenge.completedStatus')}</span>}</div>

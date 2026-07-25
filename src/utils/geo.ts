@@ -1,5 +1,12 @@
 import type { GpsPoint } from '../types/task';
 
+export class GeolocationRequestError extends Error {
+  constructor(public code: number, message = 'geolocation-unavailable') {
+    super(message);
+    this.name = 'GeolocationRequestError';
+  }
+}
+
 export const distanceMeters = (a: Pick<GpsPoint, 'lat' | 'lng'>, b: Pick<GpsPoint, 'lat' | 'lng'>) => {
   const toRad = (value: number) => (value * Math.PI) / 180;
   const earthRadius = 6371000;
@@ -13,8 +20,11 @@ export const distanceMeters = (a: Pick<GpsPoint, 'lat' | 'lng'>, b: Pick<GpsPoin
 
 export const getCurrentPosition = () => new Promise<GeolocationPosition>((resolve, reject) => {
   if (!navigator.geolocation) {
-    reject(new Error('geolocation-unavailable'));
+    reject(new GeolocationRequestError(3, 'geolocation-unavailable'));
     return;
   }
-  navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 });
+
+  navigator.geolocation.getCurrentPosition(resolve, (error) => {
+    reject(new GeolocationRequestError(error.code, error.message));
+  }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 });
 });
