@@ -20,7 +20,7 @@ export type ChallengeTask = {
   enabled: boolean;
 };
 
-export type ChallengeStatus = 'pending' | 'active' | 'completed' | 'failed';
+export type ChallengeStatus = 'pending' | 'active' | 'completed' | 'failed' | 'skipped';
 
 export type ChallengeRun = {
   id: string;
@@ -30,9 +30,11 @@ export type ChallengeRun = {
   category: string;
   difficulty: string;
   status: ChallengeStatus;
+  outcome?: ChallengeStatus;
   startedAt: string;
   completedAt?: string;
   failedAt?: string;
+  skippedAt?: string;
   gpsVerified: boolean;
   qrVerified: boolean;
   score: number;

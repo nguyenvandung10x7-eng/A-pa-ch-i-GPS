@@ -2,6 +2,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
+    "lint": "eslint . --ext .ts,.tsx",
     "package": "bash scripts/package.sh",
     "preview": "vite preview --host 0.0.0.0"
   },
@@ -20,9 +21,15 @@
     "react-i18next": "latest"
   },
   "devDependencies": {
+    "@eslint/js": "latest",
+    "@types/leaflet": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "@types/leaflet": "latest",
-    "autoprefixer": "latest"
+    "autoprefixer": "latest",
+    "eslint": "latest",
+    "eslint-plugin-react-hooks": "latest",
+    "eslint-plugin-react-refresh": "latest",
+    "globals": "latest",
+    "typescript-eslint": "latest"
   }
 }
