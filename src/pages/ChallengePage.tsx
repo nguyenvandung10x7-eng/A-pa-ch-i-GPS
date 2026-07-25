@@ -108,10 +108,11 @@ export const ChallengePage = ({ tasks, language, t }: { tasks: ChallengeTask[]; 
   };
 
   const failChallenge = () => {
-    const next = failActiveChallenge(progress);
+    const failedProgress = failActiveChallenge(progress);
+    const next = assignRandomChallenge(activeTasks, failedProgress);
     setProgress(next);
     setGpsStatus('idle');
-    setMessage(t('challenge.failed'));
+    setMessage(next.activeRun ? t('challenge.failed') : t('challenge.allDone'));
   };
 
   if (!canPlay) return <Card><p className="text-slate-200">{t('challenge.empty')}</p></Card>;

@@ -15,6 +15,7 @@ export type PlayerProgress = {
   activeRun?: ChallengeRun;
   completedTaskIds: string[];
   skippedTaskIds: string[];
+  failedTaskIds: string[];
   attemptedTaskIds: string[];
 };
 
@@ -56,9 +57,11 @@ const sanitizeProgress = (value: unknown, tasks: ChallengeTask[] = []): PlayerPr
   const enabledTaskIds = new Set(tasks.filter((task) => task.enabled).map((task) => task.id));
   const completedTaskIds = normalizeTaskIds(parsed.completedTaskIds).filter((id) => enabledTaskIds.size === 0 || enabledTaskIds.has(id));
   const skippedTaskIds = normalizeTaskIds(parsed.skippedTaskIds).filter((id) => enabledTaskIds.size === 0 || enabledTaskIds.has(id));
+  const failedTaskIds = normalizeTaskIds(parsed.failedTaskIds).filter((id) => enabledTaskIds.size === 0 || enabledTaskIds.has(id));
   const attemptedTaskIds = unique([
     ...completedTaskIds,
     ...skippedTaskIds,
+    ...failedTaskIds,
     ...normalizeTaskIds(parsed.attemptedTaskIds).filter((id) => enabledTaskIds.size === 0 || enabledTaskIds.has(id)),
   ]);
 
@@ -78,6 +81,7 @@ const sanitizeProgress = (value: unknown, tasks: ChallengeTask[] = []): PlayerPr
     activeRun,
     completedTaskIds,
     skippedTaskIds,
+    failedTaskIds,
     attemptedTaskIds,
   };
 };
@@ -109,6 +113,7 @@ export const createNewGame = (): PlayerProgress => persistProgress({
   updatedAt: now(),
   completedTaskIds: [],
   skippedTaskIds: [],
+  failedTaskIds: [],
   attemptedTaskIds: [],
 });
 
@@ -128,7 +133,7 @@ export const loadProgress = (tasks: ChallengeTask[] = []): PlayerProgress | unde
 export const loadOrCreateProgress = (tasks: ChallengeTask[] = []) => loadProgress(tasks) ?? createNewGame();
 
 export const getAvailableTasks = (tasks: ChallengeTask[], progress: PlayerProgress) => (
-  tasks.filter((task) => task.enabled && !progress.completedTaskIds.includes(task.id) && !progress.skippedTaskIds.includes(task.id))
+  tasks.filter((task) => task.enabled && !progress.completedTaskIds.includes(task.id) && !progress.skippedTaskIds.includes(task.id) && !progress.failedTaskIds.includes(task.id))
 );
 
 export const assignRandomChallenge = (tasks: ChallengeTask[], progress: PlayerProgress): PlayerProgress => {
@@ -150,7 +155,6 @@ export const assignRandomChallenge = (tasks: ChallengeTask[], progress: PlayerPr
     ...progress,
     status: 'active',
     activeRun: createRun(task),
-    attemptedTaskIds: unique([...progress.attemptedTaskIds, task.id]),
     updatedAt: now(),
   });
 };
@@ -172,7 +176,7 @@ export const completeActiveChallenge = (progress: PlayerProgress, task: Challeng
     return { progress, completed: false, duplicate: true, gps: undefined };
   }
 
-  if (progress.completedTaskIds.includes(task.id) || progress.skippedTaskIds.includes(task.id)) {
+  if (progress.completedTaskIds.includes(task.id) || progress.skippedTaskIds.includes(task.id) || progress.failedTaskIds.includes(task.id)) {
     return { progress, completed: false, duplicate: true, gps: undefined };
   }
 
@@ -197,6 +201,7 @@ export const completeActiveChallenge = (progress: PlayerProgress, task: Challeng
       score: progress.score + task.points,
       activeRun: run,
       completedTaskIds: unique([...progress.completedTaskIds, task.id]),
+      attemptedTaskIds: unique([...progress.attemptedTaskIds, task.id]),
       updatedAt: completedAt,
     }),
     completed: true,
@@ -211,7 +216,7 @@ export const skipActiveChallenge = (progress: PlayerProgress) => {
   }
 
   const taskId = progress.activeRun.taskId;
-  if (progress.completedTaskIds.includes(taskId) || progress.skippedTaskIds.includes(taskId)) {
+  if (progress.completedTaskIds.includes(taskId) || progress.skippedTaskIds.includes(taskId) || progress.failedTaskIds.includes(taskId)) {
     return { progress, skipped: false, duplicate: true };
   }
 
@@ -251,20 +256,21 @@ export const failActiveChallenge = (progress: PlayerProgress) => {
     ...progress,
     status: 'failed',
     activeRun: run,
+    failedTaskIds: unique([...progress.failedTaskIds, progress.activeRun.taskId]),
+    attemptedTaskIds: unique([...progress.attemptedTaskIds, progress.activeRun.taskId]),
     updatedAt: failedAt,
   });
 };
 
 export const getProgressSummary = (tasks: ChallengeTask[], progress: PlayerProgress) => {
   const enabledCount = tasks.filter((task) => task.enabled).length;
-  const completedCount = progress.completedTaskIds.length;
-  const skippedCount = progress.skippedTaskIds.length;
+  const attemptedCount = progress.attemptedTaskIds.length;
   return {
     enabledCount,
-    completedCount,
-    skippedCount,
-    attemptedCount: progress.attemptedTaskIds.length,
-    remainingCount: Math.max(0, enabledCount - completedCount - skippedCount),
+    completedCount: progress.completedTaskIds.length,
+    skippedCount: progress.skippedTaskIds.length,
+    attemptedCount,
+    remainingCount: Math.max(0, enabledCount - attemptedCount),
     score: progress.score,
   };
 };
