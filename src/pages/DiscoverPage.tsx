@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Card } from '../components/Card';
 import { loadApprovedSubmissions, type DiscoverySubmission, DiscoveryError } from '../services/discovery';
@@ -11,21 +11,33 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
+  const requestIdRef = useRef(0);
 
   const loadData = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     setLoading(true);
     setError(null);
     try {
       const data = await loadApprovedSubmissions();
+      if (requestIdRef.current !== requestId) {
+        return;
+      }
       setSubmissions(data);
     } catch (err) {
+      if (requestIdRef.current !== requestId) {
+        return;
+      }
       if (err instanceof DiscoveryError) {
         setError(t(err.translationKey));
       } else {
         setError(t('discover.error'));
       }
     } finally {
-      setLoading(false);
+      if (requestIdRef.current === requestId) {
+        setLoading(false);
+      }
     }
   }, [t]);
 
@@ -34,7 +46,10 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
       void loadData();
     }, 0);
 
-    return () => window.clearTimeout(timeoutId);
+    return () => {
+      window.clearTimeout(timeoutId);
+      requestIdRef.current += 1;
+    };
   }, [loadData]);
 
   const challengeOptions = useMemo(() => {
