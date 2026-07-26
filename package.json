@@ -7,18 +7,19 @@
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.8",
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "typescript": "latest",
+    "i18next": "latest",
+    "leaflet": "latest",
+    "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "react-router-dom": "latest",
-    "leaflet": "latest",
+    "react-i18next": "latest",
     "react-leaflet": "latest",
-    "lucide-react": "latest",
+    "react-router-dom": "latest",
     "tailwindcss": "^3.4.17",
-    "i18next": "latest",
-    "react-i18next": "latest"
+    "typescript": "latest",
+    "vite": "latest"
   },
   "devDependencies": {
     "@eslint/js": "latest",
