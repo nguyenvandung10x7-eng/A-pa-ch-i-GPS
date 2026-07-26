@@ -1,4 +1,4 @@
-# Milestone 3 Design: TikTok Submission + Voting
+# Milestone 3 Design: Supabase foundation for TikTok submissions and voting
 
 ## 1. Overall architecture
 
@@ -11,9 +11,8 @@ The app will keep the existing browser-side GPS verification from Milestone 2 as
 - Frontend: React + TypeScript + Vite (existing app)
 - Styling: Tailwind CSS (existing app)
 - Backend/data: Supabase Postgres
-- Authentication: Supabase Auth
-- File handling: none for video content; only URL and metadata persistence
-- Optional server logic: lightweight Supabase Edge Functions for URL normalization and vote enforcement
+- Authentication: Google OAuth via Supabase Auth
+- File handling: none for video content; the app stores only URLs and metadata
 
 ### Proposed system boundaries
 - The current gameplay flow remains intact.
@@ -25,9 +24,8 @@ The app will keep the existing browser-side GPS verification from Milestone 2 as
 ### Recommended stack
 - Frontend: React, TypeScript, React Router, Tailwind
 - Data access: Supabase JS client
-- Auth: Supabase Auth (email magic link first, optional Google OAuth later)
+- Auth: Google OAuth through Supabase Auth
 - Database: Supabase Postgres
-- Optional API logic: Edge Functions for URL normalization and enforcement of simple rules
 - Media rendering: TikTok embed when possible; otherwise open the TikTok URL externally
 
 ### Design principles
@@ -81,7 +79,7 @@ The app will keep the existing browser-side GPS verification from Milestone 2 as
 ## 3. Supabase database schema
 
 ### Overview
-The MVP uses a minimal schema built around submissions, votes, and user profiles. No challenge_completions table is required for the MVP.
+The implemented MVP uses three core tables: profiles, video_submissions, and votes.
 
 ### Tables
 
@@ -93,23 +91,19 @@ create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
   avatar_url text,
+  tiktok_username text,
+  total_stars integer not null default 0 check (total_stars >= 0),
+  total_play_seconds bigint not null default 0 check (total_play_seconds >= 0),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 ```
 
-#### submissions
+#### video_submissions
 Stores each TikTok submission linked to a challenge and a user.
 
 ```sql
-create type public.submission_status as enum (
-  'pending',
-  'approved',
-  'rejected',
-  'hidden'
-);
-
-create table public.submissions (
+create table public.video_submissions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   challenge_id text not null,
@@ -119,31 +113,33 @@ create table public.submissions (
   submitted_url text not null,
   canonical_url text,
   tiktok_video_id text,
-  status public.submission_status not null default 'pending',
-  vote_count int not null default 0,
-  created_at timestamptz not null default now()
+  star_value integer not null default 0 check (star_value >= 0),
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected', 'hidden')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 ```
 
-#### submission_votes
+#### votes
 Stores one vote per authenticated user per submission.
 
 ```sql
-create table public.submission_votes (
+create table public.votes (
   id uuid primary key default gen_random_uuid(),
-  submission_id uuid not null references public.submissions(id) on delete cascade,
-  voter_id uuid not null references public.profiles(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  submission_id uuid not null references public.video_submissions(id) on delete cascade,
   created_at timestamptz not null default now(),
-  unique(submission_id, voter_id)
+  unique (user_id, submission_id)
 );
 ```
 
-### Recommended indexes
-- `submissions(status, vote_count desc, created_at desc)`
-- `submissions(challenge_id, status)`
-- `submissions(tiktok_video_id)`
-- `submission_votes(submission_id)`
-- `submission_votes(voter_id)`
+### Implemented indexes
+- `idx_profiles_total_stars`
+- `idx_profiles_created_at`
+- `idx_video_submissions_user_id`
+- `idx_video_submissions_challenge_id`
+- `idx_video_submissions_status_created_at`
+- `idx_votes_submission_id`
 
 ### Notes on the schema
 - The app does not store video files.
@@ -158,25 +154,22 @@ create table public.submission_votes (
 ## 4. Authentication design
 
 ### Authentication provider
-Use Supabase Auth.
-
-### Recommended sign-in methods
-- Email magic link for the fastest MVP onboarding
-- Optional Google OAuth later if desired
+The implemented flow uses Google OAuth through Supabase Auth.
 
 ### User identity model
 - Each authenticated user gets a Supabase auth user.
-- A matching row is created in `profiles` via a trigger or server-side insert.
+- A matching row is created in `profiles` through a trigger on `auth.users`.
+- The trigger backfills `display_name` and `avatar_url` from `raw_user_meta_data` for new and existing auth users.
 
-### Recommended flow
+### Implemented flow
 1. User taps Sign in.
-2. User authenticates with Supabase Auth.
+2. User authenticates with Google OAuth through Supabase Auth.
 3. The app loads the user profile.
 4. The user can submit and vote.
 
 ### Why this fits the app
 - Supabase Auth is simple to integrate and fits the MVP timeline.
-- RLS can tie submissions and votes to the authenticated user ID.
+- RLS can tie `video_submissions` and `votes` to the authenticated user ID.
 - This supports the product goal of encouraging participation rather than hardening against every possible abuse case.
 
 ### Account rules
@@ -255,8 +248,8 @@ The app should treat GPS verification as a lightweight participation gate only. 
 - The UI should keep the action fast and simple.
 
 ### Server-side enforcement
-- Use a unique constraint on `(submission_id, voter_id)` in `submission_votes`.
-- Enforce with RLS and simple server-side validation where appropriate.
+- Use the unique constraint on `(user_id, submission_id)` in `votes`.
+- Enforce the approved-submission and no-self-voting rules with RLS.
 - Do not allow clients to directly edit vote totals.
 
 ### Vote payload
@@ -267,9 +260,9 @@ The app should treat GPS verification as a lightweight participation gate only. 
 ```
 
 ### Vote count handling
-- The app can maintain a denormalized `vote_count` column in `submissions`.
-- The count should be updated through controlled insert logic rather than trusting client-side changes.
-- For a simple MVP, storing `vote_count` is acceptable and keeps the leaderboard fast.
+- Vote totals are derived from an aggregate helper function, `public.get_submission_vote_counts()`.
+- The helper returns `submission_id` and `vote_count` for approved submissions.
+- The leaderboard reads totals from this helper instead of a denormalized column.
 
 ---
 
@@ -399,59 +392,30 @@ External TikTok metrics are not used for scoring. Likes, comments, views, and fo
 - Keep vote totals controlled by the backend rather than the client
 - Avoid exposing content that is not approved for public viewing
 
-### Recommended RLS policy approach
+### Applied RLS overview
 
 #### profiles
-- Users can read public profile data
-- Users can update only their own row
+- Authenticated users can read profiles.
+- Authenticated users can update only their own profile fields: `display_name`, `avatar_url`, and `tiktok_username`.
+- Client-side updates cannot modify totals such as `total_stars` or `total_play_seconds`.
 
-```sql
-alter table public.profiles enable row level security;
+#### video_submissions
+- Anyone can read submissions that are `approved`.
+- Authenticated users can read their own submissions.
+- Authenticated users can insert only their own pending submissions.
+- Authenticated users can update only their own pending submissions for editable fields such as `submitted_url` and `canonical_url`.
+- Administrative fields remain protected from normal client updates.
 
-create policy "profiles_select_public" on public.profiles
-for select using (true);
-
-create policy "profiles_update_own" on public.profiles
-for update using (auth.uid() = id);
-```
-
-#### submissions
-- Anyone can read submissions that are `approved`
-- Authenticated users can insert a submission only for their own user ID
-- Users can update only their own submissions if editing is later supported
-- Public visibility is controlled by the `status` field
-
-```sql
-alter table public.submissions enable row level security;
-
-create policy "submissions_select_approved" on public.submissions
-for select using (status = 'approved');
-
-create policy "submissions_insert_own" on public.submissions
-for insert with check (auth.uid() = user_id);
-
-create policy "submissions_update_own" on public.submissions
-for update using (auth.uid() = user_id);
-```
-
-#### submission_votes
-- Authenticated users can insert a vote only if they are not the owner of the submission and the vote does not already exist
-- Normal users cannot update or delete their votes
-- Vote totals are updated server-side or through controlled database logic
-
-```sql
-alter table public.submission_votes enable row level security;
-
-create policy "votes_insert_own" on public.submission_votes
-for insert with check (auth.uid() = voter_id);
-```
+#### votes
+- Authenticated users can create votes only for approved submissions owned by another user.
+- Authenticated users can read their own votes.
+- Authenticated users can delete their own votes.
+- One vote per user/submission is enforced by the unique constraint.
 
 ### Additional hardening
-- Validate TikTok URLs on the client and optionally in a simple Edge Function
-- Use `CHECK` constraints for status values
-- Enforce unique votes via a database uniqueness constraint
-- Prevent duplicate TikTok video IDs where possible
-- Keep vote totals server-controlled rather than client-editable
+- Status values are constrained to `pending`, `approved`, `rejected`, or `hidden`.
+- Numeric totals are guarded by non-negative checks.
+- Security-definer functions use `set search_path = ''` for safer execution.
 
 ---
 
@@ -525,7 +489,7 @@ GPS verification is a lightweight participation gate. It should be presented as 
 
 ### PR 1 — Foundation and database setup
 - Add Supabase client configuration and environment variables
-- Create `profiles`, `submissions`, and `submission_votes` tables
+- Create `profiles`, `video_submissions`, and `votes` tables
 - Add initial RLS policies
 - Add a simple auth shell
 
@@ -547,8 +511,8 @@ GPS verification is a lightweight participation gate. It should be presented as 
 - Add empty states and loading states
 
 ### PR 5 — Voting and leaderboard
-- Add one-vote-per-submission logic
-- Update vote counts through controlled server-side logic
+- Add one-vote-per-user-and-submission logic
+- Aggregate vote counts through `public.get_submission_vote_counts()`
 - Add a simple leaderboard by vote count only
 - Add public and challenge-specific leaderboard views
 
