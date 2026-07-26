@@ -21,11 +21,22 @@ export type SupabaseAuthState = {
   loading: boolean;
 };
 
-export const signInWithGoogle = async () => {
+const resolveSafeRedirect = (redirectTo?: string) => {
+  if (!redirectTo) return window.location.origin;
+
+  try {
+    const parsed = new URL(redirectTo, window.location.origin);
+    return parsed.origin === window.location.origin ? parsed.toString() : window.location.origin;
+  } catch {
+    return window.location.origin;
+  }
+};
+
+export const signInWithGoogle = async (redirectTo?: string) => {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin,
+      redirectTo: resolveSafeRedirect(redirectTo),
     },
   });
 

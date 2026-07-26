@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Card } from '../components/Card';
 import { loadHistory } from '../services/history';
 import { localize } from '../services/i18n';
@@ -14,6 +15,7 @@ export const HistoryPage = ({ language, t }: { language: LanguageCode; t: (key: 
         {history.length === 0 && <p className="text-slate-300">{t('history.empty')}</p>}
         {history.map((item) => {
           const statusLabel = item.status === 'completed' ? t('history.completed') : item.status === 'skipped' ? t('history.skipped') : item.status === 'failed' ? t('history.failed') : t('history.active');
+          const canSubmitTikTok = item.status === 'completed' && item.gpsVerified && Boolean(item.completedAt);
           return (
             <article key={item.id} className="rounded-3xl bg-white/10 p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -27,9 +29,16 @@ export const HistoryPage = ({ language, t }: { language: LanguageCode; t: (key: 
                   </p>
                   <p className="mt-3 text-sm uppercase tracking-[0.2em] text-cyan-200">{t('history.status')}: {statusLabel}</p>
                 </div>
-                <div className="rounded-2xl bg-cyan-300 px-4 py-2 text-center font-black text-slate-950">
-                  <p className="text-xs uppercase">{t('challenge.score')}</p>
-                  <p>{item.score}</p>
+                <div className="flex items-center gap-3">
+                  {canSubmitTikTok && (
+                    <Link to={`/submit-tiktok?runId=${encodeURIComponent(item.id)}`} className="rounded-full bg-cyan-300 px-4 py-2 font-black text-slate-950 transition hover:bg-cyan-200">
+                      {t('history.submitTikTok')}
+                    </Link>
+                  )}
+                  <div className="rounded-2xl bg-cyan-300 px-4 py-2 text-center font-black text-slate-950">
+                    <p className="text-xs uppercase">{t('challenge.score')}</p>
+                    <p>{item.score}</p>
+                  </div>
                 </div>
               </div>
             </article>
