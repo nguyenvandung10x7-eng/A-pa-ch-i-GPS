@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { supabase, type SupabaseAuthState, signInWithGoogle, signOut } from '../lib/supabase';
 
 type AuthContextValue = SupabaseAuthState & {
-  signIn: () => Promise<void>;
+  signIn: (redirectTo?: string) => Promise<void>;
   signOutUser: () => Promise<void>;
 };
 

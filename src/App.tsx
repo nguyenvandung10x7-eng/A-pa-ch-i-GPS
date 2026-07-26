@@ -6,6 +6,7 @@ import { AdminPage } from './pages/AdminPage';
 import { ChallengePage } from './pages/ChallengePage';
 import { HistoryPage } from './pages/HistoryPage';
 import { LandingPage } from './pages/LandingPage';
+import { TikTokSubmissionPage } from './pages/TikTokSubmissionPage';
 
 export default function App() {
   const { language, setLanguage, t } = useTranslation();
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/" element={<LandingPage tasks={tasks} t={t} />} />
         <Route path="/challenge" element={<ChallengePage tasks={activeTasks} language={language} t={t} />} />
         <Route path="/history" element={<HistoryPage language={language} t={t} />} />
+        <Route path="/submit-tiktok" element={<TikTokSubmissionPage language={language} t={t} />} />
         <Route path="/admin" element={<AdminPage tasks={tasks} setTasks={setTasks} t={t} />} />
       </Routes>
     </Layout>
