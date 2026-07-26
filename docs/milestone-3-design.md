@@ -173,10 +173,10 @@ The implemented flow uses Google OAuth through Supabase Auth.
 - This supports the product goal of encouraging participation rather than hardening against every possible abuse case.
 
 ### Account rules
-- Authenticated users only for submissions and votes
+- Authenticated users can submit and vote
 - One account may vote once per submission
 - Self-voting is blocked
-- Duplicate video IDs are prevented where possible
+- Duplicate TikTok video IDs are prevented globally for non-null values
 
 ---
 
@@ -187,8 +187,9 @@ A submission should be allowed when:
 - the user is authenticated
 - the local gameplay flow has marked the challenge as verified for participation purposes
 - the TikTok URL is valid and not empty
-- the user has not already submitted the same TikTok video ID where it can be detected
-- the user has not already submitted for that same challenge if the team wants to keep the MVP simple
+- the submission is created as a pending row with `star_value = 0`
+- `gps_verified = true` and `gps_verified_at` is set, reflecting the lightweight participation gate
+- the TikTok video ID is unique across submissions when it is present
 
 ### Lightweight participation gate
 The app should treat GPS verification as a lightweight participation gate only. It is enough to confirm that the user completed the local challenge flow and is attempting to share content. It is not a strict anti-cheat mechanism and should not be presented as fraud-proof.
@@ -237,7 +238,7 @@ The app should treat GPS verification as a lightweight participation gate only. 
 ### Voting rules
 - Only authenticated users may vote.
 - One authenticated account can vote once per submission.
-- A vote cannot be changed once created.
+- Votes are immutable after creation.
 - Self-voting is not allowed.
 - Voting only affects the app’s internal leaderboard.
 - TikTok likes, comments, views, and followers do not influence scoring.
@@ -395,7 +396,7 @@ External TikTok metrics are not used for scoring. Likes, comments, views, and fo
 ### Applied RLS overview
 
 #### profiles
-- Authenticated users can read profiles.
+- Anonymous and authenticated users can read profiles.
 - Authenticated users can update only their own profile fields: `display_name`, `avatar_url`, and `tiktok_username`.
 - Client-side updates cannot modify totals such as `total_stars` or `total_play_seconds`.
 
@@ -409,7 +410,7 @@ External TikTok metrics are not used for scoring. Likes, comments, views, and fo
 #### votes
 - Authenticated users can create votes only for approved submissions owned by another user.
 - Authenticated users can read their own votes.
-- Authenticated users can delete their own votes.
+- Authenticated users cannot delete votes after creation.
 - One vote per user/submission is enforced by the unique constraint.
 
 ### Additional hardening
