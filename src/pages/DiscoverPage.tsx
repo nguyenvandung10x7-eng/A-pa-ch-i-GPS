@@ -1,12 +1,22 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Card } from '../components/Card';
 import { useAuth } from '../contexts/AuthContext';
 import { loadApprovedSubmissions, type DiscoverySubmission, DiscoveryError } from '../services/discovery';
-import { castVote, loadUserVoteSubmissionIds, loadVoteCountMap, type VoteError } from '../services/voting';
+import { castVote, loadUserVoteSubmissionIds, loadVoteCountMap, VoteError } from '../services/voting';
 import type { LanguageCode } from '../types/task';
 
 const formatDate = (value: string, language: LanguageCode) => new Date(value).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US');
+
+type UserVoteState = {
+  userId: string | null;
+  submissionIds: Set<string>;
+};
+
+type UserOptimisticVoteState = {
+  userId: string | null;
+  submissionIds: Set<string>;
+};
 
 export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const [submissions, setSubmissions] = useState<DiscoverySubmission[]>([]);
@@ -14,16 +24,25 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
   const [voteCounts, setVoteCounts] = useState<Record<string, number>>({});
-  const [userVotes, setUserVotes] = useState<Set<string>>(new Set());
+  const [userVoteState, setUserVoteState] = useState<UserVoteState>({ userId: null, submissionIds: new Set() });
   const [voteBusy, setVoteBusy] = useState<Record<string, boolean>>({});
   const [voteFeedback, setVoteFeedback] = useState<Record<string, string | null>>({});
   const requestIdRef = useRef(0);
-  const optimisticVoteIdsRef = useRef<Set<string>>(new Set());
   const { user, signIn } = useAuth();
+  const activeUserId = user?.id ?? null;
+  const authUserIdRef = useRef<string | null>(activeUserId);
+  const optimisticVoteStateRef = useRef<UserOptimisticVoteState>({ userId: activeUserId, submissionIds: new Set() });
+  const userVotes = userVoteState.userId === activeUserId ? userVoteState.submissionIds : new Set<string>();
+
+  useLayoutEffect(() => {
+    authUserIdRef.current = activeUserId;
+    optimisticVoteStateRef.current = { userId: activeUserId, submissionIds: new Set() };
+  }, [activeUserId]);
 
   const loadData = useCallback(async () => {
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
+    const requestUserId = activeUserId;
 
     setLoading(true);
     setError(null);
@@ -31,23 +50,44 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
       const [data, counts, submittedVotes] = await Promise.all([
         loadApprovedSubmissions(),
         loadVoteCountMap(),
-        loadUserVoteSubmissionIds(user?.id ?? null),
+        loadUserVoteSubmissionIds(requestUserId),
       ]);
       if (requestIdRef.current !== requestId) {
         return;
       }
       setSubmissions(data);
-      setVoteCounts(counts);
-      setUserVotes(new Set(submittedVotes));
+      setVoteCounts((current) => {
+        const merged: Record<string, number> = { ...current };
+        for (const [submissionId, fetchedCount] of Object.entries(counts)) {
+          merged[submissionId] = Math.max(current[submissionId] ?? 0, fetchedCount ?? 0);
+        }
+        return merged;
+      });
+      if (authUserIdRef.current === requestUserId) {
+        setUserVoteState((current) => {
+          if (current.userId !== requestUserId) {
+            return { userId: requestUserId, submissionIds: new Set(submittedVotes) };
+          }
+
+          const merged = new Set(current.submissionIds);
+          for (const submissionId of submittedVotes) {
+            merged.add(submissionId);
+          }
+
+          return merged.size === current.submissionIds.size ? current : { userId: requestUserId, submissionIds: merged };
+        });
+      }
     } catch (err) {
       if (requestIdRef.current !== requestId) {
         return;
       }
+      if (authUserIdRef.current !== requestUserId && err instanceof VoteError) {
+        return;
+      }
       if (err instanceof DiscoveryError) {
         setError(t(err.translationKey));
-      } else if (err instanceof Error && 'translationKey' in err) {
-        const voteError = err as VoteError;
-        setError(t(voteError.translationKey));
+      } else if (err instanceof VoteError) {
+        setError(t(err.translationKey));
       } else {
         setError(t('discover.error'));
       }
@@ -56,7 +96,7 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
         setLoading(false);
       }
     }
-  }, [t, user]);
+  }, [activeUserId, t]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -70,10 +110,12 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
   }, [loadData]);
 
   const refreshVoteDataInBackground = useCallback(async () => {
+    const requestUserId = activeUserId;
+
     try {
       const [counts, submittedVotes] = await Promise.all([
         loadVoteCountMap(),
-        loadUserVoteSubmissionIds(user?.id ?? null),
+        loadUserVoteSubmissionIds(requestUserId),
       ]);
 
       setVoteCounts((current) => {
@@ -84,18 +126,24 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
         return merged;
       });
 
-      setUserVotes((current) => {
-        const merged = new Set(current);
-        for (const submissionId of submittedVotes) {
-          merged.add(submissionId);
-        }
+      if (authUserIdRef.current === requestUserId) {
+        setUserVoteState((current) => {
+          if (current.userId !== requestUserId) {
+            return { userId: requestUserId, submissionIds: new Set(submittedVotes) };
+          }
 
-        return merged.size === current.size ? current : merged;
-      });
+          const merged = new Set(current.submissionIds);
+          for (const submissionId of submittedVotes) {
+            merged.add(submissionId);
+          }
+
+          return merged.size === current.submissionIds.size ? current : { userId: requestUserId, submissionIds: merged };
+        });
+      }
     } catch {
       // Keep optimistic UI and success feedback even if background reconciliation fails.
     }
-  }, [user]);
+  }, [activeUserId]);
 
   const handleVote = async (submissionId: string, ownerUserId: string) => {
     if (!user?.id) {
@@ -121,16 +169,31 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
     setVoteFeedback((current) => ({ ...current, [submissionId]: null }));
 
     try {
-      await castVote({ userId: user.id, submissionId });
-      if (!optimisticVoteIdsRef.current.has(submissionId)) {
-        optimisticVoteIdsRef.current.add(submissionId);
-        setUserVotes((current) => {
-          if (current.has(submissionId)) {
+      const votingUserId = user.id;
+      await castVote({ userId: votingUserId, submissionId });
+
+      if (authUserIdRef.current !== votingUserId) {
+        return;
+      }
+
+      if (optimisticVoteStateRef.current.userId !== votingUserId) {
+        optimisticVoteStateRef.current = { userId: votingUserId, submissionIds: new Set() };
+      }
+
+      if (!optimisticVoteStateRef.current.submissionIds.has(submissionId)) {
+        optimisticVoteStateRef.current.submissionIds.add(submissionId);
+        setUserVoteState((current) => {
+          if (current.userId !== votingUserId) {
+            return { userId: votingUserId, submissionIds: new Set([submissionId]) };
+          }
+
+          if (current.submissionIds.has(submissionId)) {
             return current;
           }
-          const next = new Set(current);
+
+          const next = new Set(current.submissionIds);
           next.add(submissionId);
-          return next;
+          return { userId: votingUserId, submissionIds: next };
         });
         setVoteCounts((current) => ({
           ...current,
