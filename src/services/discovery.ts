@@ -76,16 +76,22 @@ const resolveSafeLink = (value?: string | null) => {
 export const loadApprovedSubmissions = async (): Promise<DiscoverySubmission[]> => {
   const pageSize = 1000;
   const allRows: DiscoveryRow[] = [];
-  let offset = 0;
+  let cursor: { createdAt: string; id: string } | null = null;
 
   while (true) {
-    const { data, error } = await supabase
+    let query = supabase
       .from('video_submissions')
       .select('id,user_id,challenge_id,challenge_title_snapshot,canonical_url,submitted_url,tiktok_video_id,created_at,profiles!video_submissions_user_id_fkey(display_name,avatar_url,tiktok_username)')
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
-      .range(offset, offset + pageSize - 1);
+      .limit(pageSize);
+
+    if (cursor) {
+      query = query.or(`created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       throw new DiscoveryError('discover.error', 'Unable to load approved submissions.');
@@ -102,7 +108,8 @@ export const loadApprovedSubmissions = async (): Promise<DiscoverySubmission[]> 
       break;
     }
 
-    offset += pageRows.length;
+    const lastRow = pageRows[pageRows.length - 1];
+    cursor = { createdAt: lastRow.created_at, id: lastRow.id };
   }
 
   return allRows.map((row) => {
