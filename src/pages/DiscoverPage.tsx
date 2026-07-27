@@ -76,8 +76,22 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
         loadUserVoteSubmissionIds(user?.id ?? null),
       ]);
 
-      setVoteCounts(counts);
-      setUserVotes(new Set(submittedVotes));
+      setVoteCounts((current) => {
+        const merged: Record<string, number> = { ...current };
+        for (const [submissionId, fetchedCount] of Object.entries(counts)) {
+          merged[submissionId] = Math.max(current[submissionId] ?? 0, fetchedCount ?? 0);
+        }
+        return merged;
+      });
+
+      setUserVotes((current) => {
+        const merged = new Set(current);
+        for (const submissionId of submittedVotes) {
+          merged.add(submissionId);
+        }
+
+        return merged.size === current.size ? current : merged;
+      });
     } catch {
       // Keep optimistic UI and success feedback even if background reconciliation fails.
     }
