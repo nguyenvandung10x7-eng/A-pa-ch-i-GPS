@@ -4,6 +4,7 @@ import { useTasks } from './hooks/useTasks';
 import { useTranslation } from './hooks/useTranslation';
 import { AdminPage } from './pages/AdminPage';
 import { ChallengePage } from './pages/ChallengePage';
+import { DiscoverPage } from './pages/DiscoverPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { LandingPage } from './pages/LandingPage';
 import { TikTokSubmissionPage } from './pages/TikTokSubmissionPage';
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/" element={<LandingPage tasks={tasks} t={t} />} />
         <Route path="/challenge" element={<ChallengePage tasks={activeTasks} language={language} t={t} />} />
         <Route path="/history" element={<HistoryPage language={language} t={t} />} />
+        <Route path="/discover" element={<DiscoverPage language={language} t={t} />} />
         <Route path="/submit-tiktok" element={<TikTokSubmissionPage language={language} t={t} />} />
         <Route path="/admin" element={<AdminPage tasks={tasks} setTasks={setTasks} t={t} />} />
       </Routes>
