@@ -18,6 +18,7 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
   const [voteBusy, setVoteBusy] = useState<Record<string, boolean>>({});
   const [voteFeedback, setVoteFeedback] = useState<Record<string, string | null>>({});
   const requestIdRef = useRef(0);
+  const optimisticVoteIdsRef = useRef<Set<string>>(new Set());
   const { user, signIn } = useAuth();
 
   const loadData = useCallback(async () => {
@@ -68,6 +69,20 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
     };
   }, [loadData]);
 
+  const refreshVoteDataInBackground = useCallback(async () => {
+    try {
+      const [counts, submittedVotes] = await Promise.all([
+        loadVoteCountMap(),
+        loadUserVoteSubmissionIds(user?.id ?? null),
+      ]);
+
+      setVoteCounts(counts);
+      setUserVotes(new Set(submittedVotes));
+    } catch {
+      // Keep optimistic UI and success feedback even if background reconciliation fails.
+    }
+  }, [user]);
+
   const handleVote = async (submissionId: string, ownerUserId: string) => {
     if (!user?.id) {
       setVoteFeedback((current) => ({ ...current, [submissionId]: t('discover.voteSignIn') }));
@@ -93,8 +108,23 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
 
     try {
       await castVote({ userId: user.id, submissionId });
+      if (!optimisticVoteIdsRef.current.has(submissionId)) {
+        optimisticVoteIdsRef.current.add(submissionId);
+        setUserVotes((current) => {
+          if (current.has(submissionId)) {
+            return current;
+          }
+          const next = new Set(current);
+          next.add(submissionId);
+          return next;
+        });
+        setVoteCounts((current) => ({
+          ...current,
+          [submissionId]: (current[submissionId] ?? 0) + 1,
+        }));
+      }
       setVoteFeedback((current) => ({ ...current, [submissionId]: t('discover.voteSuccess') }));
-      await loadData();
+      void refreshVoteDataInBackground();
     } catch (err) {
       if (err instanceof Error && 'translationKey' in err) {
         const voteError = err as VoteError;

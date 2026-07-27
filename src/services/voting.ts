@@ -161,7 +161,7 @@ export const loadLeaderboardEntries = async (): Promise<LeaderboardEntry[]> => {
     const leftTime = new Date(left.createdAt).getTime();
     const rightTime = new Date(right.createdAt).getTime();
     if (rightTime !== leftTime) {
-      return rightTime - leftTime;
+      return leftTime - rightTime;
     }
 
     return right.id.localeCompare(left.id);
