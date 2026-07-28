@@ -13,11 +13,6 @@ type UserVoteState = {
   submissionIds: Set<string>;
 };
 
-type UserOptimisticVoteState = {
-  userId: string | null;
-  submissionIds: Set<string>;
-};
-
 export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const [submissions, setSubmissions] = useState<DiscoverySubmission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,13 +26,30 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
   const { user, signIn } = useAuth();
   const activeUserId = user?.id ?? null;
   const authUserIdRef = useRef<string | null>(activeUserId);
-  const optimisticVoteStateRef = useRef<UserOptimisticVoteState>({ userId: activeUserId, submissionIds: new Set() });
+  const userVoteStateRef = useRef<UserVoteState>({ userId: null, submissionIds: new Set() });
   const userVotes = userVoteState.userId === activeUserId ? userVoteState.submissionIds : new Set<string>();
 
   useLayoutEffect(() => {
     authUserIdRef.current = activeUserId;
-    optimisticVoteStateRef.current = { userId: activeUserId, submissionIds: new Set() };
+    const resetState: UserVoteState = { userId: activeUserId, submissionIds: new Set() };
+    userVoteStateRef.current = resetState;
+    setUserVoteState(resetState);
+    setVoteBusy({});
+    setVoteFeedback({});
   }, [activeUserId]);
+
+  const applyMergedServerVotesForUser = useCallback((requestUserId: string | null, submittedVotes: string[]) => {
+    const current = userVoteStateRef.current;
+    const base = current.userId === requestUserId ? current.submissionIds : new Set<string>();
+    const merged = new Set(base);
+    for (const submissionId of submittedVotes) {
+      merged.add(submissionId);
+    }
+
+    const nextState: UserVoteState = { userId: requestUserId, submissionIds: merged };
+    userVoteStateRef.current = nextState;
+    setUserVoteState(nextState);
+  }, []);
 
   const loadData = useCallback(async () => {
     const requestId = requestIdRef.current + 1;
@@ -64,18 +76,7 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
         return merged;
       });
       if (authUserIdRef.current === requestUserId) {
-        setUserVoteState((current) => {
-          if (current.userId !== requestUserId) {
-            return { userId: requestUserId, submissionIds: new Set(submittedVotes) };
-          }
-
-          const merged = new Set(current.submissionIds);
-          for (const submissionId of submittedVotes) {
-            merged.add(submissionId);
-          }
-
-          return merged.size === current.submissionIds.size ? current : { userId: requestUserId, submissionIds: merged };
-        });
+        applyMergedServerVotesForUser(requestUserId, submittedVotes);
       }
     } catch (err) {
       if (requestIdRef.current !== requestId) {
@@ -96,7 +97,7 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
         setLoading(false);
       }
     }
-  }, [activeUserId, t]);
+  }, [activeUserId, applyMergedServerVotesForUser, t]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -109,8 +110,7 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
     };
   }, [loadData]);
 
-  const refreshVoteDataInBackground = useCallback(async () => {
-    const requestUserId = activeUserId;
+  const refreshVoteDataInBackground = useCallback(async (requestUserId: string | null = activeUserId) => {
 
     try {
       const [counts, submittedVotes] = await Promise.all([
@@ -127,23 +127,12 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
       });
 
       if (authUserIdRef.current === requestUserId) {
-        setUserVoteState((current) => {
-          if (current.userId !== requestUserId) {
-            return { userId: requestUserId, submissionIds: new Set(submittedVotes) };
-          }
-
-          const merged = new Set(current.submissionIds);
-          for (const submissionId of submittedVotes) {
-            merged.add(submissionId);
-          }
-
-          return merged.size === current.submissionIds.size ? current : { userId: requestUserId, submissionIds: merged };
-        });
+        applyMergedServerVotesForUser(requestUserId, submittedVotes);
       }
     } catch {
       // Keep optimistic UI and success feedback even if background reconciliation fails.
     }
-  }, [activeUserId]);
+  }, [activeUserId, applyMergedServerVotesForUser]);
 
   const handleVote = async (submissionId: string, ownerUserId: string) => {
     if (!user?.id) {
@@ -151,11 +140,14 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
       return;
     }
 
+  const votingUserId = user.id;
+  const voteCountBefore = voteCounts[submissionId] ?? 0;
+
     if (voteBusy[submissionId]) {
       return;
     }
 
-    if (user.id === ownerUserId) {
+    if (votingUserId === ownerUserId) {
       setVoteFeedback((current) => ({ ...current, [submissionId]: t('discover.voteOwnSubmission') }));
       return;
     }
@@ -169,48 +161,43 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
     setVoteFeedback((current) => ({ ...current, [submissionId]: null }));
 
     try {
-      const votingUserId = user.id;
       await castVote({ userId: votingUserId, submissionId });
+      void refreshVoteDataInBackground(votingUserId);
 
       if (authUserIdRef.current !== votingUserId) {
         return;
       }
 
-      if (optimisticVoteStateRef.current.userId !== votingUserId) {
-        optimisticVoteStateRef.current = { userId: votingUserId, submissionIds: new Set() };
-      }
+      const authoritativeState = userVoteStateRef.current;
+      const alreadyCounted = authoritativeState.userId === votingUserId && authoritativeState.submissionIds.has(submissionId);
 
-      if (!optimisticVoteStateRef.current.submissionIds.has(submissionId)) {
-        optimisticVoteStateRef.current.submissionIds.add(submissionId);
-        setUserVoteState((current) => {
-          if (current.userId !== votingUserId) {
-            return { userId: votingUserId, submissionIds: new Set([submissionId]) };
-          }
-
-          if (current.submissionIds.has(submissionId)) {
-            return current;
-          }
-
-          const next = new Set(current.submissionIds);
-          next.add(submissionId);
-          return { userId: votingUserId, submissionIds: next };
-        });
+      if (!alreadyCounted) {
+        const nextSubmissionIds = authoritativeState.userId === votingUserId ? new Set(authoritativeState.submissionIds) : new Set<string>();
+        nextSubmissionIds.add(submissionId);
+        const nextState: UserVoteState = { userId: votingUserId, submissionIds: nextSubmissionIds };
+        userVoteStateRef.current = nextState;
+        setUserVoteState(nextState);
         setVoteCounts((current) => ({
           ...current,
-          [submissionId]: (current[submissionId] ?? 0) + 1,
+          [submissionId]: Math.max(current[submissionId] ?? 0, voteCountBefore + 1),
         }));
       }
+
       setVoteFeedback((current) => ({ ...current, [submissionId]: t('discover.voteSuccess') }));
-      void refreshVoteDataInBackground();
     } catch (err) {
-      if (err instanceof Error && 'translationKey' in err) {
-        const voteError = err as VoteError;
-        setVoteFeedback((current) => ({ ...current, [submissionId]: t(voteError.translationKey) }));
+      if (authUserIdRef.current !== votingUserId) {
+        return;
+      }
+
+      if (err instanceof VoteError) {
+        setVoteFeedback((current) => ({ ...current, [submissionId]: t(err.translationKey) }));
       } else {
         setVoteFeedback((current) => ({ ...current, [submissionId]: t('discover.voteError') }));
       }
     } finally {
-      setVoteBusy((current) => ({ ...current, [submissionId]: false }));
+      if (authUserIdRef.current === votingUserId) {
+        setVoteBusy((current) => ({ ...current, [submissionId]: false }));
+      }
     }
   };
 
