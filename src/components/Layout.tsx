@@ -36,7 +36,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
           <span className="rounded-2xl bg-cyan-400 p-2 text-slate-950"><Compass /></span>{t('app.name')}
         </Link>
         <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-200">
-          {[['/challenge', 'nav.challenge'], ['/history', 'nav.history'], ['/discover', 'nav.discover'], ['/admin', 'nav.admin']].map(([to, key]) => (
+          {[['/challenge', 'nav.challenge'], ['/history', 'nav.history'], ['/discover', 'nav.discover'], ['/leaderboard', 'nav.leaderboard'], ['/admin', 'nav.admin']].map(([to, key]) => (
             <NavLink key={to} to={to} className={({ isActive }) => `rounded-full px-4 py-2 transition ${isActive ? 'bg-cyan-300 text-slate-950' : 'glass hover:bg-white/20'}`}>
               {t(key)}
             </NavLink>

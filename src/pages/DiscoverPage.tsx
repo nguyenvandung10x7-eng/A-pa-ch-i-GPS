@@ -1,35 +1,93 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Card } from '../components/Card';
+import { useAuth } from '../contexts/AuthContext';
 import { loadApprovedSubmissions, type DiscoverySubmission, DiscoveryError } from '../services/discovery';
+import { castVote, loadUserVoteSubmissionIds, loadVoteCountMap, VoteError } from '../services/voting';
 import type { LanguageCode } from '../types/task';
 
 const formatDate = (value: string, language: LanguageCode) => new Date(value).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US');
+
+type UserVoteState = {
+  userId: string | null;
+  submissionIds: Set<string>;
+};
 
 export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const [submissions, setSubmissions] = useState<DiscoverySubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
+  const [voteCounts, setVoteCounts] = useState<Record<string, number>>({});
+  const [userVoteState, setUserVoteState] = useState<UserVoteState>({ userId: null, submissionIds: new Set() });
+  const [voteBusy, setVoteBusy] = useState<Record<string, boolean>>({});
+  const [voteFeedback, setVoteFeedback] = useState<Record<string, string | null>>({});
   const requestIdRef = useRef(0);
+  const { user, signIn } = useAuth();
+  const activeUserId = user?.id ?? null;
+  const authUserIdRef = useRef<string | null>(activeUserId);
+  const userVoteStateRef = useRef<UserVoteState>({ userId: null, submissionIds: new Set() });
+  const userVotes = userVoteState.userId === activeUserId ? userVoteState.submissionIds : new Set<string>();
+
+  useLayoutEffect(() => {
+    authUserIdRef.current = activeUserId;
+    const resetState: UserVoteState = { userId: activeUserId, submissionIds: new Set() };
+    userVoteStateRef.current = resetState;
+    setUserVoteState(resetState);
+    setVoteBusy({});
+    setVoteFeedback({});
+  }, [activeUserId]);
+
+  const applyMergedServerVotesForUser = useCallback((requestUserId: string | null, submittedVotes: string[]) => {
+    const current = userVoteStateRef.current;
+    const base = current.userId === requestUserId ? current.submissionIds : new Set<string>();
+    const merged = new Set(base);
+    for (const submissionId of submittedVotes) {
+      merged.add(submissionId);
+    }
+
+    const nextState: UserVoteState = { userId: requestUserId, submissionIds: merged };
+    userVoteStateRef.current = nextState;
+    setUserVoteState(nextState);
+  }, []);
 
   const loadData = useCallback(async () => {
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
+    const requestUserId = activeUserId;
 
     setLoading(true);
     setError(null);
     try {
-      const data = await loadApprovedSubmissions();
+      const [data, counts, submittedVotes] = await Promise.all([
+        loadApprovedSubmissions(),
+        loadVoteCountMap(),
+        loadUserVoteSubmissionIds(requestUserId),
+      ]);
       if (requestIdRef.current !== requestId) {
         return;
       }
       setSubmissions(data);
+      setVoteCounts((current) => {
+        const merged: Record<string, number> = { ...current };
+        for (const [submissionId, fetchedCount] of Object.entries(counts)) {
+          merged[submissionId] = Math.max(current[submissionId] ?? 0, fetchedCount ?? 0);
+        }
+        return merged;
+      });
+      if (authUserIdRef.current === requestUserId) {
+        applyMergedServerVotesForUser(requestUserId, submittedVotes);
+      }
     } catch (err) {
       if (requestIdRef.current !== requestId) {
         return;
       }
+      if (authUserIdRef.current !== requestUserId && err instanceof VoteError) {
+        return;
+      }
       if (err instanceof DiscoveryError) {
+        setError(t(err.translationKey));
+      } else if (err instanceof VoteError) {
         setError(t(err.translationKey));
       } else {
         setError(t('discover.error'));
@@ -39,7 +97,7 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
         setLoading(false);
       }
     }
-  }, [t]);
+  }, [activeUserId, applyMergedServerVotesForUser, t]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -51,6 +109,97 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
       requestIdRef.current += 1;
     };
   }, [loadData]);
+
+  const refreshVoteDataInBackground = useCallback(async (requestUserId: string | null = activeUserId) => {
+
+    try {
+      const [counts, submittedVotes] = await Promise.all([
+        loadVoteCountMap(),
+        loadUserVoteSubmissionIds(requestUserId),
+      ]);
+
+      setVoteCounts((current) => {
+        const merged: Record<string, number> = { ...current };
+        for (const [submissionId, fetchedCount] of Object.entries(counts)) {
+          merged[submissionId] = Math.max(current[submissionId] ?? 0, fetchedCount ?? 0);
+        }
+        return merged;
+      });
+
+      if (authUserIdRef.current === requestUserId) {
+        applyMergedServerVotesForUser(requestUserId, submittedVotes);
+      }
+    } catch {
+      // Keep optimistic UI and success feedback even if background reconciliation fails.
+    }
+  }, [activeUserId, applyMergedServerVotesForUser]);
+
+  const handleVote = async (submissionId: string, ownerUserId: string) => {
+    if (!user?.id) {
+      setVoteFeedback((current) => ({ ...current, [submissionId]: t('discover.voteSignIn') }));
+      return;
+    }
+
+  const votingUserId = user.id;
+  const voteCountBefore = voteCounts[submissionId] ?? 0;
+
+    if (voteBusy[submissionId]) {
+      return;
+    }
+
+    if (votingUserId === ownerUserId) {
+      setVoteFeedback((current) => ({ ...current, [submissionId]: t('discover.voteOwnSubmission') }));
+      return;
+    }
+
+    if (userVotes.has(submissionId)) {
+      setVoteFeedback((current) => ({ ...current, [submissionId]: t('discover.voteDuplicate') }));
+      return;
+    }
+
+    setVoteBusy((current) => ({ ...current, [submissionId]: true }));
+    setVoteFeedback((current) => ({ ...current, [submissionId]: null }));
+
+    try {
+      await castVote({ userId: votingUserId, submissionId });
+      void refreshVoteDataInBackground(votingUserId);
+
+      if (authUserIdRef.current !== votingUserId) {
+        return;
+      }
+
+      const authoritativeState = userVoteStateRef.current;
+      const alreadyCounted = authoritativeState.userId === votingUserId && authoritativeState.submissionIds.has(submissionId);
+
+      if (!alreadyCounted) {
+        const nextSubmissionIds = authoritativeState.userId === votingUserId ? new Set(authoritativeState.submissionIds) : new Set<string>();
+        nextSubmissionIds.add(submissionId);
+        const nextState: UserVoteState = { userId: votingUserId, submissionIds: nextSubmissionIds };
+        userVoteStateRef.current = nextState;
+        setUserVoteState(nextState);
+        setVoteCounts((current) => ({
+          ...current,
+          [submissionId]: Math.max(current[submissionId] ?? 0, voteCountBefore + 1),
+        }));
+      }
+
+      setVoteFeedback((current) => ({ ...current, [submissionId]: t('discover.voteSuccess') }));
+    } catch (err) {
+      if (authUserIdRef.current !== votingUserId) {
+        return;
+      }
+
+      if (err instanceof VoteError) {
+        setVoteFeedback((current) => ({ ...current, [submissionId]: t(err.translationKey) }));
+      } else {
+        setVoteFeedback((current) => ({ ...current, [submissionId]: t('discover.voteError') }));
+      }
+    } finally {
+      if (authUserIdRef.current === votingUserId) {
+        setVoteBusy((current) => ({ ...current, [submissionId]: false }));
+      }
+    }
+  };
 
   const challengeOptions = useMemo(() => {
     const uniqueEntries = new Map<string, string>();
@@ -133,15 +282,44 @@ export const DiscoverPage = ({ language, t }: { language: LanguageCode; t: (key:
                     <p className="font-semibold">{t('discover.submittedLabel')}</p>
                     <p>{formatDate(submission.createdAt, language)}</p>
                   </div>
-                  {submission.safeLink ? (
-                    <a href={submission.safeLink} target="_blank" rel="noopener noreferrer" className="rounded-full bg-cyan-300 px-4 py-2 font-black text-slate-950 transition hover:bg-cyan-200">
-                      {t('discover.openTikTok')}
-                    </a>
-                  ) : (
-                    <span className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-slate-300">
-                      {t('discover.unavailableLink')}
-                    </span>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="rounded-full border border-white/15 px-3 py-2 text-sm font-semibold text-slate-200">
+                      {t('discover.voteCount')}: {voteCounts[submission.id] ?? 0}
+                    </div>
+                    {submission.safeLink ? (
+                      <a href={submission.safeLink} target="_blank" rel="noopener noreferrer" className="rounded-full bg-cyan-300 px-4 py-2 font-black text-slate-950 transition hover:bg-cyan-200">
+                        {t('discover.openTikTok')}
+                      </a>
+                    ) : (
+                      <span className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-slate-300">
+                        {t('discover.unavailableLink')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-200">{t('discover.voteHelp')}</p>
+                      {user ? (
+                        <p className="text-sm text-slate-400">{userVotes.has(submission.id) ? t('discover.voteDuplicate') : submission.userId === user.id ? t('discover.voteOwnSubmission') : t('discover.vote')}</p>
+                      ) : (
+                        <p className="text-sm text-slate-400">{t('discover.voteSignIn')}</p>
+                      )}
+                    </div>
+                    {user ? (
+                      <button type="button" onClick={() => { void handleVote(submission.id, submission.userId); }} disabled={voteBusy[submission.id] || userVotes.has(submission.id) || submission.userId === user.id} className="rounded-full bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60">
+                        {voteBusy[submission.id] ? <Loader2 className="mr-2 inline h-4 w-4 animate-spin" /> : null}
+                        {voteBusy[submission.id] ? t('discover.voting') : t('discover.vote')}
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => { void signIn('/discover'); }} className="rounded-full bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-cyan-300">
+                        {t('discover.voteSignIn')}
+                      </button>
+                    )}
+                  </div>
+                  {voteFeedback[submission.id] ? <p className="mt-3 text-sm text-cyan-200">{voteFeedback[submission.id]}</p> : null}
                 </div>
               </article>
             );
