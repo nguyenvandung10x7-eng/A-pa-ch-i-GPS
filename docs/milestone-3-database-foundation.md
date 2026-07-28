@@ -13,6 +13,7 @@ Run these migrations manually in the Supabase SQL Editor in order:
 9. Note that the follow-up migration adds a unique partial index for non-null TikTok video IDs and tightens the insert and vote policies.
 10. Note that client submissions must omit protected/default columns such as `id`, `star_value`, `status`, `created_at`, and `updated_at`; those values should rely on database defaults or trusted operations.
 11. Note that `tiktok_video_id` is expected to be supplied during insert and is not updated through the client-facing update policy.
+12. Note that submitted TikTok URLs are immutable after submission; if a URL is incorrect, the user must create a new submission.
 
 These migrations are intentionally not applied automatically by the app.
 

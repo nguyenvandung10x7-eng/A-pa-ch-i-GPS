@@ -116,7 +116,6 @@ revoke update (
   reviewed_at,
   rejection_reason
 ) on public.video_submissions from authenticated;
-grant update (submitted_url, canonical_url) on public.video_submissions to authenticated;
 
 create or replace function public.moderate_video_submission(
   p_submission_id uuid,
