@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Compass, Loader2 } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useAdminStatus } from '../hooks/useAdminStatus';
 import { LanguageSwitch } from './LanguageSwitch';
 import type { LanguageCode } from '../types/task';
 
@@ -9,7 +10,19 @@ type LayoutProps = { children: ReactNode; language: LanguageCode; setLanguage: (
 
 export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
   const { user, loading, signIn, signOutUser } = useAuth();
+  const { isAdmin, checkingAdmin } = useAdminStatus();
   const [authBusy, setAuthBusy] = useState(false);
+  const navItems: Array<[string, string]> = [
+    ['/challenge', 'nav.challenge'],
+    ['/history', 'nav.history'],
+    ['/discover', 'nav.discover'],
+    ['/leaderboard', 'nav.leaderboard'],
+  ];
+
+  if (user && !checkingAdmin && isAdmin) {
+    navItems.push(['/moderation', 'nav.moderation']);
+    navItems.push(['/admin', 'nav.admin']);
+  }
 
   const handleSignIn = async () => {
     try {
@@ -36,7 +49,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
           <span className="rounded-2xl bg-cyan-400 p-2 text-slate-950"><Compass /></span>{t('app.name')}
         </Link>
         <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-200">
-          {[['/challenge', 'nav.challenge'], ['/history', 'nav.history'], ['/discover', 'nav.discover'], ['/leaderboard', 'nav.leaderboard'], ['/admin', 'nav.admin']].map(([to, key]) => (
+          {navItems.map(([to, key]) => (
             <NavLink key={to} to={to} className={({ isActive }) => `rounded-full px-4 py-2 transition ${isActive ? 'bg-cyan-300 text-slate-950' : 'glass hover:bg-white/20'}`}>
               {t(key)}
             </NavLink>
