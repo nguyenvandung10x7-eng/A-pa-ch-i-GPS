@@ -169,6 +169,10 @@ export const TikTokSubmissionPage = ({ language, t }: { language: LanguageCode; 
             {feedback ?? t('tiktok.urlHelp')}
           </div>
 
+          <div className="rounded-2xl border border-amber-300/35 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
+            {t('tiktok.publicNotice')}
+          </div>
+
           <div className="flex flex-wrap gap-3">
             <Button type="submit" disabled={submitting || !url.trim()}>
               {submitting ? <><Loader2 className="mr-2 inline h-4 w-4 animate-spin" />{t('tiktok.submitting')}</> : <><Video className="mr-2 inline h-4 w-4" />{t('tiktok.submit')}</>}

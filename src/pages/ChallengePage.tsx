@@ -147,6 +147,9 @@ export const ChallengePage = ({ tasks, language, t }: { tasks: ChallengeTask[]; 
 
             <p className="mt-4 rounded-2xl bg-slate-950/50 p-4 text-cyan-50">{message}</p>
             <p className="mt-2 text-sm text-cyan-200">{gpsStatus !== 'idle' ? `${t('challenge.gpsStatus')}: ${t(`challenge.status.${gpsStatus}`)}` : t('challenge.ready')}</p>
+            <p className="mt-3 rounded-2xl border border-amber-300/35 bg-amber-300/10 p-3 text-sm text-amber-100">
+              {t('challenge.safetyNotice')}
+            </p>
             <div className="mt-5 flex flex-col gap-3">
               <div className="flex flex-wrap gap-3">
                 <Button onClick={startGame} variant="secondary"><RotateCcw className="mr-2 inline h-5 w-5" />{t('challenge.newGame')}</Button>

@@ -11,6 +11,7 @@ import { ChallengePage } from './pages/ChallengePage';
 import { DiscoverPage } from './pages/DiscoverPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { LandingPage } from './pages/LandingPage';
+import { LegalSafetyPage } from './pages/LegalSafetyPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ModerationPage } from './pages/ModerationPage';
 import { TikTokSubmissionPage } from './pages/TikTokSubmissionPage';
@@ -95,6 +96,7 @@ export default function App() {
         <Route path="/discover" element={<DiscoverPage language={language} t={t} />} />
         <Route path="/leaderboard" element={<LeaderboardPage language={language} t={t} />} />
         <Route path="/submit-tiktok" element={<TikTokSubmissionPage language={language} t={t} />} />
+        <Route path="/legal" element={<LegalSafetyPage t={t} />} />
         <Route path="/moderation" element={<ModerationPage language={language} t={t} />} />
         <Route path="/admin" element={<AdminOnlyRoute t={t} redirectPath="/admin"><AdminPage tasks={tasks} setTasks={setTasks} t={t} /></AdminOnlyRoute>} />
       </Routes>

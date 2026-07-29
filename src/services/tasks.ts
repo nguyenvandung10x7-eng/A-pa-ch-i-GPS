@@ -20,6 +20,10 @@ export const loadTasks = (): ChallengeTask[] => {
 
 export const saveTasks = (tasks: ChallengeTask[]) => localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
 export const resetTasks = () => { localStorage.removeItem(TASKS_KEY); return cloneTasks(defaultTasks); };
+export const clearLocalChallengeData = () => {
+  localStorage.removeItem('gps-challenge-progress');
+  localStorage.removeItem('gps-challenge-history');
+};
 export const enabledTasks = (tasks: ChallengeTask[]) => tasks.filter((task) => task.enabled);
 export const createEmptyTask = (): ChallengeTask => ({
   id: `task-${Date.now()}`,
