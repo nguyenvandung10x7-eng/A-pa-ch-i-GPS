@@ -181,7 +181,7 @@
   "legal.privacy.storageTitle": "Browser storage",
   "legal.privacy.storageBody": "This app uses browser local storage for challenge progress, local history, local task settings, and language preference. Supabase authentication session storage is managed separately by Supabase client behavior.",
   "legal.privacy.externalServicesTitle": "External services",
-  "legal.privacy.externalServicesBody": "This pilot uses Google (sign-in), Supabase (authentication and database), TikTok (submitted links), and OpenStreetMap map tiles via Leaflet.",
+  "legal.privacy.externalServicesBody": "This pilot uses Google (sign-in), Supabase (authentication and database), TikTok (submitted links), Unsplash (challenge images), and OpenStreetMap map tiles via Leaflet.",
   "legal.privacy.retentionTitle": "Retention",
   "legal.privacy.retentionBody": "Local challenge history is currently capped to the most recent 100 entries in your browser. Database records for accounts, submissions, votes, and moderation are retained until manually changed or removed by operators. This pilot does not currently provide automated account or database deletion workflows.",
   "legal.privacy.rightsTitle": "Questions and requests",
