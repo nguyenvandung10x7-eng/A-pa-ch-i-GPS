@@ -2,6 +2,7 @@ import tasksJson from '../data/tasks.json';
 import type { ChallengeTask } from '../types/task';
 
 const TASKS_KEY = 'gps-challenge-tasks';
+export const CHALLENGE_CLEAR_VERSION_KEY = 'gps-challenge-clear-version';
 
 const cloneTasks = (tasks: ChallengeTask[]) => structuredClone(tasks);
 
@@ -23,6 +24,9 @@ export const resetTasks = () => { localStorage.removeItem(TASKS_KEY); return clo
 export const clearLocalChallengeData = () => {
   localStorage.removeItem('gps-challenge-progress');
   localStorage.removeItem('gps-challenge-history');
+  const previousVersion = Number(localStorage.getItem(CHALLENGE_CLEAR_VERSION_KEY)) || 0;
+  const nextVersion = Math.max(Date.now(), previousVersion + 1);
+  localStorage.setItem(CHALLENGE_CLEAR_VERSION_KEY, String(nextVersion));
 };
 export const enabledTasks = (tasks: ChallengeTask[]) => tasks.filter((task) => task.enabled);
 export const createEmptyTask = (): ChallengeTask => ({

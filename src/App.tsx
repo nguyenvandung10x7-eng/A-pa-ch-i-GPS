@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Loader2, LogIn, ShieldCheck } from 'lucide-react';
 import { Layout } from './components/Layout';
@@ -15,6 +16,7 @@ import { LegalSafetyPage } from './pages/LegalSafetyPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ModerationPage } from './pages/ModerationPage';
 import { TikTokSubmissionPage } from './pages/TikTokSubmissionPage';
+import { CHALLENGE_CLEAR_VERSION_KEY } from './services/tasks';
 
 const AdminOnlyRoute = ({
   t,
@@ -87,6 +89,22 @@ const AdminOnlyRoute = ({
 export default function App() {
   const { language, setLanguage, t } = useTranslation();
   const { tasks, setTasks, activeTasks } = useTasks();
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.storageArea !== window.localStorage) return;
+      if (event.key !== CHALLENGE_CLEAR_VERSION_KEY) return;
+      if (event.newValue === null) return;
+      if (event.newValue === event.oldValue) return;
+      window.location.reload();
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
   return (
     <Layout language={language} setLanguage={setLanguage} t={t}>
       <Routes>
