@@ -11,10 +11,13 @@ import type { LanguageCode } from '../types/task';
 
 const getRunId = (search: string) => new URLSearchParams(search).get('runId');
 
-export const TikTokSubmissionPage = ({ language, t }: { language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
+export const TikTokSubmissionPage = ({ clearVersion, language, t }: { clearVersion: number; language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const location = useLocation();
   const { user, loading: authLoading, signIn } = useAuth();
-  const history = useMemo(() => loadHistory(), []);
+  const history = useMemo(() => {
+    void clearVersion;
+    return loadHistory();
+  }, [clearVersion]);
   const redirectTarget = `${window.location.origin}${location.pathname}${location.search}`;
   const challenge = useMemo(() => resolveSubmissionChallenge(history, getRunId(location.search)), [history, location.search]);
   const [url, setUrl] = useState('');

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { History, Languages, ListChecks, Sparkles, Trophy } from 'lucide-react';
 import { Card } from '../components/Card';
@@ -9,8 +10,11 @@ const Stat = ({ icon: Icon, label, value }: { icon: typeof Trophy; label: string
   <Card><Icon className="mb-3 text-cyan-200" /><p className="text-sm text-slate-300">{label}</p><p className="text-2xl font-black">{value}</p></Card>
 );
 
-export const LandingPage = ({ tasks, t }: { tasks: ChallengeTask[]; t: (key: string) => string }) => {
-  const history = loadHistory();
+export const LandingPage = ({ tasks, clearVersion, t }: { tasks: ChallengeTask[]; clearVersion: number; t: (key: string) => string }) => {
+  const history = useMemo(() => {
+    void clearVersion;
+    return loadHistory();
+  }, [clearVersion]);
   const best = Math.max(0, ...history.map((item) => item.score));
   return (
     <div className="grid gap-8 lg:grid-cols-[1.1fr_.9fr] lg:items-center">

@@ -26,6 +26,7 @@ export type ChallengeRun = {
   id: string;
   taskId: string;
   title: LocalizedText;
+  clearVersion?: number;
   points: number;
   category: string;
   difficulty: string;
