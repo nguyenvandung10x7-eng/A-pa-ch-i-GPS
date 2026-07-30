@@ -51,9 +51,29 @@ const buildNewGame = (clearVersion: number): PlayerProgress => ({
   attemptedTaskIds: [],
 });
 
-const writeProgress = (progress: PlayerProgress) => {
-  localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
-  return progress;
+const removeKeyIfUnchanged = (key: string, expectedValue: string) => {
+  if (localStorage.getItem(key) === expectedValue) {
+    localStorage.removeItem(key);
+  }
+};
+
+const writeProgress = (progress: PlayerProgress): boolean => {
+  const expectedVersion = normalizeClearVersion(progress.clearVersion);
+  const serialized = JSON.stringify(progress);
+  localStorage.setItem(PROGRESS_KEY, serialized);
+
+  if (getChallengeClearVersion() !== expectedVersion) {
+    removeKeyIfUnchanged(PROGRESS_KEY, serialized);
+    return false;
+  }
+
+  return true;
+};
+
+const recoverCurrentProgress = (tasks: ChallengeTask[] = []): PlayerProgress => {
+  const current = loadProgress(tasks);
+  if (current) return current;
+  return buildNewGame(getChallengeClearVersion());
 };
 
 export const isCurrentProgressVersion = (progress: Pick<PlayerProgress, 'clearVersion'>): boolean => (
@@ -132,9 +152,14 @@ const createRun = (task: ChallengeTask): ChallengeRun => ({
 
 const persistProgress = (progress: PlayerProgress, tasks: ChallengeTask[] = []): PlayerProgress => {
   if (!isCurrentProgressVersion(progress)) {
-    return loadProgress(tasks) ?? writeProgress(buildNewGame(getChallengeClearVersion()));
+    return recoverCurrentProgress(tasks);
   }
-  return writeProgress(progress);
+
+  if (writeProgress(progress)) {
+    return progress;
+  }
+
+  return recoverCurrentProgress(tasks);
 };
 
 export const createNewGame = (): PlayerProgress => persistProgress(buildNewGame(getChallengeClearVersion()));
@@ -148,7 +173,8 @@ export const loadProgress = (tasks: ChallengeTask[] = []): PlayerProgress | unde
     const sanitized = sanitizeProgress(parsed, tasks);
     if (!sanitized) return undefined;
     if (!isCurrentProgressVersion(sanitized)) return undefined;
-    return writeProgress(sanitized);
+    if (!writeProgress(sanitized)) return undefined;
+    return sanitized;
   } catch {
     return undefined;
   }

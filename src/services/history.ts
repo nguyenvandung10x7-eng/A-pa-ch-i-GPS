@@ -8,6 +8,12 @@ const normalizeRunClearVersion = (value: unknown): number => {
   return parsed;
 };
 
+const removeHistoryIfUnchanged = (expectedValue: string) => {
+  if (localStorage.getItem(HISTORY_KEY) === expectedValue) {
+    localStorage.removeItem(HISTORY_KEY);
+  }
+};
+
 export const loadHistory = (): ChallengeRun[] => {
   const stored = localStorage.getItem(HISTORY_KEY);
   if (!stored) return [];
@@ -30,6 +36,13 @@ export const saveRun = (run: ChallengeRun, expectedClearVersion: number) => {
 
   const runWithVersion: ChallengeRun = { ...run, clearVersion: normalizedExpectedVersion };
   const next = [runWithVersion, ...loadHistory().filter((item) => item.id !== run.id)].slice(0, 100);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+  const serialized = JSON.stringify(next);
+  localStorage.setItem(HISTORY_KEY, serialized);
+
+  if (getChallengeClearVersion() !== normalizedExpectedVersion) {
+    removeHistoryIfUnchanged(serialized);
+    return false;
+  }
+
   return true;
 };
