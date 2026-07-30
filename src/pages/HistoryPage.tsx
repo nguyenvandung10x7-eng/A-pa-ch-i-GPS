@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/Card';
 import { loadHistory } from '../services/history';
@@ -6,8 +7,11 @@ import type { LanguageCode } from '../types/task';
 
 const formatTime = (value?: string) => (value ? new Date(value).toLocaleString() : '');
 
-export const HistoryPage = ({ language, t }: { language: LanguageCode; t: (key: string) => string }) => {
-  const history = loadHistory();
+export const HistoryPage = ({ clearVersion, language, t }: { clearVersion: number; language: LanguageCode; t: (key: string) => string }) => {
+  const history = useMemo(() => {
+    void clearVersion;
+    return loadHistory();
+  }, [clearVersion]);
   return (
     <Card>
       <h1 className="text-3xl font-black">{t('history.title')}</h1>

@@ -82,7 +82,20 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
           )}
         </div>
       </nav>
-      <main className="mx-auto max-w-7xl px-4 pb-12">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 pb-8">{children}</main>
+      <footer className="mx-auto mt-4 w-full max-w-7xl border-t border-white/10 px-4 pb-8 pt-5 text-sm text-slate-300">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p>{t('legal.footer.operator')}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link to="/legal" className="font-semibold text-cyan-200 transition hover:text-cyan-100">
+              {t('legal.footer.link')}
+            </Link>
+            <a href="mailto:apachaigps@gmail.com" className="font-semibold text-cyan-200 transition hover:text-cyan-100">
+              {t('legal.footer.contact')}
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

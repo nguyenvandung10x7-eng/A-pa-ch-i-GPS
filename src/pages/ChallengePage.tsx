@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Flag, RotateCcw, ShieldCheck, Trophy, XCircle } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -20,7 +20,7 @@ const findRunTask = (tasks: ChallengeTask[], taskId?: string) => tasks.find((tas
 
 type GpsStatus = 'idle' | 'requestingPermission' | 'locating' | 'permissionDenied' | 'unavailable' | 'inaccurateLocation' | 'outsideTargetRadius' | 'verified';
 
-export const ChallengePage = ({ tasks, language, t }: { tasks: ChallengeTask[]; language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
+export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: ChallengeTask[]; clearVersion: number; language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const activeTasks = useMemo(() => tasks.filter((task) => task.enabled), [tasks]);
   const [progress, setProgress] = useState(() => loadOrCreateProgress(activeTasks));
   const [message, setMessage] = useState(() => t('challenge.ready'));
@@ -30,6 +30,18 @@ export const ChallengePage = ({ tasks, language, t }: { tasks: ChallengeTask[]; 
   const canPlay = activeTasks.length > 0;
   const canComplete = Boolean(task && progress.activeRun?.status === 'active');
   const isFinished = summary.enabledCount > 0 && summary.remainingCount === 0 && !canComplete;
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setProgress(loadOrCreateProgress(activeTasks));
+      setGpsStatus('idle');
+      setMessage(t('challenge.ready'));
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [activeTasks, clearVersion, t]);
 
   const startGame = () => {
     const next = assignRandomChallenge(activeTasks, createNewGame());
@@ -57,6 +69,12 @@ export const ChallengePage = ({ tasks, language, t }: { tasks: ChallengeTask[]; 
       const position = await getCurrentPosition();
       const result = completeActiveChallenge(progress, task, { lat: position.coords.latitude, lng: position.coords.longitude }, position.coords.accuracy);
       setProgress(result.progress);
+
+      if (result.stale) {
+        setGpsStatus('idle');
+        setMessage(t('challenge.ready'));
+        return;
+      }
 
       if (result.duplicate) {
         setGpsStatus('idle');
@@ -96,6 +114,13 @@ export const ChallengePage = ({ tasks, language, t }: { tasks: ChallengeTask[]; 
     if (!shouldSkip) return;
 
     const result = skipActiveChallenge(progress);
+    if (result.stale) {
+      setProgress(result.progress);
+      setGpsStatus('idle');
+      setMessage(t('challenge.ready'));
+      return;
+    }
+
     if (!result.skipped) {
       setMessage(t('challenge.duplicate'));
       return;
@@ -108,8 +133,15 @@ export const ChallengePage = ({ tasks, language, t }: { tasks: ChallengeTask[]; 
   };
 
   const failChallenge = () => {
-    const failedProgress = failActiveChallenge(progress);
-    const next = assignRandomChallenge(activeTasks, failedProgress);
+    const failedResult = failActiveChallenge(progress);
+    if (failedResult.stale) {
+      setProgress(failedResult.progress);
+      setGpsStatus('idle');
+      setMessage(t('challenge.ready'));
+      return;
+    }
+
+    const next = assignRandomChallenge(activeTasks, failedResult.progress);
     setProgress(next);
     setGpsStatus('idle');
     setMessage(next.activeRun ? t('challenge.failed') : t('challenge.allDone'));
@@ -147,6 +179,9 @@ export const ChallengePage = ({ tasks, language, t }: { tasks: ChallengeTask[]; 
 
             <p className="mt-4 rounded-2xl bg-slate-950/50 p-4 text-cyan-50">{message}</p>
             <p className="mt-2 text-sm text-cyan-200">{gpsStatus !== 'idle' ? `${t('challenge.gpsStatus')}: ${t(`challenge.status.${gpsStatus}`)}` : t('challenge.ready')}</p>
+            <p className="mt-3 rounded-2xl border border-amber-300/35 bg-amber-300/10 p-3 text-sm text-amber-100">
+              {t('challenge.safetyNotice')}
+            </p>
             <div className="mt-5 flex flex-col gap-3">
               <div className="flex flex-wrap gap-3">
                 <Button onClick={startGame} variant="secondary"><RotateCcw className="mr-2 inline h-5 w-5" />{t('challenge.newGame')}</Button>

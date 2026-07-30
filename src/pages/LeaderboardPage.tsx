@@ -56,6 +56,10 @@ export const LeaderboardPage = ({ language, t }: { language: LanguageCode; t: (k
         </div>
       </div>
 
+      <p className="mt-4 rounded-2xl border border-amber-300/35 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
+        {t('leaderboard.pointsNotice')}
+      </p>
+
       {loading && (
         <div className="mt-6 flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-4 text-slate-200">
           <Loader2 className="h-5 w-5 animate-spin" />

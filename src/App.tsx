@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Loader2, LogIn, ShieldCheck } from 'lucide-react';
 import { Layout } from './components/Layout';
@@ -11,9 +12,17 @@ import { ChallengePage } from './pages/ChallengePage';
 import { DiscoverPage } from './pages/DiscoverPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { LandingPage } from './pages/LandingPage';
+import { LegalSafetyPage } from './pages/LegalSafetyPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ModerationPage } from './pages/ModerationPage';
 import { TikTokSubmissionPage } from './pages/TikTokSubmissionPage';
+import { CHALLENGE_CLEAR_VERSION_KEY, getChallengeClearVersion } from './services/tasks';
+
+const parseClearVersion = (value: string | null): number => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return 0;
+  return parsed;
+};
 
 const AdminOnlyRoute = ({
   t,
@@ -86,15 +95,36 @@ const AdminOnlyRoute = ({
 export default function App() {
   const { language, setLanguage, t } = useTranslation();
   const { tasks, setTasks, activeTasks } = useTasks();
+  const [clearVersion, setClearVersion] = useState(() => getChallengeClearVersion());
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.storageArea !== window.localStorage) return;
+      if (event.key !== CHALLENGE_CLEAR_VERSION_KEY) return;
+      if (event.newValue === null) return;
+      if (event.newValue === event.oldValue) return;
+      const nextVersion = parseClearVersion(event.newValue);
+      const previousVersion = parseClearVersion(event.oldValue);
+      if (nextVersion === previousVersion) return;
+      setClearVersion(nextVersion);
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
   return (
     <Layout language={language} setLanguage={setLanguage} t={t}>
       <Routes>
-        <Route path="/" element={<LandingPage tasks={tasks} t={t} />} />
-        <Route path="/challenge" element={<ChallengePage tasks={activeTasks} language={language} t={t} />} />
-        <Route path="/history" element={<HistoryPage language={language} t={t} />} />
+        <Route path="/" element={<LandingPage tasks={tasks} clearVersion={clearVersion} t={t} />} />
+        <Route path="/challenge" element={<ChallengePage tasks={activeTasks} clearVersion={clearVersion} language={language} t={t} />} />
+        <Route path="/history" element={<HistoryPage clearVersion={clearVersion} language={language} t={t} />} />
         <Route path="/discover" element={<DiscoverPage language={language} t={t} />} />
         <Route path="/leaderboard" element={<LeaderboardPage language={language} t={t} />} />
-        <Route path="/submit-tiktok" element={<TikTokSubmissionPage language={language} t={t} />} />
+        <Route path="/submit-tiktok" element={<TikTokSubmissionPage clearVersion={clearVersion} language={language} t={t} />} />
+        <Route path="/legal" element={<LegalSafetyPage t={t} />} />
         <Route path="/moderation" element={<ModerationPage language={language} t={t} />} />
         <Route path="/admin" element={<AdminOnlyRoute t={t} redirectPath="/admin"><AdminPage tasks={tasks} setTasks={setTasks} t={t} /></AdminOnlyRoute>} />
       </Routes>
