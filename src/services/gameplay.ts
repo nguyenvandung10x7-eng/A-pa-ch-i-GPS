@@ -1,11 +1,30 @@
 import type { ChallengeRun, ChallengeStatus, ChallengeTask, GpsPoint } from '../types/task';
 import { distanceMeters } from '../utils/geo';
-import { saveRun } from './history';
+import { getStoredHistoryRaw, restoreStoredHistoryRawWhileLocked, saveRunWhileLocked } from './history';
 import { getChallengeClearVersion } from './tasks';
+import { withChallengeStorageLock } from './challengeStorageLock';
 
 const PROGRESS_KEY = 'gps-challenge-progress';
 
 type Coordinates = Pick<GpsPoint, 'lat' | 'lng'>;
+
+type ProgressSnapshot = {
+  clearVersion: number;
+  gameId: string;
+  updatedAt: string;
+  activeRunId?: string;
+  activeRunStatus?: ChallengeRun['status'];
+};
+
+type RawStorageSnapshot = {
+  progressRaw: string | null;
+  historyRaw: string | null;
+};
+
+type MutationGate = {
+  actionClearVersion: number;
+  expected: ProgressSnapshot;
+};
 
 export type PlayerProgress = {
   gameId: string;
@@ -30,6 +49,35 @@ export type GpsVerificationResult = {
   status: GpsVerificationStatus;
 };
 
+export type ProgressMutationResult = {
+  progress: PlayerProgress;
+  stale: boolean;
+};
+
+export type StartGameResult = ProgressMutationResult & {
+  started: boolean;
+};
+
+export type NextChallengeResult = ProgressMutationResult & {
+  assigned: boolean;
+};
+
+export type CompleteChallengeResult = ProgressMutationResult & {
+  completed: boolean;
+  duplicate: boolean;
+  gps?: GpsVerificationResult;
+};
+
+export type SkipChallengeResult = ProgressMutationResult & {
+  skipped: boolean;
+  duplicate: boolean;
+};
+
+export type FailChallengeResult = ProgressMutationResult & {
+  failed: boolean;
+  duplicate: boolean;
+};
+
 const now = () => new Date().toISOString();
 const unique = (values: string[]) => [...new Set(values.filter(Boolean))];
 const normalizeClearVersion = (value: unknown): number => {
@@ -51,29 +99,55 @@ const buildNewGame = (clearVersion: number): PlayerProgress => ({
   attemptedTaskIds: [],
 });
 
-const removeKeyIfUnchanged = (key: string, expectedValue: string) => {
-  if (localStorage.getItem(key) === expectedValue) {
-    localStorage.removeItem(key);
+const buildCurrentVersionGame = (): PlayerProgress => buildNewGame(getChallengeClearVersion());
+
+const buildSnapshot = (progress: Pick<PlayerProgress, 'clearVersion' | 'gameId' | 'updatedAt' | 'activeRun'>): ProgressSnapshot => ({
+  clearVersion: normalizeClearVersion(progress.clearVersion),
+  gameId: progress.gameId,
+  updatedAt: progress.updatedAt,
+  activeRunId: progress.activeRun?.id,
+  activeRunStatus: progress.activeRun?.status,
+});
+
+const matchesExpectedSnapshot = (persisted: PlayerProgress, expected: ProgressSnapshot): boolean => (
+  normalizeClearVersion(persisted.clearVersion) === expected.clearVersion
+  && persisted.gameId === expected.gameId
+  && persisted.updatedAt === expected.updatedAt
+  && persisted.activeRun?.id === expected.activeRunId
+  && persisted.activeRun?.status === expected.activeRunStatus
+);
+
+const captureMutationGate = (progress: PlayerProgress): MutationGate => ({
+  actionClearVersion: getChallengeClearVersion(),
+  expected: buildSnapshot(progress),
+});
+
+const captureRawStorageSnapshot = (): RawStorageSnapshot => ({
+  progressRaw: localStorage.getItem(PROGRESS_KEY),
+  historyRaw: getStoredHistoryRaw(),
+});
+
+const restoreProgressRawWhileLocked = (raw: string | null): void => {
+  if (raw === null) {
+    localStorage.removeItem(PROGRESS_KEY);
+    return;
   }
+  localStorage.setItem(PROGRESS_KEY, raw);
 };
 
-const writeProgress = (progress: PlayerProgress): boolean => {
-  const expectedVersion = normalizeClearVersion(progress.clearVersion);
-  const serialized = JSON.stringify(progress);
-  localStorage.setItem(PROGRESS_KEY, serialized);
-
-  if (getChallengeClearVersion() !== expectedVersion) {
-    removeKeyIfUnchanged(PROGRESS_KEY, serialized);
-    return false;
-  }
-
-  return true;
+const restoreRawStorageWhileLocked = (snapshot: RawStorageSnapshot): void => {
+  restoreProgressRawWhileLocked(snapshot.progressRaw);
+  restoreStoredHistoryRawWhileLocked(snapshot.historyRaw);
 };
 
-const recoverCurrentProgress = (tasks: ChallengeTask[] = []): PlayerProgress => {
-  const current = loadProgress(tasks);
-  if (current) return current;
-  return buildNewGame(getChallengeClearVersion());
+const persistProgressWhileLocked = (progress: PlayerProgress, expectedClearVersion: number): PlayerProgress | undefined => {
+  if (getChallengeClearVersion() !== expectedClearVersion) {
+    return undefined;
+  }
+
+  const next = { ...progress, clearVersion: expectedClearVersion };
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify(next));
+  return next;
 };
 
 export const isCurrentProgressVersion = (progress: Pick<PlayerProgress, 'clearVersion'>): boolean => (
@@ -150,19 +224,103 @@ const createRun = (task: ChallengeTask): ChallengeRun => ({
   score: 0,
 });
 
-const persistProgress = (progress: PlayerProgress, tasks: ChallengeTask[] = []): PlayerProgress => {
-  if (!isCurrentProgressVersion(progress)) {
-    return recoverCurrentProgress(tasks);
-  }
+const loadAuthoritativeProgressWhileLocked = (tasks: ChallengeTask[] = []): PlayerProgress => {
+  const stored = localStorage.getItem(PROGRESS_KEY);
+  if (!stored) return buildCurrentVersionGame();
 
-  if (writeProgress(progress)) {
-    return progress;
+  try {
+    const parsed = JSON.parse(stored) as unknown;
+    const sanitized = sanitizeProgress(parsed, tasks);
+    if (!sanitized) return buildCurrentVersionGame();
+    if (!isCurrentProgressVersion(sanitized)) return buildCurrentVersionGame();
+    return sanitized;
+  } catch {
+    return buildCurrentVersionGame();
   }
-
-  return recoverCurrentProgress(tasks);
 };
 
-export const createNewGame = (): PlayerProgress => persistProgress(buildNewGame(getChallengeClearVersion()));
+const assignRandomChallengeWhileLocked = (tasks: ChallengeTask[], progress: PlayerProgress): PlayerProgress => {
+  if (progress.activeRun?.status === 'active') return progress;
+
+  const availableTasks = getAvailableTasks(tasks, progress);
+  if (availableTasks.length === 0) {
+    const hasEnabledTasks = tasks.some((task) => task.enabled);
+    const persisted = persistProgressWhileLocked({
+      ...progress,
+      status: hasEnabledTasks ? 'completed' : 'pending',
+      activeRun: undefined,
+      updatedAt: now(),
+    }, progress.clearVersion);
+    return persisted ?? loadAuthoritativeProgressWhileLocked(tasks);
+  }
+
+  const task = availableTasks[Math.floor(Math.random() * availableTasks.length)];
+  const persisted = persistProgressWhileLocked({
+    ...progress,
+    status: 'active',
+    activeRun: createRun(task),
+    updatedAt: now(),
+  }, progress.clearVersion);
+  return persisted ?? loadAuthoritativeProgressWhileLocked(tasks);
+};
+
+const runLockedMutation = async <T>(
+  tasks: ChallengeTask[],
+  gate: MutationGate,
+  staleResultFactory: (authoritative: PlayerProgress) => T,
+  handler: (authoritative: PlayerProgress) => T,
+  options?: { ignoreSnapshotMismatch?: boolean },
+): Promise<T> => (
+  withChallengeStorageLock(() => {
+    const authoritative = loadAuthoritativeProgressWhileLocked(tasks);
+    if (getChallengeClearVersion() !== gate.actionClearVersion) {
+      return staleResultFactory(authoritative);
+    }
+
+    if (!options?.ignoreSnapshotMismatch && !matchesExpectedSnapshot(authoritative, gate.expected)) {
+      return staleResultFactory(authoritative);
+    }
+
+    const rawSnapshot = captureRawStorageSnapshot();
+    try {
+      return handler(authoritative);
+    } catch (error) {
+      try {
+        restoreRawStorageWhileLocked(rawSnapshot);
+      } catch {
+        // If rollback fails, preserve the original write error for caller handling.
+      }
+      throw error;
+    }
+  })
+);
+
+export const createNewGameWithChallenge = async (
+  tasks: ChallengeTask[],
+  expectedProgress: PlayerProgress,
+): Promise<StartGameResult> => {
+  const gate = captureMutationGate(expectedProgress);
+  return runLockedMutation(
+    tasks,
+    gate,
+    (authoritative) => ({ progress: authoritative, stale: true, started: false }),
+    () => {
+      // Explicit New Game intentionally supersedes prior in-version progress by lock order.
+      const fresh = buildNewGame(gate.actionClearVersion);
+      const persistedFresh = persistProgressWhileLocked(fresh, gate.actionClearVersion);
+      if (!persistedFresh) {
+        return { progress: loadAuthoritativeProgressWhileLocked(tasks), stale: true, started: false };
+      }
+
+      return {
+        progress: assignRandomChallengeWhileLocked(tasks, persistedFresh),
+        stale: false,
+        started: true,
+      };
+    },
+    { ignoreSnapshotMismatch: true },
+  );
+};
 
 export const loadProgress = (tasks: ChallengeTask[] = []): PlayerProgress | undefined => {
   const stored = localStorage.getItem(PROGRESS_KEY);
@@ -173,43 +331,30 @@ export const loadProgress = (tasks: ChallengeTask[] = []): PlayerProgress | unde
     const sanitized = sanitizeProgress(parsed, tasks);
     if (!sanitized) return undefined;
     if (!isCurrentProgressVersion(sanitized)) return undefined;
-    if (!writeProgress(sanitized)) return undefined;
     return sanitized;
   } catch {
     return undefined;
   }
 };
 
-export const loadOrCreateProgress = (tasks: ChallengeTask[] = []) => loadProgress(tasks) ?? createNewGame();
+export const loadOrCreateProgress = (tasks: ChallengeTask[] = []) => loadProgress(tasks) ?? buildCurrentVersionGame();
 
 export const getAvailableTasks = (tasks: ChallengeTask[], progress: PlayerProgress) => (
   tasks.filter((task) => task.enabled && !progress.completedTaskIds.includes(task.id) && !progress.skippedTaskIds.includes(task.id) && !progress.failedTaskIds.includes(task.id))
 );
 
-export const assignRandomChallenge = (tasks: ChallengeTask[], progress: PlayerProgress): PlayerProgress => {
-  if (!isCurrentProgressVersion(progress)) {
-    return loadOrCreateProgress(tasks);
-  }
-  if (progress.activeRun?.status === 'active') return progress;
-
-  const availableTasks = getAvailableTasks(tasks, progress);
-  if (availableTasks.length === 0) {
-    const hasEnabledTasks = tasks.some((task) => task.enabled);
-    return persistProgress({
-      ...progress,
-      status: hasEnabledTasks ? 'completed' : 'pending',
-      activeRun: undefined,
-      updatedAt: now(),
-    }, tasks);
-  }
-
-  const task = availableTasks[Math.floor(Math.random() * availableTasks.length)];
-  return persistProgress({
-    ...progress,
-    status: 'active',
-    activeRun: createRun(task),
-    updatedAt: now(),
-  }, tasks);
+export const assignRandomChallenge = async (tasks: ChallengeTask[], progress: PlayerProgress): Promise<NextChallengeResult> => {
+  const gate = captureMutationGate(progress);
+  return runLockedMutation(
+    tasks,
+    gate,
+    (authoritative) => ({ progress: authoritative, stale: true, assigned: false }),
+    (authoritative) => {
+      const next = assignRandomChallengeWhileLocked(tasks, authoritative);
+      const assigned = next.updatedAt !== authoritative.updatedAt || next.activeRun?.id !== authoritative.activeRun?.id;
+      return { progress: next, stale: false, assigned };
+    },
+  );
 };
 
 export const validateGps = (task: ChallengeTask, coordinates: Coordinates, accuracy?: number): GpsVerificationResult => {
@@ -224,136 +369,195 @@ export const validateGps = (task: ChallengeTask, coordinates: Coordinates, accur
   return { meters, accuracy, valid: true, status: 'verified' };
 };
 
-export const completeActiveChallenge = (progress: PlayerProgress, task: ChallengeTask, coordinates: Coordinates, accuracy?: number) => {
-  if (!isCurrentProgressVersion(progress)) {
-    return { progress: loadProgress() ?? createNewGame(), completed: false, duplicate: false, stale: true, gps: undefined };
-  }
-
+export const completeActiveChallenge = async (
+  progress: PlayerProgress,
+  tasks: ChallengeTask[],
+  task: ChallengeTask,
+  coordinates: Coordinates,
+  accuracy?: number,
+): Promise<CompleteChallengeResult> => {
   if (!progress.activeRun || progress.activeRun.status !== 'active') {
-    return { progress, completed: false, duplicate: true, stale: false, gps: undefined };
+    return { progress, stale: false, completed: false, duplicate: true };
   }
 
   if (progress.completedTaskIds.includes(task.id) || progress.skippedTaskIds.includes(task.id) || progress.failedTaskIds.includes(task.id)) {
-    return { progress, completed: false, duplicate: true, stale: false, gps: undefined };
+    return { progress, stale: false, completed: false, duplicate: true };
   }
 
   const gps = validateGps(task, coordinates, accuracy);
-  if (!gps.valid) return { progress, completed: false, duplicate: false, stale: false, gps };
-  if (!isCurrentProgressVersion(progress)) {
-    return { progress: loadProgress() ?? createNewGame(), completed: false, duplicate: false, stale: true, gps: undefined };
+  if (!gps.valid) {
+    return { progress, stale: false, completed: false, duplicate: false, gps };
   }
 
-  const completedAt = now();
-  const run: ChallengeRun = {
-    ...progress.activeRun,
-    status: 'completed',
-    outcome: 'completed',
-    completedAt,
-    gpsVerified: true,
-    score: task.points,
-  };
-  const saved = saveRun(run, progress.clearVersion);
-  if (!saved) {
-    return { progress: loadProgress() ?? createNewGame(), completed: false, duplicate: false, stale: true, gps: undefined };
-  }
+  const gate = captureMutationGate(progress);
+  return runLockedMutation(
+    tasks,
+    gate,
+    (authoritative) => ({ progress: authoritative, stale: true, completed: false, duplicate: false }),
+    (authoritative) => {
+      const activeRun = authoritative.activeRun;
+      if (!activeRun || activeRun.status !== 'active') {
+        return { progress: authoritative, stale: false, completed: false, duplicate: true };
+      }
 
-  const persisted = persistProgress({
-    ...progress,
-    status: 'completed',
-    score: progress.score + task.points,
-    activeRun: run,
-    completedTaskIds: unique([...progress.completedTaskIds, task.id]),
-    attemptedTaskIds: unique([...progress.attemptedTaskIds, task.id]),
-    updatedAt: completedAt,
-  });
-  if (persisted.clearVersion !== progress.clearVersion) {
-    return { progress: persisted, completed: false, duplicate: false, stale: true, gps: undefined };
-  }
+      const isKnownTask = tasks.some((candidate) => candidate.enabled && candidate.id === task.id);
+      if (!isKnownTask || activeRun.taskId !== task.id) {
+        return { progress: authoritative, stale: true, completed: false, duplicate: false };
+      }
 
-  return {
-    progress: persisted,
-    completed: true,
-    duplicate: false,
-    stale: false,
-    gps,
-  };
+      if (authoritative.completedTaskIds.includes(task.id) || authoritative.skippedTaskIds.includes(task.id) || authoritative.failedTaskIds.includes(task.id)) {
+        return { progress: authoritative, stale: false, completed: false, duplicate: true };
+      }
+
+      const completedAt = now();
+      const run: ChallengeRun = {
+        ...activeRun,
+        status: 'completed',
+        outcome: 'completed',
+        completedAt,
+        gpsVerified: true,
+        score: task.points,
+      };
+
+      const savedHistory = saveRunWhileLocked(run, gate.actionClearVersion);
+      if (!savedHistory) {
+        return { progress: loadAuthoritativeProgressWhileLocked(tasks), stale: true, completed: false, duplicate: false };
+      }
+
+      const outcomePersisted = persistProgressWhileLocked({
+        ...authoritative,
+        status: 'completed',
+        score: authoritative.score + task.points,
+        activeRun: run,
+        completedTaskIds: unique([...authoritative.completedTaskIds, task.id]),
+        attemptedTaskIds: unique([...authoritative.attemptedTaskIds, task.id]),
+        updatedAt: completedAt,
+      }, gate.actionClearVersion);
+
+      if (!outcomePersisted) {
+        return { progress: loadAuthoritativeProgressWhileLocked(tasks), stale: true, completed: false, duplicate: false };
+      }
+
+      return {
+        progress: assignRandomChallengeWhileLocked(tasks, outcomePersisted),
+        stale: false,
+        completed: true,
+        duplicate: false,
+        gps,
+      };
+    },
+  );
 };
 
-export const skipActiveChallenge = (progress: PlayerProgress) => {
-  if (!isCurrentProgressVersion(progress)) {
-    return { progress: loadProgress() ?? createNewGame(), skipped: false, duplicate: false, stale: true };
-  }
-
+export const skipActiveChallenge = async (tasks: ChallengeTask[], progress: PlayerProgress): Promise<SkipChallengeResult> => {
   if (!progress.activeRun || progress.activeRun.status !== 'active') {
-    return { progress, skipped: false, duplicate: true, stale: false };
+    return { progress, stale: false, skipped: false, duplicate: true };
   }
 
-  const taskId = progress.activeRun.taskId;
-  if (progress.completedTaskIds.includes(taskId) || progress.skippedTaskIds.includes(taskId) || progress.failedTaskIds.includes(taskId)) {
-    return { progress, skipped: false, duplicate: true, stale: false };
-  }
+  const gate = captureMutationGate(progress);
+  return runLockedMutation(
+    tasks,
+    gate,
+    (authoritative) => ({ progress: authoritative, stale: true, skipped: false, duplicate: false }),
+    (authoritative) => {
+      const activeRun = authoritative.activeRun;
+      if (!activeRun || activeRun.status !== 'active') {
+        return { progress: authoritative, stale: false, skipped: false, duplicate: true };
+      }
 
-  const skippedAt = now();
-  const run: ChallengeRun = {
-    ...progress.activeRun,
-    status: 'skipped',
-    outcome: 'skipped',
-    skippedAt,
-    gpsVerified: false,
-    score: 0,
-  };
-  const saved = saveRun(run, progress.clearVersion);
-  if (!saved) {
-    return { progress: loadProgress() ?? createNewGame(), skipped: false, duplicate: false, stale: true };
-  }
+      const currentTaskId = activeRun.taskId;
+      if (authoritative.completedTaskIds.includes(currentTaskId) || authoritative.skippedTaskIds.includes(currentTaskId) || authoritative.failedTaskIds.includes(currentTaskId)) {
+        return { progress: authoritative, stale: false, skipped: false, duplicate: true };
+      }
 
-  const persisted = persistProgress({
-    ...progress,
-    status: 'skipped',
-    activeRun: run,
-    skippedTaskIds: unique([...progress.skippedTaskIds, taskId]),
-    attemptedTaskIds: unique([...progress.attemptedTaskIds, taskId]),
-    updatedAt: skippedAt,
-  });
-  if (persisted.clearVersion !== progress.clearVersion) {
-    return { progress: persisted, skipped: false, duplicate: false, stale: true };
-  }
+      const skippedAt = now();
+      const run: ChallengeRun = {
+        ...activeRun,
+        status: 'skipped',
+        outcome: 'skipped',
+        skippedAt,
+        gpsVerified: false,
+        score: 0,
+      };
 
-  return {
-    progress: persisted,
-    skipped: true,
-    duplicate: false,
-    stale: false,
-  };
+      const savedHistory = saveRunWhileLocked(run, gate.actionClearVersion);
+      if (!savedHistory) {
+        return { progress: loadAuthoritativeProgressWhileLocked(tasks), stale: true, skipped: false, duplicate: false };
+      }
+
+      const outcomePersisted = persistProgressWhileLocked({
+        ...authoritative,
+        status: 'skipped',
+        activeRun: run,
+        skippedTaskIds: unique([...authoritative.skippedTaskIds, currentTaskId]),
+        attemptedTaskIds: unique([...authoritative.attemptedTaskIds, currentTaskId]),
+        updatedAt: skippedAt,
+      }, gate.actionClearVersion);
+
+      if (!outcomePersisted) {
+        return { progress: loadAuthoritativeProgressWhileLocked(tasks), stale: true, skipped: false, duplicate: false };
+      }
+
+      return {
+        progress: assignRandomChallengeWhileLocked(tasks, outcomePersisted),
+        stale: false,
+        skipped: true,
+        duplicate: false,
+      };
+    },
+  );
 };
 
-export const failActiveChallenge = (progress: PlayerProgress) => {
-  if (!isCurrentProgressVersion(progress)) {
-    return { progress: loadProgress() ?? createNewGame(), stale: true };
+export const failActiveChallenge = async (tasks: ChallengeTask[], progress: PlayerProgress): Promise<FailChallengeResult> => {
+  if (!progress.activeRun || progress.activeRun.status !== 'active') {
+    return { progress, stale: false, failed: false, duplicate: true };
   }
 
-  if (!progress.activeRun || progress.activeRun.status !== 'active') return { progress, stale: false };
+  const gate = captureMutationGate(progress);
+  return runLockedMutation(
+    tasks,
+    gate,
+    (authoritative) => ({ progress: authoritative, stale: true, failed: false, duplicate: false }),
+    (authoritative) => {
+      const activeRun = authoritative.activeRun;
+      if (!activeRun || activeRun.status !== 'active') {
+        return { progress: authoritative, stale: false, failed: false, duplicate: true };
+      }
 
-  const failedAt = now();
-  const run: ChallengeRun = { ...progress.activeRun, status: 'failed', outcome: 'failed', failedAt };
-  const saved = saveRun(run, progress.clearVersion);
-  if (!saved) {
-    return { progress: loadProgress() ?? createNewGame(), stale: true };
-  }
+      const failedAt = now();
+      const run: ChallengeRun = {
+        ...activeRun,
+        status: 'failed',
+        outcome: 'failed',
+        failedAt,
+      };
 
-  const persisted = persistProgress({
-    ...progress,
-    status: 'failed',
-    activeRun: run,
-    failedTaskIds: unique([...progress.failedTaskIds, progress.activeRun.taskId]),
-    attemptedTaskIds: unique([...progress.attemptedTaskIds, progress.activeRun.taskId]),
-    updatedAt: failedAt,
-  });
-  if (persisted.clearVersion !== progress.clearVersion) {
-    return { progress: persisted, stale: true };
-  }
+      const savedHistory = saveRunWhileLocked(run, gate.actionClearVersion);
+      if (!savedHistory) {
+        return { progress: loadAuthoritativeProgressWhileLocked(tasks), stale: true, failed: false, duplicate: false };
+      }
 
-  return { progress: persisted, stale: false };
+      const outcomePersisted = persistProgressWhileLocked({
+        ...authoritative,
+        status: 'failed',
+        activeRun: run,
+        failedTaskIds: unique([...authoritative.failedTaskIds, activeRun.taskId]),
+        attemptedTaskIds: unique([...authoritative.attemptedTaskIds, activeRun.taskId]),
+        updatedAt: failedAt,
+      }, gate.actionClearVersion);
+
+      if (!outcomePersisted) {
+        return { progress: loadAuthoritativeProgressWhileLocked(tasks), stale: true, failed: false, duplicate: false };
+      }
+
+      return {
+        progress: assignRandomChallengeWhileLocked(tasks, outcomePersisted),
+        stale: false,
+        failed: true,
+        duplicate: false,
+      };
+    },
+  );
 };
 
 export const getProgressSummary = (tasks: ChallengeTask[], progress: PlayerProgress) => {
