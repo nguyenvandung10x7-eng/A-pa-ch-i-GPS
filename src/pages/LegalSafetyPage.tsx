@@ -1,19 +1,28 @@
 import { useState } from 'react';
 import { ShieldAlert } from 'lucide-react';
 import { Card } from '../components/Card';
+import { ChallengeStorageLockUnavailableError } from '../services/challengeStorageLock';
 import { clearLocalChallengeData } from '../services/tasks';
 
 export const LegalSafetyPage = ({ t }: { t: (key: string) => string }) => {
   const [clearFeedback, setClearFeedback] = useState<string | null>(null);
 
-  const handleClearLocalData = () => {
+  const handleClearLocalData = async () => {
     const confirmed = window.confirm(t('legal.clear.confirm'));
     if (!confirmed) {
       return;
     }
 
-    clearLocalChallengeData();
-    setClearFeedback(t('legal.clear.success'));
+    try {
+      await clearLocalChallengeData();
+      setClearFeedback(t('legal.clear.success'));
+    } catch (error) {
+      if (error instanceof ChallengeStorageLockUnavailableError) {
+        setClearFeedback(t('legal.clear.lockUnavailable'));
+        return;
+      }
+      setClearFeedback(t('legal.clear.failed'));
+    }
   };
 
   return (
@@ -132,7 +141,7 @@ export const LegalSafetyPage = ({ t }: { t: (key: string) => string }) => {
 
         <button
           type="button"
-          onClick={handleClearLocalData}
+          onClick={() => { void handleClearLocalData(); }}
           className="mt-5 rounded-full bg-cyan-300 px-5 py-3 font-black text-slate-950 transition hover:bg-cyan-200"
         >
           {t('legal.clear.action')}

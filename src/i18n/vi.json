@@ -207,6 +207,8 @@
   "legal.clear.action": "Xóa dữ liệu thử thách cục bộ",
   "legal.clear.confirm": "Xóa dữ liệu thử thách cục bộ trên thiết bị này ngay bây giờ?",
   "legal.clear.success": "Đã xóa dữ liệu thử thách cục bộ khỏi trình duyệt này.",
+  "legal.clear.failed": "Hiện không thể xóa dữ liệu thử thách cục bộ. Vui lòng thử lại.",
+  "legal.clear.lockUnavailable": "Không thể xóa dữ liệu thử thách cục bộ trên trình duyệt này vì API khóa lưu trữ không khả dụng. Dữ liệu hiện có của bạn chưa bị thay đổi.",
   "moderation.title": "Hàng đợi kiểm duyệt TikTok",
   "moderation.heading": "Chỉ quản trị viên",
   "moderation.authLoading": "Đang kiểm tra tài khoản của bạn...",

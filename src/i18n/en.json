@@ -207,6 +207,8 @@
   "legal.clear.action": "Clear local challenge data",
   "legal.clear.confirm": "Clear local challenge data on this device now?",
   "legal.clear.success": "Local challenge data was cleared from this browser.",
+  "legal.clear.failed": "Unable to clear local challenge data right now. Please try again.",
+  "legal.clear.lockUnavailable": "Unable to clear local challenge data in this browser because the storage lock API is unavailable. Your existing data was not changed.",
   "moderation.title": "TikTok moderation queue",
   "moderation.heading": "Admin only",
   "moderation.authLoading": "Checking your account...",
