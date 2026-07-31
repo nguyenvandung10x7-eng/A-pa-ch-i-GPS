@@ -1,10 +1,20 @@
 import type { ChallengeRun, ChallengeStatus, ChallengeTask, GpsPoint } from '../types/task';
 import { distanceMeters } from '../utils/geo';
-import { getStoredHistoryRaw, restoreStoredHistoryRawWhileLocked, saveRunWhileLocked } from './history';
-import { getChallengeClearVersion } from './tasks';
+import {
+  getStoredHistoryRawV2,
+  loadLegacyHistoryForVersion,
+  restoreStoredHistoryV2RawWhileLocked,
+  saveRunWhileLocked,
+} from './history';
+import {
+  CHALLENGE_HISTORY_KEY_V2,
+  CHALLENGE_PROGRESS_KEY_LEGACY,
+  CHALLENGE_PROGRESS_KEY_V2,
+  CHALLENGE_STORAGE_PROTOCOL_KEY,
+  CHALLENGE_STORAGE_PROTOCOL_V2,
+  getChallengeClearVersion,
+} from './tasks';
 import { withChallengeStorageLock } from './challengeStorageLock';
-
-const PROGRESS_KEY = 'gps-challenge-progress';
 
 type Coordinates = Pick<GpsPoint, 'lat' | 'lng'>;
 
@@ -17,8 +27,9 @@ type ProgressSnapshot = {
 };
 
 type RawStorageSnapshot = {
-  progressRaw: string | null;
-  historyRaw: string | null;
+  protocolRaw: string | null;
+  v2ProgressRaw: string | null;
+  v2HistoryRaw: string | null;
 };
 
 type MutationGate = {
@@ -132,21 +143,23 @@ const captureMutationGate = (progress: PlayerProgress): MutationGate => ({
 });
 
 const captureRawStorageSnapshot = (): RawStorageSnapshot => ({
-  progressRaw: localStorage.getItem(PROGRESS_KEY),
-  historyRaw: getStoredHistoryRaw(),
+  protocolRaw: localStorage.getItem(CHALLENGE_STORAGE_PROTOCOL_KEY),
+  v2ProgressRaw: localStorage.getItem(CHALLENGE_PROGRESS_KEY_V2),
+  v2HistoryRaw: getStoredHistoryRawV2(),
 });
 
-const restoreProgressRawWhileLocked = (raw: string | null): void => {
+const restoreKeyWhileLocked = (key: string, raw: string | null): void => {
   if (raw === null) {
-    localStorage.removeItem(PROGRESS_KEY);
+    localStorage.removeItem(key);
     return;
   }
-  localStorage.setItem(PROGRESS_KEY, raw);
+  localStorage.setItem(key, raw);
 };
 
 const restoreRawStorageWhileLocked = (snapshot: RawStorageSnapshot): void => {
-  restoreProgressRawWhileLocked(snapshot.progressRaw);
-  restoreStoredHistoryRawWhileLocked(snapshot.historyRaw);
+  restoreKeyWhileLocked(CHALLENGE_STORAGE_PROTOCOL_KEY, snapshot.protocolRaw);
+  restoreKeyWhileLocked(CHALLENGE_PROGRESS_KEY_V2, snapshot.v2ProgressRaw);
+  restoreStoredHistoryV2RawWhileLocked(snapshot.v2HistoryRaw);
 };
 
 const persistProgressWhileLocked = (progress: PlayerProgress, expectedClearVersion: number): PlayerProgress | undefined => {
@@ -155,7 +168,7 @@ const persistProgressWhileLocked = (progress: PlayerProgress, expectedClearVersi
   }
 
   const next = { ...progress, clearVersion: expectedClearVersion };
-  localStorage.setItem(PROGRESS_KEY, JSON.stringify(next));
+  localStorage.setItem(CHALLENGE_PROGRESS_KEY_V2, JSON.stringify(next));
   return next;
 };
 
@@ -247,19 +260,53 @@ const createRun = (task: ChallengeTask): ChallengeRun => ({
   score: 0,
 });
 
-const loadAuthoritativeProgressWhileLocked = (tasks: ChallengeTask[] = []): AuthoritativeProgressState => {
-  const stored = localStorage.getItem(PROGRESS_KEY);
-  if (!stored) return { progress: buildCurrentVersionGame(), hasPersistedProgress: false };
+const readProgressFromKey = (key: string, tasks: ChallengeTask[]): PlayerProgress | undefined => {
+  const stored = localStorage.getItem(key);
+  if (!stored) return undefined;
 
   try {
     const parsed = JSON.parse(stored) as unknown;
     const sanitized = sanitizeProgress(parsed, tasks);
-    if (!sanitized) return { progress: buildCurrentVersionGame(), hasPersistedProgress: false };
-    if (!isCurrentProgressVersion(sanitized)) return { progress: buildCurrentVersionGame(), hasPersistedProgress: false };
-    return { progress: sanitized, hasPersistedProgress: true };
+    if (!sanitized) return undefined;
+    if (!isCurrentProgressVersion(sanitized)) return undefined;
+    return sanitized;
   } catch {
+    return undefined;
+  }
+};
+
+const loadV2AuthoritativeProgressWhileLocked = (tasks: ChallengeTask[]): AuthoritativeProgressState => {
+  const progress = readProgressFromKey(CHALLENGE_PROGRESS_KEY_V2, tasks);
+  if (!progress) {
     return { progress: buildCurrentVersionGame(), hasPersistedProgress: false };
   }
+  return { progress, hasPersistedProgress: true };
+};
+
+const migrateToProtocolV2WhileLocked = (tasks: ChallengeTask[]): AuthoritativeProgressState => {
+  const protocol = localStorage.getItem(CHALLENGE_STORAGE_PROTOCOL_KEY);
+  if (protocol === CHALLENGE_STORAGE_PROTOCOL_V2) {
+    return loadV2AuthoritativeProgressWhileLocked(tasks);
+  }
+
+  const currentClearVersion = getChallengeClearVersion();
+  const legacyProgress = readProgressFromKey(CHALLENGE_PROGRESS_KEY_LEGACY, tasks);
+  const legacyHistory = loadLegacyHistoryForVersion(currentClearVersion);
+
+  if (legacyProgress) {
+    localStorage.setItem(CHALLENGE_PROGRESS_KEY_V2, JSON.stringify({ ...legacyProgress, clearVersion: currentClearVersion }));
+  } else {
+    localStorage.removeItem(CHALLENGE_PROGRESS_KEY_V2);
+  }
+
+  if (legacyHistory.length > 0) {
+    localStorage.setItem(CHALLENGE_HISTORY_KEY_V2, JSON.stringify(legacyHistory.slice(0, 100)));
+  } else {
+    localStorage.removeItem(CHALLENGE_HISTORY_KEY_V2);
+  }
+
+  localStorage.setItem(CHALLENGE_STORAGE_PROTOCOL_KEY, CHALLENGE_STORAGE_PROTOCOL_V2);
+  return loadV2AuthoritativeProgressWhileLocked(tasks);
 };
 
 const assignRandomChallengeWhileLocked = (tasks: ChallengeTask[], progress: PlayerProgress): PlayerProgress => {
@@ -274,7 +321,7 @@ const assignRandomChallengeWhileLocked = (tasks: ChallengeTask[], progress: Play
       activeRun: undefined,
       updatedAt: now(),
     }, progress.clearVersion);
-    return persisted ?? loadAuthoritativeProgressWhileLocked(tasks);
+    return persisted ?? loadV2AuthoritativeProgressWhileLocked(tasks).progress;
   }
 
   const task = availableTasks[Math.floor(Math.random() * availableTasks.length)];
@@ -284,7 +331,7 @@ const assignRandomChallengeWhileLocked = (tasks: ChallengeTask[], progress: Play
     activeRun: createRun(task),
     updatedAt: now(),
   }, progress.clearVersion);
-  return persisted ?? loadAuthoritativeProgressWhileLocked(tasks);
+  return persisted ?? loadV2AuthoritativeProgressWhileLocked(tasks).progress;
 };
 
 const runLockedMutation = async <T>(
@@ -295,40 +342,44 @@ const runLockedMutation = async <T>(
   options?: { ignoreSnapshotMismatch?: boolean; allowBootstrapFromExpected?: boolean },
 ): Promise<T> => (
   withChallengeStorageLock(() => {
-    const authoritativeState = loadAuthoritativeProgressWhileLocked(tasks);
     if (getChallengeClearVersion() !== gate.actionClearVersion) {
-      return staleResultFactory(authoritativeState.progress);
+      const protocol = localStorage.getItem(CHALLENGE_STORAGE_PROTOCOL_KEY);
+      if (protocol === CHALLENGE_STORAGE_PROTOCOL_V2) {
+        return staleResultFactory(loadV2AuthoritativeProgressWhileLocked(tasks).progress);
+      }
+      return staleResultFactory(loadRenderProgress(tasks) ?? buildCurrentVersionGame());
     }
 
     const rawSnapshot = captureRawStorageSnapshot();
-    let authoritative = authoritativeState.progress;
-
-    if (!authoritativeState.hasPersistedProgress) {
-      if (!options?.allowBootstrapFromExpected) {
-        return staleResultFactory(authoritative);
-      }
-
-      if (gate.expected.clearVersion !== gate.actionClearVersion) {
-        return staleResultFactory(authoritative);
-      }
-
-      const bootstrapPersisted = persistProgressWhileLocked(gate.bootstrapProgress, gate.actionClearVersion);
-      if (!bootstrapPersisted) {
-        return staleResultFactory(loadAuthoritativeProgressWhileLocked(tasks).progress);
-      }
-
-      authoritative = bootstrapPersisted;
-    } else if (!options?.ignoreSnapshotMismatch && !matchesExpectedSnapshot(authoritative, gate.expected)) {
-      return staleResultFactory(authoritative);
-    }
-
     try {
+      const authoritativeState = migrateToProtocolV2WhileLocked(tasks);
+      let authoritative = authoritativeState.progress;
+
+      if (!authoritativeState.hasPersistedProgress) {
+        if (!options?.allowBootstrapFromExpected) {
+          return staleResultFactory(authoritative);
+        }
+
+        if (gate.expected.clearVersion !== gate.actionClearVersion) {
+          return staleResultFactory(authoritative);
+        }
+
+        const bootstrapPersisted = persistProgressWhileLocked(gate.bootstrapProgress, gate.actionClearVersion);
+        if (!bootstrapPersisted) {
+          return staleResultFactory(loadV2AuthoritativeProgressWhileLocked(tasks).progress);
+        }
+
+        authoritative = bootstrapPersisted;
+      } else if (!options?.ignoreSnapshotMismatch && !matchesExpectedSnapshot(authoritative, gate.expected)) {
+        return staleResultFactory(authoritative);
+      }
+
       return handler(authoritative);
     } catch (error) {
       try {
         restoreRawStorageWhileLocked(rawSnapshot);
       } catch {
-        // If rollback fails, preserve the original write error for caller handling.
+        // Keep the original write error if rollback restoration also fails.
       }
       throw error;
     }
@@ -349,7 +400,7 @@ export const createNewGameWithChallenge = async (
       const fresh = buildNewGame(gate.actionClearVersion);
       const persistedFresh = persistProgressWhileLocked(fresh, gate.actionClearVersion);
       if (!persistedFresh) {
-        return { progress: loadAuthoritativeProgressWhileLocked(tasks).progress, stale: true, started: false };
+        return { progress: loadV2AuthoritativeProgressWhileLocked(tasks).progress, stale: true, started: false };
       }
 
       return {
@@ -362,20 +413,15 @@ export const createNewGameWithChallenge = async (
   );
 };
 
-export const loadProgress = (tasks: ChallengeTask[] = []): PlayerProgress | undefined => {
-  const stored = localStorage.getItem(PROGRESS_KEY);
-  if (!stored) return undefined;
-
-  try {
-    const parsed = JSON.parse(stored) as unknown;
-    const sanitized = sanitizeProgress(parsed, tasks);
-    if (!sanitized) return undefined;
-    if (!isCurrentProgressVersion(sanitized)) return undefined;
-    return sanitized;
-  } catch {
-    return undefined;
+const loadRenderProgress = (tasks: ChallengeTask[] = []): PlayerProgress | undefined => {
+  const protocol = localStorage.getItem(CHALLENGE_STORAGE_PROTOCOL_KEY);
+  if (protocol === CHALLENGE_STORAGE_PROTOCOL_V2) {
+    return readProgressFromKey(CHALLENGE_PROGRESS_KEY_V2, tasks);
   }
+  return readProgressFromKey(CHALLENGE_PROGRESS_KEY_LEGACY, tasks);
 };
+
+export const loadProgress = (tasks: ChallengeTask[] = []): PlayerProgress | undefined => loadRenderProgress(tasks);
 
 export const loadOrCreateProgress = (tasks: ChallengeTask[] = []) => loadProgress(tasks) ?? buildCurrentVersionGame();
 
@@ -463,7 +509,7 @@ export const completeActiveChallenge = async (
 
       const savedHistory = saveRunWhileLocked(run, gate.actionClearVersion);
       if (!savedHistory) {
-        return { progress: loadAuthoritativeProgressWhileLocked(tasks).progress, stale: true, completed: false, duplicate: false };
+        return { progress: loadV2AuthoritativeProgressWhileLocked(tasks).progress, stale: true, completed: false, duplicate: false };
       }
 
       const outcomePersisted = persistProgressWhileLocked({
@@ -477,7 +523,7 @@ export const completeActiveChallenge = async (
       }, gate.actionClearVersion);
 
       if (!outcomePersisted) {
-        return { progress: loadAuthoritativeProgressWhileLocked(tasks).progress, stale: true, completed: false, duplicate: false };
+        return { progress: loadV2AuthoritativeProgressWhileLocked(tasks).progress, stale: true, completed: false, duplicate: false };
       }
 
       return {
@@ -524,7 +570,7 @@ export const skipActiveChallenge = async (tasks: ChallengeTask[], progress: Play
 
       const savedHistory = saveRunWhileLocked(run, gate.actionClearVersion);
       if (!savedHistory) {
-        return { progress: loadAuthoritativeProgressWhileLocked(tasks).progress, stale: true, skipped: false, duplicate: false };
+        return { progress: loadV2AuthoritativeProgressWhileLocked(tasks).progress, stale: true, skipped: false, duplicate: false };
       }
 
       const outcomePersisted = persistProgressWhileLocked({
@@ -537,7 +583,7 @@ export const skipActiveChallenge = async (tasks: ChallengeTask[], progress: Play
       }, gate.actionClearVersion);
 
       if (!outcomePersisted) {
-        return { progress: loadAuthoritativeProgressWhileLocked(tasks).progress, stale: true, skipped: false, duplicate: false };
+        return { progress: loadV2AuthoritativeProgressWhileLocked(tasks).progress, stale: true, skipped: false, duplicate: false };
       }
 
       return {
@@ -576,7 +622,7 @@ export const failActiveChallenge = async (tasks: ChallengeTask[], progress: Play
 
       const savedHistory = saveRunWhileLocked(run, gate.actionClearVersion);
       if (!savedHistory) {
-        return { progress: loadAuthoritativeProgressWhileLocked(tasks).progress, stale: true, failed: false, duplicate: false };
+        return { progress: loadV2AuthoritativeProgressWhileLocked(tasks).progress, stale: true, failed: false, duplicate: false };
       }
 
       const outcomePersisted = persistProgressWhileLocked({
@@ -589,7 +635,7 @@ export const failActiveChallenge = async (tasks: ChallengeTask[], progress: Play
       }, gate.actionClearVersion);
 
       if (!outcomePersisted) {
-        return { progress: loadAuthoritativeProgressWhileLocked(tasks).progress, stale: true, failed: false, duplicate: false };
+        return { progress: loadV2AuthoritativeProgressWhileLocked(tasks).progress, stale: true, failed: false, duplicate: false };
       }
 
       return {
