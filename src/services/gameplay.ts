@@ -32,6 +32,8 @@ type AuthoritativeProgressState = {
   hasPersistedProgress: boolean;
 };
 
+const LEGACY_TIMESTAMP_FALLBACK = '1970-01-01T00:00:00.000Z';
+
 export type PlayerProgress = {
   gameId: string;
   status: ChallengeStatus;
@@ -178,6 +180,10 @@ const normalizeTaskIds = (value: unknown): string[] => {
   return unique(value.filter((item): item is string => typeof item === 'string'));
 };
 
+const firstValidTimestamp = (...values: unknown[]): string | undefined => (
+  values.find((value): value is string => typeof value === 'string' && value.trim().length > 0)
+);
+
 const sanitizeProgress = (value: unknown, tasks: ChallengeTask[] = []): PlayerProgress | undefined => {
   if (!value || typeof value !== 'object') return undefined;
 
@@ -199,6 +205,16 @@ const sanitizeProgress = (value: unknown, tasks: ChallengeTask[] = []): PlayerPr
   const activeRunTaskId = typeof rawActiveRun?.taskId === 'string' ? rawActiveRun.taskId : undefined;
   const activeRunIsValid = Boolean(rawActiveRun && activeRunTaskId && (enabledTaskIds.size === 0 || enabledTaskIds.has(activeRunTaskId)) && rawActiveRun.status === 'active');
   const activeRun = activeRunIsValid ? rawActiveRun as ChallengeRun : undefined;
+  const startedAt = firstValidTimestamp(parsed.startedAt, rawActiveRun?.startedAt, LEGACY_TIMESTAMP_FALLBACK) ?? LEGACY_TIMESTAMP_FALLBACK;
+  const updatedAt = firstValidTimestamp(
+    parsed.updatedAt,
+    parsed.startedAt,
+    rawActiveRun?.completedAt,
+    rawActiveRun?.failedAt,
+    rawActiveRun?.skippedAt,
+    rawActiveRun?.startedAt,
+    LEGACY_TIMESTAMP_FALLBACK,
+  ) ?? LEGACY_TIMESTAMP_FALLBACK;
   const normalizedStatus = normalizeStatus(parsed.status);
   const status = normalizedStatus === 'active' && activeRun ? 'active' : normalizedStatus === 'completed' || normalizedStatus === 'failed' || normalizedStatus === 'skipped' ? normalizedStatus : 'pending';
 
@@ -206,8 +222,8 @@ const sanitizeProgress = (value: unknown, tasks: ChallengeTask[] = []): PlayerPr
     gameId: parsed.gameId,
     status,
     score: typeof parsed.score === 'number' && Number.isFinite(parsed.score) ? parsed.score : 0,
-    startedAt: typeof parsed.startedAt === 'string' ? parsed.startedAt : now(),
-    updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : now(),
+    startedAt,
+    updatedAt,
     clearVersion: normalizeClearVersion(parsed.clearVersion),
     activeRun,
     completedTaskIds,
@@ -276,7 +292,7 @@ const runLockedMutation = async <T>(
   gate: MutationGate,
   staleResultFactory: (authoritative: PlayerProgress) => T,
   handler: (authoritative: PlayerProgress) => T,
-  options?: { ignoreSnapshotMismatch?: boolean },
+  options?: { ignoreSnapshotMismatch?: boolean; allowBootstrapFromExpected?: boolean },
 ): Promise<T> => (
   withChallengeStorageLock(() => {
     const authoritativeState = loadAuthoritativeProgressWhileLocked(tasks);
@@ -288,6 +304,10 @@ const runLockedMutation = async <T>(
     let authoritative = authoritativeState.progress;
 
     if (!authoritativeState.hasPersistedProgress) {
+      if (!options?.allowBootstrapFromExpected) {
+        return staleResultFactory(authoritative);
+      }
+
       if (gate.expected.clearVersion !== gate.actionClearVersion) {
         return staleResultFactory(authoritative);
       }
@@ -338,7 +358,7 @@ export const createNewGameWithChallenge = async (
         started: true,
       };
     },
-    { ignoreSnapshotMismatch: true },
+    { ignoreSnapshotMismatch: true, allowBootstrapFromExpected: true },
   );
 };
 
@@ -374,6 +394,7 @@ export const assignRandomChallenge = async (tasks: ChallengeTask[], progress: Pl
       const assigned = next.updatedAt !== authoritative.updatedAt || next.activeRun?.id !== authoritative.activeRun?.id;
       return { progress: next, stale: false, assigned };
     },
+    { allowBootstrapFromExpected: true },
   );
 };
 
@@ -405,9 +426,6 @@ export const completeActiveChallenge = async (
   }
 
   const gps = validateGps(task, coordinates, accuracy);
-  if (!gps.valid) {
-    return { progress, stale: false, completed: false, duplicate: false, gps };
-  }
 
   const gate = captureMutationGate(progress);
   return runLockedMutation(
@@ -415,6 +433,10 @@ export const completeActiveChallenge = async (
     gate,
     (authoritative) => ({ progress: authoritative, stale: true, completed: false, duplicate: false }),
     (authoritative) => {
+      if (!gps.valid) {
+        return { progress: authoritative, stale: false, completed: false, duplicate: false, gps };
+      }
+
       const activeRun = authoritative.activeRun;
       if (!activeRun || activeRun.status !== 'active') {
         return { progress: authoritative, stale: false, completed: false, duplicate: true };
