@@ -212,6 +212,35 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
       });
   }, [musicTrackId, musicVolume]);
 
+  const playSelectedMusicTrack = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) {
+      return;
+    }
+
+    musicPrepareActiveRef.current = false;
+    musicPrepareSessionRef.current += 1;
+
+    const selected = MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0];
+    if (audio.dataset.trackId !== selected.id) {
+      audio.src = `/audio/${selected.fileName}`;
+      audio.dataset.trackId = selected.id;
+      audio.load();
+    }
+
+    audio.loop = true;
+    audio.volume = musicVolume;
+    audio.muted = false;
+
+    void audio.play()
+      .then(() => {
+        setMusicPlaybackError(false);
+      })
+      .catch(() => {
+        setMusicPlaybackError(true);
+      });
+  }, [musicTrackId, musicVolume]);
+
   useEffect(() => {
     window.addEventListener(GAMEPLAY_MUSIC_PREPARE_EVENT, prepareGameplayMusic);
     window.addEventListener(GAMEPLAY_MUSIC_ADVANCE_EVENT, advanceGameplayMusic);
@@ -235,31 +264,14 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     }
 
     setMusicEnabledPreference(true);
-    advanceGameplayMusic();
+    playSelectedMusicTrack();
   };
 
   const handleSelectTrack = async (trackId: string) => {
     setMusicTrackId(trackId);
 
-    const audio = audioRef.current;
-    if (!audio) {
-      return;
-    }
-
-    const selected = MUSIC_TRACKS.find((track) => track.id === trackId) ?? MUSIC_TRACKS[0];
-    if (audio.dataset.trackId !== selected.id) {
-      audio.src = `/audio/${selected.fileName}`;
-      audio.dataset.trackId = selected.id;
-      audio.load();
-    }
-
-    audio.loop = true;
-    audio.volume = musicVolume;
-
     if (musicIsPlaying) {
-      void audio.play().catch(() => {
-        setMusicPlaybackError(true);
-      });
+      playSelectedMusicTrack();
     }
   };
 
