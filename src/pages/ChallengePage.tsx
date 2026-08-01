@@ -203,6 +203,10 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           return;
         }
 
+        if (result.progress.activeRun?.status === 'active') {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
+        }
+
         setGpsStatus('idle');
         setMessage(result.progress.activeRun ? t('challenge.skipped') : t('challenge.allDone'));
       } catch (error) {
@@ -233,6 +237,10 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           setGpsStatus('idle');
           setMessage(t('challenge.duplicate'));
           return;
+        }
+
+        if (failedResult.progress.activeRun?.status === 'active') {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
         }
 
         setGpsStatus('idle');
