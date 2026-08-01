@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { Compass, Loader2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Compass, Loader2, Music2, Pause, Play, Volume2 } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdminStatus } from '../hooks/useAdminStatus';
@@ -8,10 +8,57 @@ import type { LanguageCode } from '../types/task';
 
 type LayoutProps = { children: ReactNode; language: LanguageCode; setLanguage: (language: LanguageCode) => void; t: (key: string) => string };
 
+type MusicTrack = { id: string; fileName: string; labelKey: string };
+type MusicSettings = { enabled: boolean; volume: number; trackId: string };
+
+const MUSIC_STORAGE_KEY = 'gps-music-settings-v1';
+const GAMEPLAY_MUSIC_ADVANCE_EVENT = 'gps:challenge-task-received';
+const MUSIC_TRACKS: MusicTrack[] = [
+  { id: 'hmong-ballad-1', fileName: 'hmong-ballad-1.mp3', labelKey: 'music.track.hmongBallad1' },
+  { id: 'hmong-ballad-2', fileName: 'hmong-ballad-2.mp3', labelKey: 'music.track.hmongBallad2' },
+  { id: 'thai-epic-1', fileName: 'thai-epic-1.mp3', labelKey: 'music.track.thaiEpic1' },
+  { id: 'thai-epic-2', fileName: 'thai-epic-2.mp3', labelKey: 'music.track.thaiEpic2' },
+  { id: 'thai-street-1', fileName: 'thai-street-1.mp3', labelKey: 'music.track.thaiStreet1' },
+  { id: 'thai-street-2', fileName: 'thai-street-2.mp3', labelKey: 'music.track.thaiStreet2' },
+];
+
+const DEFAULT_TRACK_ID = MUSIC_TRACKS[0].id;
+const DEFAULT_VOLUME = 0.25;
+
+const isKnownTrack = (trackId: string) => MUSIC_TRACKS.some((track) => track.id === trackId);
+
+const readMusicSettings = (): MusicSettings => {
+  if (typeof window === 'undefined') {
+    return { enabled: false, volume: DEFAULT_VOLUME, trackId: DEFAULT_TRACK_ID };
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(MUSIC_STORAGE_KEY);
+    if (!rawValue) {
+      return { enabled: false, volume: DEFAULT_VOLUME, trackId: DEFAULT_TRACK_ID };
+    }
+
+    const parsed = JSON.parse(rawValue) as Partial<MusicSettings>;
+    const nextVolume = Number.isFinite(parsed.volume) ? Math.max(0, Math.min(1, Number(parsed.volume))) : DEFAULT_VOLUME;
+    const nextTrackId = typeof parsed.trackId === 'string' && isKnownTrack(parsed.trackId) ? parsed.trackId : DEFAULT_TRACK_ID;
+    return { enabled: Boolean(parsed.enabled), volume: nextVolume, trackId: nextTrackId };
+  } catch {
+    return { enabled: false, volume: DEFAULT_VOLUME, trackId: DEFAULT_TRACK_ID };
+  }
+};
+
 export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
   const { user, loading, signIn, signOutUser } = useAuth();
   const { isAdmin, checkingAdmin } = useAdminStatus();
   const [authBusy, setAuthBusy] = useState(false);
+  const [musicPickerOpen, setMusicPickerOpen] = useState(false);
+  const [musicEnabledPreference, setMusicEnabledPreference] = useState(() => readMusicSettings().enabled);
+  const [musicVolume, setMusicVolume] = useState(() => readMusicSettings().volume);
+  const [musicTrackId, setMusicTrackId] = useState(() => readMusicSettings().trackId);
+  const [musicIsPlaying, setMusicIsPlaying] = useState(false);
+  const [musicPlaybackError, setMusicPlaybackError] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const selectedTrack = useMemo(() => MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0], [musicTrackId]);
   const navItems: Array<[string, string]> = [
     ['/challenge', 'nav.challenge'],
     ['/history', 'nav.history'],
@@ -42,6 +89,110 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     }
   };
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem(
+      MUSIC_STORAGE_KEY,
+      JSON.stringify({ enabled: musicEnabledPreference, volume: musicVolume, trackId: musicTrackId })
+    );
+  }, [musicEnabledPreference, musicTrackId, musicVolume]);
+
+  useEffect(() => {
+    if (!audioRef.current) {
+      return;
+    }
+
+    audioRef.current.volume = musicVolume;
+  }, [musicVolume]);
+
+  useEffect(() => {
+    if (!audioRef.current) {
+      return;
+    }
+
+    const audio = audioRef.current;
+    const handlePlay = () => setMusicIsPlaying(true);
+    const handlePause = () => setMusicIsPlaying(false);
+
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+
+    return () => {
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+    };
+  }, []);
+
+  const playTrack = useCallback(async (trackId: string, forcePlay = false) => {
+    if (!audioRef.current) {
+      return;
+    }
+
+    const nextTrack = MUSIC_TRACKS.find((track) => track.id === trackId) ?? MUSIC_TRACKS[0];
+    const audio = audioRef.current;
+    const wasPlaying = !audio.paused;
+
+    if (audio.dataset.trackId !== nextTrack.id) {
+      audio.src = `/audio/${nextTrack.fileName}`;
+      audio.dataset.trackId = nextTrack.id;
+      audio.load();
+    }
+
+    audio.loop = true;
+    audio.volume = musicVolume;
+
+    if (forcePlay || wasPlaying) {
+      try {
+        await audio.play();
+        setMusicPlaybackError(false);
+      } catch {
+        setMusicIsPlaying(false);
+        setMusicPlaybackError(true);
+      }
+    }
+  }, [musicVolume]);
+
+  useEffect(() => {
+    const handleGameplayMusicAdvance = () => {
+      const currentIndex = MUSIC_TRACKS.findIndex((track) => track.id === musicTrackId);
+      const normalizedIndex = currentIndex >= 0 ? currentIndex : 0;
+      const nextIndex = (normalizedIndex + 1) % MUSIC_TRACKS.length;
+      const nextTrackId = MUSIC_TRACKS[nextIndex].id;
+
+      setMusicTrackId(nextTrackId);
+      setMusicEnabledPreference(true);
+      void playTrack(nextTrackId, true);
+    };
+
+    window.addEventListener(GAMEPLAY_MUSIC_ADVANCE_EVENT, handleGameplayMusicAdvance);
+    return () => {
+      window.removeEventListener(GAMEPLAY_MUSIC_ADVANCE_EVENT, handleGameplayMusicAdvance);
+    };
+  }, [musicTrackId, playTrack]);
+
+  const handleToggleMusicEnabled = async () => {
+    if (!audioRef.current) {
+      return;
+    }
+
+    if (musicIsPlaying) {
+      audioRef.current.pause();
+      setMusicEnabledPreference(false);
+      return;
+    }
+
+    setMusicEnabledPreference(true);
+    await playTrack(musicTrackId, true);
+  };
+
+  const handleSelectTrack = async (trackId: string) => {
+    setMusicTrackId(trackId);
+    await playTrack(trackId, musicIsPlaying);
+  };
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#1f7aff55,transparent_32rem),linear-gradient(135deg,#06111f,#10223d_50%,#09101c)] text-white">
       <nav className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between">
@@ -54,6 +205,60 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
               {t(key)}
             </NavLink>
           ))}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMusicPickerOpen((value) => !value)}
+              className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-slate-100 transition hover:bg-white/20"
+              aria-expanded={musicPickerOpen}
+              aria-label={t('music.button')}
+            >
+              <Music2 className="h-4 w-4" />
+              {t('music.button')}
+            </button>
+            {musicPickerOpen ? (
+              <div className="absolute right-0 z-20 mt-2 w-64 rounded-2xl border border-white/20 bg-slate-950/95 p-3 shadow-xl backdrop-blur">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wide text-cyan-200">{t('music.panelTitle')}</span>
+                  <button
+                    type="button"
+                    onClick={handleToggleMusicEnabled}
+                    className="flex items-center gap-1 rounded-full bg-cyan-400 px-3 py-1 text-xs font-black text-slate-950 transition hover:bg-cyan-300"
+                  >
+                    {musicIsPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                    {musicIsPlaying ? t('music.off') : t('music.on')}
+                  </button>
+                </div>
+                <div className="mb-3 flex items-center gap-2">
+                  <Volume2 className="h-4 w-4 text-cyan-100" />
+                  <label className="text-xs text-slate-200" htmlFor="music-volume-slider">{t('music.volume')}</label>
+                  <input
+                    id="music-volume-slider"
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={musicVolume}
+                    onChange={(event) => setMusicVolume(Number(event.target.value))}
+                    className="w-full accent-cyan-300"
+                  />
+                </div>
+                <div className="flex max-h-40 flex-col gap-1 overflow-y-auto">
+                  {MUSIC_TRACKS.map((track) => (
+                    <button
+                      key={track.id}
+                      type="button"
+                      onClick={() => void handleSelectTrack(track.id)}
+                      className={`rounded-lg px-2 py-1.5 text-left text-xs font-semibold transition ${track.id === selectedTrack.id ? 'bg-cyan-300 text-slate-950' : 'bg-white/5 text-slate-100 hover:bg-white/15'}`}
+                    >
+                      {t(track.labelKey)}
+                    </button>
+                  ))}
+                </div>
+                {musicPlaybackError ? <p className="mt-2 text-xs text-amber-200">{t('music.playBlocked')}</p> : null}
+              </div>
+            ) : null}
+          </div>
           <LanguageSwitch language={language} label={t('language.switch')} onChange={setLanguage} />
           {loading ? (
             <span className="rounded-full border border-white/20 px-3 py-2 text-slate-200">
@@ -96,6 +301,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
           </div>
         </div>
       </footer>
+      <audio ref={audioRef} preload="none" loop />
     </div>
   );
 };

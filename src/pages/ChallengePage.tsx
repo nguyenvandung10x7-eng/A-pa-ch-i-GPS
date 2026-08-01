@@ -20,6 +20,7 @@ import { GeolocationRequestError, getCurrentPosition } from '../utils/geo';
 const findRunTask = (tasks: ChallengeTask[], taskId?: string) => tasks.find((task) => task.id === taskId);
 
 type GpsStatus = 'idle' | 'requestingPermission' | 'locating' | 'permissionDenied' | 'unavailable' | 'inaccurateLocation' | 'outsideTargetRadius' | 'verified';
+const GAMEPLAY_MUSIC_ADVANCE_EVENT = 'gps:challenge-task-received';
 
 export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: ChallengeTask[]; clearVersion: number; language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const activeTasks = useMemo(() => tasks.filter((task) => task.enabled), [tasks]);
@@ -56,6 +57,10 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   };
 
   const startGame = async () => {
+    if (isMutating) return;
+
+    window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
+
     await runMutation(async () => {
       try {
         const result = await createNewGameWithChallenge(activeTasks, progress);
@@ -80,6 +85,10 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   };
 
   const startNextChallenge = async () => {
+    if (isMutating) return;
+
+    window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
+
     await runMutation(async () => {
       try {
         const result = progress.status === 'completed' && summary.remainingCount === 0
@@ -142,6 +151,10 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           setGpsStatus(nextStatus);
           setMessage(result.gps.status === 'inaccurateLocation' ? t('challenge.status.inaccurateLocation') : t('challenge.status.outsideTargetRadius'));
           return;
+        }
+
+        if (result.completed) {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
         }
 
         setGpsStatus('verified');
