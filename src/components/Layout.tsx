@@ -10,7 +10,7 @@ type LayoutProps = { children: ReactNode; language: LanguageCode; setLanguage: (
 
 type MusicTrack = { id: string; fileName: string; labelKey: string };
 type MusicSettings = { enabled: boolean; volume: number; trackId: string };
-type MusicPreparationSnapshot = { trackId: string | null; currentTime: number; wasPlaying: boolean };
+type MusicPreparationSnapshot = { trackId: string | null; currentTime: number; wasPlaying: boolean; wasMuted: boolean; previousVolume: number };
 
 const MUSIC_STORAGE_KEY = 'gps-music-settings-v1';
 const GAMEPLAY_MUSIC_PREPARE_EVENT = 'gps:challenge-music-prepare';
@@ -68,6 +68,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const musicPrepareSessionRef = useRef(0);
   const musicPrepareActiveRef = useRef(false);
+  const musicPreparedTrackIdRef = useRef<string | null>(null);
   const musicPreparationSnapshotRef = useRef<MusicPreparationSnapshot | null>(null);
   const selectedTrack = useMemo(() => MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0], [musicTrackId]);
   const navItems: Array<[string, string]> = [
@@ -139,17 +140,30 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
 
   const prepareGameplayMusic = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio || !audio.paused) {
+    if (!audio) {
       return;
     }
 
+    const previousTrackId = audio.dataset.trackId ?? null;
+    const previousCurrentTime = audio.currentTime;
+    const previousWasPlaying = !audio.paused;
+    const previousWasMuted = audio.muted;
+    const previousVolume = audio.volume;
+
     musicPreparationSnapshotRef.current = {
-      trackId: audio.dataset.trackId ?? null,
-      currentTime: audio.currentTime,
-      wasPlaying: !audio.paused,
+      trackId: previousTrackId,
+      currentTime: previousCurrentTime,
+      wasPlaying: previousWasPlaying,
+      wasMuted: previousWasMuted,
+      previousVolume,
     };
 
-    const preparedTrack = MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0];
+    const currentIndex = MUSIC_TRACKS.findIndex((track) => track.id === musicTrackId);
+    const normalizedIndex = currentIndex >= 0 ? currentIndex : 0;
+    const nextIndex = (normalizedIndex + 1) % MUSIC_TRACKS.length;
+    const preparedTrack = MUSIC_TRACKS[nextIndex];
+    musicPreparedTrackIdRef.current = preparedTrack.id;
+
     if (audio.dataset.trackId !== preparedTrack.id) {
       audio.src = `/audio/${preparedTrack.fileName}`;
       audio.dataset.trackId = preparedTrack.id;
@@ -162,7 +176,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
 
     audio.loop = true;
     audio.currentTime = 0;
-    audio.volume = musicVolume;
+    audio.volume = previousVolume;
     audio.muted = true;
 
     void audio.play().catch(() => {
@@ -170,7 +184,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
         setMusicPlaybackError(true);
       }
     });
-  }, [musicTrackId, musicVolume]);
+  }, [musicTrackId]);
 
   const cancelGameplayMusicPreparation = useCallback(() => {
     const audio = audioRef.current;
@@ -182,6 +196,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
 
     musicPrepareActiveRef.current = false;
     musicPrepareSessionRef.current += 1;
+    musicPreparedTrackIdRef.current = null;
 
     audio.pause();
 
@@ -202,6 +217,9 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
 
     if (snapshot) {
       const restoreSnapshotState = () => {
+        audio.muted = snapshot.wasMuted;
+        audio.volume = snapshot.previousVolume;
+
         try {
           audio.currentTime = snapshot.currentTime;
         } catch {
@@ -221,8 +239,6 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
         audio.addEventListener('loadedmetadata', restoreSnapshotState, { once: true });
       }
     }
-
-    audio.muted = false;
     musicPreparationSnapshotRef.current = null;
     setMusicPlaybackError(false);
   }, []);
@@ -233,17 +249,33 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
       return;
     }
 
-    musicPrepareActiveRef.current = false;
-    musicPrepareSessionRef.current += 1;
-    musicPreparationSnapshotRef.current = null;
-
     const currentIndex = MUSIC_TRACKS.findIndex((track) => track.id === musicTrackId);
     const normalizedIndex = currentIndex >= 0 ? currentIndex : 0;
     const nextIndex = (normalizedIndex + 1) % MUSIC_TRACKS.length;
-    const nextTrack = MUSIC_TRACKS[nextIndex];
+    const fallbackNextTrack = MUSIC_TRACKS[nextIndex];
+    const preparedTrack = MUSIC_TRACKS.find((track) => track.id === musicPreparedTrackIdRef.current);
+    const nextTrack = preparedTrack ?? fallbackNextTrack;
 
     setMusicTrackId(nextTrack.id);
     setMusicEnabledPreference(true);
+
+    const canUsePreparedPlayback =
+      preparedTrack !== undefined
+      && audio.dataset.trackId === preparedTrack.id
+      && !audio.paused;
+
+    musicPrepareActiveRef.current = false;
+    musicPrepareSessionRef.current += 1;
+    musicPreparedTrackIdRef.current = null;
+    musicPreparationSnapshotRef.current = null;
+
+    if (canUsePreparedPlayback) {
+      audio.loop = true;
+      audio.muted = false;
+      audio.volume = musicVolume;
+      setMusicPlaybackError(false);
+      return;
+    }
 
     audio.pause();
     if (audio.dataset.trackId !== nextTrack.id) {
@@ -275,6 +307,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
 
     musicPrepareActiveRef.current = false;
     musicPrepareSessionRef.current += 1;
+    musicPreparedTrackIdRef.current = null;
     musicPreparationSnapshotRef.current = null;
 
     const selectedTrackId = trackId ?? musicTrackId;
