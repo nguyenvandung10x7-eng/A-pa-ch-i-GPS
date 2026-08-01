@@ -22,6 +22,8 @@ const MUSIC_TRACKS: MusicTrack[] = [
   { id: 'thai-epic-2', fileName: 'thai-epic-2.mp3', labelKey: 'music.track.thaiEpic2' },
   { id: 'thai-street-1', fileName: 'thai-street-1.mp3', labelKey: 'music.track.thaiStreet1' },
   { id: 'thai-street-2', fileName: 'thai-street-2.mp3', labelKey: 'music.track.thaiStreet2' },
+  { id: 'HMONGdisco', fileName: 'HMONGdisco.mp3', labelKey: 'music.track.HMONGdisco' },
+  { id: 'HMONGdisco2', fileName: 'HMONGdisco2.mp3', labelKey: 'music.track.HMONGdisco2' },
 ];
 
 const DEFAULT_TRACK_ID = MUSIC_TRACKS[0].id;
@@ -212,7 +214,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
       });
   }, [musicTrackId, musicVolume]);
 
-  const playSelectedMusicTrack = useCallback(() => {
+  const playSelectedMusicTrack = useCallback((trackId?: string, restart = false) => {
     const audio = audioRef.current;
     if (!audio) {
       return;
@@ -221,7 +223,8 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     musicPrepareActiveRef.current = false;
     musicPrepareSessionRef.current += 1;
 
-    const selected = MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0];
+    const selectedTrackId = trackId ?? musicTrackId;
+    const selected = MUSIC_TRACKS.find((track) => track.id === selectedTrackId) ?? MUSIC_TRACKS[0];
     if (audio.dataset.trackId !== selected.id) {
       audio.src = `/audio/${selected.fileName}`;
       audio.dataset.trackId = selected.id;
@@ -231,6 +234,10 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     audio.loop = true;
     audio.volume = musicVolume;
     audio.muted = false;
+
+    if (restart) {
+      audio.currentTime = 0;
+    }
 
     void audio.play()
       .then(() => {
@@ -271,7 +278,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     setMusicTrackId(trackId);
 
     if (musicIsPlaying) {
-      playSelectedMusicTrack();
+      playSelectedMusicTrack(trackId, true);
     }
   };
 
