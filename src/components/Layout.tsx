@@ -10,6 +10,7 @@ type LayoutProps = { children: ReactNode; language: LanguageCode; setLanguage: (
 
 type MusicTrack = { id: string; fileName: string; labelKey: string };
 type MusicSettings = { enabled: boolean; volume: number; trackId: string };
+type MusicPreparationSnapshot = { trackId: string | null; currentTime: number; wasPlaying: boolean };
 
 const MUSIC_STORAGE_KEY = 'gps-music-settings-v1';
 const GAMEPLAY_MUSIC_PREPARE_EVENT = 'gps:challenge-music-prepare';
@@ -67,6 +68,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const musicPrepareSessionRef = useRef(0);
   const musicPrepareActiveRef = useRef(false);
+  const musicPreparationSnapshotRef = useRef<MusicPreparationSnapshot | null>(null);
   const selectedTrack = useMemo(() => MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0], [musicTrackId]);
   const navItems: Array<[string, string]> = [
     ['/challenge', 'nav.challenge'],
@@ -141,6 +143,12 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
       return;
     }
 
+    musicPreparationSnapshotRef.current = {
+      trackId: audio.dataset.trackId ?? null,
+      currentTime: audio.currentTime,
+      wasPlaying: !audio.paused,
+    };
+
     const preparedTrack = MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0];
     if (audio.dataset.trackId !== preparedTrack.id) {
       audio.src = `/audio/${preparedTrack.fileName}`;
@@ -170,11 +178,52 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
       return;
     }
 
+    const snapshot = musicPreparationSnapshotRef.current;
+
     musicPrepareActiveRef.current = false;
     musicPrepareSessionRef.current += 1;
+
     audio.pause();
-    audio.currentTime = 0;
+
+    if (snapshot?.trackId) {
+      const previousTrack = MUSIC_TRACKS.find((track) => track.id === snapshot.trackId);
+      if (previousTrack && audio.dataset.trackId !== previousTrack.id) {
+        audio.src = `/audio/${previousTrack.fileName}`;
+        audio.dataset.trackId = previousTrack.id;
+        audio.load();
+      }
+    }
+
+    if (snapshot && !snapshot.trackId) {
+      audio.removeAttribute('src');
+      audio.removeAttribute('data-track-id');
+      audio.load();
+    }
+
+    if (snapshot) {
+      const restoreSnapshotState = () => {
+        try {
+          audio.currentTime = snapshot.currentTime;
+        } catch {
+          audio.currentTime = 0;
+        }
+
+        if (snapshot.wasPlaying) {
+          void audio.play().catch(() => {
+            setMusicPlaybackError(true);
+          });
+        }
+      };
+
+      if (audio.readyState >= 1) {
+        restoreSnapshotState();
+      } else {
+        audio.addEventListener('loadedmetadata', restoreSnapshotState, { once: true });
+      }
+    }
+
     audio.muted = false;
+    musicPreparationSnapshotRef.current = null;
     setMusicPlaybackError(false);
   }, []);
 
@@ -186,6 +235,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
 
     musicPrepareActiveRef.current = false;
     musicPrepareSessionRef.current += 1;
+    musicPreparationSnapshotRef.current = null;
 
     const currentIndex = MUSIC_TRACKS.findIndex((track) => track.id === musicTrackId);
     const normalizedIndex = currentIndex >= 0 ? currentIndex : 0;
@@ -225,6 +275,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
 
     musicPrepareActiveRef.current = false;
     musicPrepareSessionRef.current += 1;
+    musicPreparationSnapshotRef.current = null;
 
     const selectedTrackId = trackId ?? musicTrackId;
     const selected = MUSIC_TRACKS.find((track) => track.id === selectedTrackId) ?? MUSIC_TRACKS[0];
