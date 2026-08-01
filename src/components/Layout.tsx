@@ -22,8 +22,11 @@ const MUSIC_TRACKS: MusicTrack[] = [
   { id: 'thai-epic-2', fileName: 'thai-epic-2.mp3', labelKey: 'music.track.thaiEpic2' },
   { id: 'thai-street-1', fileName: 'thai-street-1.mp3', labelKey: 'music.track.thaiStreet1' },
   { id: 'thai-street-2', fileName: 'thai-street-2.mp3', labelKey: 'music.track.thaiStreet2' },
-  { id: 'HMONGdisco', fileName: 'HMONGdisco.mp3', labelKey: 'music.track.HMONGdisco' },
-  { id: 'HMONGdisco2', fileName: 'HMONGdisco2.mp3', labelKey: 'music.track.HMONGdisco2' },
+  { id: 'hmongdisco', fileName: 'HMONGdisco.mp3', labelKey: 'music.track.hmongdisco' },
+  { id: 'hmongdisco2', fileName: 'HMONGdisco2.mp3', labelKey: 'music.track.hmongdisco2' },
+  { id: 'hatthai', fileName: 'HATTHAI.mp3', labelKey: 'music.track.hatthai' },
+  { id: 'hmong', fileName: 'HMONG.mp3', labelKey: 'music.track.hmong' },
+  { id: 'hmongrock2', fileName: 'HMONGrock2.mp3', labelKey: 'music.track.hmongrock2' },
 ];
 
 const DEFAULT_TRACK_ID = MUSIC_TRACKS[0].id;
