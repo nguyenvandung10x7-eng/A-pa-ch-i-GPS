@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Flag, RotateCcw, ShieldCheck, Trophy, XCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { TaskMap } from '../components/TaskMap';
@@ -23,13 +24,16 @@ type GpsStatus = 'idle' | 'requestingPermission' | 'locating' | 'permissionDenie
 const GAMEPLAY_MUSIC_PREPARE_EVENT = 'gps:challenge-music-prepare';
 const GAMEPLAY_MUSIC_ADVANCE_EVENT = 'gps:challenge-task-received';
 const GAMEPLAY_MUSIC_CANCEL_EVENT = 'gps:challenge-music-cancel';
+const SAMPLE_TIKTOK_URL = 'https://www.tiktok.com/@1954.theater/video/7669351423066295553';
 
 export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: ChallengeTask[]; clearVersion: number; language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
+  const navigate = useNavigate();
   const activeTasks = useMemo(() => tasks.filter((task) => task.enabled), [tasks]);
   const [progress, setProgress] = useState(() => loadOrCreateProgress(activeTasks));
   const [message, setMessage] = useState(() => t('challenge.ready'));
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
   const [isMutating, setIsMutating] = useState(false);
+  const [completionPanelRunId, setCompletionPanelRunId] = useState<string | null>(null);
   const task = findRunTask(activeTasks, progress.activeRun?.taskId);
   const summary = getProgressSummary(activeTasks, progress);
   const canPlay = activeTasks.length > 0;
@@ -41,6 +45,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       setProgress(loadOrCreateProgress(activeTasks));
       setGpsStatus('idle');
       setMessage(t('challenge.ready'));
+      setCompletionPanelRunId(null);
     }, 0);
 
     return () => {
@@ -60,6 +65,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   const startGame = async () => {
     if (isMutating) return;
+    setCompletionPanelRunId(null);
 
     window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
 
@@ -97,6 +103,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   const startNextChallenge = async () => {
     if (isMutating) return;
+    setCompletionPanelRunId(null);
 
     window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
 
@@ -136,6 +143,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   const verifyGps = async () => {
     if (!task || !canComplete) return;
+    const completedRunId = progress.activeRun?.id;
 
     window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
 
@@ -160,6 +168,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           setGpsStatus('idle');
           setMessage(t('challenge.ready'));
+          setCompletionPanelRunId(null);
           return;
         }
 
@@ -167,6 +176,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           setGpsStatus('idle');
           setMessage(t('challenge.duplicate'));
+          setCompletionPanelRunId(null);
           return;
         }
 
@@ -175,6 +185,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           const nextStatus = result.gps.status === 'inaccurateLocation' ? 'inaccurateLocation' : 'outsideTargetRadius';
           setGpsStatus(nextStatus);
           setMessage(result.gps.status === 'inaccurateLocation' ? t('challenge.status.inaccurateLocation') : t('challenge.status.outsideTargetRadius'));
+          setCompletionPanelRunId(null);
           return;
         }
 
@@ -186,6 +197,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
         setGpsStatus('verified');
         setMessage(t('challenge.verified', { title: localize(task.title, language), meters: result.gps?.meters ?? 0 }));
+        setCompletionPanelRunId(result.completed && completedRunId ? completedRunId : null);
         if (!result.progress.activeRun) {
           setMessage(t('challenge.allDone'));
         }
@@ -195,11 +207,13 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           const nextStatus = error.code === 1 ? 'permissionDenied' : error.code === 2 ? 'unavailable' : 'unavailable';
           setGpsStatus(nextStatus);
           setMessage(error.code === 1 ? t('challenge.status.permissionDenied') : t('challenge.status.unavailable'));
+          setCompletionPanelRunId(null);
           return;
         }
         if (error instanceof ChallengeStorageLockUnavailableError) {
           setGpsStatus('idle');
           setMessage(t('challenge.status.unavailable'));
+          setCompletionPanelRunId(null);
           return;
         }
         console.error('Unexpected error while verifying challenge GPS', error);
@@ -211,6 +225,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   const skipChallenge = async () => {
     if (!task || !canComplete) return;
+    setCompletionPanelRunId(null);
 
     const shouldSkip = window.confirm(t('challenge.confirmSkip'));
     if (!shouldSkip) return;
@@ -258,6 +273,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   };
 
   const failChallenge = async () => {
+    setCompletionPanelRunId(null);
     window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
 
     await runMutation(async () => {
@@ -302,6 +318,17 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   if (!canPlay) return <Card><p className="text-slate-200">{t('challenge.empty')}</p></Card>;
 
+  const handleDismissCompletionPanel = () => {
+    setCompletionPanelRunId(null);
+  };
+
+  const handleNavigateToTikTokSubmission = () => {
+    if (!completionPanelRunId) return;
+    const destination = `/submit-tiktok?runId=${encodeURIComponent(completionPanelRunId)}`;
+    setCompletionPanelRunId(null);
+    void navigate(destination);
+  };
+
   return (
     <div className="grid gap-6 lg:grid-cols-[.95fr_1.05fr]">
       <Card>
@@ -335,6 +362,29 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
             <p className="mt-3 rounded-2xl border border-amber-300/35 bg-amber-300/10 p-3 text-sm text-amber-100">
               {t('challenge.safetyNotice')}
             </p>
+            {completionPanelRunId && (
+              <div className="mt-4 rounded-2xl border border-cyan-300/35 bg-cyan-300/10 p-4 text-cyan-50">
+                <p className="text-base font-bold text-cyan-100">{t('challenge.completionHandoff.title')}</p>
+                <p className="mt-2 text-sm text-cyan-50">{t('challenge.completionHandoff.description')}</p>
+                <p className="mt-2 text-sm text-cyan-100">{t('challenge.completionHandoff.sampleHint')}</p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <a
+                    href={SAMPLE_TIKTOK_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full border border-white/30 px-4 py-2 text-sm font-black text-white transition hover:bg-white/10"
+                  >
+                    {t('challenge.completionHandoff.sampleAction')}
+                  </a>
+                  <Button type="button" onClick={handleNavigateToTikTokSubmission}>
+                    {t('challenge.completionHandoff.submitAction')}
+                  </Button>
+                  <Button type="button" onClick={handleDismissCompletionPanel} variant="secondary">
+                    {t('challenge.completionHandoff.laterAction')}
+                  </Button>
+                </div>
+              </div>
+            )}
             <div className="mt-5 flex flex-col gap-3">
               <div className="flex flex-wrap gap-3">
                 <Button onClick={() => { void startGame(); }} disabled={isMutating} variant="secondary"><RotateCcw className="mr-2 inline h-5 w-5" />{t('challenge.newGame')}</Button>
