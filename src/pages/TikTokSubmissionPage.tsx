@@ -21,9 +21,14 @@ export const TikTokSubmissionPage = ({ clearVersion, language, t }: { clearVersi
   const redirectTarget = `${window.location.origin}${location.pathname}${location.search}`;
   const challenge = useMemo(() => resolveSubmissionChallenge(history, getRunId(location.search)), [history, location.search]);
   const [url, setUrl] = useState('');
+  const [hasConsent, setHasConsent] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackTone, setFeedbackTone] = useState<'idle' | 'success' | 'error'>('idle');
   const [submitting, setSubmitting] = useState(false);
+  const privacyLinkLabel = language === 'vi' ? 'Chính sách quyền riêng tư' : 'Privacy Policy';
+  const consentLabel = language === 'vi'
+    ? 'Tôi đồng ý để A Pa Chải GPS lưu trữ, kiểm duyệt và công khai liên kết TikTok này nếu nội dung được phê duyệt. Tôi xác nhận có quyền chia sẻ nội dung đã gửi.'
+    : 'I agree that A Pa Chai GPS may store, review, and publicly display this TikTok link if approved. I confirm that I have the right to share the submitted content.';
 
   const handleUrlChange = (value: string) => {
     setUrl(value);
@@ -50,7 +55,7 @@ export const TikTokSubmissionPage = ({ clearVersion, language, t }: { clearVersi
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!challenge || !user || submitting) {
+    if (!challenge || !user || submitting || !hasConsent) {
       return;
     }
 
@@ -78,6 +83,7 @@ export const TikTokSubmissionPage = ({ clearVersion, language, t }: { clearVersi
       setFeedback(t('tiktok.success'));
       setFeedbackTone('success');
       setUrl('');
+      setHasConsent(false);
     } catch (error) {
       if (error instanceof TikTokSubmissionError) {
         setFeedback(t(error.translationKey));
@@ -176,8 +182,25 @@ export const TikTokSubmissionPage = ({ clearVersion, language, t }: { clearVersi
             {t('tiktok.publicNotice')}
           </div>
 
+          <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+            <input
+              type="checkbox"
+              checked={hasConsent}
+              onChange={(event) => setHasConsent(event.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-white/30 bg-slate-950/60"
+              required
+            />
+            <span>{consentLabel}</span>
+          </label>
+
+          <p className="text-sm text-slate-300">
+            <Link to="/privacy" className="font-semibold text-cyan-200 underline decoration-cyan-200/40 underline-offset-4 transition hover:text-cyan-100">
+              {privacyLinkLabel}
+            </Link>
+          </p>
+
           <div className="flex flex-wrap gap-3">
-            <Button type="submit" disabled={submitting || !url.trim()}>
+            <Button type="submit" disabled={submitting || !url.trim() || !hasConsent}>
               {submitting ? <><Loader2 className="mr-2 inline h-4 w-4 animate-spin" />{t('tiktok.submitting')}</> : <><Video className="mr-2 inline h-4 w-4" />{t('tiktok.submit')}</>}
             </Button>
             <Link to="/history" className="rounded-full border border-white/20 px-5 py-3 font-black text-white transition hover:bg-white/10">{t('tiktok.backToHistory')}</Link>

@@ -468,6 +468,9 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p>{t('legal.footer.operator')}</p>
           <div className="flex flex-wrap items-center gap-3">
+            <Link to="/privacy" className="font-semibold text-cyan-200 transition hover:text-cyan-100">
+              Privacy Policy
+            </Link>
             <Link to="/legal" className="font-semibold text-cyan-200 transition hover:text-cyan-100">
               {t('legal.footer.link')}
             </Link>
