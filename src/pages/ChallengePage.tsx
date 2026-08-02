@@ -24,7 +24,7 @@ type GpsStatus = 'idle' | 'requestingPermission' | 'locating' | 'permissionDenie
 const GAMEPLAY_MUSIC_PREPARE_EVENT = 'gps:challenge-music-prepare';
 const GAMEPLAY_MUSIC_ADVANCE_EVENT = 'gps:challenge-task-received';
 const GAMEPLAY_MUSIC_CANCEL_EVENT = 'gps:challenge-music-cancel';
-const SAMPLE_TIKTOK_URL = 'https://www.tiktok.com/@1954.theater/video/7669351423066295553';
+const SAMPLE_TIKTOK_URL = 'https://www.tiktok.com/@1954.theater';
 
 export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: ChallengeTask[]; clearVersion: number; language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const navigate = useNavigate();
@@ -110,13 +110,13 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   const startNextChallenge = async () => {
     if (isMutating) return;
-    setCompletionPanelRunId(null);
+    const shouldStartNewGame = progress.status === 'completed' && summary.remainingCount === 0;
 
     window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
 
     await runMutation(async () => {
       try {
-        const result = progress.status === 'completed' && summary.remainingCount === 0
+        const result = shouldStartNewGame
           ? await createNewGameWithChallenge(activeTasks, progress)
           : await assignRandomChallenge(activeTasks, progress);
         setProgress(result.progress);
@@ -131,6 +131,10 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
         } else {
           window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
+        }
+
+        if (shouldStartNewGame && 'started' in result && result.started) {
+          setCompletionPanelRunId(null);
         }
 
         setMessage(result.progress.activeRun?.status === 'active' ? t('challenge.active') : t('challenge.allDone'));
