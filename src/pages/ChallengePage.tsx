@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, Flag, RotateCcw, ShieldCheck, Trophy, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
@@ -34,6 +34,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
   const [isMutating, setIsMutating] = useState(false);
   const [completionPanelRunId, setCompletionPanelRunId] = useState<string | null>(null);
+  const previousResetStateRef = useRef<{ activeTasks: ChallengeTask[]; clearVersion: number } | null>(null);
   const task = findRunTask(activeTasks, progress.activeRun?.taskId);
   const summary = getProgressSummary(activeTasks, progress);
   const canPlay = activeTasks.length > 0;
@@ -41,11 +42,17 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const isFinished = summary.enabledCount > 0 && summary.remainingCount === 0 && !canComplete;
 
   useEffect(() => {
+    const previousResetState = previousResetStateRef.current;
+    const shouldClearCompletionPanel = !previousResetState || previousResetState.activeTasks !== activeTasks || previousResetState.clearVersion !== clearVersion;
+    previousResetStateRef.current = { activeTasks, clearVersion };
+
     const timeoutId = window.setTimeout(() => {
       setProgress(loadOrCreateProgress(activeTasks));
       setGpsStatus('idle');
       setMessage(t('challenge.ready'));
-      setCompletionPanelRunId(null);
+      if (shouldClearCompletionPanel) {
+        setCompletionPanelRunId(null);
+      }
     }, 0);
 
     return () => {
@@ -225,10 +232,11 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   const skipChallenge = async () => {
     if (!task || !canComplete) return;
-    setCompletionPanelRunId(null);
 
     const shouldSkip = window.confirm(t('challenge.confirmSkip'));
     if (!shouldSkip) return;
+
+    setCompletionPanelRunId(null);
 
     window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
 
