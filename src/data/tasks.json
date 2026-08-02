@@ -1,317 +1,46 @@
 [
   {
-    "id": "quang-truong-7-5-mthen",
-    "title": {
-      "vi": "Quảng trường 7-5 – Cô gái đẹp MThen",
-      "en": "7 May Square – Beautiful MThen Girl"
-    },
-    "description": {
-      "vi": "Đến Quảng trường 7-5. Tưởng tượng bạn là một cô gái đẹp MThen đang đứng trước máy quay: vuốt tóc nhẹ, che miệng cười rồi quay đi.",
-      "en": "Go to 7 May Square. Imagine you are a beautiful MThen girl standing in front of the camera: gently brush your hair, cover your mouth as you smile, then turn away."
-    },
-    "category": "mthen",
-    "difficulty": "easy",
-    "points": 120,
-    "gps": {
-      "lat": 21.38825,
-      "lng": 103.016,
-      "radius": 120
-    },
-    "image": "",
-    "enabled": true
-  },
-  {
-    "id": "cong-vien-vu-a-dinh-trai-ban",
-    "title": {
-      "vi": "Công viên Vừ A Dính – Chàng trai bản",
-      "en": "Vu A Dinh Park – Rugged Village Guy"
-    },
-    "description": {
-      "vi": "Đến Công viên Vừ A Dính. Tưởng tượng bạn là một chàng trai bản đẹp trai, phong trần và lạnh lùng: nhìn thẳng vào máy quay, sau đó từ từ quay đi và không cười.",
-      "en": "Go to Vu A Dinh Park. Imagine you are a rugged, handsome village guy: look straight into the camera with a cool expression, then slowly turn away without smiling."
-    },
-    "category": "village-boy",
-    "difficulty": "easy",
-    "points": 120,
-    "gps": {
-      "lat": 21.38958,
-      "lng": 103.01347,
-      "radius": 90
-    },
-    "image": "",
-    "enabled": true
-  },
-  {
-    "id": "phadin-coffee-cat-banh",
-    "title": {
-      "vi": "PhaDin Coffee – Cắt bánh tại chỗ",
-      "en": "PhaDin Coffee – Cut the Mooncake"
-    },
-    "description": {
-      "vi": "Đến PhaDin Coffee, chọn chỗ ngồi phù hợp, cắt bánh Trung thu và ăn một miếng trước máy quay. Thu dọn sạch sau khi hoàn thành.",
-      "en": "Go to PhaDin Coffee, choose a suitable seat, cut the mooncake, and eat one piece on camera. Clean up after finishing."
-    },
-    "category": "mooncake",
+    "id": "saigon-central-post-office",
+    "title": { "vi": "Bưu điện Trung tâm Sài Gòn", "en": "Saigon Central Post Office" },
+    "description": { "vi": "Tìm mặt tiền vàng nổi tiếng và xác nhận vị trí tại quảng trường phía trước.", "en": "Find the famous yellow facade and verify your position from the front plaza." },
+    "category": "landmark",
     "difficulty": "easy",
     "points": 100,
-    "gps": {
-      "lat": 21.39237,
-      "lng": 103.01165,
-      "radius": 60
-    },
-    "image": "",
+    "gps": { "lat": 10.7798, "lng": 106.699, "radius": 60 },
+    "image": "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=1200&q=80",
     "enabled": true
   },
   {
-    "id": "cong-vien-noong-bua-mthen",
-    "title": {
-      "vi": "Công viên Noong Bua – Cô gái đẹp MThen",
-      "en": "Noong Bua Park – Beautiful MThen Girl"
-    },
-    "description": {
-      "vi": "Đến Công viên Noong Bua. Tưởng tượng bạn là một cô gái đẹp MThen đang đứng trước máy quay: vuốt tóc nhẹ, che miệng cười rồi quay đi.",
-      "en": "Go to Noong Bua Park. Imagine you are a beautiful MThen girl standing in front of the camera: gently brush your hair, cover your mouth as you smile, then turn away."
-    },
-    "category": "mthen",
-    "difficulty": "easy",
-    "points": 120,
-    "gps": {
-      "lat": 21.38899,
-      "lng": 103.0315,
-      "radius": 100
-    },
-    "image": "",
-    "enabled": true
-  },
-  {
-    "id": "cho-noong-bua-trai-ban",
-    "title": {
-      "vi": "Chợ Noong Bua – Chàng trai bản",
-      "en": "Noong Bua Market – Rugged Village Guy"
-    },
-    "description": {
-      "vi": "Đến khu vực thoáng, không cản trở lối đi tại Chợ Noong Bua. Tưởng tượng bạn là một chàng trai bản phong trần, lạnh lùng: nhìn vào máy quay rồi từ từ quay đi, không cười.",
-      "en": "Go to an open area at Noong Bua Market without blocking anyone. Imagine you are a rugged village guy: look into the camera with a cool expression, then slowly turn away without smiling."
-    },
-    "category": "village-boy",
+    "id": "ben-thanh-market",
+    "title": { "vi": "Chợ Bến Thành", "en": "Ben Thanh Market" },
+    "description": { "vi": "Đến biểu tượng chợ trung tâm và check-in gần tháp đồng hồ.", "en": "Reach the central market icon and check in near the clock tower." },
+    "category": "market",
     "difficulty": "medium",
     "points": 140,
-    "gps": {
-      "lat": 21.39002,
-      "lng": 103.03072,
-      "radius": 100
-    },
-    "image": "",
+    "gps": { "lat": 10.7725, "lng": 106.698, "radius": 70 },
+    "image": "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1200&q=80",
     "enabled": true
   },
   {
-    "id": "cong-vien-tai-dinh-cu-him-lam-cat-banh",
-    "title": {
-      "vi": "Công viên Him Lam – Cắt bánh tại chỗ",
-      "en": "Him Lam Park – Cut the Mooncake"
-    },
-    "description": {
-      "vi": "Đến Công viên Tái định cư Him Lam, chọn vị trí ngồi sạch và an toàn, cắt bánh Trung thu rồi ăn một miếng trước máy quay. Thu dọn sạch sau khi hoàn thành.",
-      "en": "Go to Him Lam Resettlement Park, choose a clean and safe place to sit, cut the mooncake, and eat one piece on camera. Clean up after finishing."
-    },
-    "category": "mooncake",
+    "id": "nguyen-hue-walking-street",
+    "title": { "vi": "Phố đi bộ Nguyễn Huệ", "en": "Nguyen Hue Walking Street" },
+    "description": { "vi": "Hoàn thành thử thách giữa đại lộ đi bộ sôi động nhất trung tâm.", "en": "Complete the mission along the city's most energetic pedestrian boulevard." },
+    "category": "culture",
     "difficulty": "easy",
     "points": 120,
-    "gps": {
-      "lat": 21.40212,
-      "lng": 103.03796,
-      "radius": 120
-    },
-    "image": "",
+    "gps": { "lat": 10.7756, "lng": 106.7039, "radius": 80 },
+    "image": "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=1200&q=80",
     "enabled": true
   },
   {
-    "id": "ho-huoi-pha-mthen",
-    "title": {
-      "vi": "Hồ Huổi Phạ – Cô gái đẹp MThen",
-      "en": "Huoi Pha Lake – Beautiful MThen Girl"
-    },
-    "description": {
-      "vi": "Đến điểm ngắm cảnh an toàn bên Hồ Huổi Phạ. Tưởng tượng bạn là một cô gái đẹp MThen trước máy quay: vuốt tóc nhẹ, che miệng cười rồi quay đi.",
-      "en": "Go to a safe viewpoint by Huoi Pha Lake. Imagine you are a beautiful MThen girl in front of the camera: gently brush your hair, cover your mouth as you smile, then turn away."
-    },
-    "category": "mthen",
-    "difficulty": "easy",
-    "points": 140,
-    "gps": {
-      "lat": 21.40685,
-      "lng": 103.04535,
-      "radius": 180
-    },
-    "image": "",
-    "enabled": true
-  },
-  {
-    "id": "khu-du-lich-him-lam-trai-ban",
-    "title": {
-      "vi": "Khu du lịch Him Lam – Chàng trai bản",
-      "en": "Him Lam Eco-Tourism Area – Rugged Village Guy"
-    },
-    "description": {
-      "vi": "Đến Khu du lịch sinh thái Him Lam. Tưởng tượng bạn là một chàng trai bản đẹp trai, phong trần và lạnh lùng: nhìn vào máy quay, sau đó từ từ quay đi và không cười.",
-      "en": "Go to the Him Lam eco-tourism area. Imagine you are a rugged, handsome village guy: look into the camera with a cool expression, then slowly turn away without smiling."
-    },
-    "category": "village-boy",
-    "difficulty": "easy",
-    "points": 140,
-    "gps": {
-      "lat": 21.40553,
-      "lng": 103.043,
-      "radius": 150
-    },
-    "image": "",
-    "enabled": true
-  },
-  {
-    "id": "canh-dong-muong-thanh-cat-banh",
-    "title": {
-      "vi": "Cánh đồng Mường Thanh – Cắt bánh tại chỗ",
-      "en": "Muong Thanh Field – Cut the Mooncake"
-    },
-    "description": {
-      "vi": "Đến điểm dừng chân an toàn bên Cánh đồng Mường Thanh, ngồi xuống, cắt bánh Trung thu và ăn một miếng trước máy quay. Không đi vào ruộng và phải thu dọn sạch.",
-      "en": "Go to a safe stopping point beside Muong Thanh Field, sit down, cut the mooncake, and eat one piece on camera. Do not enter the fields, and clean up afterward."
-    },
-    "category": "mooncake",
-    "difficulty": "medium",
-    "points": 150,
-    "gps": {
-      "lat": 21.37668,
-      "lng": 103.02135,
-      "radius": 250
-    },
-    "image": "",
-    "enabled": true
-  },
-  {
-    "id": "cong-vien-hoa-ban-mthen",
-    "title": {
-      "vi": "Công viên Hoa Ban – Cô gái đẹp MThen",
-      "en": "Ban Flower Park – Beautiful MThen Girl"
-    },
-    "description": {
-      "vi": "Đến Công viên Hoa Ban. Tưởng tượng bạn là một cô gái đẹp MThen đang đứng trước máy quay: vuốt tóc nhẹ, che miệng cười rồi quay đi.",
-      "en": "Go to Ban Flower Park. Imagine you are a beautiful MThen girl standing in front of the camera: gently brush your hair, cover your mouth as you smile, then turn away."
-    },
-    "category": "mthen",
-    "difficulty": "easy",
-    "points": 120,
-    "gps": {
-      "lat": 21.3944,
-      "lng": 103.0344,
-      "radius": 120
-    },
-    "image": "",
-    "enabled": true
-  },
-  {
-    "id": "ho-pa-khoang-trai-ban",
-    "title": {
-      "vi": "Hồ Pá Khoang – Chàng trai bản",
-      "en": "Pa Khoang Lake – Rugged Village Guy"
-    },
-    "description": {
-      "vi": "Đến một điểm ngắm cảnh an toàn bên Hồ Pá Khoang. Tưởng tượng bạn là một chàng trai bản phong trần, lạnh lùng: nhìn thẳng vào máy quay rồi từ từ quay đi, không cười.",
-      "en": "Go to a safe viewpoint by Pa Khoang Lake. Imagine you are a rugged village guy: look straight into the camera with a cool expression, then slowly turn away without smiling."
-    },
-    "category": "village-boy",
-    "difficulty": "medium",
+    "id": "turtle-lake",
+    "title": { "vi": "Hồ Con Rùa", "en": "Turtle Lake" },
+    "description": { "vi": "Tìm vòng xoay biểu tượng, đứng trong bán kính cho phép và xác nhận GPS.", "en": "Find the iconic roundabout, stand within range, and verify GPS." },
+    "category": "urban",
+    "difficulty": "hard",
     "points": 180,
-    "gps": {
-      "lat": 21.4352,
-      "lng": 103.09946,
-      "radius": 300
-    },
-    "image": "",
-    "enabled": true
-  },
-  {
-    "id": "deo-pha-din-cat-banh",
-    "title": {
-      "vi": "Đèo Pha Đin – Cắt bánh giữa núi",
-      "en": "Pha Din Pass – Cut the Mooncake"
-    },
-    "description": {
-      "vi": "Đến điểm dừng chân an toàn tại Đèo Pha Đin, ngồi xuống, cắt bánh Trung thu và ăn một miếng trước máy quay. Tránh mép đường, mép vực và thu dọn sạch.",
-      "en": "Go to a safe stopping point at Pha Din Pass, sit down, cut the mooncake, and eat one piece on camera. Stay away from traffic and cliff edges, and clean up afterward."
-    },
-    "category": "mooncake",
-    "difficulty": "hard",
-    "points": 220,
-    "gps": {
-      "lat": 21.56542,
-      "lng": 103.52739,
-      "radius": 300
-    },
-    "image": "",
-    "enabled": true
-  },
-  {
-    "id": "cho-muong-nhe-mthen",
-    "title": {
-      "vi": "Chợ Mường Nhé – Cô gái đẹp MThen",
-      "en": "Muong Nhe Market – Beautiful MThen Girl"
-    },
-    "description": {
-      "vi": "Đến khu vực thoáng, không cản trở lối đi tại Chợ Mường Nhé. Tưởng tượng bạn là một cô gái đẹp MThen trước máy quay: vuốt tóc nhẹ, che miệng cười rồi quay đi.",
-      "en": "Go to an open area at Muong Nhe Market without blocking anyone. Imagine you are a beautiful MThen girl in front of the camera: gently brush your hair, cover your mouth as you smile, then turn away."
-    },
-    "category": "mthen",
-    "difficulty": "medium",
-    "points": 200,
-    "gps": {
-      "lat": 22.1908,
-      "lng": 102.45994,
-      "radius": 160
-    },
-    "image": "",
-    "enabled": true
-  },
-  {
-    "id": "cau-ta-ko-khu-cat-banh",
-    "title": {
-      "vi": "Cầu Tả Kố Khừ – Cắt bánh tại điểm nghỉ",
-      "en": "Ta Ko Khu Bridge – Cut the Mooncake"
-    },
-    "description": {
-      "vi": "Đến khu vực nghỉ an toàn gần Cầu Tả Kố Khừ, không đứng dưới lòng đường. Ngồi xuống, cắt bánh Trung thu và ăn một miếng trước máy quay, sau đó thu dọn sạch.",
-      "en": "Go to a safe resting area near Ta Ko Khu Bridge and stay off the roadway. Sit down, cut the mooncake, eat one piece on camera, and clean up afterward."
-    },
-    "category": "mooncake",
-    "difficulty": "hard",
-    "points": 240,
-    "gps": {
-      "lat": 22.37424,
-      "lng": 102.25375,
-      "radius": 200
-    },
-    "image": "",
-    "enabled": true
-  },
-  {
-    "id": "ban-a-pa-chai-trai-ban",
-    "title": {
-      "vi": "Bản A Pa Chải – Chàng trai bản",
-      "en": "A Pa Chai Village – Rugged Village Guy"
-    },
-    "description": {
-      "vi": "Đến khu vực công cộng phù hợp tại bản A Pa Chải. Tưởng tượng bạn là một chàng trai bản đẹp trai, phong trần và lạnh lùng: nhìn vào máy quay, sau đó từ từ quay đi và không cười.",
-      "en": "Go to a suitable public area in A Pa Chai Village. Imagine you are a rugged, handsome village guy: look into the camera with a cool expression, then slowly turn away without smiling."
-    },
-    "category": "village-boy",
-    "difficulty": "hard",
-    "points": 260,
-    "gps": {
-      "lat": 22.39102,
-      "lng": 102.23009,
-      "radius": 250
-    },
-    "image": "",
+    "gps": { "lat": 10.7829, "lng": 106.6955, "radius": 55 },
+    "image": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
     "enabled": true
   }
 ]
