@@ -72,7 +72,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   const startGame = async () => {
     if (isMutating) return;
-    setCompletionPanelRunId(null);
 
     window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
 
@@ -93,6 +92,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
         }
 
+        setCompletionPanelRunId(null);
         setMessage(result.progress.activeRun?.status === 'active' ? t('challenge.active') : t('challenge.allDone'));
       } catch (error) {
         window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
@@ -233,8 +233,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     const shouldSkip = window.confirm(t('challenge.confirmSkip'));
     if (!shouldSkip) return;
 
-    setCompletionPanelRunId(null);
-
     window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
 
     await runMutation(async () => {
@@ -261,6 +259,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
         }
 
+        setCompletionPanelRunId(null);
         setGpsStatus('idle');
         setMessage(result.progress.activeRun ? t('challenge.skipped') : t('challenge.allDone'));
       } catch (error) {
@@ -278,7 +277,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   };
 
   const failChallenge = async () => {
-    setCompletionPanelRunId(null);
     window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
 
     await runMutation(async () => {
@@ -305,6 +303,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
         }
 
+        setCompletionPanelRunId(null);
         setGpsStatus('idle');
         setMessage(failedResult.progress.activeRun ? t('challenge.failed') : t('challenge.allDone'));
       } catch (error) {
