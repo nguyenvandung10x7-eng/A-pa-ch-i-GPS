@@ -20,6 +20,9 @@ import { GeolocationRequestError, getCurrentPosition } from '../utils/geo';
 const findRunTask = (tasks: ChallengeTask[], taskId?: string) => tasks.find((task) => task.id === taskId);
 
 type GpsStatus = 'idle' | 'requestingPermission' | 'locating' | 'permissionDenied' | 'unavailable' | 'inaccurateLocation' | 'outsideTargetRadius' | 'verified';
+const GAMEPLAY_MUSIC_PREPARE_EVENT = 'gps:challenge-music-prepare';
+const GAMEPLAY_MUSIC_ADVANCE_EVENT = 'gps:challenge-task-received';
+const GAMEPLAY_MUSIC_CANCEL_EVENT = 'gps:challenge-music-cancel';
 
 export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: ChallengeTask[]; clearVersion: number; language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const activeTasks = useMemo(() => tasks.filter((task) => task.enabled), [tasks]);
@@ -56,17 +59,30 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   };
 
   const startGame = async () => {
+    if (isMutating) return;
+
+    window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
+
     await runMutation(async () => {
       try {
         const result = await createNewGameWithChallenge(activeTasks, progress);
         setProgress(result.progress);
         setGpsStatus('idle');
         if (result.stale) {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           setMessage(t('challenge.ready'));
           return;
         }
+
+        if (result.progress.activeRun?.status === 'active') {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
+        } else {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
+        }
+
         setMessage(result.progress.activeRun?.status === 'active' ? t('challenge.active') : t('challenge.allDone'));
       } catch (error) {
+        window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
         if (error instanceof ChallengeStorageLockUnavailableError) {
           setGpsStatus('idle');
           setMessage(t('challenge.status.unavailable'));
@@ -80,6 +96,10 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   };
 
   const startNextChallenge = async () => {
+    if (isMutating) return;
+
+    window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
+
     await runMutation(async () => {
       try {
         const result = progress.status === 'completed' && summary.remainingCount === 0
@@ -88,11 +108,20 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         setProgress(result.progress);
         setGpsStatus('idle');
         if (result.stale) {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           setMessage(t('challenge.ready'));
           return;
         }
+
+        if (result.progress.activeRun?.status === 'active') {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
+        } else {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
+        }
+
         setMessage(result.progress.activeRun?.status === 'active' ? t('challenge.active') : t('challenge.allDone'));
       } catch (error) {
+        window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
         if (error instanceof ChallengeStorageLockUnavailableError) {
           setGpsStatus('idle');
           setMessage(t('challenge.status.unavailable'));
@@ -107,6 +136,8 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   const verifyGps = async () => {
     if (!task || !canComplete) return;
+
+    window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
 
     await runMutation(async () => {
       setGpsStatus('requestingPermission');
@@ -126,22 +157,31 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         setProgress(result.progress);
 
         if (result.stale) {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           setGpsStatus('idle');
           setMessage(t('challenge.ready'));
           return;
         }
 
         if (result.duplicate) {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           setGpsStatus('idle');
           setMessage(t('challenge.duplicate'));
           return;
         }
 
         if (!result.completed && result.gps) {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           const nextStatus = result.gps.status === 'inaccurateLocation' ? 'inaccurateLocation' : 'outsideTargetRadius';
           setGpsStatus(nextStatus);
           setMessage(result.gps.status === 'inaccurateLocation' ? t('challenge.status.inaccurateLocation') : t('challenge.status.outsideTargetRadius'));
           return;
+        }
+
+        if (result.completed && result.progress.activeRun?.status === 'active') {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
+        } else {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
         }
 
         setGpsStatus('verified');
@@ -150,6 +190,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           setMessage(t('challenge.allDone'));
         }
       } catch (error) {
+        window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
         if (error instanceof GeolocationRequestError) {
           const nextStatus = error.code === 1 ? 'permissionDenied' : error.code === 2 ? 'unavailable' : 'unavailable';
           setGpsStatus(nextStatus);
@@ -174,25 +215,36 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     const shouldSkip = window.confirm(t('challenge.confirmSkip'));
     if (!shouldSkip) return;
 
+    window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
+
     await runMutation(async () => {
       try {
         const result = await skipActiveChallenge(activeTasks, progress);
         setProgress(result.progress);
         if (result.stale) {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           setGpsStatus('idle');
           setMessage(t('challenge.ready'));
           return;
         }
 
         if (!result.skipped) {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           setGpsStatus('idle');
           setMessage(t('challenge.duplicate'));
           return;
         }
 
+        if (result.progress.activeRun?.status === 'active') {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
+        } else {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
+        }
+
         setGpsStatus('idle');
         setMessage(result.progress.activeRun ? t('challenge.skipped') : t('challenge.allDone'));
       } catch (error) {
+        window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
         if (error instanceof ChallengeStorageLockUnavailableError) {
           setGpsStatus('idle');
           setMessage(t('challenge.status.unavailable'));
@@ -206,25 +258,36 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   };
 
   const failChallenge = async () => {
+    window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
+
     await runMutation(async () => {
       try {
         const failedResult = await failActiveChallenge(activeTasks, progress);
         setProgress(failedResult.progress);
         if (failedResult.stale) {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           setGpsStatus('idle');
           setMessage(t('challenge.ready'));
           return;
         }
 
         if (!failedResult.failed) {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           setGpsStatus('idle');
           setMessage(t('challenge.duplicate'));
           return;
         }
 
+        if (failedResult.progress.activeRun?.status === 'active') {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
+        } else {
+          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
+        }
+
         setGpsStatus('idle');
         setMessage(failedResult.progress.activeRun ? t('challenge.failed') : t('challenge.allDone'));
       } catch (error) {
+        window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
         if (error instanceof ChallengeStorageLockUnavailableError) {
           setGpsStatus('idle');
           setMessage(t('challenge.status.unavailable'));
