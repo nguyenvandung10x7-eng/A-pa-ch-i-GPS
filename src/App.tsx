@@ -124,6 +124,7 @@ export default function App() {
         <Route path="/discover" element={<DiscoverPage language={language} t={t} />} />
         <Route path="/leaderboard" element={<LeaderboardPage language={language} t={t} />} />
         <Route path="/submit-tiktok" element={<TikTokSubmissionPage clearVersion={clearVersion} language={language} t={t} />} />
+        <Route path="/privacy" element={<LegalSafetyPage t={t} />} />
         <Route path="/legal" element={<LegalSafetyPage t={t} />} />
         <Route path="/moderation" element={<ModerationPage language={language} t={t} />} />
         <Route path="/admin" element={<AdminOnlyRoute t={t} redirectPath="/admin"><AdminPage tasks={tasks} setTasks={setTasks} t={t} /></AdminOnlyRoute>} />
