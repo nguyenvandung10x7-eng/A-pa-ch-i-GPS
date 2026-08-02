@@ -175,7 +175,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           setGpsStatus('idle');
           setMessage(t('challenge.ready'));
-          setCompletionPanelRunId(null);
           return;
         }
 
@@ -183,7 +182,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           setGpsStatus('idle');
           setMessage(t('challenge.duplicate'));
-          setCompletionPanelRunId(null);
           return;
         }
 
@@ -192,7 +190,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           const nextStatus = result.gps.status === 'inaccurateLocation' ? 'inaccurateLocation' : 'outsideTargetRadius';
           setGpsStatus(nextStatus);
           setMessage(result.gps.status === 'inaccurateLocation' ? t('challenge.status.inaccurateLocation') : t('challenge.status.outsideTargetRadius'));
-          setCompletionPanelRunId(null);
           return;
         }
 
@@ -204,7 +201,9 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
         setGpsStatus('verified');
         setMessage(t('challenge.verified', { title: localize(task.title, language), meters: result.gps?.meters ?? 0 }));
-        setCompletionPanelRunId(result.completed && completedRunId ? completedRunId : null);
+        if (result.completed && completedRunId) {
+          setCompletionPanelRunId(completedRunId);
+        }
         if (!result.progress.activeRun) {
           setMessage(t('challenge.allDone'));
         }
@@ -214,13 +213,11 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           const nextStatus = error.code === 1 ? 'permissionDenied' : error.code === 2 ? 'unavailable' : 'unavailable';
           setGpsStatus(nextStatus);
           setMessage(error.code === 1 ? t('challenge.status.permissionDenied') : t('challenge.status.unavailable'));
-          setCompletionPanelRunId(null);
           return;
         }
         if (error instanceof ChallengeStorageLockUnavailableError) {
           setGpsStatus('idle');
           setMessage(t('challenge.status.unavailable'));
-          setCompletionPanelRunId(null);
           return;
         }
         console.error('Unexpected error while verifying challenge GPS', error);
