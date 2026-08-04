@@ -257,7 +257,7 @@ export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (ke
   if (authLoading) {
     return (
       <Card>
-        <div className="flex items-center gap-3 text-slate-200">
+    <div className="flex items-center gap-3 text-[var(--forest-900)]">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>{t('moderation.authLoading')}</span>
         </div>
@@ -268,15 +268,15 @@ export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (ke
   if (!user) {
     return (
       <Card>
-        <div className="flex items-center gap-3 text-cyan-200">
+    <div className="flex items-center gap-3 text-[var(--earth-800)]">
           <LogIn className="h-5 w-5" />
           <p className="text-lg font-semibold">{t('moderation.signInRequired')}</p>
         </div>
-        <p className="mt-4 text-slate-300">{t('moderation.signInDescription')}</p>
+    <p className="mt-4 text-[var(--forest-800)]">{t('moderation.signInDescription')}</p>
         <button
           type="button"
           onClick={() => { void signIn(signInRedirect); }}
-          className="mt-6 rounded-full bg-cyan-400 px-5 py-3 font-black text-slate-950 transition hover:bg-cyan-300"
+      className="wood-panel mt-6 rounded-full px-5 py-3 font-black text-[var(--earth-900)] transition hover:-translate-y-px"
         >
           {t('moderation.signIn')}
         </button>
@@ -287,7 +287,7 @@ export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (ke
   if (checkingAdmin) {
     return (
       <Card>
-        <div className="flex items-center gap-3 text-slate-200">
+    <div className="flex items-center gap-3 text-[var(--forest-900)]">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>{t('moderation.checkingAuthorization')}</span>
         </div>
@@ -298,11 +298,11 @@ export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (ke
   if (!isAdmin) {
     return (
       <Card>
-        <div className="flex items-center gap-3 text-rose-200">
+    <div className="flex items-center gap-3 text-[var(--brocade-red)]">
           <ShieldCheck className="h-5 w-5" />
           <p className="text-lg font-semibold">{t('moderation.unauthorizedTitle')}</p>
         </div>
-        <p className="mt-4 text-slate-300">{t('moderation.unauthorizedDescription')}</p>
+    <p className="mt-4 text-[var(--forest-800)]">{t('moderation.unauthorizedDescription')}</p>
       </Card>
     );
   }
@@ -311,37 +311,37 @@ export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (ke
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm uppercase tracking-[0.2em] text-cyan-200">{t('moderation.heading')}</p>
-          <h1 className="text-3xl font-black">{t('moderation.title')}</h1>
+      <p className="section-kicker">{t('moderation.heading')}</p>
+      <h1 className="text-3xl font-black text-[var(--forest-950)]">{t('moderation.title')}</h1>
         </div>
-        <button type="button" onClick={() => { void loadQueue('replace'); }} className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">
+    <button type="button" onClick={() => { void loadQueue('replace'); }} className="rounded-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.52)] px-4 py-2 text-sm font-semibold text-[var(--forest-900)] transition hover:bg-[rgba(255,255,255,0.72)]">
           <RefreshCw className="mr-2 inline h-4 w-4" />{t('moderation.retry')}
         </button>
       </div>
 
       {actionSuccess ? (
-        <div className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{actionSuccess}</div>
+    <div className="mt-4 rounded-[1.25rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(85,122,72,0.1)] px-4 py-3 text-sm text-[var(--forest-800)]">{actionSuccess}</div>
       ) : null}
 
       {queueLoading && (
-        <div className="mt-6 flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-4 text-slate-200">
+    <div className="mt-6 flex items-center gap-3 rounded-[1.4rem] bg-[rgba(255,255,255,0.62)] px-4 py-4 text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.12)]">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>{t('moderation.loadingQueue')}</span>
         </div>
       )}
 
       {!queueLoading && queueError && (
-        <div className="mt-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-4 text-rose-200">
+    <div className="mt-6 rounded-[1.4rem] border border-[rgba(141,64,47,0.22)] bg-[rgba(170,85,70,0.12)] px-4 py-4 text-[var(--brocade-red)]">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
             <span>{queueError}</span>
           </div>
-          <button type="button" onClick={() => { void loadQueue('replace'); }} className="mt-3 rounded-full bg-rose-400 px-4 py-2 text-sm font-black text-rose-950">{t('moderation.retry')}</button>
+      <button type="button" onClick={() => { void loadQueue('replace'); }} className="mt-3 rounded-full bg-[rgba(141,64,47,0.16)] px-4 py-2 text-sm font-black text-[var(--brocade-red)]">{t('moderation.retry')}</button>
         </div>
       )}
 
       {!queueLoading && !queueError && submissions.length === 0 && (
-        <div className="mt-6 rounded-2xl bg-white/10 px-4 py-6 text-slate-300">
+    <div className="mt-6 rounded-[1.4rem] bg-[rgba(255,255,255,0.58)] px-4 py-6 text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.12)]">
           <p className="text-lg font-semibold">{t('moderation.emptyTitle')}</p>
           <p className="mt-2">{t('moderation.emptyDescription')}</p>
         </div>
@@ -356,32 +356,32 @@ export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (ke
             const isBusy = Boolean(busyAction);
 
             return (
-              <article key={submission.id} className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-5">
+            <article key={submission.id} className="rounded-[1.6rem] border border-[rgba(61,84,52,0.12)] bg-[rgba(255,255,255,0.58)] p-5 shadow-[0_14px_28px_rgba(38,52,31,0.08)]">
                 <div className="flex items-center gap-3">
-                  {submission.avatarUrl ? <img src={submission.avatarUrl} alt={displayName} className="h-12 w-12 rounded-full border border-cyan-400/30 object-cover" /> : <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-300 font-black text-slate-950">{displayName.charAt(0).toUpperCase()}</div>}
-                  <div>
-                    <p className="font-black text-white">{displayName}</p>
-                    {username ? <p className="text-sm text-cyan-200">@{username}</p> : null}
+              {submission.avatarUrl ? <img src={submission.avatarUrl} alt={displayName} className="h-12 w-12 rounded-full border border-[rgba(91,67,38,0.14)] object-cover" /> : <div className="wood-panel flex h-12 w-12 items-center justify-center rounded-full font-black text-[var(--earth-900)]">{displayName.charAt(0).toUpperCase()}</div>}
+              <div className="min-w-0">
+              <p className="truncate font-black text-[var(--forest-950)]">{displayName}</p>
+              {username ? <p className="truncate text-sm text-[var(--forest-700)]">@{username}</p> : null}
                   </div>
                 </div>
 
-                <div className="mt-4 rounded-2xl bg-white/10 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">{t('moderation.challengeLabel')}</p>
-                  <p className="mt-2 font-semibold text-white">{submission.challengeTitleSnapshot || t('moderation.unknownChallenge')}</p>
+            <div className="mt-4 rounded-[1.3rem] bg-[rgba(255,247,229,0.72)] p-4 ring-1 ring-[rgba(112,79,39,0.12)]">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--earth-800)]">{t('moderation.challengeLabel')}</p>
+              <p className="mt-2 break-words font-semibold text-[var(--forest-950)]">{submission.challengeTitleSnapshot || t('moderation.unknownChallenge')}</p>
                 </div>
 
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-300">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--forest-800)]">
                   <div>
                     <p className="font-semibold">{t('moderation.submittedLabel')}</p>
                     <p>{formatDate(submission.createdAt, language)}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {submission.safeLink ? (
-                      <a href={submission.safeLink} target="_blank" rel="noopener noreferrer" className="rounded-full bg-cyan-300 px-4 py-2 font-black text-slate-950 transition hover:bg-cyan-200">
+                <a href={submission.safeLink} target="_blank" rel="noopener noreferrer" className="wood-panel inline-flex min-h-[3rem] items-center justify-center rounded-full px-4 py-2 font-black text-[var(--earth-900)] transition hover:-translate-y-px">
                         {t('moderation.openTikTok')}
                       </a>
                     ) : (
-                      <span className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-slate-300">
+                <span className="rounded-full border border-[rgba(61,84,52,0.12)] px-4 py-2 text-sm font-semibold text-[var(--forest-700)]">
                         {t('moderation.unavailableLink')}
                       </span>
                     )}
@@ -389,13 +389,13 @@ export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (ke
                 </div>
 
                 <div className="mt-4 grid gap-3">
-                  <label className="text-sm font-semibold text-slate-200">
+              <label className="text-sm font-semibold text-[var(--forest-900)]">
                     <span className="mb-2 block">{t('moderation.rejectionReasonLabel')}</span>
                     <textarea
                       value={rejectReasons[submission.id] ?? ''}
                       onChange={(event) => setRejectReasons((current) => ({ ...current, [submission.id]: event.target.value }))}
                       placeholder={t('moderation.rejectionReasonPlaceholder')}
-                      className="w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-white outline-none ring-0"
+                className="w-full rounded-[1.2rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.72)] px-4 py-3 text-[var(--forest-950)] outline-none ring-0 focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.24)]"
                       rows={2}
                       maxLength={1000}
                       disabled={isBusy}
@@ -407,7 +407,7 @@ export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (ke
                       type="button"
                       onClick={() => { void handleApprove(submission.id); }}
                       disabled={isBusy}
-                      className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-black text-emerald-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-full bg-[rgba(85,122,72,0.18)] px-4 py-2 text-sm font-black text-[var(--forest-900)] transition hover:bg-[rgba(85,122,72,0.24)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {busyAction === 'approve' ? <Loader2 className="mr-2 inline h-4 w-4 animate-spin" /> : null}
                       {busyAction === 'approve' ? t('moderation.approving') : t('moderation.approve')}
@@ -416,7 +416,7 @@ export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (ke
                       type="button"
                       onClick={() => { void handleReject(submission.id); }}
                       disabled={isBusy}
-                      className="rounded-full bg-rose-400 px-4 py-2 text-sm font-black text-rose-950 transition hover:bg-rose-300 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-full bg-[rgba(141,64,47,0.16)] px-4 py-2 text-sm font-black text-[var(--brocade-red)] transition hover:bg-[rgba(141,64,47,0.22)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {busyAction === 'reject' ? <Loader2 className="mr-2 inline h-4 w-4 animate-spin" /> : null}
                       {busyAction === 'reject' ? t('moderation.rejecting') : t('moderation.reject')}
@@ -424,7 +424,7 @@ export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (ke
                   </div>
 
                   {actionError[submission.id] ? (
-                    <p className="text-sm text-rose-200">{actionError[submission.id]}</p>
+                    <p className="text-sm text-[var(--brocade-red)]">{actionError[submission.id]}</p>
                   ) : null}
                 </div>
               </article>
@@ -439,7 +439,7 @@ export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (ke
             type="button"
             onClick={() => { void loadQueue('append'); }}
             disabled={queueLoadingMore}
-            className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+      className="rounded-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.52)] px-4 py-2 text-sm font-semibold text-[var(--forest-900)] transition hover:bg-[rgba(255,255,255,0.72)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {queueLoadingMore ? <Loader2 className="mr-2 inline h-4 w-4 animate-spin" /> : null}
             {queueLoadingMore ? t('moderation.loadingMore') : t('moderation.loadMore')}
@@ -448,7 +448,7 @@ export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (ke
       )}
 
       <div className="mt-6">
-        <Link to="/discover" className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">
+    <Link to="/discover" className="inline-flex min-h-[3rem] items-center justify-center rounded-full border border-[rgba(61,84,52,0.14)] px-4 py-2 text-sm font-semibold text-[var(--forest-900)] transition hover:bg-[rgba(255,255,255,0.56)]">
           {t('moderation.backToDiscover')}
         </Link>
       </div>

@@ -2,12 +2,12 @@
   {
     "id": "quang-truong-7-5-mthen",
     "title": {
-      "vi": "Quảng trường 7-5 – Cô gái đẹp MThen",
-      "en": "7 May Square – Beautiful MThen Girl"
+      "vi": "Quảng trường 7-5 – Cô gái đẹp MThen phi giới tính",
+      "en": "7 May Square – Gender-Neutral Beautiful MThen Girl"
     },
     "description": {
-      "vi": "Đến Quảng trường 7-5. Tưởng tượng bạn là một cô gái đẹp MThen đang đứng trước máy quay: vuốt tóc nhẹ, che miệng cười rồi quay đi.",
-      "en": "Go to 7 May Square. Imagine you are a beautiful MThen girl standing in front of the camera: gently brush your hair, cover your mouth as you smile, then turn away."
+      "vi": "Đến Quảng trường 7-5. Đây là thử thách hóa thân phi giới tính: không phân biệt bạn là nam hay nữ, hãy tưởng tượng mình là một cô gái đẹp MThen đang đứng trước máy quay, nhẹ nhàng vuốt tóc, che miệng cười rồi từ từ quay đi.",
+      "en": "Go to 7 May Square. This is a gender-neutral role-play challenge: regardless of whether you are male or female, imagine you are a beautiful MThen girl standing in front of the camera. Gently brush your hair, cover your mouth as you smile, then slowly turn away."
     },
     "category": "mthen",
     "difficulty": "easy",
@@ -17,18 +17,18 @@
       "lng": 103.016,
       "radius": 120
     },
-    "image": "",
+    "image": "/images/tasks/quang-truong-7-5-mthen.webp",
     "enabled": true
   },
   {
     "id": "cong-vien-vu-a-dinh-trai-ban",
     "title": {
-      "vi": "Công viên Vừ A Dính – Chàng trai bản",
-      "en": "Vu A Dinh Park – Rugged Village Guy"
+      "vi": "Công viên Vừ A Dính – Chàng trai bản đẹp trai phi giới tính",
+      "en": "Vu A Dinh Park – Gender-Neutral Handsome Village Guy"
     },
     "description": {
-      "vi": "Đến Công viên Vừ A Dính. Tưởng tượng bạn là một chàng trai bản đẹp trai, phong trần và lạnh lùng: nhìn thẳng vào máy quay, sau đó từ từ quay đi và không cười.",
-      "en": "Go to Vu A Dinh Park. Imagine you are a rugged, handsome village guy: look straight into the camera with a cool expression, then slowly turn away without smiling."
+      "vi": "Đến Công viên Vừ A Dính. Đây là thử thách hóa thân phi giới tính: không phân biệt bạn là nam hay nữ, hãy tưởng tượng mình là một chàng trai bản đẹp trai, phong trần và lạnh lùng. Đầu tiên nhìn thẳng vào máy quay, sau đó từ từ quay đi và tuyệt đối không cười.",
+      "en": "Go to Vu A Dinh Park. This is a gender-neutral role-play challenge: regardless of whether you are male or female, imagine you are a handsome, rugged village guy with a cool expression. First look directly into the camera, then slowly turn away without smiling."
     },
     "category": "village-boy",
     "difficulty": "easy",
@@ -38,7 +38,7 @@
       "lng": 103.01347,
       "radius": 90
     },
-    "image": "",
+    "image": "/images/tasks/cong-vien-vu-a-dinh-trai-ban.webp",
     "enabled": true
   },
   {
@@ -51,7 +51,7 @@
       "vi": "Đến PhaDin Coffee, chọn chỗ ngồi phù hợp, cắt bánh Trung thu và ăn một miếng trước máy quay. Thu dọn sạch sau khi hoàn thành.",
       "en": "Go to PhaDin Coffee, choose a suitable seat, cut the mooncake, and eat one piece on camera. Clean up after finishing."
     },
-    "category": "mooncake",
+    "category": "mthen",
     "difficulty": "easy",
     "points": 100,
     "gps": {
@@ -59,18 +59,18 @@
       "lng": 103.01165,
       "radius": 60
     },
-    "image": "",
+    "image": "/images/tasks/phadin-coffee-cat-banh.webp",
     "enabled": true
   },
   {
     "id": "cong-vien-noong-bua-mthen",
     "title": {
-      "vi": "Công viên Noong Bua – Cô gái đẹp MThen",
-      "en": "Noong Bua Park – Beautiful MThen Girl"
+      "vi": "Công viên Noong Bua – Cô gái đẹp MThen phi giới tính",
+      "en": "Noong Bua Park – Gender-Neutral Beautiful MThen Girl"
     },
     "description": {
-      "vi": "Đến Công viên Noong Bua. Tưởng tượng bạn là một cô gái đẹp MThen đang đứng trước máy quay: vuốt tóc nhẹ, che miệng cười rồi quay đi.",
-      "en": "Go to Noong Bua Park. Imagine you are a beautiful MThen girl standing in front of the camera: gently brush your hair, cover your mouth as you smile, then turn away."
+      "vi": "Đến Công viên Noong Bua. Đây là thử thách hóa thân phi giới tính: không phân biệt bạn là nam hay nữ, hãy tưởng tượng mình là một cô gái đẹp MThen đang đứng trước máy quay, nhẹ nhàng vuốt tóc, che miệng cười rồi từ từ quay đi.",
+      "en": "Go to Noong Bua Park. This is a gender-neutral role-play challenge: regardless of whether you are male or female, imagine you are a beautiful MThen girl standing in front of the camera. Gently brush your hair, cover your mouth as you smile, then slowly turn away."
     },
     "category": "mthen",
     "difficulty": "easy",
@@ -80,18 +80,18 @@
       "lng": 103.0315,
       "radius": 100
     },
-    "image": "",
+    "image": "/images/tasks/cong-vien-noong-bua-mthen.webp",
     "enabled": true
   },
   {
     "id": "cho-noong-bua-trai-ban",
     "title": {
-      "vi": "Chợ Noong Bua – Chàng trai bản",
-      "en": "Noong Bua Market – Rugged Village Guy"
+      "vi": "Chợ Noong Bua – Chàng trai bản đẹp trai phi giới tính",
+      "en": "Noong Bua Market – Gender-Neutral Handsome Village Guy"
     },
     "description": {
-      "vi": "Đến khu vực thoáng, không cản trở lối đi tại Chợ Noong Bua. Tưởng tượng bạn là một chàng trai bản phong trần, lạnh lùng: nhìn vào máy quay rồi từ từ quay đi, không cười.",
-      "en": "Go to an open area at Noong Bua Market without blocking anyone. Imagine you are a rugged village guy: look into the camera with a cool expression, then slowly turn away without smiling."
+      "vi": "Đến Chợ Noong Bua. Đây là thử thách hóa thân phi giới tính: không phân biệt bạn là nam hay nữ, hãy tưởng tượng mình là một chàng trai bản đẹp trai, phong trần và lạnh lùng. Đầu tiên nhìn thẳng vào máy quay, sau đó từ từ quay đi và tuyệt đối không cười.",
+      "en": "Go to Noong Bua Market. This is a gender-neutral role-play challenge: regardless of whether you are male or female, imagine you are a handsome, rugged village guy with a cool expression. First look directly into the camera, then slowly turn away without smiling."
     },
     "category": "village-boy",
     "difficulty": "medium",
@@ -101,39 +101,18 @@
       "lng": 103.03072,
       "radius": 100
     },
-    "image": "",
-    "enabled": true
-  },
-  {
-    "id": "cong-vien-tai-dinh-cu-him-lam-cat-banh",
-    "title": {
-      "vi": "Công viên Him Lam – Cắt bánh tại chỗ",
-      "en": "Him Lam Park – Cut the Mooncake"
-    },
-    "description": {
-      "vi": "Đến Công viên Tái định cư Him Lam, chọn vị trí ngồi sạch và an toàn, cắt bánh Trung thu rồi ăn một miếng trước máy quay. Thu dọn sạch sau khi hoàn thành.",
-      "en": "Go to Him Lam Resettlement Park, choose a clean and safe place to sit, cut the mooncake, and eat one piece on camera. Clean up after finishing."
-    },
-    "category": "mooncake",
-    "difficulty": "easy",
-    "points": 120,
-    "gps": {
-      "lat": 21.40212,
-      "lng": 103.03796,
-      "radius": 120
-    },
-    "image": "",
+    "image": "/images/tasks/cho-noong-bua-trai-ban.webp",
     "enabled": true
   },
   {
     "id": "ho-huoi-pha-mthen",
     "title": {
-      "vi": "Hồ Huổi Phạ – Cô gái đẹp MThen",
-      "en": "Huoi Pha Lake – Beautiful MThen Girl"
+      "vi": "Hồ Huổi Phạ – Cô gái đẹp MThen phi giới tính",
+      "en": "Huoi Pha Lake – Gender-Neutral Beautiful MThen Girl"
     },
     "description": {
-      "vi": "Đến điểm ngắm cảnh an toàn bên Hồ Huổi Phạ. Tưởng tượng bạn là một cô gái đẹp MThen trước máy quay: vuốt tóc nhẹ, che miệng cười rồi quay đi.",
-      "en": "Go to a safe viewpoint by Huoi Pha Lake. Imagine you are a beautiful MThen girl in front of the camera: gently brush your hair, cover your mouth as you smile, then turn away."
+      "vi": "Đến Hồ Huổi Phạ. Đây là thử thách hóa thân phi giới tính: không phân biệt bạn là nam hay nữ, hãy tưởng tượng mình là một cô gái đẹp MThen đang đứng trước máy quay, nhẹ nhàng vuốt tóc, che miệng cười rồi từ từ quay đi.",
+      "en": "Go to Huoi Pha Lake. This is a gender-neutral role-play challenge: regardless of whether you are male or female, imagine you are a beautiful MThen girl standing in front of the camera. Gently brush your hair, cover your mouth as you smile, then slowly turn away."
     },
     "category": "mthen",
     "difficulty": "easy",
@@ -143,18 +122,18 @@
       "lng": 103.04535,
       "radius": 180
     },
-    "image": "",
+    "image": "/images/tasks/ho-huoi-pha-mthen.webp",
     "enabled": true
   },
   {
     "id": "khu-du-lich-him-lam-trai-ban",
     "title": {
-      "vi": "Khu du lịch Him Lam – Chàng trai bản",
-      "en": "Him Lam Eco-Tourism Area – Rugged Village Guy"
+      "vi": "Khu du lịch Him Lam – Chàng trai bản đẹp trai phi giới tính",
+      "en": "Him Lam Eco-Tourism Area – Gender-Neutral Handsome Village Guy"
     },
     "description": {
-      "vi": "Đến Khu du lịch sinh thái Him Lam. Tưởng tượng bạn là một chàng trai bản đẹp trai, phong trần và lạnh lùng: nhìn vào máy quay, sau đó từ từ quay đi và không cười.",
-      "en": "Go to the Him Lam eco-tourism area. Imagine you are a rugged, handsome village guy: look into the camera with a cool expression, then slowly turn away without smiling."
+      "vi": "Đến Khu du lịch Him Lam. Đây là thử thách hóa thân phi giới tính: không phân biệt bạn là nam hay nữ, hãy tưởng tượng mình là một chàng trai bản đẹp trai, phong trần và lạnh lùng. Đầu tiên nhìn thẳng vào máy quay, sau đó từ từ quay đi và tuyệt đối không cười.",
+      "en": "Go to Him Lam Eco-Tourism Area. This is a gender-neutral role-play challenge: regardless of whether you are male or female, imagine you are a handsome, rugged village guy with a cool expression. First look directly into the camera, then slowly turn away without smiling."
     },
     "category": "village-boy",
     "difficulty": "easy",
@@ -164,7 +143,7 @@
       "lng": 103.043,
       "radius": 150
     },
-    "image": "",
+    "image": "/images/tasks/khu-du-lich-him-lam-trai-ban.webp",
     "enabled": true
   },
   {
@@ -185,18 +164,18 @@
       "lng": 103.02135,
       "radius": 250
     },
-    "image": "",
+    "image": "/images/tasks/canh-dong-muong-thanh-cat-banh.webp",
     "enabled": true
   },
   {
     "id": "cong-vien-hoa-ban-mthen",
     "title": {
-      "vi": "Công viên Hoa Ban – Cô gái đẹp MThen",
-      "en": "Ban Flower Park – Beautiful MThen Girl"
+      "vi": "Công viên Hoa Ban – Cô gái đẹp MThen phi giới tính",
+      "en": "Ban Flower Park – Gender-Neutral Beautiful MThen Girl"
     },
     "description": {
-      "vi": "Đến Công viên Hoa Ban. Tưởng tượng bạn là một cô gái đẹp MThen đang đứng trước máy quay: vuốt tóc nhẹ, che miệng cười rồi quay đi.",
-      "en": "Go to Ban Flower Park. Imagine you are a beautiful MThen girl standing in front of the camera: gently brush your hair, cover your mouth as you smile, then turn away."
+      "vi": "Đến Công viên Hoa Ban. Đây là thử thách hóa thân phi giới tính: không phân biệt bạn là nam hay nữ, hãy tưởng tượng mình là một cô gái đẹp MThen đang đứng trước máy quay, nhẹ nhàng vuốt tóc, che miệng cười rồi từ từ quay đi.",
+      "en": "Go to Ban Flower Park. This is a gender-neutral role-play challenge: regardless of whether you are male or female, imagine you are a beautiful MThen girl standing in front of the camera. Gently brush your hair, cover your mouth as you smile, then slowly turn away."
     },
     "category": "mthen",
     "difficulty": "easy",
@@ -206,18 +185,18 @@
       "lng": 103.0344,
       "radius": 120
     },
-    "image": "",
+    "image": "/images/tasks/cong-vien-hoa-ban-mthen.webp",
     "enabled": true
   },
   {
     "id": "ho-pa-khoang-trai-ban",
     "title": {
-      "vi": "Hồ Pá Khoang – Chàng trai bản",
-      "en": "Pa Khoang Lake – Rugged Village Guy"
+      "vi": "Hồ Pá Khoang – Chàng trai bản đẹp trai phi giới tính",
+      "en": "Pa Khoang Lake – Gender-Neutral Handsome Village Guy"
     },
     "description": {
-      "vi": "Đến một điểm ngắm cảnh an toàn bên Hồ Pá Khoang. Tưởng tượng bạn là một chàng trai bản phong trần, lạnh lùng: nhìn thẳng vào máy quay rồi từ từ quay đi, không cười.",
-      "en": "Go to a safe viewpoint by Pa Khoang Lake. Imagine you are a rugged village guy: look straight into the camera with a cool expression, then slowly turn away without smiling."
+      "vi": "Đến Hồ Pá Khoang. Đây là thử thách hóa thân phi giới tính: không phân biệt bạn là nam hay nữ, hãy tưởng tượng mình là một chàng trai bản đẹp trai, phong trần và lạnh lùng. Đầu tiên nhìn thẳng vào máy quay, sau đó từ từ quay đi và tuyệt đối không cười.",
+      "en": "Go to Pa Khoang Lake. This is a gender-neutral role-play challenge: regardless of whether you are male or female, imagine you are a handsome, rugged village guy with a cool expression. First look directly into the camera, then slowly turn away without smiling."
     },
     "category": "village-boy",
     "difficulty": "medium",
@@ -227,41 +206,24 @@
       "lng": 103.09946,
       "radius": 300
     },
-    "image": "",
+    "image": "/images/tasks/ho-pa-khoang-trai-ban.webp",
     "enabled": true
   },
   {
-    "id": "deo-pha-din-cat-banh",
+    "id": "cho-muong-nhe-tang-banh-trung-thu",
     "title": {
-      "vi": "Đèo Pha Đin – Cắt bánh giữa núi",
-      "en": "Pha Din Pass – Cut the Mooncake"
+      "vi": "Gặp gỡ và tặng bánh tại Chợ Mường Nhé",
+      "en": "Meet and Share Mooncakes at Mường Nhé Market"
     },
     "description": {
-      "vi": "Đến điểm dừng chân an toàn tại Đèo Pha Đin, ngồi xuống, cắt bánh Trung thu và ăn một miếng trước máy quay. Tránh mép đường, mép vực và thu dọn sạch.",
-      "en": "Go to a safe stopping point at Pha Din Pass, sit down, cut the mooncake, and eat one piece on camera. Stay away from traffic and cliff edges, and clean up afterward."
+      "vi": "Đến Chợ Mường Nhé, gặp trẻ em đi cùng gia đình hoặc người giám hộ và tặng các em bánh Trung thu còn nguyên bao bì, còn hạn sử dụng. Không tự ý quay cận mặt trẻ em và không làm ảnh hưởng đến hoạt động mua bán tại chợ. Chỉ tặng bánh còn nguyên niêm phong hoặc được đóng gói an toàn, có bao bì nguyên vẹn và còn hạn sử dụng rõ ràng. Cha mẹ hoặc người giám hộ có thể từ chối món quà, và không được gây áp lực để trẻ ăn bánh ngay tại chỗ.",
+      "en": "Go to Mường Nhé Market, meet children accompanied by their families or guardians, and give them sealed, unexpired mooncakes. Do not film children's faces without permission or disrupt market activities. Only give factory-sealed or safely packaged mooncakes with intact wrapping and a clear expiry date. A parent or guardian may decline the gift, and children should never be pressured to eat the mooncakes immediately."
+    },
+    "locationIntro": {
+      "vi": "Chợ Mường Nhé nằm tại trung tâm huyện Mường Nhé, tỉnh Điện Biên. Đây là điểm sinh hoạt và trao đổi hàng hóa của người dân trong khu vực biên giới phía Tây của tỉnh, nơi thường gặp nhiều gia đình từ các xã lân cận đến mua bán. Không gian chợ phản ánh nhịp sống thường ngày của cộng đồng địa phương.",
+      "en": "Mường Nhé Market is in the center of Muong Nhe District, Dien Bien Province. It is a local trading point in the province's far-western border area, where families from nearby communes often gather for daily buying and selling. The market offers a practical view of everyday community life in the district."
     },
     "category": "mooncake",
-    "difficulty": "hard",
-    "points": 220,
-    "gps": {
-      "lat": 21.56542,
-      "lng": 103.52739,
-      "radius": 300
-    },
-    "image": "",
-    "enabled": true
-  },
-  {
-    "id": "cho-muong-nhe-mthen",
-    "title": {
-      "vi": "Chợ Mường Nhé – Cô gái đẹp MThen",
-      "en": "Muong Nhe Market – Beautiful MThen Girl"
-    },
-    "description": {
-      "vi": "Đến khu vực thoáng, không cản trở lối đi tại Chợ Mường Nhé. Tưởng tượng bạn là một cô gái đẹp MThen trước máy quay: vuốt tóc nhẹ, che miệng cười rồi quay đi.",
-      "en": "Go to an open area at Muong Nhe Market without blocking anyone. Imagine you are a beautiful MThen girl in front of the camera: gently brush your hair, cover your mouth as you smile, then turn away."
-    },
-    "category": "mthen",
     "difficulty": "medium",
     "points": 200,
     "gps": {
@@ -269,18 +231,22 @@
       "lng": 102.45994,
       "radius": 160
     },
-    "image": "",
+    "image": "/images/tasks/cho-muong-nhe-tang-banh-trung-thu.webp",
     "enabled": true
   },
   {
-    "id": "cau-ta-ko-khu-cat-banh",
+    "id": "cau-ta-ko-khu-tang-banh-trung-thu",
     "title": {
-      "vi": "Cầu Tả Kố Khừ – Cắt bánh tại điểm nghỉ",
-      "en": "Ta Ko Khu Bridge – Cut the Mooncake"
+      "vi": "Tặng bánh Trung thu tại Cầu Tả Kó Khừ",
+      "en": "Share Mooncakes at Tả Kó Khừ Bridge"
     },
     "description": {
-      "vi": "Đến khu vực nghỉ an toàn gần Cầu Tả Kố Khừ, không đứng dưới lòng đường. Ngồi xuống, cắt bánh Trung thu và ăn một miếng trước máy quay, sau đó thu dọn sạch.",
-      "en": "Go to a safe resting area near Ta Ko Khu Bridge and stay off the roadway. Sit down, cut the mooncake, eat one piece on camera, and clean up afterward."
+      "vi": "Đến Cầu Tả Kó Khừ, gặp trẻ em địa phương và tặng các em bánh Trung thu còn nguyên bao bì, còn hạn sử dụng. Hãy trao quà với thái độ thân thiện, tôn trọng và chỉ ghi hình trẻ em khi có sự đồng ý của cha mẹ hoặc người giám hộ. Chỉ sử dụng bánh còn nguyên niêm phong hoặc được đóng gói an toàn, có bao bì nguyên vẹn và còn hạn sử dụng rõ ràng. Không tiếp cận trẻ đang đi một mình, không yêu cầu tạo dáng hay cung cấp thông tin cá nhân, và không gây áp lực để trẻ ăn bánh ngay lập tức.",
+      "en": "Go to Tả Kó Khừ Bridge, meet local children, and give them sealed, unexpired mooncakes. Offer the gifts respectfully and only record children with permission from a parent or guardian. Only use factory-sealed or safely packaged mooncakes with intact wrapping and a clear expiry date. Do not approach children who are alone, do not ask them to pose or share personal information, and never pressure them to eat the mooncakes immediately."
+    },
+    "locationIntro": {
+      "vi": "Cầu Tả Kó Khừ nằm trên tuyến đường vào khu vực A Pa Chải - Mường Nhé của tỉnh Điện Biên. Đây là một điểm dừng quen thuộc trên hành trình di chuyển qua vùng núi biên giới phía Tây, gắn với cảnh quan suối và địa hình đồi núi. Khu vực xung quanh chủ yếu phục vụ nhu cầu đi lại của người dân và khách qua tuyến đường này.",
+      "en": "Tả Kó Khừ Bridge lies on the route into the A Pa Chải - Mường Nhé area of Dien Bien Province. It is a familiar stopping point on journeys through the western border mountains, with nearby stream scenery and hilly terrain. The surrounding area mainly serves local travel along this route."
     },
     "category": "mooncake",
     "difficulty": "hard",
@@ -290,20 +256,24 @@
       "lng": 102.25375,
       "radius": 200
     },
-    "image": "",
+    "image": "/images/tasks/cau-ta-ko-khu-tang-banh-trung-thu.webp",
     "enabled": true
   },
   {
-    "id": "ban-a-pa-chai-trai-ban",
+    "id": "ban-a-pa-chai-tang-banh-trung-thu",
     "title": {
-      "vi": "Bản A Pa Chải – Chàng trai bản",
-      "en": "A Pa Chai Village – Rugged Village Guy"
+      "vi": "Tặng bánh Trung thu cho trẻ em ở A Pa Chải",
+      "en": "Share Mooncakes with Children in A Pa Chải"
     },
     "description": {
-      "vi": "Đến khu vực công cộng phù hợp tại bản A Pa Chải. Tưởng tượng bạn là một chàng trai bản đẹp trai, phong trần và lạnh lùng: nhìn vào máy quay, sau đó từ từ quay đi và không cười.",
-      "en": "Go to a suitable public area in A Pa Chai Village. Imagine you are a rugged, handsome village guy: look into the camera with a cool expression, then slowly turn away without smiling."
+      "vi": "Đến Bản A Pa Chải, gặp trẻ em địa phương cùng cha mẹ, người thân hoặc người giám hộ và tặng các em bánh Trung thu còn nguyên bao bì, còn hạn sử dụng. Hãy trò chuyện thân thiện, tôn trọng phong tục địa phương và chỉ ghi hình khi được đồng ý. Chỉ tặng bánh còn nguyên niêm phong hoặc được đóng gói an toàn, có bao bì nguyên vẹn và còn hạn sử dụng rõ ràng. Không yêu cầu trẻ tạo dáng, nói gì trước máy quay hoặc cung cấp thông tin cá nhân, và không gây áp lực để trẻ ăn bánh ngay.",
+      "en": "Go to A Pa Chải Village, meet local children together with their parents, relatives, or guardians, and give them sealed, unexpired mooncakes. Be friendly, respect local customs, and only record with permission. Only give factory-sealed or safely packaged mooncakes with intact wrapping and a clear expiry date. Do not ask children to pose, speak on camera, or share personal information, and never pressure them to eat the mooncakes immediately."
     },
-    "category": "village-boy",
+    "locationIntro": {
+      "vi": "Bản A Pa Chải thuộc xã Sín Thầu, huyện Mường Nhé, tỉnh Điện Biên. Đây là khu vực dân cư nằm gần vùng cực Tây của Việt Nam và gắn với hành trình tới khu vực biên giới Việt Nam - Lào - Trung Quốc. Địa bàn này phản ánh đời sống cộng đồng ở vùng núi biên giới phía Tây của tỉnh.",
+      "en": "A Pa Chải Village is in Sin Thau Commune, Muong Nhe District, Dien Bien Province. It is a residential area near Vietnam's far-western frontier and is associated with travel toward the Vietnam-Laos-China border region. The area reflects community life in the province's western border highlands."
+    },
+    "category": "mooncake",
     "difficulty": "hard",
     "points": 260,
     "gps": {
@@ -311,39 +281,119 @@
       "lng": 102.23009,
       "radius": 250
     },
-    "image": "",
+    "image": "/images/tasks/cot-co-a-pa-chai.webp",
     "enabled": true
   },
   {
-    "id": "doi-a1-khoanh-khac-tuong-niem",
+    "id": "cot-co-a-pa-chai-mthen",
     "title": {
-      "vi": "Đồi A1 – Khoảnh khắc tưởng niệm",
-      "en": "A1 Hill – A Moment of Reflection"
+      "vi": "Cô gái MThen tại Cột cờ A Pa Chải",
+      "en": "MThen Girl at A Pa Chai Flag Tower"
     },
     "description": {
-      "vi": "Đến khu vực tham quan được phép tại Đồi A1. Đứng yên trước máy quay, nhìn thẳng vào camera trong 5 giây, sau đó từ từ quay về phía di tích. Giữ thái độ trang nghiêm, không cười và không gây ảnh hưởng đến người khác.",
-      "en": "Go to an authorized visitor area at A1 Hill. Stand still in front of the camera, look directly into it for five seconds, then slowly turn toward the historical site. Remain respectful, do not smile, and do not disturb other visitors."
+      "vi": "Đến Cột cờ A Pa Chải. Tưởng tượng bạn là một cô gái đẹp MThen đang đứng trước máy quay: vuốt tóc nhẹ, che miệng cười rồi quay đi.",
+      "en": "Go to A Pa Chai Flag Tower. Imagine yourself as a beautiful MThen girl standing in front of the camera: gently brush your hair, cover your smile, then turn away."
+    },
+    "locationIntro": {
+      "vi": "Cột cờ A Pa Chải nằm trong khu vực A Pa Chải, xã Sín Thầu, huyện Mường Nhé, tỉnh Điện Biên. Điểm đến này gắn với hành trình tới vùng biên giới cực Tây của Việt Nam và khu vực ngã ba biên giới Việt Nam - Lào - Trung Quốc.",
+      "en": "A Pa Chai Flag Tower is in the A Pa Chai border area of Sin Thau Commune, Muong Nhe District, Dien Bien Province. The destination is associated with journeys to Vietnam's far-western frontier and the Vietnam-Laos-China border region."
+    },
+    "category": "mthen",
+    "difficulty": "hard",
+    "points": 480,
+    "gps": {
+      "lat": 22.39102,
+      "lng": 102.23009,
+      "radius": 250
+    },
+    "image": "/images/tasks/cot-co-a-pa-chai.webp",
+    "enabled": true
+  },
+  {
+    "id": "cot-co-a-pa-chai-trai-ban-lanh-lung",
+    "title": {
+      "vi": "Chàng trai bản tại Cột cờ A Pa Chải",
+      "en": "Cold Village Boy at A Pa Chai Flag Tower"
+    },
+    "description": {
+      "vi": "Đến Cột cờ A Pa Chải. Tưởng tượng bạn là một chàng trai bản phong trần, lạnh lùng: nhìn thẳng vào máy quay, sau đó lạnh lùng quay đi.",
+      "en": "Go to A Pa Chai Flag Tower. Imagine yourself as a rugged, cold village boy: look directly into the camera, then turn away with a cool expression."
+    },
+    "locationIntro": {
+      "vi": "Cột cờ A Pa Chải nằm trong khu vực A Pa Chải, xã Sín Thầu, huyện Mường Nhé, tỉnh Điện Biên. Điểm đến này gắn với hành trình tới vùng biên giới cực Tây của Việt Nam và khu vực ngã ba biên giới Việt Nam - Lào - Trung Quốc.",
+      "en": "A Pa Chai Flag Tower is in the A Pa Chai border area of Sin Thau Commune, Muong Nhe District, Dien Bien Province. The destination is associated with journeys to Vietnam's far-western frontier and the Vietnam-Laos-China border region."
+    },
+    "category": "village-boy",
+    "difficulty": "hard",
+    "points": 480,
+    "gps": {
+      "lat": 22.39102,
+      "lng": 102.23009,
+      "radius": 250
+    },
+    "image": "/images/tasks/cot-co-a-pa-chai.webp",
+    "enabled": true
+  },
+  {
+    "id": "doi-a1-chuyen-tau-thoi-gian-1954",
+    "title": {
+      "vi": "1954 – Chuyến tàu thời gian",
+      "en": "1954 – The Time Train"
+    },
+    "description": {
+      "vi": "Chuẩn bị tai nghe cá nhân, đến Đồi A1 và hoàn thành thử thách “1954 – Chuyến tàu thời gian” tại đường dẫn bên dưới. Sau khi hoàn thành, quay lại ứng dụng để tiếp tục hành trình.",
+      "en": "Bring your personal headphones, travel to A1 Hill, and complete the “1954 – The Time Train” challenge using the link below. After finishing, return to this app to continue your journey."
+    },
+    "locationIntro": {
+      "vi": "Đồi A1 thuộc phường Mường Thanh, thành phố Điện Biên Phủ, tỉnh Điện Biên. Đây là một cứ điểm quan trọng trong tập đoàn cứ điểm Điện Biên Phủ và là nơi diễn ra những trận đánh quyết liệt của chiến dịch năm 1954. Hiện nay khu vực vẫn còn nhiều dấu tích lịch sử như hầm hào, xác xe tăng và hố bộc phá.",
+      "en": "A1 Hill is in Muong Thanh Ward, Dien Bien Phu City, Dien Bien Province. It was one of the key strongpoints in the Dien Bien Phu fortified complex and the site of some of the campaign's fiercest fighting in 1954. The area still preserves historical remains such as trenches, a tank wreck, and a large demolition crater."
     },
     "category": "reflection",
-    "difficulty": "medium",
-    "points": 180,
+    "difficulty": "hard",
+    "points": 400,
     "gps": {
       "lat": 21.38102,
       "lng": 103.01674,
       "radius": 180
     },
-    "image": "",
+    "image": "/images/tasks/doi-a1-khoanh-khac-tuong-niem.webp",
+    "externalUrl": "https://1954-chuyentauthoigian.netlify.app/",
+    "enabled": true
+  },
+  {
+    "id": "bao-tang-chien-thang-dien-bien-phu-trai-nghiem",
+    "title": {
+      "vi": "Trải nghiệm Bảo tàng Chiến thắng Điện Biên Phủ",
+      "en": "Experience the Điện Biên Phủ Victory Museum"
+    },
+    "description": {
+      "vi": "Đến Bảo tàng Chiến thắng Điện Biên Phủ, tham quan các không gian trưng bày và bức tranh Panorama về Chiến dịch Điện Biên Phủ. Chọn một hiện vật, hình ảnh hoặc chi tiết khiến bạn ấn tượng nhất, sau đó chụp ảnh hoặc quay một đoạn video ngắn kèm một câu chia sẻ về điều bạn cảm nhận được sau chuyến tham quan. Tuân thủ nội quy tham quan và hướng dẫn của Bảo tàng.",
+      "en": "Visit the Điện Biên Phủ Victory Museum, explore its exhibition spaces and the Panorama depicting the Điện Biên Phủ Campaign. Choose one object, image, or detail that leaves the strongest impression on you, then take a photo or record a short video with one sentence about what you learned or felt during the visit. Follow the museum's visitor rules and staff instructions."
+    },
+    "locationIntro": {
+      "vi": "Bảo tàng Chiến thắng Điện Biên Phủ là bảo tàng chuyên đề lưu giữ, trưng bày và phát huy giá trị các tài liệu, hiện vật gắn với Chiến dịch Điện Biên Phủ. Một điểm nhấn của không gian tham quan là bức tranh Panorama tái hiện những diễn biến tiêu biểu của chiến dịch, giúp người xem tiếp cận lịch sử bằng hình thức trực quan.",
+      "en": "The Điện Biên Phủ Victory Museum is a thematic museum that preserves and presents documents and objects connected with the Điện Biên Phủ Campaign. A major feature of the visitor experience is the Panorama depicting key moments of the campaign, offering a visual way to engage with its history."
+    },
+    "category": "reflection",
+    "difficulty": "medium",
+    "points": 300,
+    "gps": {
+      "lat": 21.380741,
+      "lng": 103.015194,
+      "radius": 150
+    },
+    "image": "/images/tasks/bao-tang-chien-thang-dien-bien-phu-trai-nghiem.webp",
     "enabled": true
   },
   {
     "id": "ban-phieng-loi-mthen",
     "title": {
-      "vi": "Bản văn hóa Phiêng Lơi – Cô gái đẹp MThen",
-      "en": "Phieng Loi Cultural Village – Beautiful MThen Girl"
+      "vi": "Bản văn hóa Phiêng Lơi – Cô gái đẹp MThen phi giới tính",
+      "en": "Phieng Loi Cultural Village – Gender-Neutral Beautiful MThen Girl"
     },
     "description": {
-      "vi": "Đến khu vực công cộng phù hợp tại bản văn hóa Phiêng Lơi. Tưởng tượng bạn là một cô gái đẹp MThen đang đứng trước máy quay: nhẹ nhàng vuốt tóc, che miệng cười rồi từ từ quay đi.",
-      "en": "Go to a suitable public area in Phieng Loi Cultural Village. Imagine you are a beautiful MThen girl standing in front of the camera: gently brush your hair, cover your mouth as you smile, then slowly turn away."
+      "vi": "Đến Bản văn hóa Phiêng Lơi. Đây là thử thách hóa thân phi giới tính: không phân biệt bạn là nam hay nữ, hãy tưởng tượng mình là một cô gái đẹp MThen đang đứng trước máy quay, nhẹ nhàng vuốt tóc, che miệng cười rồi từ từ quay đi.",
+      "en": "Go to Phieng Loi Cultural Village. This is a gender-neutral role-play challenge: regardless of whether you are male or female, imagine you are a beautiful MThen girl standing in front of the camera. Gently brush your hair, cover your mouth as you smile, then slowly turn away."
     },
     "category": "mthen",
     "difficulty": "medium",
@@ -353,7 +403,7 @@
       "lng": 103.0467659,
       "radius": 250
     },
-    "image": "",
+    "image": "/images/tasks/ban-phieng-loi-mthen.webp",
     "enabled": true
   },
   {
@@ -366,6 +416,10 @@
       "vi": "Đến Cà phê Kê Nênh, chọn một chỗ ngồi phù hợp, cắt bánh Trung thu và ăn một miếng trước máy quay. Xin phép cơ sở nếu cần và thu dọn sạch sau khi hoàn thành.",
       "en": "Go to Ke Nenh Mountain View Coffee, choose a suitable seat, cut the mooncake, and eat one piece on camera. Ask the venue for permission if necessary and clean up after finishing."
     },
+    "locationIntro": {
+      "vi": "Bản Kê Nênh thuộc xã Tà Lèng, thành phố Điện Biên Phủ, tỉnh Điện Biên. Theo Cổng thông tin du lịch Điện Biên, nơi đây được biết đến với ruộng bậc thang, thác nước chảy quanh năm và không gian rừng phòng hộ mát mẻ. Khu vực có đường bê tông nhỏ men theo sườn dốc, thuận tiện để quan sát cảnh quan.",
+      "en": "Ke Nenh Village is in Ta Leng Commune, Dien Bien Phu City, Dien Bien Province. According to the Dien Bien tourism portal, the area is known for terraced fields, a year-round waterfall, and cool protected forest surroundings. A small concrete road follows the hillside and is commonly used to observe the landscape."
+    },
     "category": "mooncake",
     "difficulty": "medium",
     "points": 180,
@@ -374,7 +428,57 @@
       "lng": 103.0632348,
       "radius": 150
     },
-    "image": "",
+    "image": "/images/tasks/ca-phe-ke-nenh-cat-banh.webp",
+    "enabled": true
+  },
+  {
+    "id": "ruong-bac-thang-ta-leng-mthen",
+    "title": {
+      "vi": "Cô gái MThen giữa ruộng bậc thang Tà Lèng",
+      "en": "MThen Girl Among the Tà Lèng Terraces"
+    },
+    "description": {
+      "vi": "Đến ruộng bậc thang Tà Lèng. Tưởng tượng bạn là một cô gái đẹp MThen đang đứng trước máy quay: vuốt tóc nhẹ, che miệng cười rồi quay đi. Thực hiện tại đường hoặc điểm quan sát công cộng, không đi vào ruộng.",
+      "en": "Go to the Tà Lèng terraced fields. Imagine yourself as a beautiful MThen girl standing in front of the camera: gently brush your hair, cover your smile, then turn away. Perform from a public road or viewpoint and do not enter the fields."
+    },
+    "locationIntro": {
+      "vi": "Khu vực ruộng bậc thang dùng cho nhiệm vụ này nằm ở xã Tà Lèng, thành phố Điện Biên Phủ, tỉnh Điện Biên. Trên Cổng thông tin du lịch Điện Biên, bản Kê Nênh trong xã Tà Lèng được giới thiệu với ruộng bậc thang, rừng phòng hộ và khí hậu mát mẻ. Vào mùa lúa, khu vực thường được nhắc tới nhờ những triền ruộng vàng trên sườn dốc.",
+      "en": "The terraced-field area used for this task is in Ta Leng Commune, Dien Bien Phu City, Dien Bien Province. On the Dien Bien tourism portal, Ke Nenh Village in Ta Leng is presented with terraced fields, protected forest, and a cool climate. In the rice season, the area is noted for golden terraces running along the slopes."
+    },
+    "category": "mthen",
+    "difficulty": "hard",
+    "points": 240,
+    "gps": {
+      "lat": 21.3881152,
+      "lng": 103.0632348,
+      "radius": 220
+    },
+    "image": "/images/tasks/ruong-bac-thang-ta-leng-mthen.webp",
+    "enabled": true
+  },
+  {
+    "id": "thac-ke-nenh-mthen",
+    "title": {
+      "vi": "Cô gái MThen bên thác Kê Nênh",
+      "en": "MThen Girl at Kê Nênh Waterfall"
+    },
+    "description": {
+      "vi": "Đến thác Kê Nênh. Tưởng tượng bạn là một cô gái đẹp MThen đang đứng trước máy quay: vuốt tóc nhẹ, che miệng cười rồi quay đi. Thực hiện tại vị trí quan sát an toàn, không đứng sát dòng nước hoặc đá trơn.",
+      "en": "Go to Kê Nênh Waterfall. Imagine yourself as a beautiful MThen girl standing in front of the camera: gently brush your hair, cover your smile, then turn away. Perform at a safe viewing point, away from strong water and slippery rocks."
+    },
+    "locationIntro": {
+      "vi": "Bản Kê Nênh thuộc xã Tà Lèng, thành phố Điện Biên Phủ, tỉnh Điện Biên. Theo Cổng thông tin du lịch Điện Biên, nơi đây được biết đến với ruộng bậc thang, thác nước chảy quanh năm và không gian rừng phòng hộ mát mẻ. Khu vực có đường bê tông nhỏ men theo sườn dốc, thuận tiện để quan sát cảnh quan.",
+      "en": "Ke Nenh Village is in Ta Leng Commune, Dien Bien Phu City, Dien Bien Province. According to the Dien Bien tourism portal, the area is known for terraced fields, a year-round waterfall, and cool protected forest surroundings. A small concrete road follows the hillside and is commonly used to observe the landscape."
+    },
+    "category": "mthen",
+    "difficulty": "hard",
+    "points": 240,
+    "gps": {
+      "lat": 21.3881152,
+      "lng": 103.0632348,
+      "radius": 220
+    },
+    "image": "/images/tasks/thac-ke-nenh-mthen.webp",
     "enabled": true
   }
 ]

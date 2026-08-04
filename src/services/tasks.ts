@@ -21,14 +21,197 @@ export const getChallengeClearVersion = (): number => parseClearVersion(localSto
 
 const cloneTasks = (tasks: ChallengeTask[]) => structuredClone(tasks);
 
+const mergeLocalizedOptionalField = (
+  current: ChallengeTask['locationIntro'],
+  fallback: ChallengeTask['locationIntro'],
+): ChallengeTask['locationIntro'] => {
+  if (!fallback) return current;
+  if (current == null) return fallback;
+
+  let nextValue = current;
+
+  if (!Object.prototype.hasOwnProperty.call(current, 'vi')) {
+    nextValue = { ...nextValue, vi: fallback.vi };
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(current, 'en')) {
+    nextValue = { ...nextValue, en: fallback.en };
+  }
+
+  return nextValue;
+};
+
 export const defaultTasks = tasksJson as ChallengeTask[];
+
+const LEGACY_A1_TASK_ID = 'doi-a1-khoanh-khac-tuong-niem';
+const TIME_TRAIN_TASK_ID = 'doi-a1-chuyen-tau-thoi-gian-1954';
+const LEGACY_REMOVED_TASK_IDS = new Set([
+  'deo-pha-din-cat-banh',
+  'cong-vien-tai-dinh-cu-him-lam-cat-banh',
+]);
+const LEGACY_RENAMES = new Map<string, string>([
+  ['cho-muong-nhe-mthen', 'cho-muong-nhe-tang-banh-trung-thu'],
+  ['cau-ta-ko-khu-cat-banh', 'cau-ta-ko-khu-tang-banh-trung-thu'],
+  ['ban-a-pa-chai-trai-ban', 'ban-a-pa-chai-tang-banh-trung-thu'],
+  ['ke-nenh-ruong-bac-thang-mthen', 'ruong-bac-thang-ta-leng-mthen'],
+  ['thac-ke-nenh-trai-ban-lanh-lung', 'thac-ke-nenh-mthen'],
+]);
+const AUTHORITATIVE_TASK_IDS = new Set([
+  'cho-muong-nhe-tang-banh-trung-thu',
+  'cau-ta-ko-khu-tang-banh-trung-thu',
+  'ban-a-pa-chai-tang-banh-trung-thu',
+  'bao-tang-chien-thang-dien-bien-phu-trai-nghiem',
+  'cot-co-a-pa-chai-mthen',
+  'cot-co-a-pa-chai-trai-ban-lanh-lung',
+  'ruong-bac-thang-ta-leng-mthen',
+  'thac-ke-nenh-mthen',
+]);
+
+const CHO_MUONG_NHE_OBSOLETE_IMAGE_PATHS = new Set([
+  '/images/tasks/cho-muong-nhe-mthen.webp',
+]);
+
+const mergeStoredTasksWithDefaults = (storedTasks: ChallengeTask[]): ChallengeTask[] => {
+  const defaultsById = new Map(defaultTasks.map((task) => [task.id, task]));
+  const canonicalTimeTrainTask = defaultsById.get(TIME_TRAIN_TASK_ID);
+  let changed = false;
+  const hasCanonicalA1 = storedTasks.some((task) => task.id === TIME_TRAIN_TASK_ID);
+  const storedTaskIds = new Set(storedTasks.map((task) => task.id));
+  const seenDefaultIds = new Set<string>();
+
+  const cloneDefaultTask = (taskId: string): ChallengeTask | undefined => {
+    const defaultTask = defaultsById.get(taskId);
+    return defaultTask ? structuredClone(defaultTask) : undefined;
+  };
+
+  const merged = storedTasks.flatMap((task) => {
+    if (LEGACY_REMOVED_TASK_IDS.has(task.id)) {
+      changed = true;
+      return [];
+    }
+
+    const renamedTaskId = LEGACY_RENAMES.get(task.id);
+    if (renamedTaskId) {
+      const canonicalTask = cloneDefaultTask(renamedTaskId);
+      if (!canonicalTask) return [];
+
+      if (storedTaskIds.has(renamedTaskId)) {
+        changed = true;
+        return [];
+      }
+
+      changed = true;
+      seenDefaultIds.add(renamedTaskId);
+      return [canonicalTask];
+    }
+
+    if (task.id === LEGACY_A1_TASK_ID && hasCanonicalA1) {
+      changed = true;
+      return [];
+    }
+
+    if (task.id === LEGACY_A1_TASK_ID && canonicalTimeTrainTask) {
+      changed = true;
+      seenDefaultIds.add(canonicalTimeTrainTask.id);
+      const currentImage = typeof task.image === 'string' ? task.image.trim() : '';
+      return [{
+        ...task,
+        id: canonicalTimeTrainTask.id,
+        title: canonicalTimeTrainTask.title,
+        description: canonicalTimeTrainTask.description,
+        locationIntro: task.locationIntro ?? canonicalTimeTrainTask.locationIntro,
+        category: canonicalTimeTrainTask.category,
+        difficulty: canonicalTimeTrainTask.difficulty,
+        points: canonicalTimeTrainTask.points,
+        enabled: canonicalTimeTrainTask.enabled,
+        externalUrl: canonicalTimeTrainTask.externalUrl,
+        image: currentImage || canonicalTimeTrainTask.image,
+      }];
+    }
+
+    const defaultTask = defaultsById.get(task.id);
+    if (!defaultTask) return [task];
+
+    seenDefaultIds.add(task.id);
+
+    if (AUTHORITATIVE_TASK_IDS.has(task.id)) {
+      changed = true;
+      return [cloneDefaultTask(task.id) as ChallengeTask];
+    }
+
+    let nextTask = task;
+    const currentImage = typeof nextTask.image === 'string' ? nextTask.image.trim() : '';
+    const defaultImage = typeof defaultTask.image === 'string' ? defaultTask.image.trim() : '';
+
+    if (task.id === 'cho-muong-nhe-tang-banh-trung-thu' && CHO_MUONG_NHE_OBSOLETE_IMAGE_PATHS.has(currentImage) && currentImage !== defaultImage && defaultImage) {
+      changed = true;
+      nextTask = { ...nextTask, image: defaultImage };
+    }
+
+    if (!currentImage && defaultImage) {
+      changed = true;
+      nextTask = { ...nextTask, image: defaultImage };
+    }
+
+    const currentExternalUrl = typeof nextTask.externalUrl === 'string' ? nextTask.externalUrl.trim() : '';
+    const defaultExternalUrl = typeof defaultTask.externalUrl === 'string' ? defaultTask.externalUrl.trim() : '';
+    if (!currentExternalUrl && defaultExternalUrl) {
+      changed = true;
+      nextTask = { ...nextTask, externalUrl: defaultExternalUrl };
+    }
+
+    const mergedLocationIntro = mergeLocalizedOptionalField(nextTask.locationIntro, defaultTask.locationIntro);
+    if (mergedLocationIntro !== nextTask.locationIntro) {
+      changed = true;
+      nextTask = { ...nextTask, locationIntro: mergedLocationIntro };
+    }
+
+    if (task.id === TIME_TRAIN_TASK_ID && canonicalTimeTrainTask) {
+      const needsSync =
+        nextTask.title.vi !== canonicalTimeTrainTask.title.vi
+        || nextTask.title.en !== canonicalTimeTrainTask.title.en
+        || nextTask.description.vi !== canonicalTimeTrainTask.description.vi
+        || nextTask.description.en !== canonicalTimeTrainTask.description.en
+        || nextTask.points !== canonicalTimeTrainTask.points
+        || nextTask.difficulty !== canonicalTimeTrainTask.difficulty
+        || nextTask.category !== canonicalTimeTrainTask.category;
+
+      if (needsSync) {
+        changed = true;
+        nextTask = {
+          ...nextTask,
+          title: canonicalTimeTrainTask.title,
+          description: canonicalTimeTrainTask.description,
+          points: canonicalTimeTrainTask.points,
+          difficulty: canonicalTimeTrainTask.difficulty,
+          category: canonicalTimeTrainTask.category,
+        };
+      }
+    }
+
+    return [nextTask];
+  });
+
+  defaultTasks.forEach((task) => {
+    if (seenDefaultIds.has(task.id)) return;
+    changed = true;
+    merged.push(structuredClone(task));
+  });
+
+  if (changed) {
+    localStorage.setItem(TASKS_KEY, JSON.stringify(merged));
+  }
+
+  return merged;
+};
 
 export const loadTasks = (): ChallengeTask[] => {
   const stored = localStorage.getItem(TASKS_KEY);
   if (!stored) return cloneTasks(defaultTasks);
   try {
     const parsed = JSON.parse(stored) as ChallengeTask[];
-    return Array.isArray(parsed) ? parsed : cloneTasks(defaultTasks);
+    if (!Array.isArray(parsed)) return cloneTasks(defaultTasks);
+    return mergeStoredTasksWithDefaults(parsed);
   } catch {
     return cloneTasks(defaultTasks);
   }
@@ -90,6 +273,7 @@ export const createEmptyTask = (): ChallengeTask => ({
   id: `task-${Date.now()}`,
   title: { vi: '', en: '' },
   description: { vi: '', en: '' },
+  locationIntro: { vi: '', en: '' },
   category: 'general',
   difficulty: 'easy',
   points: 100,

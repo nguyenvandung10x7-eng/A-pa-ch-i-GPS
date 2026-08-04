@@ -48,27 +48,27 @@ export const LeaderboardPage = ({ language, t }: { language: LanguageCode; t: (k
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm uppercase tracking-[0.2em] text-cyan-200">{t('leaderboard.heading')}</p>
-          <h1 className="text-3xl font-black">{t('leaderboard.title')}</h1>
+      <p className="section-kicker">{t('leaderboard.heading')}</p>
+      <h1 className="text-3xl font-black text-[var(--forest-950)]">{t('leaderboard.title')}</h1>
         </div>
-        <div className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100">
+    <div className="rounded-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.62)] px-4 py-2 text-sm font-semibold text-[var(--forest-800)]">
           {user ? t('leaderboard.authenticated') : t('leaderboard.anonymous')}
         </div>
       </div>
 
-      <p className="mt-4 rounded-2xl border border-amber-300/35 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
+    <p className="mt-4 rounded-[1.4rem] border border-[rgba(112,79,39,0.16)] bg-[rgba(255,247,229,0.72)] px-4 py-3 text-sm leading-6 text-[var(--earth-900)]">
         {t('leaderboard.pointsNotice')}
       </p>
 
       {loading && (
-        <div className="mt-6 flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-4 text-slate-200">
+    <div className="mt-6 flex items-center gap-3 rounded-[1.4rem] bg-[rgba(255,255,255,0.62)] px-4 py-4 text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.12)]">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>{t('leaderboard.loading')}</span>
         </div>
       )}
 
       {!loading && error && (
-        <div className="mt-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-4 text-rose-200">
+    <div className="mt-6 rounded-[1.4rem] border border-[rgba(141,64,47,0.22)] bg-[rgba(170,85,70,0.12)] px-4 py-4 text-[var(--brocade-red)]">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
             <span>{error}</span>
@@ -77,7 +77,7 @@ export const LeaderboardPage = ({ language, t }: { language: LanguageCode; t: (k
       )}
 
       {!loading && !error && emptyState && (
-        <div className="mt-6 rounded-2xl bg-white/10 px-4 py-6 text-slate-300">
+    <div className="mt-6 rounded-[1.4rem] bg-[rgba(255,255,255,0.62)] px-4 py-6 text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.12)]">
           <p className="text-lg font-semibold">{t('leaderboard.emptyTitle')}</p>
           <p className="mt-2">{t('leaderboard.emptyDescription')}</p>
         </div>
@@ -86,36 +86,36 @@ export const LeaderboardPage = ({ language, t }: { language: LanguageCode; t: (k
       {!loading && !error && !emptyState && (
         <div className="mt-6 space-y-3">
           {entries.map((entry) => (
-            <article key={entry.id} className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4">
+        <article key={entry.id} className="rounded-[1.6rem] border border-[rgba(61,84,52,0.12)] bg-[rgba(255,255,255,0.58)] p-4 shadow-[0_14px_28px_rgba(38,52,31,0.08)]">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-300 font-black text-slate-950">
+            <div className="wood-panel flex h-12 w-12 items-center justify-center rounded-full font-black text-[var(--earth-900)]">
                     {entry.rank}
                   </div>
-                  <div>
+            <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <Trophy className="h-4 w-4 text-cyan-300" />
-                      <p className="font-black text-white">{entry.challengeTitleSnapshot || t('discover.unknownChallenge')}</p>
+              <Trophy className="h-4 w-4 text-[var(--forest-700)]" />
+              <p className="break-words font-black text-[var(--forest-950)]">{entry.challengeTitleSnapshot || t('discover.unknownChallenge')}</p>
                     </div>
-                    <p className="text-sm text-slate-300">{entry.displayName?.trim() || t('discover.anonymous')}</p>
-                    {entry.tiktokUsername ? <p className="text-sm text-cyan-200">@{entry.tiktokUsername}</p> : null}
+            <p className="text-sm text-[var(--forest-800)]">{entry.displayName?.trim() || t('discover.anonymous')}</p>
+            {entry.tiktokUsername ? <p className="text-sm text-[var(--forest-700)]">@{entry.tiktokUsername}</p> : null}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-3 text-sm text-slate-300">
-                  <div className="rounded-2xl bg-white/10 px-3 py-2">
-                    <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">{t('leaderboard.voteCount')}</p>
-                    <p className="font-black text-white">{entry.voteCount}</p>
+          <div className="flex flex-wrap gap-3 text-sm text-[var(--forest-800)]">
+            <div className="rounded-[1.2rem] bg-[rgba(255,255,255,0.72)] px-3 py-2 ring-1 ring-[rgba(61,84,52,0.12)]">
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--forest-700)]">{t('leaderboard.voteCount')}</p>
+            <p className="font-black text-[var(--forest-950)]">{entry.voteCount}</p>
                   </div>
-                  <div className="rounded-2xl bg-white/10 px-3 py-2">
-                    <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">{t('leaderboard.submitted')}</p>
+            <div className="rounded-[1.2rem] bg-[rgba(255,255,255,0.72)] px-3 py-2 ring-1 ring-[rgba(61,84,52,0.12)]">
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--forest-700)]">{t('leaderboard.submitted')}</p>
                     <p>{formatDate(entry.createdAt, language)}</p>
                   </div>
                   {entry.safeLink ? (
-                    <a href={entry.safeLink} target="_blank" rel="noopener noreferrer" className="rounded-full bg-cyan-300 px-4 py-2 font-black text-slate-950 transition hover:bg-cyan-200">
+            <a href={entry.safeLink} target="_blank" rel="noopener noreferrer" className="wood-panel inline-flex min-h-[3rem] items-center justify-center rounded-full px-4 py-2 font-black text-[var(--earth-900)] transition hover:-translate-y-px">
                       {t('discover.openTikTok')}
                     </a>
                   ) : (
-                    <span className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-slate-300">{t('discover.unavailableLink')}</span>
+            <span className="rounded-full border border-[rgba(61,84,52,0.14)] px-4 py-2 text-sm font-semibold text-[var(--forest-700)]">{t('discover.unavailableLink')}</span>
                   )}
                 </div>
               </div>
