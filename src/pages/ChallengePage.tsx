@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, Flag, RotateCcw, ShieldCheck, Trophy, XCircle } from 'lucide-react';
+import { CheckCircle2, Flag, Headphones, RotateCcw, ShieldCheck, Trophy, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -21,10 +21,22 @@ import { GeolocationRequestError, getCurrentPosition } from '../utils/geo';
 const findRunTask = (tasks: ChallengeTask[], taskId?: string) => tasks.find((task) => task.id === taskId);
 
 type GpsStatus = 'idle' | 'requestingPermission' | 'locating' | 'permissionDenied' | 'unavailable' | 'inaccurateLocation' | 'outsideTargetRadius' | 'verified';
+const GAMEPLAY_MUSIC_ACTION_EVENT = 'gps:challenge-music-action';
 const GAMEPLAY_MUSIC_PREPARE_EVENT = 'gps:challenge-music-prepare';
 const GAMEPLAY_MUSIC_ADVANCE_EVENT = 'gps:challenge-task-received';
 const GAMEPLAY_MUSIC_CANCEL_EVENT = 'gps:challenge-music-cancel';
 const SAMPLE_TIKTOK_URL = 'https://www.tiktok.com/@1954.theater';
+
+const isValidExternalChallengeUrl = (value?: string): value is string => {
+  if (!value) return false;
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
 
 export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: ChallengeTask[]; clearVersion: number; language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const navigate = useNavigate();
@@ -33,6 +45,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const [message, setMessage] = useState(() => t('challenge.ready'));
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
   const [isMutating, setIsMutating] = useState(false);
+  const [failedTaskImageKey, setFailedTaskImageKey] = useState<string | null>(null);
   const [completionPanelRunId, setCompletionPanelRunId] = useState<string | null>(null);
   const previousResetStateRef = useRef<{ activeTasks: ChallengeTask[]; clearVersion: number } | null>(null);
   const task = findRunTask(activeTasks, progress.activeRun?.taskId);
@@ -60,6 +73,8 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     };
   }, [activeTasks, clearVersion, t]);
 
+  const currentTaskImageKey = task?.image ? `${task.id}:${task.image}` : null;
+
   const runMutation = async (mutation: () => Promise<void>) => {
     if (isMutating) return;
     setIsMutating(true);
@@ -73,7 +88,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const startGame = async () => {
     if (isMutating) return;
 
-    window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
+    window.dispatchEvent(new CustomEvent<'next'>(GAMEPLAY_MUSIC_ACTION_EVENT, { detail: 'next' }));
 
     await runMutation(async () => {
       try {
@@ -81,21 +96,13 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         setProgress(result.progress);
         setGpsStatus('idle');
         if (result.stale) {
-          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
           setMessage(t('challenge.ready'));
           return;
-        }
-
-        if (result.progress.activeRun?.status === 'active') {
-          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
-        } else {
-          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
         }
 
         setCompletionPanelRunId(null);
         setMessage(result.progress.activeRun?.status === 'active' ? t('challenge.active') : t('challenge.allDone'));
       } catch (error) {
-        window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
         if (error instanceof ChallengeStorageLockUnavailableError) {
           setGpsStatus('idle');
           setMessage(t('challenge.status.unavailable'));
@@ -324,7 +331,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     });
   };
 
-  if (!canPlay) return <Card><p className="text-slate-200">{t('challenge.empty')}</p></Card>;
+  if (!canPlay) return <Card><p className="text-emerald-900">{t('challenge.empty')}</p></Card>;
 
   const handleDismissCompletionPanel = () => {
     setCompletionPanelRunId(null);
@@ -337,76 +344,150 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     void navigate(destination);
   };
 
+  const statusBadge = progress.activeRun?.status === 'active' ? t('history.active') : progress.activeRun?.status;
+  const taskExternalUrl = task && isValidExternalChallengeUrl(task.externalUrl) ? task.externalUrl : null;
+  const taskLocationIntro = task?.locationIntro ? localize(task.locationIntro, language).trim() : '';
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[.95fr_1.05fr]">
-      <Card>
-        <div className="overflow-hidden rounded-[1.5rem] bg-slate-950/30">
-          {task?.image && <img src={task.image} alt={localize(task.title, language)} className="h-56 w-full object-cover" />}
-          <div className="p-5">
-            <p className="text-cyan-200">{t('challenge.title')}</p>
-            <div className="mt-3 grid gap-3 sm:grid-cols-4">
-              <div className="rounded-3xl bg-cyan-300 px-5 py-3 text-center text-slate-950"><p className="text-xs font-bold">{t('challenge.total')}</p><p className="text-3xl font-black">{summary.enabledCount}</p></div>
-              <div className="rounded-3xl bg-white/10 px-5 py-3 text-center"><p className="text-xs font-bold text-slate-300">{t('challenge.completedCount')}</p><p className="text-3xl font-black">{summary.completedCount}</p></div>
-              <div className="rounded-3xl bg-white/10 px-5 py-3 text-center"><p className="text-xs font-bold text-slate-300">{t('challenge.skippedCount')}</p><p className="text-3xl font-black">{summary.skippedCount}</p></div>
-              <div className="rounded-3xl bg-white/10 px-5 py-3 text-center"><p className="text-xs font-bold text-slate-300">{t('challenge.remaining')}</p><p className="text-3xl font-black">{summary.remainingCount}</p></div>
-            </div>
+  <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,1.02fr)]">
+    <Card className="overflow-visible p-0">
+    <div className="overflow-hidden rounded-[1.9rem]">
+      {task?.image && failedTaskImageKey !== currentTaskImageKey ? (
+      <div className="relative h-56 sm:h-64">
+        <img
+          src={task.image}
+          alt={localize(task.title, language)}
+          className="h-full w-full object-cover"
+          onError={() => setFailedTaskImageKey(currentTaskImageKey)}
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,20,11,0.02),rgba(14,26,16,0.6))]" />
+      </div>
+      ) : (
+      <div className="relative h-48 bg-[linear-gradient(180deg,rgba(181,206,194,0.6),rgba(56,84,53,0.82))]">
+        <p className="absolute inset-x-4 top-4 rounded-[0.9rem] bg-[rgba(255,255,255,0.42)] px-3 py-2 text-xs font-semibold text-[var(--forest-900)]">
+          {t('challenge.imageUnavailable')}
+        </p>
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,transparent,rgba(20,34,18,0.42))]" />
+      </div>
+      )}
 
-            {task && progress.activeRun ? (
-              <div className="mt-6">
-                <p className="text-cyan-200">{task.category} • {task.difficulty} • {progress.activeRun.status}</p>
-                <h1 className="mt-2 text-3xl font-black">{localize(task.title, language)}</h1>
-                <p className="mt-3 text-slate-300">{localize(task.description, language)}</p>
-                <p className="mt-4 text-sm text-slate-400">{t('challenge.radius')} {task.gps.radius}m • {task.points} {t('challenge.points')}</p>
-              </div>
-            ) : (
-              <div className="mt-6 rounded-3xl bg-white/10 p-5">
-                <h1 className="text-3xl font-black">{isFinished ? t('challenge.allDone') : t('challenge.pending')}</h1>
-                <p className="mt-3 text-slate-300">{t('challenge.pendingDescription')}</p>
-              </div>
-            )}
+      <div className="p-5 sm:p-6">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="wood-panel rounded-[1.5rem] px-4 py-3 text-center text-[var(--earth-900)]">
+        <p className="text-xs font-bold uppercase tracking-[0.18em]">{t('challenge.total')}</p>
+        <p className="mt-2 text-3xl font-black">{summary.enabledCount}</p>
+        </div>
+        <div className="rounded-[1.5rem] bg-[rgba(255,255,255,0.52)] px-4 py-3 text-center ring-1 ring-[rgba(61,84,52,0.12)]">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.completedCount')}</p>
+        <p className="mt-2 text-3xl font-black text-[var(--forest-950)]">{summary.completedCount}</p>
+        </div>
+        <div className="rounded-[1.5rem] bg-[rgba(255,255,255,0.52)] px-4 py-3 text-center ring-1 ring-[rgba(61,84,52,0.12)]">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.skippedCount')}</p>
+        <p className="mt-2 text-3xl font-black text-[var(--forest-950)]">{summary.skippedCount}</p>
+        </div>
+        <div className="rounded-[1.5rem] bg-[rgba(255,255,255,0.52)] px-4 py-3 text-center ring-1 ring-[rgba(61,84,52,0.12)]">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.remaining')}</p>
+        <p className="mt-2 text-3xl font-black text-[var(--forest-950)]">{summary.remainingCount}</p>
+        </div>
+      </div>
 
-            <p className="mt-4 rounded-2xl bg-slate-950/50 p-4 text-cyan-50">{message}</p>
-            <p className="mt-2 text-sm text-cyan-200">{gpsStatus !== 'idle' ? `${t('challenge.gpsStatus')}: ${t(`challenge.status.${gpsStatus}`)}` : t('challenge.ready')}</p>
-            <p className="mt-3 rounded-2xl border border-amber-300/35 bg-amber-300/10 p-3 text-sm text-amber-100">
-              {t('challenge.safetyNotice')}
-            </p>
-            {completionPanelRunId && (
-              <div className="mt-4 rounded-2xl border border-cyan-300/35 bg-cyan-300/10 p-4 text-cyan-50">
-                <p className="text-base font-bold text-cyan-100">{t('challenge.completionHandoff.title')}</p>
-                <p className="mt-2 text-sm text-cyan-50">{t('challenge.completionHandoff.description')}</p>
-                <p className="mt-2 text-sm text-cyan-100">{t('challenge.completionHandoff.sampleHint')}</p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <a
-                    href={SAMPLE_TIKTOK_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-full border border-white/30 px-4 py-2 text-sm font-black text-white transition hover:bg-white/10"
-                  >
-                    {t('challenge.completionHandoff.sampleAction')}
-                  </a>
-                  <Button type="button" onClick={handleNavigateToTikTokSubmission}>
-                    {t('challenge.completionHandoff.submitAction')}
-                  </Button>
-                  <Button type="button" onClick={handleDismissCompletionPanel} variant="secondary">
-                    {t('challenge.completionHandoff.laterAction')}
-                  </Button>
-                </div>
-              </div>
-            )}
-            <div className="mt-5 flex flex-col gap-3">
-              <div className="flex flex-wrap gap-3">
-                <Button onClick={() => { void startGame(); }} disabled={isMutating} variant="secondary"><RotateCcw className="mr-2 inline h-5 w-5" />{t('challenge.newGame')}</Button>
-                <Button onClick={() => { void startNextChallenge(); }} disabled={canComplete || isMutating}><Trophy className="mr-2 inline h-5 w-5" />{t('challenge.next')}</Button>
-                <Button onClick={() => { void verifyGps(); }} disabled={!canComplete || isMutating}><ShieldCheck className="mr-2 inline h-5 w-5" />{t('challenge.verifyGps')}</Button>
-                <Button onClick={() => { void skipChallenge(); }} disabled={!canComplete || isMutating} variant="secondary"><XCircle className="mr-2 inline h-5 w-5" />{t('challenge.skip')}</Button>
-                <Button onClick={() => { void failChallenge(); }} disabled={!canComplete || isMutating} variant="secondary"><Flag className="mr-2 inline h-5 w-5" />{t('challenge.fail')}</Button>
-              </div>
-              <div className="flex gap-3 text-sm text-slate-200">{progress.activeRun?.gpsVerified && <span><CheckCircle2 className="inline h-4 w-4 text-emerald-300" /> {t('challenge.gpsStatus')}</span>}{progress.completedTaskIds.includes(task?.id ?? '') && <span><CheckCircle2 className="inline h-4 w-4 text-cyan-300" /> {t('challenge.completedStatus')}</span>}</div>
-            </div>
+      {task && progress.activeRun ? (
+        <div className="mt-6 min-w-0">
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full bg-[rgba(255,255,255,0.58)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--forest-700)] ring-1 ring-[rgba(61,84,52,0.12)]">{task.category}</span>
+          <span className="rounded-full bg-[rgba(255,255,255,0.58)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--forest-700)] ring-1 ring-[rgba(61,84,52,0.12)]">{task.difficulty}</span>
+          {statusBadge ? <span className="rounded-full bg-[rgba(201,148,62,0.16)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.12)]">{statusBadge}</span> : null}
+        </div>
+        <p className="mt-5 section-kicker">{t('challenge.title')}</p>
+        <h1 className="mt-2 break-words text-3xl font-black leading-tight text-[var(--forest-950)] sm:text-[2.4rem]">{localize(task.title, language)}</h1>
+        <p className="mt-4 text-base leading-7 text-[var(--forest-800)]">{localize(task.description, language)}</p>
+        {taskLocationIntro ? (
+          <div className="mt-4 rounded-[1.35rem] bg-[rgba(255,255,255,0.58)] p-4 ring-1 ring-[rgba(61,84,52,0.12)]">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.locationIntroLabel')}</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--forest-800)]">{taskLocationIntro}</p>
+          </div>
+        ) : null}
+        {taskExternalUrl ? (
+          <a
+            href={taskExternalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex min-h-[3rem] items-center justify-center rounded-full bg-[rgba(255,255,255,0.68)] px-5 py-3 text-sm font-black text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)] transition hover:bg-white"
+          >
+            {t('challenge.externalAction')}
+          </a>
+        ) : null}
+        <div className="mt-5 flex flex-wrap gap-3 text-sm text-[var(--forest-900)]">
+          <div className="rounded-[1.25rem] bg-[rgba(255,247,229,0.68)] px-4 py-3 ring-1 ring-[rgba(112,79,39,0.12)]">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--earth-800)]">{t('challenge.radius')}</p>
+          <p className="mt-1 font-black">{task.gps.radius}m</p>
+          </div>
+          <div className="rounded-[1.25rem] bg-[rgba(255,255,255,0.62)] px-4 py-3 ring-1 ring-[rgba(61,84,52,0.12)]">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.score')}</p>
+          <p className="mt-1 font-black">{task.points} {t('challenge.points')}</p>
           </div>
         </div>
-      </Card>
-      <TaskMap tasks={task ? [task] : activeTasks} language={language} />
+        </div>
+      ) : (
+        <div className="mt-6 rounded-[1.6rem] bg-[rgba(255,255,255,0.56)] p-5 ring-1 ring-[rgba(61,84,52,0.12)]">
+        <h1 className="text-3xl font-black text-[var(--forest-950)]">{isFinished ? t('challenge.allDone') : t('challenge.pending')}</h1>
+        <p className="mt-3 text-[var(--forest-800)]">{t('challenge.pendingDescription')}</p>
+        </div>
+      )}
+
+      <div className="mt-5 rounded-[1.45rem] border border-[rgba(61,84,52,0.12)] bg-[rgba(234,241,229,0.76)] p-4 text-[var(--forest-900)]">
+        {message}
+      </div>
+      <p className="mt-3 text-sm leading-6 text-[var(--forest-700)]">{gpsStatus !== 'idle' ? `${t('challenge.gpsStatus')}: ${t(`challenge.status.${gpsStatus}`)}` : t('challenge.ready')}</p>
+      <p className="mt-3 rounded-[1.35rem] border border-[rgba(112,79,39,0.16)] bg-[rgba(255,247,229,0.72)] p-4 text-sm leading-6 text-[var(--earth-900)]">
+        {t('challenge.safetyNotice')}
+      </p>
+
+      {completionPanelRunId && (
+        <div className="mt-4 rounded-[1.5rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.68)] p-4 text-[var(--forest-900)] shadow-[0_16px_30px_rgba(42,52,31,0.08)]">
+        <p className="text-base font-bold text-[var(--forest-950)]">{t('challenge.completionHandoff.title')}</p>
+        <p className="mt-2 text-sm leading-6 text-[var(--forest-800)]">{t('challenge.completionHandoff.description')}</p>
+        <p className="mt-2 text-sm leading-6 text-[var(--forest-700)]">{t('challenge.completionHandoff.sampleHint')}</p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <a
+          href={SAMPLE_TIKTOK_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-[3rem] items-center justify-center rounded-full border border-[rgba(61,84,52,0.16)] bg-[rgba(255,255,255,0.58)] px-4 py-2 text-sm font-black text-[var(--forest-900)] transition hover:bg-white"
+          >
+          {t('challenge.completionHandoff.sampleAction')}
+          </a>
+          <Button type="button" onClick={handleNavigateToTikTokSubmission}>
+          {t('challenge.completionHandoff.submitAction')}
+          </Button>
+          <Button type="button" onClick={handleDismissCompletionPanel} variant="secondary">
+          {t('challenge.completionHandoff.laterAction')}
+          </Button>
+        </div>
+        </div>
+      )}
+
+      <p className="mt-6 inline-flex items-start gap-2 rounded-[1.2rem] bg-[rgba(255,255,255,0.54)] px-3 py-2 text-sm text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.12)]">
+        <Headphones className="mt-0.5 h-4 w-4 shrink-0" />
+        <span>{t('challenge.headphoneRecommendation')}</span>
+      </p>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <Button onClick={() => { void startGame(); }} disabled={isMutating} variant="secondary" className="w-full"><RotateCcw className="h-5 w-5" />{t('challenge.newGame')}</Button>
+        <Button onClick={() => { void startNextChallenge(); }} disabled={canComplete || isMutating} className="w-full"><Trophy className="h-5 w-5" />{t('challenge.next')}</Button>
+        <Button onClick={() => { void verifyGps(); }} disabled={!canComplete || isMutating} className="w-full"><ShieldCheck className="h-5 w-5" />{t('challenge.verifyGps')}</Button>
+        <Button onClick={() => { void skipChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full"><XCircle className="h-5 w-5" />{t('challenge.skip')}</Button>
+        <Button onClick={() => { void failChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full sm:col-span-2"><Flag className="h-5 w-5" />{t('challenge.fail')}</Button>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-3 text-sm text-[var(--forest-700)]">
+        {progress.activeRun?.gpsVerified ? <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(234,241,229,0.72)] px-3 py-1.5 ring-1 ring-[rgba(61,84,52,0.12)]"><CheckCircle2 className="h-4 w-4 text-[var(--forest-700)]" />{t('challenge.gpsStatus')}</span> : null}
+        {progress.completedTaskIds.includes(task?.id ?? '') ? <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(255,247,229,0.72)] px-3 py-1.5 ring-1 ring-[rgba(112,79,39,0.12)]"><CheckCircle2 className="h-4 w-4 text-[var(--earth-800)]" />{t('challenge.completedStatus')}</span> : null}
+      </div>
+      </div>
     </div>
+    </Card>
+    <TaskMap tasks={task ? [task] : activeTasks} language={language} t={t} />
+  </div>
   );
 };

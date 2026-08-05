@@ -3,7 +3,345 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-body { margin: 0; min-width: 320px; min-height: 100vh; background: #06111f; }
-.leaflet-container { min-height: 360px; border-radius: 1.5rem; }
-.glass { background: linear-gradient(135deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.06)); backdrop-filter: blur(18px); border: 1px solid rgb(255 255 255 / 0.14); }
+:root {
+	color-scheme: light;
+	font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
+	--forest-950: #162516;
+	--forest-900: #1d3120;
+	--forest-800: #29442a;
+	--forest-700: #36593a;
+	--forest-600: #547156;
+	--moss-500: #728867;
+	--earth-900: #4b3422;
+	--earth-800: #6f4b31;
+	--earth-700: #926541;
+	--fabric-100: #f6efdd;
+	--fabric-200: #ead8bb;
+	--mist-100: rgba(247, 250, 244, 0.88);
+	--mist-200: rgba(233, 239, 226, 0.68);
+	--amber-500: #c9943e;
+	--brocade-red: #8d402f;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	overflow-x: hidden;
+	background: #dce6d4;
+}
+
+body {
+	margin: 0;
+	min-width: 320px;
+	min-height: 100vh;
+	color: var(--forest-950);
+	overflow-x: hidden;
+	background:
+		radial-gradient(75rem 22rem at 50% 112%, rgba(58, 90, 48, 0.18), transparent 72%),
+		radial-gradient(28rem 14rem at 12% 4%, rgba(255, 255, 255, 0.85), transparent 78%),
+		radial-gradient(24rem 12rem at 85% 10%, rgba(255, 241, 216, 0.7), transparent 80%),
+		linear-gradient(180deg, #a8d0d8 0%, #d9e5dc 31%, #ebeadb 57%, #e4d8bf 100%);
+}
+
+body::before,
+body::after {
+	content: "";
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 0;
+}
+
+body::before {
+	background:
+		repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 120px),
+		repeating-linear-gradient(180deg, rgba(45, 64, 40, 0.025) 0 1px, transparent 1px 96px);
+	opacity: 0.7;
+}
+
+body::after {
+	background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.2), transparent 44%);
+	mix-blend-mode: screen;
+}
+
+#root {
+	position: relative;
+	min-height: 100vh;
+	z-index: 1;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+img {
+	display: block;
+	max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+}
+
+.app-shell {
+	position: relative;
+	isolation: isolate;
+	min-height: 100vh;
+	overflow-x: clip;
+}
+
+.mountain-scene {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	pointer-events: none;
+	z-index: 0;
+}
+
+.mountain-haze {
+	position: absolute;
+	inset: 0;
+	background:
+		radial-gradient(circle at 20% 14%, rgba(255, 255, 255, 0.38), transparent 28%),
+		radial-gradient(circle at 80% 22%, rgba(249, 236, 212, 0.24), transparent 24%),
+		linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 40%);
+	filter: blur(1px);
+	opacity: 0.9;
+}
+
+.mountain-layer {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	transform-origin: bottom center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	clip-path: polygon(0 100%, 0 56%, 11% 60%, 18% 44%, 25% 54%, 36% 34%, 46% 49%, 56% 26%, 65% 42%, 76% 31%, 85% 48%, 100% 40%, 100% 100%);
+}
+
+.mountain-layer-far {
+	height: 46vh;
+	background: linear-gradient(180deg, rgba(94, 120, 105, 0.18), rgba(81, 112, 87, 0.52) 72%, rgba(56, 87, 58, 0.68));
+	bottom: 30vh;
+	filter: blur(1px);
+	opacity: 0.8;
+}
+
+.mountain-layer-mid {
+	height: 44vh;
+	background: linear-gradient(180deg, rgba(69, 96, 64, 0.22), rgba(44, 72, 43, 0.86));
+	bottom: 18vh;
+	opacity: 0.94;
+}
+
+.mountain-layer-front {
+	height: 36vh;
+	background: linear-gradient(180deg, rgba(39, 57, 33, 0.2), rgba(24, 38, 22, 0.96));
+	clip-path: polygon(0 100%, 0 68%, 8% 61%, 15% 66%, 21% 56%, 31% 70%, 40% 49%, 48% 59%, 58% 45%, 68% 62%, 78% 50%, 88% 64%, 100% 54%, 100% 100%);
+	bottom: 0;
+}
+
+.mountain-fog {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 22vh;
+	border-radius: 999px;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(240, 238, 228, 0.5));
+	filter: blur(20px);
+	opacity: 0.6;
+}
+
+.mountain-fog-top {
+	bottom: 30vh;
+}
+
+.mountain-fog-bottom {
+	bottom: 10vh;
+	opacity: 0.42;
+}
+
+.trail-line {
+	position: absolute;
+	left: 50%;
+	bottom: -10vh;
+	width: min(68vw, 760px);
+	height: 32vh;
+	border-radius: 999px;
+	border: 1px solid rgba(118, 91, 56, 0.24);
+	border-top-color: transparent;
+	border-left-color: transparent;
+	transform: translateX(-50%) rotate(-4deg);
+	box-shadow: 0 0 0 18px rgba(128, 101, 63, 0.05);
+	opacity: 0.55;
+}
+
+.leaflet-container {
+	min-height: 360px;
+	height: 100%;
+	border-radius: 1.6rem;
+	border: 1px solid rgba(73, 58, 41, 0.12);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+	z-index: 0;
+}
+
+.leaflet-pane,
+.leaflet-control,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-marker-pane,
+.leaflet-shadow-pane,
+.leaflet-overlay-pane,
+.leaflet-tooltip-pane,
+.leaflet-popup-pane {
+	z-index: 10;
+}
+
+
+.leaflet-popup-pane {
+	z-index: 20;
+}
+
+.leaflet-control-container {
+	position: relative;
+	z-index: 15;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+	background: rgba(246, 239, 221, 0.94);
+	color: var(--forest-950);
+	box-shadow: 0 14px 30px rgba(35, 36, 24, 0.18);
+	border: 1px solid rgba(87, 68, 45, 0.1);
+}
+
+.leaflet-popup-content {
+	margin: 12px 14px;
+	line-height: 1.5;
+}
+
+.leaflet-control-zoom a,
+.leaflet-control-attribution {
+	background: rgba(246, 239, 221, 0.94) !important;
+	color: var(--forest-900) !important;
+	border-color: rgba(87, 68, 45, 0.14) !important;
+}
+
+.glass {
+	background: linear-gradient(180deg, rgba(249, 244, 230, 0.96), rgba(237, 228, 205, 0.9));
+	backdrop-filter: blur(10px);
+	border: 1px solid rgba(97, 73, 49, 0.14);
+	box-shadow:
+		0 24px 48px rgba(31, 44, 29, 0.12),
+		inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.textile-border {
+	border: 2px solid transparent;
+	background-image:
+		linear-gradient(to right, rgba(249, 244, 230, 0.96), rgba(249, 244, 230, 0.96)),
+		repeating-linear-gradient(135deg, #a84f34 0 10px, #e0b54d 10px 20px, #203526 20px 30px, #f6efdd 30px 40px, #596e4f 40px 50px);
+	background-origin: border-box;
+	background-clip: padding-box, border-box;
+}
+
+.wood-panel {
+	background:
+		linear-gradient(180deg, rgba(241, 228, 199, 0.96), rgba(226, 205, 170, 0.92)),
+		repeating-linear-gradient(90deg, rgba(125, 87, 51, 0.07) 0 14px, rgba(166, 124, 77, 0.08) 14px 28px);
+	border: 1px solid rgba(104, 72, 45, 0.12);
+	box-shadow:
+		0 20px 34px rgba(41, 53, 31, 0.1),
+		inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.ban-flower {
+	position: relative;
+}
+
+.ban-flower::after {
+	content: "";
+	position: absolute;
+	right: 18px;
+	top: 16px;
+	width: 54px;
+	height: 54px;
+	border-radius: 9999px;
+	pointer-events: none;
+	opacity: 0.3;
+	background:
+		radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.95), transparent 38%),
+		radial-gradient(circle at 72% 40%, rgba(245, 214, 224, 0.88), transparent 40%),
+		radial-gradient(circle at 45% 75%, rgba(255, 241, 248, 0.9), transparent 42%);
+}
+
+.textile-divider {
+	background: repeating-linear-gradient(90deg, #873e2c 0 20px, #e0b54d 20px 40px, #1d2f20 40px 60px, #f5edda 60px 72px, #627658 72px 92px);
+	border-radius: 999px;
+	opacity: 0.9;
+}
+
+.section-kicker {
+	font-size: 0.72rem;
+	font-weight: 800;
+	letter-spacing: 0.24em;
+	text-transform: uppercase;
+	color: var(--forest-700);
+}
+
+.focus-ring {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(221, 182, 97, 0.34);
+}
+
+@keyframes float-firefly {
+	0% { transform: translateY(0); opacity: 0.3; }
+	50% { transform: translateY(-8px); opacity: 0.9; }
+	100% { transform: translateY(0); opacity: 0.35; }
+}
+
+.firefly {
+	position: absolute;
+	width: 6px;
+	height: 6px;
+	border-radius: 9999px;
+	background: rgb(255 226 123 / 0.95);
+	box-shadow: 0 0 18px rgb(255 212 89 / 0.9);
+	animation: float-firefly 2.8s ease-in-out infinite;
+	z-index: 1;
+}
+
+@media (max-width: 640px) {
+	.ban-flower::after {
+		right: 12px;
+		top: 12px;
+		width: 42px;
+		height: 42px;
+	}
+
+	.mountain-layer-far {
+		height: 36vh;
+		bottom: 32vh;
+	}
+
+	.mountain-layer-mid {
+		height: 34vh;
+		bottom: 20vh;
+	}
+
+	.mountain-layer-front {
+		height: 30vh;
+	}
+
+	.trail-line {
+		width: 96vw;
+		height: 26vh;
+	}
+}

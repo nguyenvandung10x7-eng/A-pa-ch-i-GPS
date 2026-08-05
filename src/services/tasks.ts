@@ -1,6 +1,7 @@
 import tasksJson from '../data/tasks.json';
 import type { ChallengeTask } from '../types/task';
 import { withChallengeStorageLock } from './challengeStorageLock';
+import { migrateTaskId } from './taskIdMigration';
 
 const TASKS_KEY = 'gps-challenge-tasks';
 export const CHALLENGE_CLEAR_VERSION_KEY = 'gps-challenge-clear-version';
@@ -21,14 +22,271 @@ export const getChallengeClearVersion = (): number => parseClearVersion(localSto
 
 const cloneTasks = (tasks: ChallengeTask[]) => structuredClone(tasks);
 
+const mergeLocalizedOptionalField = (
+  current: ChallengeTask['locationIntro'],
+  fallback: ChallengeTask['locationIntro'],
+): ChallengeTask['locationIntro'] => {
+  if (!fallback) return current;
+  if (current == null) return fallback;
+
+  if (typeof current !== 'object' || Array.isArray(current)) {
+    return fallback;
+  }
+
+  let nextValue = current;
+
+  if (typeof current.vi !== 'string') {
+    nextValue = { ...nextValue, vi: fallback.vi };
+  }
+
+  if (typeof current.en !== 'string') {
+    nextValue = { ...nextValue, en: fallback.en };
+  }
+
+  return nextValue;
+};
+
+const mergeLocalizedRequiredField = (
+  current: ChallengeTask['title'] | ChallengeTask['description'],
+  fallback: ChallengeTask['title'] | ChallengeTask['description'],
+): ChallengeTask['title'] | ChallengeTask['description'] => {
+  if (!current || typeof current !== 'object' || Array.isArray(current)) {
+    return fallback;
+  }
+
+  let nextValue = current;
+
+  if (typeof current.vi !== 'string') {
+    nextValue = { ...nextValue, vi: fallback.vi };
+  }
+
+  if (typeof current.en !== 'string') {
+    nextValue = { ...nextValue, en: fallback.en };
+  }
+
+  return nextValue;
+};
+
+const normalizeStringField = (value: unknown, fallback: string): string => {
+  if (typeof value !== 'string') return fallback;
+  const normalized = value.trim();
+  return normalized || fallback;
+};
+
+const normalizeOptionalStringField = (value: unknown, fallback: string | undefined): string | undefined => {
+  if (typeof value !== 'string') return fallback;
+  const normalized = value.trim();
+  if (normalized) return normalized;
+  return fallback;
+};
+
+const normalizePoints = (value: unknown, fallback: number): number => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
+  return value;
+};
+
+const normalizeEnabled = (value: unknown, fallback: boolean): boolean => {
+  if (typeof value !== 'boolean') return fallback;
+  return value;
+};
+
+const normalizeGps = (value: unknown, fallback: ChallengeTask['gps']): ChallengeTask['gps'] => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return fallback;
+  }
+
+  const candidate = value as Partial<ChallengeTask['gps']>;
+  const hasValidLat = typeof candidate.lat === 'number' && Number.isFinite(candidate.lat);
+  const hasValidLng = typeof candidate.lng === 'number' && Number.isFinite(candidate.lng);
+  const hasValidRadius = typeof candidate.radius === 'number' && Number.isFinite(candidate.radius) && candidate.radius > 0;
+
+  if (!hasValidLat || !hasValidLng || !hasValidRadius) {
+    return fallback;
+  }
+
+  return {
+    lat: candidate.lat,
+    lng: candidate.lng,
+    radius: candidate.radius,
+  };
+};
+
 export const defaultTasks = tasksJson as ChallengeTask[];
+
+const LEGACY_A1_TASK_ID = 'doi-a1-khoanh-khac-tuong-niem';
+const TIME_TRAIN_TASK_ID = 'doi-a1-chuyen-tau-thoi-gian-1954';
+const LEGACY_REMOVED_TASK_IDS = new Set([
+  'deo-pha-din-cat-banh',
+  'cong-vien-tai-dinh-cu-him-lam-cat-banh',
+]);
+
+const CHO_MUONG_NHE_OBSOLETE_IMAGE_PATHS = new Set([
+  '/images/tasks/cho-muong-nhe-mthen.webp',
+]);
+
+const mergeTaskWithDefault = (task: ChallengeTask, defaultTask: ChallengeTask): { task: ChallengeTask; changed: boolean } => {
+  let nextTask = task;
+  let changed = false;
+
+  const nextTitle = mergeLocalizedRequiredField(nextTask.title, defaultTask.title);
+  if (nextTitle !== nextTask.title) {
+    changed = true;
+    nextTask = { ...nextTask, title: nextTitle };
+  }
+
+  const nextDescription = mergeLocalizedRequiredField(nextTask.description, defaultTask.description);
+  if (nextDescription !== nextTask.description) {
+    changed = true;
+    nextTask = { ...nextTask, description: nextDescription };
+  }
+
+  const nextLocationIntro = mergeLocalizedOptionalField(nextTask.locationIntro, defaultTask.locationIntro);
+  if (nextLocationIntro !== nextTask.locationIntro) {
+    changed = true;
+    nextTask = { ...nextTask, locationIntro: nextLocationIntro };
+  }
+
+  const nextCategory = normalizeStringField(nextTask.category, defaultTask.category);
+  if (nextCategory !== nextTask.category) {
+    changed = true;
+    nextTask = { ...nextTask, category: nextCategory };
+  }
+
+  const nextDifficulty = normalizeStringField(nextTask.difficulty, defaultTask.difficulty);
+  if (nextDifficulty !== nextTask.difficulty) {
+    changed = true;
+    nextTask = { ...nextTask, difficulty: nextDifficulty };
+  }
+
+  const nextPoints = normalizePoints(nextTask.points, defaultTask.points);
+  if (nextPoints !== nextTask.points) {
+    changed = true;
+    nextTask = { ...nextTask, points: nextPoints };
+  }
+
+  const nextGps = normalizeGps(nextTask.gps, defaultTask.gps);
+  if (nextGps !== nextTask.gps) {
+    changed = true;
+    nextTask = { ...nextTask, gps: nextGps };
+  }
+
+  const nextEnabled = normalizeEnabled(nextTask.enabled, defaultTask.enabled);
+  if (nextEnabled !== nextTask.enabled) {
+    changed = true;
+    nextTask = { ...nextTask, enabled: nextEnabled };
+  }
+
+  const nextImage = normalizeStringField(nextTask.image, defaultTask.image);
+  if (nextImage !== nextTask.image) {
+    changed = true;
+    nextTask = { ...nextTask, image: nextImage };
+  }
+
+  const currentImage = typeof nextTask.image === 'string' ? nextTask.image.trim() : '';
+  const defaultImage = typeof defaultTask.image === 'string' ? defaultTask.image.trim() : '';
+  if (nextTask.id === 'cho-muong-nhe-tang-banh-trung-thu' && CHO_MUONG_NHE_OBSOLETE_IMAGE_PATHS.has(currentImage) && currentImage !== defaultImage && defaultImage) {
+    changed = true;
+    nextTask = { ...nextTask, image: defaultImage };
+  }
+
+  const nextExternalUrl = normalizeOptionalStringField(nextTask.externalUrl, defaultTask.externalUrl);
+  if (nextExternalUrl !== nextTask.externalUrl) {
+    changed = true;
+    nextTask = { ...nextTask, externalUrl: nextExternalUrl };
+  }
+
+  return { task: nextTask, changed };
+};
+
+const mergeStoredTasksWithDefaults = (storedTasks: ChallengeTask[]): ChallengeTask[] => {
+  const defaultsById = new Map(defaultTasks.map((task) => [task.id, task]));
+  const canonicalTimeTrainTask = defaultsById.get(TIME_TRAIN_TASK_ID);
+  let changed = false;
+  const hasCanonicalA1 = storedTasks.some((task) => task.id === TIME_TRAIN_TASK_ID);
+  const storedTaskIds = new Set(storedTasks.map((task) => task.id));
+  const seenDefaultIds = new Set<string>();
+
+  const cloneDefaultTask = (taskId: string): ChallengeTask | undefined => {
+    const defaultTask = defaultsById.get(taskId);
+    return defaultTask ? structuredClone(defaultTask) : undefined;
+  };
+
+  const merged = storedTasks.flatMap((task) => {
+    if (LEGACY_REMOVED_TASK_IDS.has(task.id)) {
+      changed = true;
+      return [];
+    }
+
+    const migratedTaskId = migrateTaskId(task.id);
+    if (migratedTaskId.changed) {
+      const renamedTaskId = migratedTaskId.taskId;
+      const canonicalTask = cloneDefaultTask(renamedTaskId);
+      if (!canonicalTask) return [];
+
+      if (storedTaskIds.has(renamedTaskId)) {
+        changed = true;
+        return [];
+      }
+
+      seenDefaultIds.add(renamedTaskId);
+      const mergedRenamedTask = mergeTaskWithDefault({
+        ...task,
+        id: renamedTaskId,
+      }, canonicalTask);
+      changed = true;
+      return [mergedRenamedTask.task];
+    }
+
+    if (task.id === LEGACY_A1_TASK_ID && hasCanonicalA1) {
+      changed = true;
+      return [];
+    }
+
+    if (task.id === LEGACY_A1_TASK_ID && canonicalTimeTrainTask) {
+      changed = true;
+      seenDefaultIds.add(canonicalTimeTrainTask.id);
+      const migratedLegacyA1Task = mergeTaskWithDefault({
+        ...task,
+        id: canonicalTimeTrainTask.id,
+      }, canonicalTimeTrainTask);
+      return [migratedLegacyA1Task.task];
+    }
+
+    const defaultTask = defaultsById.get(task.id);
+    if (!defaultTask) return [task];
+
+    seenDefaultIds.add(task.id);
+
+    let nextTask = task;
+    const mergedTask = mergeTaskWithDefault(task, defaultTask);
+    if (mergedTask.changed) {
+      changed = true;
+      nextTask = mergedTask.task;
+    }
+
+    return [nextTask];
+  });
+
+  defaultTasks.forEach((task) => {
+    if (seenDefaultIds.has(task.id)) return;
+    changed = true;
+    merged.push(structuredClone(task));
+  });
+
+  if (changed) {
+    localStorage.setItem(TASKS_KEY, JSON.stringify(merged));
+  }
+
+  return merged;
+};
 
 export const loadTasks = (): ChallengeTask[] => {
   const stored = localStorage.getItem(TASKS_KEY);
   if (!stored) return cloneTasks(defaultTasks);
   try {
     const parsed = JSON.parse(stored) as ChallengeTask[];
-    return Array.isArray(parsed) ? parsed : cloneTasks(defaultTasks);
+    if (!Array.isArray(parsed)) return cloneTasks(defaultTasks);
+    return mergeStoredTasksWithDefaults(parsed);
   } catch {
     return cloneTasks(defaultTasks);
   }
@@ -90,6 +348,7 @@ export const createEmptyTask = (): ChallengeTask => ({
   id: `task-${Date.now()}`,
   title: { vi: '', en: '' },
   description: { vi: '', en: '' },
+  locationIntro: { vi: '', en: '' },
   category: 'general',
   difficulty: 'easy',
   points: 100,

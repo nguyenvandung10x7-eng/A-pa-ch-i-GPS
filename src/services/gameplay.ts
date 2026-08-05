@@ -8,6 +8,7 @@ import {
 } from './history';
 import {
   CHALLENGE_HISTORY_KEY_V2,
+  CHALLENGE_HISTORY_KEY_LEGACY,
   CHALLENGE_PROGRESS_KEY_LEGACY,
   CHALLENGE_PROGRESS_KEY_V2,
   CHALLENGE_STORAGE_PROTOCOL_KEY,
@@ -15,6 +16,7 @@ import {
   getChallengeClearVersion,
 } from './tasks';
 import { withChallengeStorageLock } from './challengeStorageLock';
+import { migrateTaskId, migrateTaskIdList } from './taskIdMigration';
 
 type Coordinates = Pick<GpsPoint, 'lat' | 'lng'>;
 
@@ -38,12 +40,25 @@ type MutationGate = {
   bootstrapProgress: PlayerProgress;
 };
 
+type StorageTaskIdMigrationResult = {
+  changed: boolean;
+  nextRaw?: string;
+};
+
 type AuthoritativeProgressState = {
   progress: PlayerProgress;
   hasPersistedProgress: boolean;
 };
 
 const LEGACY_TIMESTAMP_FALLBACK = '1970-01-01T00:00:00.000Z';
+const GAMEPLAY_MIGRATION_KEYS = [
+  CHALLENGE_PROGRESS_KEY_LEGACY,
+  CHALLENGE_PROGRESS_KEY_V2,
+  CHALLENGE_HISTORY_KEY_LEGACY,
+  CHALLENGE_HISTORY_KEY_V2,
+] as const;
+
+let gameplayStorageMigrationPromise: Promise<void> | null = null;
 
 export type PlayerProgress = {
   gameId: string;
@@ -193,6 +208,11 @@ const normalizeTaskIds = (value: unknown): string[] => {
   return unique(value.filter((item): item is string => typeof item === 'string'));
 };
 
+const normalizeAndMigrateTaskIds = (value: unknown): { taskIds: string[]; changed: boolean } => {
+  const normalizedTaskIds = normalizeTaskIds(value);
+  return migrateTaskIdList(normalizedTaskIds);
+};
+
 const firstValidTimestamp = (...values: unknown[]): string | undefined => (
   values.find((value): value is string => typeof value === 'string' && value.trim().length > 0)
 );
@@ -204,20 +224,26 @@ const sanitizeProgress = (value: unknown, tasks: ChallengeTask[] = []): PlayerPr
   if (typeof parsed.gameId !== 'string') return undefined;
 
   const enabledTaskIds = new Set(tasks.filter((task) => task.enabled).map((task) => task.id));
-  const completedTaskIds = normalizeTaskIds(parsed.completedTaskIds).filter((id) => enabledTaskIds.size === 0 || enabledTaskIds.has(id));
-  const skippedTaskIds = normalizeTaskIds(parsed.skippedTaskIds).filter((id) => enabledTaskIds.size === 0 || enabledTaskIds.has(id));
-  const failedTaskIds = normalizeTaskIds(parsed.failedTaskIds).filter((id) => enabledTaskIds.size === 0 || enabledTaskIds.has(id));
+  const completedTaskIds = normalizeAndMigrateTaskIds(parsed.completedTaskIds).taskIds.filter((id) => enabledTaskIds.size === 0 || enabledTaskIds.has(id));
+  const skippedTaskIds = normalizeAndMigrateTaskIds(parsed.skippedTaskIds).taskIds.filter((id) => enabledTaskIds.size === 0 || enabledTaskIds.has(id));
+  const failedTaskIds = normalizeAndMigrateTaskIds(parsed.failedTaskIds).taskIds.filter((id) => enabledTaskIds.size === 0 || enabledTaskIds.has(id));
+  const attemptedTaskIdsSource = normalizeAndMigrateTaskIds(parsed.attemptedTaskIds).taskIds;
   const attemptedTaskIds = unique([
     ...completedTaskIds,
     ...skippedTaskIds,
     ...failedTaskIds,
-    ...normalizeTaskIds(parsed.attemptedTaskIds).filter((id) => enabledTaskIds.size === 0 || enabledTaskIds.has(id)),
+    ...attemptedTaskIdsSource.filter((id) => enabledTaskIds.size === 0 || enabledTaskIds.has(id)),
   ]);
 
   const rawActiveRun = parsed.activeRun && typeof parsed.activeRun === 'object' ? parsed.activeRun : undefined;
-  const activeRunTaskId = typeof rawActiveRun?.taskId === 'string' ? rawActiveRun.taskId : undefined;
+  const activeRunTaskId = typeof rawActiveRun?.taskId === 'string' ? migrateTaskId(rawActiveRun.taskId).taskId : undefined;
   const activeRunIsValid = Boolean(rawActiveRun && activeRunTaskId && (enabledTaskIds.size === 0 || enabledTaskIds.has(activeRunTaskId)) && rawActiveRun.status === 'active');
-  const activeRun = activeRunIsValid ? rawActiveRun as ChallengeRun : undefined;
+  const activeRun = activeRunIsValid
+    ? {
+      ...(rawActiveRun as ChallengeRun),
+      taskId: activeRunTaskId as string,
+    }
+    : undefined;
   const startedAt = firstValidTimestamp(parsed.startedAt, rawActiveRun?.startedAt, LEGACY_TIMESTAMP_FALLBACK) ?? LEGACY_TIMESTAMP_FALLBACK;
   const updatedAt = firstValidTimestamp(
     parsed.updatedAt,
@@ -246,6 +272,177 @@ const sanitizeProgress = (value: unknown, tasks: ChallengeTask[] = []): PlayerPr
   };
 };
 
+const migrateProgressTaskIds = (value: unknown): { value: unknown; changed: boolean } => {
+  if (!value || typeof value !== 'object') {
+    return { value, changed: false };
+  }
+
+  const parsed = value as Partial<PlayerProgress> & { activeRun?: Partial<ChallengeRun> };
+  let changed = false;
+
+  const completed = normalizeAndMigrateTaskIds(parsed.completedTaskIds);
+  if (completed.changed) {
+    changed = true;
+  }
+
+  const skipped = normalizeAndMigrateTaskIds(parsed.skippedTaskIds);
+  if (skipped.changed) {
+    changed = true;
+  }
+
+  const failed = normalizeAndMigrateTaskIds(parsed.failedTaskIds);
+  if (failed.changed) {
+    changed = true;
+  }
+
+  const attempted = normalizeAndMigrateTaskIds(parsed.attemptedTaskIds);
+  if (attempted.changed) {
+    changed = true;
+  }
+
+  const mergedAttempted = unique([
+    ...completed.taskIds,
+    ...skipped.taskIds,
+    ...failed.taskIds,
+    ...attempted.taskIds,
+  ]);
+
+  if (mergedAttempted.length !== attempted.taskIds.length || !mergedAttempted.every((taskId, index) => taskId === attempted.taskIds[index])) {
+    changed = true;
+  }
+
+  const rawActiveRun = parsed.activeRun && typeof parsed.activeRun === 'object' ? parsed.activeRun : undefined;
+  let migratedActiveRun = rawActiveRun;
+  if (rawActiveRun && typeof rawActiveRun.taskId === 'string') {
+    const migratedTaskId = migrateTaskId(rawActiveRun.taskId);
+    if (migratedTaskId.changed) {
+      changed = true;
+      migratedActiveRun = {
+        ...rawActiveRun,
+        taskId: migratedTaskId.taskId,
+      };
+    }
+  }
+
+  if (!changed) {
+    return { value, changed: false };
+  }
+
+  return {
+    value: {
+      ...parsed,
+      completedTaskIds: completed.taskIds,
+      skippedTaskIds: skipped.taskIds,
+      failedTaskIds: failed.taskIds,
+      attemptedTaskIds: mergedAttempted,
+      activeRun: migratedActiveRun,
+    },
+    changed: true,
+  };
+};
+
+const migrateProgressStorageRawTaskIds = (raw: string): StorageTaskIdMigrationResult => {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    const migrated = migrateProgressTaskIds(parsed);
+    if (!migrated.changed) {
+      return { changed: false };
+    }
+
+    return {
+      changed: true,
+      nextRaw: JSON.stringify(migrated.value),
+    };
+  } catch {
+    // Keep malformed progress storage untouched.
+    return { changed: false };
+  }
+};
+
+const migrateHistoryStorageRawTaskIds = (raw: string): StorageTaskIdMigrationResult => {
+  try {
+    const parsed = JSON.parse(raw) as ChallengeRun[];
+    if (!Array.isArray(parsed)) {
+      return { changed: false };
+    }
+
+    let changed = false;
+    const migratedItems = parsed.map((item) => {
+      if (!item || typeof item !== 'object' || typeof item.taskId !== 'string') {
+        return item;
+      }
+
+      const migratedTask = migrateTaskId(item.taskId);
+      if (!migratedTask.changed) {
+        return item;
+      }
+
+      changed = true;
+      return {
+        ...item,
+        taskId: migratedTask.taskId,
+      };
+    });
+
+    if (!changed) {
+      return { changed: false };
+    }
+
+    return {
+      changed: true,
+      nextRaw: JSON.stringify(migratedItems),
+    };
+  } catch {
+    // Keep malformed history storage untouched.
+    return { changed: false };
+  }
+};
+
+const migrateStorageRawTaskIds = (key: string, raw: string): StorageTaskIdMigrationResult => {
+  if (key === CHALLENGE_HISTORY_KEY_LEGACY || key === CHALLENGE_HISTORY_KEY_V2) {
+    return migrateHistoryStorageRawTaskIds(raw);
+  }
+
+  return migrateProgressStorageRawTaskIds(raw);
+};
+
+const migrateAllGameplayStorageTaskIdsWhileLocked = (): void => {
+  const rawByKey = new Map<string, string | null>();
+  GAMEPLAY_MIGRATION_KEYS.forEach((key) => {
+    rawByKey.set(key, localStorage.getItem(key));
+  });
+
+  const writes = new Map<string, string>();
+  rawByKey.forEach((raw, key) => {
+    if (!raw) {
+      return;
+    }
+
+    const migrated = migrateStorageRawTaskIds(key, raw);
+    if (!migrated.changed || typeof migrated.nextRaw !== 'string') {
+      return;
+    }
+
+    writes.set(key, migrated.nextRaw);
+  });
+
+  writes.forEach((nextRaw, key) => {
+    localStorage.setItem(key, nextRaw);
+  });
+};
+
+export const migrateAllGameplayStorageTaskIds = (): Promise<void> => {
+  if (!gameplayStorageMigrationPromise) {
+    gameplayStorageMigrationPromise = withChallengeStorageLock(() => {
+      migrateAllGameplayStorageTaskIdsWhileLocked();
+    }).finally(() => {
+      gameplayStorageMigrationPromise = null;
+    });
+  }
+
+  return gameplayStorageMigrationPromise;
+};
+
 const createRun = (task: ChallengeTask): ChallengeRun => ({
   id: crypto.randomUUID(),
   taskId: task.id,
@@ -266,7 +463,8 @@ const readProgressFromKey = (key: string, tasks: ChallengeTask[]): PlayerProgres
 
   try {
     const parsed = JSON.parse(stored) as unknown;
-    const sanitized = sanitizeProgress(parsed, tasks);
+    const migrated = migrateProgressTaskIds(parsed);
+    const sanitized = sanitizeProgress(migrated.value, tasks);
     if (!sanitized) return undefined;
     if (!isCurrentProgressVersion(sanitized)) return undefined;
     return sanitized;
@@ -284,6 +482,8 @@ const loadV2AuthoritativeProgressWhileLocked = (tasks: ChallengeTask[]): Authori
 };
 
 const migrateToProtocolV2WhileLocked = (tasks: ChallengeTask[]): AuthoritativeProgressState => {
+  migrateAllGameplayStorageTaskIdsWhileLocked();
+
   const protocol = localStorage.getItem(CHALLENGE_STORAGE_PROTOCOL_KEY);
   if (protocol === CHALLENGE_STORAGE_PROTOCOL_V2) {
     return loadV2AuthoritativeProgressWhileLocked(tasks);
