@@ -1,4 +1,5 @@
 import type { ChallengeRun } from '../types/task';
+import { migrateTaskId } from './taskIdMigration';
 import {
   CHALLENGE_HISTORY_KEY_LEGACY,
   CHALLENGE_HISTORY_KEY_V2,
@@ -24,11 +25,65 @@ export const restoreStoredHistoryV2RawWhileLocked = (raw: string | null): void =
   localStorage.setItem(CHALLENGE_HISTORY_KEY_V2, raw);
 };
 
+const migrateHistoryEntriesTaskIds = (items: ChallengeRun[]): { items: ChallengeRun[]; changed: boolean } => {
+  let changed = false;
+  const migratedItems = items.map((item) => {
+    if (!item || typeof item !== 'object' || typeof item.taskId !== 'string') {
+      return item;
+    }
+
+    const migratedTask = migrateTaskId(item.taskId);
+    if (!migratedTask.changed) {
+      return item;
+    }
+
+    changed = true;
+    return {
+      ...item,
+      taskId: migratedTask.taskId,
+    };
+  });
+
+  return { items: migratedItems, changed };
+};
+
+const migrateHistoryStorageTaskIdsInternal = (key: string): void => {
+  const raw = localStorage.getItem(key);
+  if (!raw) {
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as ChallengeRun[];
+    if (!Array.isArray(parsed)) {
+      return;
+    }
+
+    const migrated = migrateHistoryEntriesTaskIds(parsed);
+    if (!migrated.changed) {
+      return;
+    }
+
+    localStorage.setItem(key, JSON.stringify(migrated.items));
+  } catch {
+    // Keep malformed history storage untouched.
+  }
+};
+
+export const migrateHistoryStorageTaskIds = (key = CHALLENGE_HISTORY_KEY_V2): void => {
+  migrateHistoryStorageTaskIdsInternal(key);
+};
+
+export const migrateLegacyHistoryStorageTaskIds = (key = CHALLENGE_HISTORY_KEY_LEGACY): void => {
+  migrateHistoryStorageTaskIdsInternal(key);
+};
+
 const parseHistoryRaw = (raw: string | null): ChallengeRun[] => {
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw) as ChallengeRun[];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return migrateHistoryEntriesTaskIds(parsed).items;
   } catch {
     return [];
   }

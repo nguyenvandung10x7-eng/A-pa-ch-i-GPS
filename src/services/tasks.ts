@@ -245,20 +245,11 @@ const mergeStoredTasksWithDefaults = (storedTasks: ChallengeTask[]): ChallengeTa
     if (task.id === LEGACY_A1_TASK_ID && canonicalTimeTrainTask) {
       changed = true;
       seenDefaultIds.add(canonicalTimeTrainTask.id);
-      const currentImage = typeof task.image === 'string' ? task.image.trim() : '';
-      return [{
+      const migratedLegacyA1Task = mergeTaskWithDefault({
         ...task,
         id: canonicalTimeTrainTask.id,
-        title: canonicalTimeTrainTask.title,
-        description: canonicalTimeTrainTask.description,
-        locationIntro: task.locationIntro ?? canonicalTimeTrainTask.locationIntro,
-        category: canonicalTimeTrainTask.category,
-        difficulty: canonicalTimeTrainTask.difficulty,
-        points: canonicalTimeTrainTask.points,
-        enabled: canonicalTimeTrainTask.enabled,
-        externalUrl: canonicalTimeTrainTask.externalUrl,
-        image: currentImage || canonicalTimeTrainTask.image,
-      }];
+      }, canonicalTimeTrainTask);
+      return [migratedLegacyA1Task.task];
     }
 
     const defaultTask = defaultsById.get(task.id);
@@ -271,29 +262,6 @@ const mergeStoredTasksWithDefaults = (storedTasks: ChallengeTask[]): ChallengeTa
     if (mergedTask.changed) {
       changed = true;
       nextTask = mergedTask.task;
-    }
-
-    if (task.id === TIME_TRAIN_TASK_ID && canonicalTimeTrainTask) {
-      const needsSync =
-        nextTask.title.vi !== canonicalTimeTrainTask.title.vi
-        || nextTask.title.en !== canonicalTimeTrainTask.title.en
-        || nextTask.description.vi !== canonicalTimeTrainTask.description.vi
-        || nextTask.description.en !== canonicalTimeTrainTask.description.en
-        || nextTask.points !== canonicalTimeTrainTask.points
-        || nextTask.difficulty !== canonicalTimeTrainTask.difficulty
-        || nextTask.category !== canonicalTimeTrainTask.category;
-
-      if (needsSync) {
-        changed = true;
-        nextTask = {
-          ...nextTask,
-          title: canonicalTimeTrainTask.title,
-          description: canonicalTimeTrainTask.description,
-          points: canonicalTimeTrainTask.points,
-          difficulty: canonicalTimeTrainTask.difficulty,
-          category: canonicalTimeTrainTask.category,
-        };
-      }
     }
 
     return [nextTask];

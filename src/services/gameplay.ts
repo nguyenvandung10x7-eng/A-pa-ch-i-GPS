@@ -3,8 +3,6 @@ import { distanceMeters } from '../utils/geo';
 import {
   getStoredHistoryRawV2,
   loadLegacyHistoryForVersion,
-  migrateHistoryStorageTaskIds,
-  migrateLegacyHistoryStorageTaskIds,
   restoreStoredHistoryV2RawWhileLocked,
   saveRunWhileLocked,
 } from './history';
@@ -42,12 +40,25 @@ type MutationGate = {
   bootstrapProgress: PlayerProgress;
 };
 
+type StorageTaskIdMigrationResult = {
+  changed: boolean;
+  nextRaw?: string;
+};
+
 type AuthoritativeProgressState = {
   progress: PlayerProgress;
   hasPersistedProgress: boolean;
 };
 
 const LEGACY_TIMESTAMP_FALLBACK = '1970-01-01T00:00:00.000Z';
+const GAMEPLAY_MIGRATION_KEYS = [
+  CHALLENGE_PROGRESS_KEY_LEGACY,
+  CHALLENGE_PROGRESS_KEY_V2,
+  CHALLENGE_HISTORY_KEY_LEGACY,
+  CHALLENGE_HISTORY_KEY_V2,
+] as const;
+
+let gameplayStorageMigrationPromise: Promise<void> | null = null;
 
 export type PlayerProgress = {
   gameId: string;
@@ -330,30 +341,106 @@ const migrateProgressTaskIds = (value: unknown): { value: unknown; changed: bool
   };
 };
 
-const migrateProgressStorageTaskIds = (key: string): void => {
-  const raw = localStorage.getItem(key);
-  if (!raw) {
-    return;
-  }
-
+const migrateProgressStorageRawTaskIds = (raw: string): StorageTaskIdMigrationResult => {
   try {
     const parsed = JSON.parse(raw) as unknown;
     const migrated = migrateProgressTaskIds(parsed);
     if (!migrated.changed) {
-      return;
+      return { changed: false };
     }
 
-    localStorage.setItem(key, JSON.stringify(migrated.value));
+    return {
+      changed: true,
+      nextRaw: JSON.stringify(migrated.value),
+    };
   } catch {
     // Keep malformed progress storage untouched.
+    return { changed: false };
   }
 };
 
-export const migrateAllGameplayStorageTaskIds = (): void => {
-  migrateProgressStorageTaskIds(CHALLENGE_PROGRESS_KEY_LEGACY);
-  migrateProgressStorageTaskIds(CHALLENGE_PROGRESS_KEY_V2);
-  migrateLegacyHistoryStorageTaskIds(CHALLENGE_HISTORY_KEY_LEGACY);
-  migrateHistoryStorageTaskIds(CHALLENGE_HISTORY_KEY_V2);
+const migrateHistoryStorageRawTaskIds = (raw: string): StorageTaskIdMigrationResult => {
+  try {
+    const parsed = JSON.parse(raw) as ChallengeRun[];
+    if (!Array.isArray(parsed)) {
+      return { changed: false };
+    }
+
+    let changed = false;
+    const migratedItems = parsed.map((item) => {
+      if (!item || typeof item !== 'object' || typeof item.taskId !== 'string') {
+        return item;
+      }
+
+      const migratedTask = migrateTaskId(item.taskId);
+      if (!migratedTask.changed) {
+        return item;
+      }
+
+      changed = true;
+      return {
+        ...item,
+        taskId: migratedTask.taskId,
+      };
+    });
+
+    if (!changed) {
+      return { changed: false };
+    }
+
+    return {
+      changed: true,
+      nextRaw: JSON.stringify(migratedItems),
+    };
+  } catch {
+    // Keep malformed history storage untouched.
+    return { changed: false };
+  }
+};
+
+const migrateStorageRawTaskIds = (key: string, raw: string): StorageTaskIdMigrationResult => {
+  if (key === CHALLENGE_HISTORY_KEY_LEGACY || key === CHALLENGE_HISTORY_KEY_V2) {
+    return migrateHistoryStorageRawTaskIds(raw);
+  }
+
+  return migrateProgressStorageRawTaskIds(raw);
+};
+
+const migrateAllGameplayStorageTaskIdsWhileLocked = (): void => {
+  const rawByKey = new Map<string, string | null>();
+  GAMEPLAY_MIGRATION_KEYS.forEach((key) => {
+    rawByKey.set(key, localStorage.getItem(key));
+  });
+
+  const writes = new Map<string, string>();
+  rawByKey.forEach((raw, key) => {
+    if (!raw) {
+      return;
+    }
+
+    const migrated = migrateStorageRawTaskIds(key, raw);
+    if (!migrated.changed || typeof migrated.nextRaw !== 'string') {
+      return;
+    }
+
+    writes.set(key, migrated.nextRaw);
+  });
+
+  writes.forEach((nextRaw, key) => {
+    localStorage.setItem(key, nextRaw);
+  });
+};
+
+export const migrateAllGameplayStorageTaskIds = (): Promise<void> => {
+  if (!gameplayStorageMigrationPromise) {
+    gameplayStorageMigrationPromise = withChallengeStorageLock(() => {
+      migrateAllGameplayStorageTaskIdsWhileLocked();
+    }).finally(() => {
+      gameplayStorageMigrationPromise = null;
+    });
+  }
+
+  return gameplayStorageMigrationPromise;
 };
 
 const createRun = (task: ChallengeTask): ChallengeRun => ({
@@ -402,7 +489,7 @@ const loadV2AuthoritativeProgressWhileLocked = (tasks: ChallengeTask[]): Authori
 };
 
 const migrateToProtocolV2WhileLocked = (tasks: ChallengeTask[]): AuthoritativeProgressState => {
-  migrateAllGameplayStorageTaskIds();
+  migrateAllGameplayStorageTaskIdsWhileLocked();
 
   const protocol = localStorage.getItem(CHALLENGE_STORAGE_PROTOCOL_KEY);
   if (protocol === CHALLENGE_STORAGE_PROTOCOL_V2) {
@@ -534,8 +621,6 @@ export const createNewGameWithChallenge = async (
 };
 
 const loadRenderProgress = (tasks: ChallengeTask[] = []): PlayerProgress | undefined => {
-  migrateAllGameplayStorageTaskIds();
-
   const protocol = localStorage.getItem(CHALLENGE_STORAGE_PROTOCOL_KEY);
   if (protocol === CHALLENGE_STORAGE_PROTOCOL_V2) {
     return readProgressFromKey(CHALLENGE_PROGRESS_KEY_V2, tasks);
