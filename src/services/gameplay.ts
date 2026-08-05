@@ -465,13 +465,6 @@ const readProgressFromKey = (key: string, tasks: ChallengeTask[]): PlayerProgres
     const parsed = JSON.parse(stored) as unknown;
     const migrated = migrateProgressTaskIds(parsed);
     const sanitized = sanitizeProgress(migrated.value, tasks);
-    if (migrated.changed && sanitized) {
-      try {
-        localStorage.setItem(key, JSON.stringify(sanitized));
-      } catch {
-        // Best-effort persistence for migration normalization.
-      }
-    }
     if (!sanitized) return undefined;
     if (!isCurrentProgressVersion(sanitized)) return undefined;
     return sanitized;
