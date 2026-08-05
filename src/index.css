@@ -29,20 +29,22 @@
 
 html {
 	overflow-x: hidden;
-	background: #dce6d4;
+	background: #ccd6c8;
 }
 
 body {
 	margin: 0;
 	min-width: 320px;
 	min-height: 100vh;
+	font-size: 1.05rem;
+	line-height: 1.62;
 	color: var(--forest-950);
 	overflow-x: hidden;
 	background:
-		radial-gradient(75rem 22rem at 50% 112%, rgba(58, 90, 48, 0.18), transparent 72%),
-		radial-gradient(28rem 14rem at 12% 4%, rgba(255, 255, 255, 0.85), transparent 78%),
-		radial-gradient(24rem 12rem at 85% 10%, rgba(255, 241, 216, 0.7), transparent 80%),
-		linear-gradient(180deg, #a8d0d8 0%, #d9e5dc 31%, #ebeadb 57%, #e4d8bf 100%);
+		radial-gradient(75rem 22rem at 50% 112%, rgba(44, 72, 38, 0.26), transparent 72%),
+		radial-gradient(28rem 14rem at 12% 4%, rgba(243, 246, 238, 0.64), transparent 78%),
+		radial-gradient(24rem 12rem at 85% 10%, rgba(236, 221, 194, 0.56), transparent 80%),
+		linear-gradient(180deg, #8fb8bf 0%, #becdc4 30%, #d4d5c9 58%, #ccbfa5 100%);
 }
 
 body::before,
@@ -62,7 +64,7 @@ body::before {
 }
 
 body::after {
-	background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.2), transparent 44%);
+	background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.12), transparent 44%);
 	mix-blend-mode: screen;
 }
 
@@ -108,9 +110,9 @@ textarea {
 	position: absolute;
 	inset: 0;
 	background:
-		radial-gradient(circle at 20% 14%, rgba(255, 255, 255, 0.38), transparent 28%),
-		radial-gradient(circle at 80% 22%, rgba(249, 236, 212, 0.24), transparent 24%),
-		linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 40%);
+		radial-gradient(circle at 20% 14%, rgba(255, 255, 255, 0.26), transparent 28%),
+		radial-gradient(circle at 80% 22%, rgba(249, 236, 212, 0.18), transparent 24%),
+		linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 40%);
 	filter: blur(1px);
 	opacity: 0.9;
 }
@@ -154,7 +156,7 @@ textarea {
 	right: 0;
 	height: 22vh;
 	border-radius: 999px;
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(240, 238, 228, 0.5));
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(217, 218, 207, 0.42));
 	filter: blur(20px);
 	opacity: 0.6;
 }
@@ -216,7 +218,7 @@ textarea {
 
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
-	background: rgba(246, 239, 221, 0.94);
+	background: rgba(231, 222, 200, 0.94);
 	color: var(--forest-950);
 	box-shadow: 0 14px 30px rgba(35, 36, 24, 0.18);
 	border: 1px solid rgba(87, 68, 45, 0.1);
@@ -229,18 +231,18 @@ textarea {
 
 .leaflet-control-zoom a,
 .leaflet-control-attribution {
-	background: rgba(246, 239, 221, 0.94) !important;
+	background: rgba(231, 222, 200, 0.94) !important;
 	color: var(--forest-900) !important;
 	border-color: rgba(87, 68, 45, 0.14) !important;
 }
 
 .glass {
-	background: linear-gradient(180deg, rgba(249, 244, 230, 0.96), rgba(237, 228, 205, 0.9));
+	background: linear-gradient(180deg, rgba(236, 229, 213, 0.96), rgba(217, 204, 178, 0.92));
 	backdrop-filter: blur(10px);
-	border: 1px solid rgba(97, 73, 49, 0.14);
+	border: 1px solid rgba(88, 68, 46, 0.18);
 	box-shadow:
-		0 24px 48px rgba(31, 44, 29, 0.12),
-		inset 0 1px 0 rgba(255, 255, 255, 0.5);
+		0 24px 48px rgba(27, 40, 25, 0.16),
+		inset 0 1px 0 rgba(255, 255, 255, 0.38);
 }
 
 .textile-border {
@@ -254,12 +256,12 @@ textarea {
 
 .wood-panel {
 	background:
-		linear-gradient(180deg, rgba(241, 228, 199, 0.96), rgba(226, 205, 170, 0.92)),
-		repeating-linear-gradient(90deg, rgba(125, 87, 51, 0.07) 0 14px, rgba(166, 124, 77, 0.08) 14px 28px);
-	border: 1px solid rgba(104, 72, 45, 0.12);
+		linear-gradient(180deg, rgba(224, 209, 176, 0.96), rgba(203, 180, 144, 0.94)),
+		repeating-linear-gradient(90deg, rgba(112, 78, 46, 0.1) 0 14px, rgba(154, 114, 70, 0.1) 14px 28px);
+	border: 1px solid rgba(93, 65, 41, 0.16);
 	box-shadow:
-		0 20px 34px rgba(41, 53, 31, 0.1),
-		inset 0 1px 0 rgba(255, 255, 255, 0.42);
+		0 20px 34px rgba(31, 44, 27, 0.14),
+		inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .ban-flower {
@@ -294,6 +296,26 @@ textarea {
 	letter-spacing: 0.24em;
 	text-transform: uppercase;
 	color: var(--forest-700);
+}
+
+.text-sm {
+	font-size: 0.97rem;
+	line-height: 1.5;
+}
+
+.text-base {
+	font-size: 1.12rem;
+	line-height: 1.62;
+}
+
+@media (max-width: 640px) {
+	body {
+		font-size: 1.02rem;
+	}
+
+	.text-base {
+		font-size: 1.06rem;
+	}
 }
 
 .focus-ring {

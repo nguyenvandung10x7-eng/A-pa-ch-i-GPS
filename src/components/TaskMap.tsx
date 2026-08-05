@@ -6,12 +6,12 @@ export const TaskMap = ({ tasks, language, t }: { tasks: ChallengeTask[]; langua
   const first = tasks[0]?.gps;
   return (
   <section className="wood-panel textile-border relative z-10 rounded-[2rem] p-3 shadow-[0_22px_48px_rgba(39,52,31,0.14)] sm:p-4">
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-[1.35rem] bg-[rgba(255,248,236,0.55)] px-4 py-3 ring-1 ring-[rgba(92,67,40,0.08)]">
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-[1.35rem] bg-[rgba(230,222,204,0.66)] px-4 py-3 ring-1 ring-[rgba(92,67,40,0.12)]">
     <div>
       <p className="section-kicker">{t('challenge.gpsStatus')}</p>
-      <p className="text-base font-black text-[var(--forest-950)]">{tasks.length > 1 ? t('challenge.title') : localize(tasks[0].title, language)}</p>
+      <p className="text-lg font-black text-[var(--forest-950)] sm:text-[1.35rem]">{tasks.length > 1 ? t('challenge.title') : localize(tasks[0].title, language)}</p>
     </div>
-    <p className="rounded-full bg-[rgba(255,255,255,0.65)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[var(--earth-800)] ring-1 ring-[rgba(92,67,40,0.08)]">
+    <p className="rounded-full bg-[rgba(246,241,230,0.75)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[var(--earth-800)] ring-1 ring-[rgba(92,67,40,0.1)]">
       {tasks.length}
     </p>
     </div>

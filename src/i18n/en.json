@@ -16,6 +16,8 @@
   "landing.savedRuns": "Saved runs",
   "landing.enabledTasks": "Enabled tasks",
   "landing.languages": "Languages",
+  "landing.facebook.title": "Follow us on Facebook",
+  "landing.facebook.description": "View weekly rewards and the latest announcements",
   "challenge.title": "Random challenge",
   "challenge.locationIntroLabel": "About this location",
   "challenge.empty": "No enabled tasks are available. Enable or add a task in Admin.",

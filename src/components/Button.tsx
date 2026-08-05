@@ -20,7 +20,7 @@ export const Button = ({ children, className = '', disabled = false, onClick, ty
     type={type}
     disabled={disabled}
     onClick={onClick}
-    className={`inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-black tracking-[0.01em] transition duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)] disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
+    className={`inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-full px-5 py-3 text-[1.03rem] font-black tracking-[0.01em] transition duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)] disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
   >
     {children}
   </button>

@@ -16,6 +16,8 @@
   "landing.savedRuns": "Lượt đã lưu",
   "landing.enabledTasks": "Nhiệm vụ bật",
   "landing.languages": "Ngôn ngữ",
+  "landing.facebook.title": "Theo dõi Facebook",
+  "landing.facebook.description": "Xem phần thưởng tuần và thông báo mới nhất",
   "challenge.title": "Thử thách ngẫu nhiên",
   "challenge.locationIntroLabel": "Giới thiệu địa điểm",
   "challenge.empty": "Chưa có nhiệm vụ nào được bật. Hãy bật hoặc thêm nhiệm vụ trong Quản trị.",

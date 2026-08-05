@@ -52,14 +52,31 @@ export const LandingPage = ({ tasks, clearVersion, t }: { tasks: ChallengeTask[]
         onClick={() => {
           window.dispatchEvent(new CustomEvent<'start'>(GAMEPLAY_MUSIC_ACTION_EVENT, { detail: 'start' }));
         }}
-        className="wood-panel inline-flex min-h-[3.2rem] items-center justify-center rounded-full px-6 py-3 font-black text-[var(--earth-900)] shadow-[0_16px_28px_rgba(104,76,41,0.18)] transition hover:-translate-y-px"
+        className="wood-panel inline-flex min-h-[3.2rem] items-center justify-center rounded-full px-6 py-3 text-[1.08rem] font-black text-[var(--earth-900)] shadow-[0_16px_28px_rgba(104,76,41,0.18)] transition hover:-translate-y-px"
       >
         {t('landing.start')}
       </Link>
-      <Link to="/admin" className="inline-flex min-h-[3.2rem] items-center justify-center rounded-full bg-[rgba(247,241,228,0.72)] px-6 py-3 font-bold text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)] transition hover:bg-[rgba(255,255,255,0.76)]">
+      <Link to="/admin" className="inline-flex min-h-[3.2rem] items-center justify-center rounded-full bg-[rgba(229,223,210,0.8)] px-6 py-3 text-[1.02rem] font-bold text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.16)] transition hover:bg-[rgba(236,231,219,0.9)]">
         {t('landing.admin')}
       </Link>
       </div>
+
+      <a
+        href="https://www.facebook.com/db1954tour"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-6 flex w-full max-w-2xl items-start gap-3 rounded-[1.45rem] bg-[rgba(232,225,211,0.88)] px-4 py-3 ring-1 ring-[rgba(61,84,52,0.15)] transition hover:bg-[rgba(239,234,223,0.95)]"
+      >
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[rgba(24,119,242,0.2)] text-[#1877f2] ring-1 ring-[rgba(24,119,242,0.3)]" aria-hidden="true">
+          <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" focusable="false" aria-hidden="true">
+            <path d="M13.5 22v-8.2h2.8l.4-3.2h-3.2V8.6c0-.9.3-1.5 1.6-1.5h1.7V4.2c-.8-.1-1.6-.2-2.4-.2-2.4 0-4 1.5-4 4.1v2.3H8v3.2h2.4V22h3.1Z" />
+          </svg>
+        </span>
+        <span className="min-w-0">
+          <span className="block text-[1.01rem] font-black text-[var(--forest-950)]">{t('landing.facebook.title')}</span>
+          <span className="mt-1 block text-sm leading-6 text-[var(--forest-800)]">{t('landing.facebook.description')}</span>
+        </span>
+      </a>
     </div>
     </section>
 

@@ -363,7 +363,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,20,11,0.02),rgba(14,26,16,0.6))]" />
       </div>
       ) : (
-      <div className="relative h-48 bg-[linear-gradient(180deg,rgba(181,206,194,0.6),rgba(56,84,53,0.82))]">
+      <div className="relative h-48 bg-[linear-gradient(180deg,rgba(161,189,177,0.64),rgba(46,72,44,0.86))]">
         <p className="absolute inset-x-4 top-4 rounded-[0.9rem] bg-[rgba(255,255,255,0.42)] px-3 py-2 text-xs font-semibold text-[var(--forest-900)]">
           {t('challenge.imageUnavailable')}
         </p>
@@ -377,15 +377,15 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         <p className="text-xs font-bold uppercase tracking-[0.18em]">{t('challenge.total')}</p>
         <p className="mt-2 text-3xl font-black">{summary.enabledCount}</p>
         </div>
-        <div className="rounded-[1.5rem] bg-[rgba(255,255,255,0.52)] px-4 py-3 text-center ring-1 ring-[rgba(61,84,52,0.12)]">
+        <div className="rounded-[1.5rem] bg-[rgba(243,239,230,0.58)] px-4 py-3 text-center ring-1 ring-[rgba(61,84,52,0.14)]">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.completedCount')}</p>
         <p className="mt-2 text-3xl font-black text-[var(--forest-950)]">{summary.completedCount}</p>
         </div>
-        <div className="rounded-[1.5rem] bg-[rgba(255,255,255,0.52)] px-4 py-3 text-center ring-1 ring-[rgba(61,84,52,0.12)]">
+        <div className="rounded-[1.5rem] bg-[rgba(243,239,230,0.58)] px-4 py-3 text-center ring-1 ring-[rgba(61,84,52,0.14)]">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.skippedCount')}</p>
         <p className="mt-2 text-3xl font-black text-[var(--forest-950)]">{summary.skippedCount}</p>
         </div>
-        <div className="rounded-[1.5rem] bg-[rgba(255,255,255,0.52)] px-4 py-3 text-center ring-1 ring-[rgba(61,84,52,0.12)]">
+        <div className="rounded-[1.5rem] bg-[rgba(243,239,230,0.58)] px-4 py-3 text-center ring-1 ring-[rgba(61,84,52,0.14)]">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.remaining')}</p>
         <p className="mt-2 text-3xl font-black text-[var(--forest-950)]">{summary.remainingCount}</p>
         </div>
@@ -399,7 +399,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           {statusBadge ? <span className="rounded-full bg-[rgba(201,148,62,0.16)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.12)]">{statusBadge}</span> : null}
         </div>
         <p className="mt-5 section-kicker">{t('challenge.title')}</p>
-        <h1 className="mt-2 break-words text-3xl font-black leading-tight text-[var(--forest-950)] sm:text-[2.4rem]">{localize(task.title, language)}</h1>
+        <h1 className="mt-2 break-words text-[2.15rem] font-black leading-tight text-[var(--forest-950)] sm:text-[2.55rem]">{localize(task.title, language)}</h1>
         <p className="mt-4 text-base leading-7 text-[var(--forest-800)]">{localize(task.description, language)}</p>
         {taskLocationIntro ? (
           <div className="mt-4 rounded-[1.35rem] bg-[rgba(255,255,255,0.58)] p-4 ring-1 ring-[rgba(61,84,52,0.12)]">

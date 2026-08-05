@@ -634,7 +634,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
 
     <div className="relative z-10">
     <header className="sticky top-0 z-30 px-3 pt-3 sm:px-4">
-      <div className="mx-auto max-w-7xl rounded-[2.25rem] bg-[rgba(237,232,219,0.28)] pb-3 backdrop-blur-[2px]">
+      <div className="mx-auto max-w-7xl rounded-[2.25rem] bg-[rgba(205,197,179,0.4)] pb-3 backdrop-blur-[2px]">
       <div className="wood-panel relative overflow-visible rounded-[2rem] px-4 py-4 sm:px-5">
         <div className="textile-divider absolute inset-x-6 bottom-0 h-2" />
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -654,12 +654,12 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-3 xl:items-end">
-          <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[var(--forest-900)] xl:justify-end">
+          <div className="flex flex-wrap items-center gap-2 text-[0.99rem] font-semibold text-[var(--forest-900)] xl:justify-end">
           {navItems.map(([to, key]) => (
             <NavLink
             key={to}
             to={to}
-            className={({ isActive }) => `rounded-full px-4 py-2.5 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)] ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.16)]' : 'bg-[rgba(247,241,228,0.76)] ring-1 ring-[rgba(61,84,52,0.14)] hover:bg-[rgba(252,248,241,0.95)]'}`}
+            className={({ isActive }) => `rounded-full px-4 py-2.5 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)] ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.16)]' : 'bg-[rgba(231,225,212,0.82)] ring-1 ring-[rgba(61,84,52,0.16)] hover:bg-[rgba(238,233,222,0.94)]'}`}
             >
             {t(key)}
             </NavLink>
@@ -671,7 +671,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
             <button
             type="button"
             onClick={() => setMusicPickerOpen((value) => !value)}
-            className="flex min-h-[2.75rem] items-center gap-2 rounded-full bg-[rgba(247,241,228,0.84)] px-4 py-2 text-sm font-semibold text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)] transition hover:bg-[rgba(252,248,241,0.95)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)]"
+            className="flex min-h-[2.75rem] items-center gap-2 rounded-full bg-[rgba(231,225,212,0.88)] px-4 py-2 text-[0.99rem] font-semibold text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.16)] transition hover:bg-[rgba(238,233,222,0.95)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)]"
             aria-expanded={musicPickerOpen}
             aria-label={t('music.button')}
             >
@@ -679,7 +679,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
             <span className="max-w-[10rem] truncate">{t('music.button')}</span>
             </button>
             {musicPickerOpen ? (
-            <div className="absolute left-0 top-full z-50 mt-3 w-[min(18rem,calc(100vw-1.5rem))] rounded-[1.75rem] bg-[rgba(246,239,221,0.96)] p-4 shadow-[0_26px_48px_rgba(30,37,23,0.22)] ring-1 ring-[rgba(77,57,37,0.12)] backdrop-blur">
+            <div className="absolute left-0 top-full z-50 mt-3 w-[min(18rem,calc(100vw-1.5rem))] rounded-[1.75rem] bg-[rgba(227,218,196,0.96)] p-4 shadow-[0_26px_48px_rgba(30,37,23,0.26)] ring-1 ring-[rgba(77,57,37,0.15)] backdrop-blur">
               <div className="mb-3 flex items-center justify-between gap-2">
               <span className="text-xs font-bold uppercase tracking-[0.24em] text-[var(--forest-700)]">{t('music.panelTitle')}</span>
               <button
@@ -691,7 +691,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
                 {musicIsPlaying ? t('music.off') : t('music.on')}
               </button>
               </div>
-              <div className="mb-4 rounded-[1.25rem] bg-[rgba(255,255,255,0.54)] p-3 ring-1 ring-[rgba(87,68,45,0.08)]">
+              <div className="mb-4 rounded-[1.25rem] bg-[rgba(246,241,230,0.62)] p-3 ring-1 ring-[rgba(87,68,45,0.1)]">
               <div className="mb-2 flex items-center gap-2 text-[var(--forest-800)]">
                 <Volume2 className="h-4 w-4" />
                 <label className="text-xs font-semibold" htmlFor="music-volume-slider">{t('music.volume')}</label>
@@ -713,7 +713,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
                 key={track.id}
                 type="button"
                 onClick={() => void handleSelectTrack(track.id)}
-                className={`rounded-[1rem] px-3 py-2 text-left text-xs font-semibold transition ${track.id === selectedTrack.id ? 'wood-panel text-[var(--earth-900)]' : 'bg-[rgba(255,255,255,0.58)] text-[var(--forest-900)] hover:bg-[rgba(255,255,255,0.78)]'}`}
+                className={`rounded-[1rem] px-3 py-2 text-left text-xs font-semibold transition ${track.id === selectedTrack.id ? 'wood-panel text-[var(--earth-900)]' : 'bg-[rgba(246,241,230,0.68)] text-[var(--forest-900)] hover:bg-[rgba(250,246,237,0.84)]'}`}
                 >
                 {t(track.labelKey)}
                 </button>
@@ -727,12 +727,12 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
           <LanguageSwitch language={language} label={t('language.switch')} onChange={setLanguage} />
 
           {loading ? (
-            <span className="inline-flex min-h-[2.75rem] items-center rounded-full bg-[rgba(247,241,228,0.82)] px-4 py-2 text-sm font-semibold text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]">
+            <span className="inline-flex min-h-[2.75rem] items-center rounded-full bg-[rgba(231,225,212,0.88)] px-4 py-2 text-[0.99rem] font-semibold text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.16)]">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             {t('app.loading')}
             </span>
           ) : user ? (
-            <div className="flex min-w-0 max-w-full items-center gap-2 rounded-full bg-[rgba(247,241,228,0.88)] px-3 py-2 ring-1 ring-[rgba(91,67,38,0.12)]">
+            <div className="flex min-w-0 max-w-full items-center gap-2 rounded-full bg-[rgba(231,225,212,0.9)] px-3 py-2 ring-1 ring-[rgba(91,67,38,0.16)]">
             {user.user_metadata?.avatar_url ? (
               <img src={user.user_metadata.avatar_url as string} alt={user.user_metadata?.full_name ?? user.email ?? 'User'} className="h-9 w-9 shrink-0 rounded-full border border-[rgba(91,67,38,0.14)] object-cover" />
             ) : (
@@ -740,13 +740,13 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
               {user.email?.charAt(0).toUpperCase() ?? 'U'}
               </span>
             )}
-            <span className="min-w-0 max-w-[8.5rem] truncate text-sm text-[var(--forest-900)]">{user.user_metadata?.full_name ?? user.email ?? 'User'}</span>
-            <button type="button" onClick={() => { void handleSignOut(); }} disabled={authBusy} className="rounded-full bg-[rgba(255,255,255,0.68)] px-3 py-1.5 text-sm font-semibold text-[var(--forest-900)] transition hover:bg-white disabled:opacity-60">
+            <span className="min-w-0 max-w-[8.5rem] truncate text-[0.96rem] text-[var(--forest-900)]">{user.user_metadata?.full_name ?? user.email ?? 'User'}</span>
+            <button type="button" onClick={() => { void handleSignOut(); }} disabled={authBusy} className="rounded-full bg-[rgba(247,242,231,0.78)] px-3 py-1.5 text-[0.96rem] font-semibold text-[var(--forest-900)] transition hover:bg-[rgba(252,249,242,0.94)] disabled:opacity-60">
               {authBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Logout'}
             </button>
             </div>
           ) : (
-            <button type="button" onClick={() => { void handleSignIn(); }} disabled={authBusy} className="wood-panel inline-flex min-h-[2.75rem] items-center rounded-full px-4 py-2 text-sm font-black text-[var(--earth-900)] shadow-[0_12px_24px_rgba(101,75,40,0.16)] transition hover:-translate-y-px disabled:opacity-60">
+            <button type="button" onClick={() => { void handleSignIn(); }} disabled={authBusy} className="wood-panel inline-flex min-h-[2.75rem] items-center rounded-full px-4 py-2 text-[1.01rem] font-black text-[var(--earth-900)] shadow-[0_12px_24px_rgba(101,75,40,0.16)] transition hover:-translate-y-px disabled:opacity-60">
             {authBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Login with Google
             </button>
@@ -761,7 +761,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     <main className="relative z-10 mx-auto max-w-7xl px-3 pb-10 pt-3 sm:px-4 sm:pb-14 sm:pt-5">{children}</main>
 
     <footer className="relative z-10 px-3 pb-8 sm:px-4">
-      <div className="mx-auto max-w-7xl rounded-[1.75rem] bg-[rgba(246,241,229,0.64)] px-5 py-5 text-sm text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.1)] backdrop-blur-sm">
+      <div className="mx-auto max-w-7xl rounded-[1.75rem] bg-[rgba(220,212,194,0.74)] px-5 py-5 text-sm text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)] backdrop-blur-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p>{t('legal.footer.operator')}</p>
         <div className="flex flex-wrap items-center gap-3">
