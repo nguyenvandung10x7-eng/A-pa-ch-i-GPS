@@ -91,6 +91,9 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const [completionPanelRunId, setCompletionPanelRunId] = useState<string | null>(null);
   const [expandedInstructionsTaskId, setExpandedInstructionsTaskId] = useState<string | null>(null);
   const scopeTransitionRef = useRef<string | null>(null);
+  const scopeReassignTokenRef = useRef(0);
+  const scopeMutatingTokenRef = useRef<number | null>(null);
+  const latestScopeContextRef = useRef<string>('');
   const previousResetStateRef = useRef<{ activeTasks: ChallengeTask[]; clearVersion: number } | null>(null);
   const task = findRunTask(activeTasks, progress.activeRun?.taskId);
   const eligibleTaskIdSet = useMemo(() => new Set(eligibleTasks.map((candidate) => candidate.id)), [eligibleTasks]);
@@ -98,6 +101,17 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const canComplete = Boolean(task && progress.activeRun?.status === 'active');
   const canPlay = eligibleTasks.length > 0 || canComplete;
   const isFinished = summary.enabledCount > 0 && summary.remainingCount === 0 && !canComplete;
+  const isScopedMode = scopedExperienceMode !== null;
+  const isScopedCompleted = isScopedMode && isFinished;
+  const scopeCompletionPrimaryLabel = language === 'vi' ? 'Chọn trải nghiệm khác' : 'Choose another experience';
+
+  const scopeContext = useMemo(() => [
+    scopedExperienceMode ?? 'all',
+    progress.gameId,
+    progress.activeRun?.id ?? 'none',
+    progress.activeRun?.taskId ?? 'none',
+    eligibleTasks.map((candidate) => candidate.id).join(','),
+  ].join('|'), [eligibleTasks, progress.activeRun?.id, progress.activeRun?.taskId, progress.gameId, scopedExperienceMode]);
 
   useEffect(() => {
     const previousResetState = previousResetStateRef.current;
@@ -119,8 +133,11 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   }, [activeTasks, clearVersion, t]);
 
   useEffect(() => {
+    latestScopeContextRef.current = scopeContext;
+  }, [scopeContext]);
+
+  useEffect(() => {
     if (!scopedExperienceMode) return;
-    if (isMutating) return;
 
     const activeRun = progress.activeRun;
     if (!activeRun || activeRun.status !== 'active') return;
@@ -135,12 +152,19 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     }
     scopeTransitionRef.current = transitionKey;
 
-    let cancelled = false;
+    const requestToken = ++scopeReassignTokenRef.current;
+    scopeMutatingTokenRef.current = requestToken;
+    const requestContext = latestScopeContextRef.current;
+    let applied = false;
+
     setIsMutating(true);
 
     void reassignActiveRunForScope(activeTasks, progress, eligibleTasks)
       .then((result) => {
-        if (cancelled) return;
+        if (scopeReassignTokenRef.current !== requestToken) return;
+        if (latestScopeContextRef.current !== requestContext) return;
+
+        applied = true;
         setProgress(result.progress);
 
         if (result.stale) {
@@ -152,7 +176,10 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         setMessage(result.progress.activeRun?.status === 'active' ? t('challenge.active') : t('challenge.allDone'));
       })
       .catch((error) => {
-        if (cancelled) return;
+        if (scopeReassignTokenRef.current !== requestToken) return;
+        if (latestScopeContextRef.current !== requestContext) return;
+
+        applied = true;
         if (error instanceof ChallengeStorageLockUnavailableError) {
           setGpsStatus('idle');
           setMessage(t('challenge.status.unavailable'));
@@ -163,15 +190,16 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         setMessage(t('challenge.status.unavailable'));
       })
       .finally(() => {
-        if (!cancelled) {
+        if (scopeMutatingTokenRef.current === requestToken) {
+          scopeMutatingTokenRef.current = null;
           setIsMutating(false);
         }
-      });
 
-    return () => {
-      cancelled = true;
-    };
-  }, [activeTasks, eligibleTaskIdSet, eligibleTasks, isMutating, progress, scopedExperienceMode, t]);
+        if (scopeReassignTokenRef.current === requestToken && !applied) {
+          scopeTransitionRef.current = null;
+        }
+      });
+  }, [activeTasks, eligibleTaskIdSet, eligibleTasks, progress, scopedExperienceMode, scopeContext, t]);
 
   const currentTaskImageKey = task?.image ? `${task.id}:${task.image}` : null;
   const localizedTaskTitle = task ? localize(task.title, language) : '';
@@ -196,6 +224,12 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   const startGame = async () => {
     if (isMutating) return;
+
+    if (isScopedCompleted) {
+      void navigate('/experiences');
+      return;
+    }
+
     if (eligibleTasks.length === 0) {
       setMessage(t('challenge.allDone'));
       return;
@@ -230,11 +264,17 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   const startNextChallenge = async () => {
     if (isMutating) return;
+
+    if (isScopedCompleted) {
+      void navigate('/experiences');
+      return;
+    }
+
     if (eligibleTasks.length === 0) {
       setMessage(t('challenge.allDone'));
       return;
     }
-    const shouldStartNewGame = progress.status === 'completed' && summary.remainingCount === 0;
+    const shouldStartNewGame = !isScopedMode && progress.status === 'completed' && summary.remainingCount === 0;
 
     window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
 
@@ -616,7 +656,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       <div className="mt-5">
         <Button onClick={() => { void verifyGps(); }} disabled={!canComplete || isMutating} variant="gpsPrimary" className="w-full" style={{ scrollMarginBottom: '7rem' }}><ShieldCheck className="h-5 w-5" />{t('challenge.verifyGps')}</Button>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Button onClick={() => { void startGame(); }} disabled={isMutating} variant="secondary" className="w-full border border-[rgba(91,67,38,0.14)] bg-[rgba(247,242,231,0.86)]"><RotateCcw className="h-5 w-5" />{t('challenge.newGame')}</Button>
+          <Button onClick={() => { void startGame(); }} disabled={isMutating} variant="secondary" className="w-full border border-[rgba(91,67,38,0.14)] bg-[rgba(247,242,231,0.86)]"><RotateCcw className="h-5 w-5" />{isScopedCompleted ? scopeCompletionPrimaryLabel : t('challenge.newGame')}</Button>
           <Button onClick={() => { void startNextChallenge(); }} disabled={canComplete || isMutating || eligibleTasks.length === 0} variant="secondary" className="w-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.68)]"><Trophy className="h-5 w-5" />{t('challenge.next')}</Button>
           <Button onClick={() => { void skipChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full"><XCircle className="h-5 w-5" />{t('challenge.skip')}</Button>
           <Button onClick={() => { void failChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full text-[var(--brocade-red)]"><Flag className="h-5 w-5" />{t('challenge.fail')}</Button>
