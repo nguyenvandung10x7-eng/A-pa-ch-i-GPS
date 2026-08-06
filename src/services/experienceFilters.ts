@@ -64,7 +64,7 @@ const MODE_TASK_IDS: Record<ExperienceMode, Set<string>> = {
   'surprise-missions': new Set(),
 };
 
-const specializedIdSet = new Set(Object.values(SPECIALIZED_TASK_IDS));
+const specializedIdSet = new Set<string>(Object.values(SPECIALIZED_TASK_IDS));
 
 export const resolveExperienceMode = (value: string | null): ExperienceMode => {
   if (!value) return DEFAULT_MODE;
@@ -83,4 +83,11 @@ export const getEligibleTasksForExperience = (tasks: ChallengeTask[], mode: Expe
 export const getExperienceModeFromSearch = (search: string): ExperienceMode => {
   const searchParams = new URLSearchParams(search);
   return resolveExperienceMode(searchParams.get('experience'));
+};
+
+export const getScopedExperienceModeFromSearch = (search: string): ExperienceMode | null => {
+  const searchParams = new URLSearchParams(search);
+  const mode = searchParams.get('experience');
+  if (!mode) return null;
+  return resolveExperienceMode(mode);
 };
