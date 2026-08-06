@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Compass, Loader2, Music2, Pause, Play, Volume2 } from 'lucide-react';
+import { ChevronDown, Compass, Loader2, Menu, Music2, Pause, Play, Volume2, X } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdminStatus } from '../hooks/useAdminStatus';
@@ -96,6 +96,8 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
   const { isAdmin, checkingAdmin } = useAdminStatus();
   const [authBusy, setAuthBusy] = useState(false);
   const [musicPickerOpen, setMusicPickerOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileOpenSection, setMobileOpenSection] = useState<'music' | 'language' | 'account' | null>(null);
   const [musicEnabledPreference, setMusicEnabledPreference] = useState(() => readMusicSettings().enabled);
   const [musicVolume, setMusicVolume] = useState(() => readMusicSettings().volume);
   const [musicTrackId, setMusicTrackId] = useState(() => readMusicSettings().trackId);
@@ -119,10 +121,18 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     ['/discover', 'nav.discover'],
     ['/leaderboard', 'nav.leaderboard'],
   ];
+  const mobilePrimaryNavItems: Array<[string, string]> = [
+    ['/challenge', 'nav.challenge'],
+    ['/discover', 'nav.discover'],
+    ['/leaderboard', 'nav.leaderboard'],
+  ];
+  const mobileSecondaryNavItems: Array<[string, string]> = [['/history', 'nav.history']];
 
   if (user && !checkingAdmin && isAdmin) {
     navItems.push(['/moderation', 'nav.moderation']);
     navItems.push(['/admin', 'nav.admin']);
+    mobileSecondaryNavItems.push(['/moderation', 'nav.moderation']);
+    mobileSecondaryNavItems.push(['/admin', 'nav.admin']);
   }
 
   const handleSignIn = async () => {
@@ -142,6 +152,11 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
       setAuthBusy(false);
     }
   };
+
+  const closeMobileMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+    setMobileOpenSection(null);
+  }, []);
 
   useEffect(() => {
     musicEnabledPreferenceRef.current = musicEnabledPreference;
@@ -592,6 +607,51 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     };
   }, [musicPickerOpen]);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      return;
+    }
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeMobileMenu();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [closeMobileMenu, mobileMenuOpen]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const desktopMediaQuery = window.matchMedia('(min-width: 1024px)');
+    const handleDesktopChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        closeMobileMenu();
+      }
+    };
+
+    desktopMediaQuery.addEventListener('change', handleDesktopChange);
+
+    return () => {
+      desktopMediaQuery.removeEventListener('change', handleDesktopChange);
+    };
+  }, [closeMobileMenu]);
+
   const handleToggleMusicEnabled = async () => {
     if (!audioRef.current) {
       return;
@@ -616,6 +676,93 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     }
   };
 
+  const toggleMobileSection = (section: 'music' | 'language' | 'account') => {
+    setMobileOpenSection((current) => current === section ? null : section);
+  };
+
+  const renderMusicControls = (mobile = false) => (
+    <div className={`${mobile ? 'rounded-[1.4rem] bg-[rgba(246,241,230,0.78)] p-4 ring-1 ring-[rgba(87,68,45,0.1)]' : ''}`}>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <span className="text-xs font-bold uppercase tracking-[0.24em] text-[var(--forest-700)]">{t('music.panelTitle')}</span>
+        <button
+          type="button"
+          onClick={() => { void handleToggleMusicEnabled(); }}
+          className="inline-flex min-h-[2.75rem] items-center gap-1 rounded-full bg-[rgba(219,185,102,0.35)] px-3 py-1.5 text-xs font-black text-[var(--earth-900)] transition hover:bg-[rgba(219,185,102,0.48)]"
+        >
+          {musicIsPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+          {musicIsPlaying ? t('music.off') : t('music.on')}
+        </button>
+      </div>
+      <div className="mb-4 rounded-[1.25rem] bg-[rgba(255,255,255,0.6)] p-3 ring-1 ring-[rgba(87,68,45,0.1)]">
+        <div className="mb-2 flex items-center gap-2 text-[var(--forest-800)]">
+          <Volume2 className="h-4 w-4" />
+          <label className="text-xs font-semibold" htmlFor={mobile ? 'mobile-music-volume-slider' : 'music-volume-slider'}>{t('music.volume')}</label>
+        </div>
+        <input
+          id={mobile ? 'mobile-music-volume-slider' : 'music-volume-slider'}
+          type="range"
+          min={0}
+          max={1}
+          step={0.05}
+          value={musicVolume}
+          onChange={(event) => setMusicVolume(Number(event.target.value))}
+          className="w-full accent-[var(--amber-500)]"
+        />
+      </div>
+      <div className={`mobile-scroll-panel flex ${mobile ? 'max-h-56' : 'max-h-56'} flex-col gap-1 overflow-y-auto pr-1`}>
+        {MUSIC_TRACKS.map((track) => (
+          <button
+            key={`${mobile ? 'mobile' : 'desktop'}-${track.id}`}
+            type="button"
+            onClick={() => void handleSelectTrack(track.id)}
+            className={`rounded-[1rem] px-3 py-2 text-left text-xs font-semibold transition ${track.id === selectedTrack.id ? 'wood-panel text-[var(--earth-900)]' : 'bg-[rgba(246,241,230,0.68)] text-[var(--forest-900)] hover:bg-[rgba(250,246,237,0.84)]'}`}
+          >
+            {t(track.labelKey)}
+          </button>
+        ))}
+      </div>
+      {musicPlaybackError ? <p className="mt-3 text-xs text-[var(--brocade-red)]">{t('music.playBlocked')}</p> : null}
+    </div>
+  );
+
+  const renderAccountControls = (mobile = false) => {
+    if (loading) {
+      return (
+        <span className={`inline-flex min-h-[2.75rem] items-center rounded-full bg-[rgba(231,225,212,0.88)] px-4 py-2 text-[0.99rem] font-semibold text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.16)] ${mobile ? 'w-full justify-center' : ''}`}>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          {t('app.loading')}
+        </span>
+      );
+    }
+
+    if (user) {
+      return (
+        <div className={`${mobile ? 'space-y-3 rounded-[1.4rem] bg-[rgba(246,241,230,0.78)] p-4 ring-1 ring-[rgba(87,68,45,0.1)]' : 'flex min-w-0 max-w-full items-center gap-2 rounded-full bg-[rgba(231,225,212,0.9)] px-3 py-2 ring-1 ring-[rgba(91,67,38,0.16)]'}`}>
+          <div className={`flex min-w-0 items-center gap-2 ${mobile ? '' : ''}`}>
+            {user.user_metadata?.avatar_url ? (
+              <img src={user.user_metadata.avatar_url as string} alt={user.user_metadata?.full_name ?? user.email ?? 'User'} className="h-9 w-9 shrink-0 rounded-full border border-[rgba(91,67,38,0.14)] object-cover" />
+            ) : (
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[rgba(219,185,102,0.35)] text-sm font-black text-[var(--earth-900)]">
+                {user.email?.charAt(0).toUpperCase() ?? 'U'}
+              </span>
+            )}
+            <span className={`${mobile ? 'break-words text-sm font-semibold text-[var(--forest-900)]' : 'min-w-0 max-w-[8.5rem] truncate text-[0.96rem] text-[var(--forest-900)]'}`}>{user.user_metadata?.full_name ?? user.email ?? 'User'}</span>
+          </div>
+          <button type="button" onClick={() => { void handleSignOut(); if (mobile) { closeMobileMenu(); } }} disabled={authBusy} className={`${mobile ? 'w-full justify-center' : ''} inline-flex min-h-[2.75rem] items-center rounded-full bg-[rgba(247,242,231,0.78)] px-3 py-1.5 text-[0.96rem] font-semibold text-[var(--forest-900)] transition hover:bg-[rgba(252,249,242,0.94)] disabled:opacity-60`}>
+            {authBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('auth.signOut')}
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <button type="button" onClick={() => { void handleSignIn(); if (mobile) { closeMobileMenu(); } }} disabled={authBusy} className={`wood-panel inline-flex min-h-[2.75rem] items-center rounded-full px-4 py-2 text-[1.01rem] font-black text-[var(--earth-900)] shadow-[0_12px_24px_rgba(101,75,40,0.16)] transition hover:-translate-y-px disabled:opacity-60 ${mobile ? 'w-full justify-center' : ''}`}>
+        {authBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        {t('tiktok.signIn')}
+      </button>
+    );
+  };
+
   return (
   <div className="app-shell text-[var(--forest-950)]">
     <div className="mountain-scene" aria-hidden="true">
@@ -632,7 +779,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     <div className="firefly left-[88%] top-[65%] [animation-delay:2.1s]" />
     </div>
 
-    <div className="relative z-10">
+    <div className="relative z-10 mobile-safe-bottom lg:pb-0">
     <header className="sticky top-0 z-30 px-3 pt-3 sm:px-4">
       <div className="mx-auto max-w-7xl rounded-[2.25rem] bg-[rgba(205,197,179,0.4)] pb-3 backdrop-blur-[2px]">
       <div className="wood-panel relative overflow-visible rounded-[2rem] px-4 py-4 sm:px-5">
@@ -653,7 +800,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
           </p>
         </div>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-3 xl:items-end">
+        <div className="hidden min-w-0 flex-1 flex-col gap-3 lg:flex xl:items-end">
           <div className="flex flex-wrap items-center gap-2 text-[0.99rem] font-semibold text-[var(--forest-900)] xl:justify-end">
           {navItems.map(([to, key]) => (
             <NavLink
@@ -678,85 +825,122 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
             <Music2 className="h-4 w-4" />
             <span className="max-w-[10rem] truncate">{t('music.button')}</span>
             </button>
-            {musicPickerOpen ? (
-            <div className="absolute left-0 top-full z-50 mt-3 w-[min(18rem,calc(100vw-1.5rem))] rounded-[1.75rem] bg-[rgba(227,218,196,0.96)] p-4 shadow-[0_26px_48px_rgba(30,37,23,0.26)] ring-1 ring-[rgba(77,57,37,0.15)] backdrop-blur">
-              <div className="mb-3 flex items-center justify-between gap-2">
-              <span className="text-xs font-bold uppercase tracking-[0.24em] text-[var(--forest-700)]">{t('music.panelTitle')}</span>
-              <button
-                type="button"
-                onClick={() => { void handleToggleMusicEnabled(); }}
-                className="inline-flex items-center gap-1 rounded-full bg-[rgba(219,185,102,0.35)] px-3 py-1.5 text-xs font-black text-[var(--earth-900)] transition hover:bg-[rgba(219,185,102,0.48)]"
-              >
-                {musicIsPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-                {musicIsPlaying ? t('music.off') : t('music.on')}
-              </button>
-              </div>
-              <div className="mb-4 rounded-[1.25rem] bg-[rgba(246,241,230,0.62)] p-3 ring-1 ring-[rgba(87,68,45,0.1)]">
-              <div className="mb-2 flex items-center gap-2 text-[var(--forest-800)]">
-                <Volume2 className="h-4 w-4" />
-                <label className="text-xs font-semibold" htmlFor="music-volume-slider">{t('music.volume')}</label>
-              </div>
-              <input
-                id="music-volume-slider"
-                type="range"
-                min={0}
-                max={1}
-                step={0.05}
-                value={musicVolume}
-                onChange={(event) => setMusicVolume(Number(event.target.value))}
-                className="w-full accent-[var(--amber-500)]"
-              />
-              </div>
-              <div className="flex max-h-56 flex-col gap-1 overflow-y-auto pr-1">
-              {MUSIC_TRACKS.map((track) => (
-                <button
-                key={track.id}
-                type="button"
-                onClick={() => void handleSelectTrack(track.id)}
-                className={`rounded-[1rem] px-3 py-2 text-left text-xs font-semibold transition ${track.id === selectedTrack.id ? 'wood-panel text-[var(--earth-900)]' : 'bg-[rgba(246,241,230,0.68)] text-[var(--forest-900)] hover:bg-[rgba(250,246,237,0.84)]'}`}
-                >
-                {t(track.labelKey)}
-                </button>
-              ))}
-              </div>
-              {musicPlaybackError ? <p className="mt-3 text-xs text-[var(--brocade-red)]">{t('music.playBlocked')}</p> : null}
-            </div>
-            ) : null}
+            {musicPickerOpen ? <div className="absolute left-0 top-full z-50 mt-3 w-[min(18rem,calc(100vw-1.5rem))] rounded-[1.75rem] bg-[rgba(227,218,196,0.96)] p-4 shadow-[0_26px_48px_rgba(30,37,23,0.26)] ring-1 ring-[rgba(77,57,37,0.15)] backdrop-blur">{renderMusicControls()}</div> : null}
           </div>
 
           <LanguageSwitch language={language} label={t('language.switch')} onChange={setLanguage} />
 
-          {loading ? (
-            <span className="inline-flex min-h-[2.75rem] items-center rounded-full bg-[rgba(231,225,212,0.88)] px-4 py-2 text-[0.99rem] font-semibold text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.16)]">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {t('app.loading')}
-            </span>
-          ) : user ? (
-            <div className="flex min-w-0 max-w-full items-center gap-2 rounded-full bg-[rgba(231,225,212,0.9)] px-3 py-2 ring-1 ring-[rgba(91,67,38,0.16)]">
-            {user.user_metadata?.avatar_url ? (
-              <img src={user.user_metadata.avatar_url as string} alt={user.user_metadata?.full_name ?? user.email ?? 'User'} className="h-9 w-9 shrink-0 rounded-full border border-[rgba(91,67,38,0.14)] object-cover" />
-            ) : (
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[rgba(219,185,102,0.35)] text-sm font-black text-[var(--earth-900)]">
-              {user.email?.charAt(0).toUpperCase() ?? 'U'}
-              </span>
-            )}
-            <span className="min-w-0 max-w-[8.5rem] truncate text-[0.96rem] text-[var(--forest-900)]">{user.user_metadata?.full_name ?? user.email ?? 'User'}</span>
-            <button type="button" onClick={() => { void handleSignOut(); }} disabled={authBusy} className="rounded-full bg-[rgba(247,242,231,0.78)] px-3 py-1.5 text-[0.96rem] font-semibold text-[var(--forest-900)] transition hover:bg-[rgba(252,249,242,0.94)] disabled:opacity-60">
-              {authBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Logout'}
-            </button>
-            </div>
-          ) : (
-            <button type="button" onClick={() => { void handleSignIn(); }} disabled={authBusy} className="wood-panel inline-flex min-h-[2.75rem] items-center rounded-full px-4 py-2 text-[1.01rem] font-black text-[var(--earth-900)] shadow-[0_12px_24px_rgba(101,75,40,0.16)] transition hover:-translate-y-px disabled:opacity-60">
-            {authBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Login with Google
-            </button>
-          )}
+          {renderAccountControls()}
           </div>
         </div>
         </div>
       </div>
       </div>
     </header>
+
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[rgba(91,67,38,0.14)] bg-[rgba(239,232,218,0.96)] px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-16px_34px_rgba(29,40,24,0.14)] backdrop-blur lg:hidden">
+      <div className="mx-auto grid max-w-7xl grid-cols-4 gap-2">
+        {mobilePrimaryNavItems.map(([to, key]) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) => `flex min-h-[3rem] min-w-0 items-center justify-center rounded-[1.2rem] px-2 py-2 text-center text-xs font-black leading-4 transition ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.14)]' : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]'}`}
+            onClick={closeMobileMenu}
+          >
+            <span className="break-words">{t(key)}</span>
+          </NavLink>
+        ))}
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen((value) => !value)}
+          className={`flex min-h-[3rem] min-w-0 items-center justify-center gap-2 rounded-[1.2rem] px-2 py-2 text-center text-xs font-black leading-4 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)] ${mobileMenuOpen ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.14)]' : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]'}`}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-nav-sheet"
+        >
+          {mobileMenuOpen ? <X className="h-4 w-4 shrink-0" /> : <Menu className="h-4 w-4 shrink-0" />}
+          <span className="break-words">{t('nav.menu')}</span>
+        </button>
+      </div>
+    </nav>
+
+    {mobileMenuOpen ? (
+      <div className="lg:hidden">
+        <button
+          type="button"
+          aria-label={t('nav.menu')}
+          className="fixed inset-x-0 top-0 z-40 bg-[rgba(18,28,18,0.28)]"
+          style={{ bottom: 'calc(5.4rem + env(safe-area-inset-bottom))' }}
+          onClick={closeMobileMenu}
+        />
+        <section
+          id="mobile-nav-sheet"
+          className="mobile-scroll-panel fixed inset-x-3 z-50 rounded-[1.8rem] bg-[rgba(240,234,221,0.98)] p-4 shadow-[0_30px_60px_rgba(22,31,18,0.24)] ring-1 ring-[rgba(91,67,38,0.16)] backdrop-blur"
+          style={{
+            top: 'calc(env(safe-area-inset-top) + 0.75rem)',
+            bottom: 'calc(5.4rem + env(safe-area-inset-bottom))',
+            maxHeight: 'calc(100dvh - 6.5rem - env(safe-area-inset-bottom) - env(safe-area-inset-top))',
+            overflowY: 'auto',
+          }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="section-kicker">{t('nav.menu')}</p>
+              <p className="mt-1 break-words text-lg font-black text-[var(--forest-950)]">{t('app.name')}</p>
+            </div>
+            <button type="button" onClick={closeMobileMenu} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-3">
+            {mobileSecondaryNavItems.map(([to, key]) => (
+              <NavLink
+                key={`mobile-${to}`}
+                to={to}
+                className={({ isActive }) => `flex min-h-[3rem] min-w-0 items-center justify-between gap-3 rounded-[1.25rem] px-4 py-3 text-left text-sm font-black transition ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_12px_24px_rgba(101,75,40,0.14)]' : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]'}`}
+                onClick={closeMobileMenu}
+              >
+                <span className="min-w-0 break-words">{t(key)}</span>
+              </NavLink>
+            ))}
+
+            <a
+              href="https://www.facebook.com/db1954tour"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block rounded-[1.35rem] bg-[rgba(255,247,229,0.82)] px-4 py-4 text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.12)]"
+            >
+              <p className="text-sm font-black">{t('landing.facebook.title')}</p>
+              <p className="mt-1 text-sm leading-6 text-[var(--earth-800)]">{t('landing.facebook.description')}</p>
+            </a>
+
+            <div className="rounded-[1.35rem] bg-[rgba(255,255,255,0.62)] p-2 ring-1 ring-[rgba(61,84,52,0.12)]">
+              <button type="button" onClick={() => toggleMobileSection('music')} className="flex min-h-[2.75rem] w-full items-center justify-between gap-3 rounded-[1rem] px-3 py-2 text-left text-sm font-black text-[var(--forest-900)]">
+                <span className="min-w-0 break-words">{t('music.button')}</span>
+                <ChevronDown className={`h-4 w-4 shrink-0 transition ${mobileOpenSection === 'music' ? 'rotate-180' : ''}`} />
+              </button>
+              {mobileOpenSection === 'music' ? <div className="pt-2">{renderMusicControls(true)}</div> : null}
+            </div>
+
+            <div className="rounded-[1.35rem] bg-[rgba(255,255,255,0.62)] p-2 ring-1 ring-[rgba(61,84,52,0.12)]">
+              <button type="button" onClick={() => toggleMobileSection('language')} className="flex min-h-[2.75rem] w-full items-center justify-between gap-3 rounded-[1rem] px-3 py-2 text-left text-sm font-black text-[var(--forest-900)]">
+                <span className="min-w-0 break-words">{t('language.switch')}</span>
+                <ChevronDown className={`h-4 w-4 shrink-0 transition ${mobileOpenSection === 'language' ? 'rotate-180' : ''}`} />
+              </button>
+              {mobileOpenSection === 'language' ? <div className="pt-2"><div className="rounded-[1.4rem] bg-[rgba(246,241,230,0.78)] p-4 ring-1 ring-[rgba(87,68,45,0.1)]"><LanguageSwitch language={language} label={t('language.switch')} onChange={setLanguage} /></div></div> : null}
+            </div>
+
+            <div className="rounded-[1.35rem] bg-[rgba(255,255,255,0.62)] p-2 ring-1 ring-[rgba(61,84,52,0.12)]">
+              <button type="button" onClick={() => toggleMobileSection('account')} className="flex min-h-[2.75rem] w-full items-center justify-between gap-3 rounded-[1rem] px-3 py-2 text-left text-sm font-black text-[var(--forest-900)]">
+                <span className="min-w-0 break-words">{t('nav.account')}</span>
+                <ChevronDown className={`h-4 w-4 shrink-0 transition ${mobileOpenSection === 'account' ? 'rotate-180' : ''}`} />
+              </button>
+              {mobileOpenSection === 'account' ? <div className="pt-2">{renderAccountControls(true)}</div> : null}
+            </div>
+          </div>
+        </section>
+      </div>
+    ) : null}
 
     <main className="relative z-10 mx-auto max-w-7xl px-3 pb-10 pt-3 sm:px-4 sm:pb-14 sm:pt-5">{children}</main>
 
