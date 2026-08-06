@@ -116,17 +116,20 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
   const musicShuffleQueueRef = useRef<string[]>(createShuffleQueue(MUSIC_TRACKS, musicTrackId));
   const selectedTrack = useMemo(() => MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0], [musicTrackId]);
   const navItems: Array<[string, string]> = [
-    ['/challenge', 'nav.challenge'],
-    ['/history', 'nav.history'],
+    ['/experiences', 'nav.experiences'],
     ['/discover', 'nav.discover'],
     ['/leaderboard', 'nav.leaderboard'],
+    ['/history', 'nav.history'],
   ];
   const mobilePrimaryNavItems: Array<[string, string]> = [
-    ['/challenge', 'nav.challenge'],
+    ['/experiences', 'nav.experiences'],
     ['/discover', 'nav.discover'],
     ['/leaderboard', 'nav.leaderboard'],
   ];
-  const mobileSecondaryNavItems: Array<[string, string]> = [['/history', 'nav.history']];
+  const mobileSecondaryNavItems: Array<[string, string]> = [
+    ['/challenge', 'nav.challenge'],
+    ['/history', 'nav.history'],
+  ];
 
   if (user && !checkingAdmin && isAdmin) {
     navItems.push(['/moderation', 'nav.moderation']);

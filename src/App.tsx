@@ -10,6 +10,7 @@ import { useAdminStatus } from './hooks/useAdminStatus';
 import { AdminPage } from './pages/AdminPage';
 import { ChallengePage } from './pages/ChallengePage';
 import { DiscoverPage } from './pages/DiscoverPage';
+import { ExperiencesPage } from './pages/ExperiencesPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { LandingPage } from './pages/LandingPage';
 import { LegalSafetyPage } from './pages/LegalSafetyPage';
@@ -119,6 +120,7 @@ export default function App() {
     <Layout language={language} setLanguage={setLanguage} t={t}>
       <Routes>
         <Route path="/" element={<LandingPage tasks={tasks} clearVersion={clearVersion} t={t} />} />
+        <Route path="/experiences" element={<ExperiencesPage t={t} />} />
         <Route path="/challenge" element={<ChallengePage tasks={activeTasks} clearVersion={clearVersion} language={language} t={t} />} />
         <Route path="/history" element={<HistoryPage clearVersion={clearVersion} language={language} t={t} />} />
         <Route path="/discover" element={<DiscoverPage language={language} t={t} />} />

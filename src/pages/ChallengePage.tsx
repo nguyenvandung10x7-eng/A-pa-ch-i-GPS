@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, Flag, Headphones, RotateCcw, ShieldCheck, Trophy, XCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { TaskMap } from '../components/TaskMap';
@@ -9,11 +9,11 @@ import {
   completeActiveChallenge,
   createNewGameWithChallenge,
   failActiveChallenge,
-  getProgressSummary,
   loadOrCreateProgress,
   skipActiveChallenge,
 } from '../services/gameplay';
 import { ChallengeStorageLockUnavailableError } from '../services/challengeStorageLock';
+import { getEligibleTasksForExperience, getExperienceModeFromSearch } from '../services/experienceFilters';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
 import { GeolocationRequestError, getCurrentPosition } from '../utils/geo';
@@ -31,6 +31,30 @@ const splitTaskHeading = (value: string) => {
   return {
     locationName: locationName?.trim() || value,
     subtitle: rest.join(' - ').trim(),
+  };
+};
+
+const getScopedProgressSummary = (tasks: ChallengeTask[], progress: ReturnType<typeof loadOrCreateProgress>) => {
+  const enabledTaskIds = new Set(tasks.filter((task) => task.enabled).map((task) => task.id));
+  const countInScope = (taskIds: string[]) => taskIds.filter((taskId) => enabledTaskIds.has(taskId)).length;
+  const completedCount = countInScope(progress.completedTaskIds);
+  const skippedCount = countInScope(progress.skippedTaskIds);
+  const scopedAttemptedCount = new Set([
+    ...progress.completedTaskIds.filter((taskId) => enabledTaskIds.has(taskId)),
+    ...progress.skippedTaskIds.filter((taskId) => enabledTaskIds.has(taskId)),
+    ...progress.failedTaskIds.filter((taskId) => enabledTaskIds.has(taskId)),
+    ...progress.attemptedTaskIds.filter((taskId) => enabledTaskIds.has(taskId)),
+  ]).size;
+
+  const enabledCount = enabledTaskIds.size;
+
+  return {
+    enabledCount,
+    completedCount,
+    skippedCount,
+    attemptedCount: scopedAttemptedCount,
+    remainingCount: Math.max(0, enabledCount - scopedAttemptedCount),
+    score: progress.score,
   };
 };
 
@@ -54,7 +78,10 @@ const isValidExternalChallengeUrl = (value?: string): value is string => {
 
 export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: ChallengeTask[]; clearVersion: number; language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const activeTasks = useMemo(() => tasks.filter((task) => task.enabled), [tasks]);
+  const experienceMode = useMemo(() => getExperienceModeFromSearch(location.search), [location.search]);
+  const eligibleTasks = useMemo(() => getEligibleTasksForExperience(activeTasks, experienceMode), [activeTasks, experienceMode]);
   const [progress, setProgress] = useState(() => loadOrCreateProgress(activeTasks));
   const [message, setMessage] = useState(() => t('challenge.ready'));
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
@@ -64,9 +91,20 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const [expandedInstructionsTaskId, setExpandedInstructionsTaskId] = useState<string | null>(null);
   const previousResetStateRef = useRef<{ activeTasks: ChallengeTask[]; clearVersion: number } | null>(null);
   const task = findRunTask(activeTasks, progress.activeRun?.taskId);
-  const summary = getProgressSummary(activeTasks, progress);
-  const canPlay = activeTasks.length > 0;
+  const mutationTasks = useMemo(() => {
+    if (!task) {
+      return eligibleTasks;
+    }
+
+    if (eligibleTasks.some((candidate) => candidate.id === task.id)) {
+      return eligibleTasks;
+    }
+
+    return [...eligibleTasks, task];
+  }, [eligibleTasks, task]);
+  const summary = useMemo(() => getScopedProgressSummary(eligibleTasks, progress), [eligibleTasks, progress]);
   const canComplete = Boolean(task && progress.activeRun?.status === 'active');
+  const canPlay = eligibleTasks.length > 0 || canComplete;
   const isFinished = summary.enabledCount > 0 && summary.remainingCount === 0 && !canComplete;
 
   useEffect(() => {
@@ -111,12 +149,16 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   const startGame = async () => {
     if (isMutating) return;
+    if (eligibleTasks.length === 0) {
+      setMessage(t('challenge.allDone'));
+      return;
+    }
 
     window.dispatchEvent(new CustomEvent<'next'>(GAMEPLAY_MUSIC_ACTION_EVENT, { detail: 'next' }));
 
     await runMutation(async () => {
       try {
-        const result = await createNewGameWithChallenge(activeTasks, progress);
+        const result = await createNewGameWithChallenge(eligibleTasks, progress);
         setProgress(result.progress);
         setGpsStatus('idle');
         if (result.stale) {
@@ -141,6 +183,10 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   const startNextChallenge = async () => {
     if (isMutating) return;
+    if (eligibleTasks.length === 0) {
+      setMessage(t('challenge.allDone'));
+      return;
+    }
     const shouldStartNewGame = progress.status === 'completed' && summary.remainingCount === 0;
 
     window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
@@ -148,8 +194,8 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     await runMutation(async () => {
       try {
         const result = shouldStartNewGame
-          ? await createNewGameWithChallenge(activeTasks, progress)
-          : await assignRandomChallenge(activeTasks, progress);
+          ? await createNewGameWithChallenge(eligibleTasks, progress)
+          : await assignRandomChallenge(eligibleTasks, progress);
         setProgress(result.progress);
         setGpsStatus('idle');
         if (result.stale) {
@@ -199,7 +245,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         const position = await getCurrentPosition();
         const result = await completeActiveChallenge(
           progress,
-          activeTasks,
+          mutationTasks,
           task,
           { lat: position.coords.latitude, lng: position.coords.longitude },
           position.coords.accuracy,
@@ -272,7 +318,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
     await runMutation(async () => {
       try {
-        const result = await skipActiveChallenge(activeTasks, progress);
+        const result = await skipActiveChallenge(mutationTasks, progress);
         setProgress(result.progress);
         if (result.stale) {
           window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
@@ -316,7 +362,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
     await runMutation(async () => {
       try {
-        const failedResult = await failActiveChallenge(activeTasks, progress);
+        const failedResult = await failActiveChallenge(mutationTasks, progress);
         setProgress(failedResult.progress);
         if (failedResult.stale) {
           window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
@@ -523,7 +569,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         <Button onClick={() => { void verifyGps(); }} disabled={!canComplete || isMutating} variant="gpsPrimary" className="w-full" style={{ scrollMarginBottom: '7rem' }}><ShieldCheck className="h-5 w-5" />{t('challenge.verifyGps')}</Button>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <Button onClick={() => { void startGame(); }} disabled={isMutating} variant="secondary" className="w-full border border-[rgba(91,67,38,0.14)] bg-[rgba(247,242,231,0.86)]"><RotateCcw className="h-5 w-5" />{t('challenge.newGame')}</Button>
-          <Button onClick={() => { void startNextChallenge(); }} disabled={canComplete || isMutating} variant="secondary" className="w-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.68)]"><Trophy className="h-5 w-5" />{t('challenge.next')}</Button>
+          <Button onClick={() => { void startNextChallenge(); }} disabled={canComplete || isMutating || eligibleTasks.length === 0} variant="secondary" className="w-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.68)]"><Trophy className="h-5 w-5" />{t('challenge.next')}</Button>
           <Button onClick={() => { void skipChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full"><XCircle className="h-5 w-5" />{t('challenge.skip')}</Button>
           <Button onClick={() => { void failChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full text-[var(--brocade-red)]"><Flag className="h-5 w-5" />{t('challenge.fail')}</Button>
         </div>
@@ -536,7 +582,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       </div>
     </div>
     </Card>
-    <TaskMap tasks={task ? [task] : activeTasks} language={language} t={t} />
+    <TaskMap tasks={task ? [task] : eligibleTasks} language={language} t={t} />
   </div>
   );
 };

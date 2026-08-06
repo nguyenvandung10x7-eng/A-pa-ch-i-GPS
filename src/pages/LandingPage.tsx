@@ -6,8 +6,6 @@ import { supportedLanguages } from '../i18n';
 import { loadHistory } from '../services/history';
 import type { ChallengeTask } from '../types/task';
 
-const GAMEPLAY_MUSIC_ACTION_EVENT = 'gps:challenge-music-action';
-
 const Stat = ({ icon: Icon, label, value }: { icon: typeof Trophy; label: string; value: string }) => (
   <Card className="p-5">
     <div className="flex items-center justify-between gap-3">
@@ -48,10 +46,7 @@ export const LandingPage = ({ tasks, clearVersion, t }: { tasks: ChallengeTask[]
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
       <Link
-        to="/challenge"
-        onClick={() => {
-          window.dispatchEvent(new CustomEvent<'start'>(GAMEPLAY_MUSIC_ACTION_EVENT, { detail: 'start' }));
-        }}
+        to="/experiences"
         className="wood-panel inline-flex min-h-[3.2rem] items-center justify-center rounded-full px-6 py-3 text-[1.08rem] font-black text-[var(--earth-900)] shadow-[0_16px_28px_rgba(104,76,41,0.18)] transition hover:-translate-y-px"
       >
         {t('landing.start')}
