@@ -520,7 +520,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       </p>
 
       <div className="mt-5">
-        <Button onClick={() => { void verifyGps(); }} disabled={!canComplete || isMutating} className="w-full bg-[linear-gradient(180deg,#2f4e30,#1f331f)] text-[var(--fabric-100)] shadow-[0_16px_30px_rgba(28,44,24,0.22)] hover:brightness-[1.05]" style={{ scrollMarginBottom: '7rem' }}><ShieldCheck className="h-5 w-5" />{t('challenge.verifyGps')}</Button>
+        <Button onClick={() => { void verifyGps(); }} disabled={!canComplete || isMutating} variant="gpsPrimary" className="w-full" style={{ scrollMarginBottom: '7rem' }}><ShieldCheck className="h-5 w-5" />{t('challenge.verifyGps')}</Button>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <Button onClick={() => { void startGame(); }} disabled={isMutating} variant="secondary" className="w-full border border-[rgba(91,67,38,0.14)] bg-[rgba(247,242,231,0.86)]"><RotateCcw className="h-5 w-5" />{t('challenge.newGame')}</Button>
           <Button onClick={() => { void startNextChallenge(); }} disabled={canComplete || isMutating} variant="secondary" className="w-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.68)]"><Trophy className="h-5 w-5" />{t('challenge.next')}</Button>

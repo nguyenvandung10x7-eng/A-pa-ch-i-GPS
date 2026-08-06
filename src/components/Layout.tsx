@@ -153,6 +153,11 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     }
   };
 
+  const closeMobileMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+    setMobileOpenSection(null);
+  }, []);
+
   useEffect(() => {
     musicEnabledPreferenceRef.current = musicEnabledPreference;
   }, [musicEnabledPreference]);
@@ -615,7 +620,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setMobileMenuOpen(false);
+        closeMobileMenu();
       }
     };
 
@@ -626,7 +631,26 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
       document.documentElement.style.overflow = previousHtmlOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [mobileMenuOpen]);
+  }, [closeMobileMenu, mobileMenuOpen]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const desktopMediaQuery = window.matchMedia('(min-width: 1024px)');
+    const handleDesktopChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        closeMobileMenu();
+      }
+    };
+
+    desktopMediaQuery.addEventListener('change', handleDesktopChange);
+
+    return () => {
+      desktopMediaQuery.removeEventListener('change', handleDesktopChange);
+    };
+  }, [closeMobileMenu]);
 
   const handleToggleMusicEnabled = async () => {
     if (!audioRef.current) {
@@ -724,7 +748,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
             )}
             <span className={`${mobile ? 'break-words text-sm font-semibold text-[var(--forest-900)]' : 'min-w-0 max-w-[8.5rem] truncate text-[0.96rem] text-[var(--forest-900)]'}`}>{user.user_metadata?.full_name ?? user.email ?? 'User'}</span>
           </div>
-          <button type="button" onClick={() => { void handleSignOut(); if (mobile) { setMobileMenuOpen(false); setMobileOpenSection(null); } }} disabled={authBusy} className={`${mobile ? 'w-full justify-center' : ''} inline-flex min-h-[2.75rem] items-center rounded-full bg-[rgba(247,242,231,0.78)] px-3 py-1.5 text-[0.96rem] font-semibold text-[var(--forest-900)] transition hover:bg-[rgba(252,249,242,0.94)] disabled:opacity-60`}>
+          <button type="button" onClick={() => { void handleSignOut(); if (mobile) { closeMobileMenu(); } }} disabled={authBusy} className={`${mobile ? 'w-full justify-center' : ''} inline-flex min-h-[2.75rem] items-center rounded-full bg-[rgba(247,242,231,0.78)] px-3 py-1.5 text-[0.96rem] font-semibold text-[var(--forest-900)] transition hover:bg-[rgba(252,249,242,0.94)] disabled:opacity-60`}>
             {authBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('auth.signOut')}
           </button>
         </div>
@@ -732,7 +756,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     }
 
     return (
-      <button type="button" onClick={() => { void handleSignIn(); if (mobile) { setMobileMenuOpen(false); setMobileOpenSection(null); } }} disabled={authBusy} className={`wood-panel inline-flex min-h-[2.75rem] items-center rounded-full px-4 py-2 text-[1.01rem] font-black text-[var(--earth-900)] shadow-[0_12px_24px_rgba(101,75,40,0.16)] transition hover:-translate-y-px disabled:opacity-60 ${mobile ? 'w-full justify-center' : ''}`}>
+      <button type="button" onClick={() => { void handleSignIn(); if (mobile) { closeMobileMenu(); } }} disabled={authBusy} className={`wood-panel inline-flex min-h-[2.75rem] items-center rounded-full px-4 py-2 text-[1.01rem] font-black text-[var(--earth-900)] shadow-[0_12px_24px_rgba(101,75,40,0.16)] transition hover:-translate-y-px disabled:opacity-60 ${mobile ? 'w-full justify-center' : ''}`}>
         {authBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         {t('tiktok.signIn')}
       </button>
@@ -821,6 +845,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
             key={to}
             to={to}
             className={({ isActive }) => `flex min-h-[3rem] min-w-0 items-center justify-center rounded-[1.2rem] px-2 py-2 text-center text-xs font-black leading-4 transition ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.14)]' : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]'}`}
+            onClick={closeMobileMenu}
           >
             <span className="break-words">{t(key)}</span>
           </NavLink>
@@ -845,7 +870,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
           aria-label={t('nav.menu')}
           className="fixed inset-x-0 top-0 z-40 bg-[rgba(18,28,18,0.28)]"
           style={{ bottom: 'calc(5.4rem + env(safe-area-inset-bottom))' }}
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={closeMobileMenu}
         />
         <section
           id="mobile-nav-sheet"
@@ -862,7 +887,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
               <p className="section-kicker">{t('nav.menu')}</p>
               <p className="mt-1 break-words text-lg font-black text-[var(--forest-950)]">{t('app.name')}</p>
             </div>
-            <button type="button" onClick={() => setMobileMenuOpen(false)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]">
+            <button type="button" onClick={closeMobileMenu} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -873,7 +898,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
                 key={`mobile-${to}`}
                 to={to}
                 className={({ isActive }) => `flex min-h-[3rem] min-w-0 items-center justify-between gap-3 rounded-[1.25rem] px-4 py-3 text-left text-sm font-black transition ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_12px_24px_rgba(101,75,40,0.14)]' : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]'}`}
-                onClick={() => { setMobileMenuOpen(false); setMobileOpenSection(null); }}
+                onClick={closeMobileMenu}
               >
                 <span className="min-w-0 break-words">{t(key)}</span>
               </NavLink>
