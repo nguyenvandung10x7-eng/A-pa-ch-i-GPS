@@ -34,7 +34,7 @@ html {
 
 body {
 	margin: 0;
-	min-width: 320px;
+	min-width: 0;
 	min-height: 100vh;
 	font-size: 1.05rem;
 	line-height: 1.62;
@@ -96,6 +96,23 @@ textarea {
 	isolation: isolate;
 	min-height: 100vh;
 	overflow-x: clip;
+}
+
+.mobile-scroll-panel {
+	overflow-wrap: anywhere;
+	overscroll-behavior: contain;
+	-webkit-overflow-scrolling: touch;
+}
+
+.mobile-safe-bottom {
+	padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+.line-clamp-4 {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 4;
+	overflow: hidden;
 }
 
 .mountain-scene {
@@ -315,6 +332,10 @@ textarea {
 
 	.text-base {
 		font-size: 1.06rem;
+	}
+
+	.mobile-safe-bottom {
+		padding-bottom: calc(5.25rem + env(safe-area-inset-bottom));
 	}
 }
 

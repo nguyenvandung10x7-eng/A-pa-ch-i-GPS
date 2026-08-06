@@ -20,6 +20,20 @@ import { GeolocationRequestError, getCurrentPosition } from '../utils/geo';
 
 const findRunTask = (tasks: ChallengeTask[], taskId?: string) => tasks.find((task) => task.id === taskId);
 
+const formatTokenLabel = (value: string) => value
+  .split('-')
+  .filter(Boolean)
+  .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+  .join(' ');
+
+const splitTaskHeading = (value: string) => {
+  const [locationName, ...rest] = value.split(/\s+[-\u2013]\s+/);
+  return {
+    locationName: locationName?.trim() || value,
+    subtitle: rest.join(' - ').trim(),
+  };
+};
+
 type GpsStatus = 'idle' | 'requestingPermission' | 'locating' | 'permissionDenied' | 'unavailable' | 'inaccurateLocation' | 'outsideTargetRadius' | 'verified';
 const GAMEPLAY_MUSIC_ACTION_EVENT = 'gps:challenge-music-action';
 const GAMEPLAY_MUSIC_PREPARE_EVENT = 'gps:challenge-music-prepare';
@@ -47,6 +61,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const [isMutating, setIsMutating] = useState(false);
   const [failedTaskImageKey, setFailedTaskImageKey] = useState<string | null>(null);
   const [completionPanelRunId, setCompletionPanelRunId] = useState<string | null>(null);
+  const [expandedInstructionsTaskId, setExpandedInstructionsTaskId] = useState<string | null>(null);
   const previousResetStateRef = useRef<{ activeTasks: ChallengeTask[]; clearVersion: number } | null>(null);
   const task = findRunTask(activeTasks, progress.activeRun?.taskId);
   const summary = getProgressSummary(activeTasks, progress);
@@ -74,6 +89,15 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   }, [activeTasks, clearVersion, t]);
 
   const currentTaskImageKey = task?.image ? `${task.id}:${task.image}` : null;
+  const localizedTaskTitle = task ? localize(task.title, language) : '';
+  const localizedTaskDescription = task ? localize(task.description, language) : '';
+  const { locationName, subtitle: locationSubtitle } = splitTaskHeading(localizedTaskTitle);
+  const progressPercent = summary.enabledCount > 0 ? Math.round((summary.completedCount / summary.enabledCount) * 100) : 0;
+  const instructionsExpanded = Boolean(task?.id && expandedInstructionsTaskId === task.id);
+  const instructionParagraphs = localizedTaskDescription
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 
   const runMutation = async (mutation: () => Promise<void>) => {
     if (isMutating) return;
@@ -347,62 +371,95 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const statusBadge = progress.activeRun?.status === 'active' ? t('history.active') : progress.activeRun?.status;
   const taskExternalUrl = task && isValidExternalChallengeUrl(task.externalUrl) ? task.externalUrl : null;
   const taskLocationIntro = task?.locationIntro ? localize(task.locationIntro, language).trim() : '';
+  const categoryLabel = task ? (() => {
+    const translated = t(`challenge.category.${task.category}`);
+    return translated === `challenge.category.${task.category}` ? formatTokenLabel(task.category) : translated;
+  })() : '';
+  const difficultyLabel = task ? (() => {
+    const translated = t(`challenge.difficulty.${task.difficulty}`);
+    return translated === `challenge.difficulty.${task.difficulty}` ? formatTokenLabel(task.difficulty) : translated;
+  })() : '';
 
   return (
   <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,1.02fr)]">
     <Card className="overflow-visible p-0">
     <div className="overflow-hidden rounded-[1.9rem]">
       {task?.image && failedTaskImageKey !== currentTaskImageKey ? (
-      <div className="relative h-56 sm:h-64">
+      <div className="relative aspect-[4/3] min-h-[16rem] sm:aspect-[16/10] sm:min-h-[18rem]">
         <img
           src={task.image}
-          alt={localize(task.title, language)}
-          className="h-full w-full object-cover"
+          alt={localizedTaskTitle}
+          className="h-full w-full object-cover object-center"
           onError={() => setFailedTaskImageKey(currentTaskImageKey)}
         />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,20,11,0.02),rgba(14,26,16,0.6))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,20,12,0.02)_22%,rgba(10,18,12,0.18)_48%,rgba(14,22,16,0.84)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+          <div className="max-w-[min(100%,34rem)]">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[rgba(247,240,226,0.82)]">{t('challenge.title')}</p>
+            <h1 className="mt-2 text-[1.9rem] font-black leading-tight text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.45)] sm:text-[2.3rem]">{locationName}</h1>
+            {locationSubtitle ? <p className="mt-2 max-w-[28rem] text-sm leading-6 text-[rgba(247,240,226,0.92)]">{locationSubtitle}</p> : null}
+          </div>
+        </div>
       </div>
       ) : (
-      <div className="relative h-48 bg-[linear-gradient(180deg,rgba(161,189,177,0.64),rgba(46,72,44,0.86))]">
+      <div className="relative aspect-[4/3] min-h-[15rem] bg-[linear-gradient(180deg,rgba(161,189,177,0.64),rgba(46,72,44,0.9))] sm:aspect-[16/10]">
         <p className="absolute inset-x-4 top-4 rounded-[0.9rem] bg-[rgba(255,255,255,0.42)] px-3 py-2 text-xs font-semibold text-[var(--forest-900)]">
           {t('challenge.imageUnavailable')}
         </p>
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,transparent,rgba(20,34,18,0.42))]" />
+        <div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent,rgba(20,34,18,0.72))] p-5 sm:p-6">
+          <h1 className="text-[1.85rem] font-black leading-tight text-white sm:text-[2.2rem]">{locationName}</h1>
+          {locationSubtitle ? <p className="mt-2 text-sm leading-6 text-[rgba(247,240,226,0.92)]">{locationSubtitle}</p> : null}
+        </div>
       </div>
       )}
 
       <div className="p-5 sm:p-6">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="wood-panel rounded-[1.5rem] px-4 py-3 text-center text-[var(--earth-900)]">
-        <p className="text-xs font-bold uppercase tracking-[0.18em]">{t('challenge.total')}</p>
-        <p className="mt-2 text-3xl font-black">{summary.enabledCount}</p>
+      <div className="rounded-[1.65rem] bg-[rgba(247,243,234,0.78)] px-4 py-4 ring-1 ring-[rgba(61,84,52,0.12)] shadow-[0_12px_28px_rgba(37,52,30,0.06)] sm:px-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="section-kicker">{t('challenge.journeyProgress')}</p>
+            <p className="mt-2 text-lg font-black text-[var(--forest-950)]">{t('challenge.progressCompletedLine', { completed: summary.completedCount, total: summary.enabledCount })}</p>
+            <p className="mt-1 text-sm text-[var(--forest-700)]">{t('challenge.progressRemainingLine', { remaining: summary.remainingCount })}</p>
+          </div>
+          <p className="shrink-0 text-sm font-black text-[var(--forest-800)]">{progressPercent}%</p>
         </div>
-        <div className="rounded-[1.5rem] bg-[rgba(243,239,230,0.58)] px-4 py-3 text-center ring-1 ring-[rgba(61,84,52,0.14)]">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.completedCount')}</p>
-        <p className="mt-2 text-3xl font-black text-[var(--forest-950)]">{summary.completedCount}</p>
+        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[rgba(61,84,52,0.12)]">
+          <div className="h-full rounded-full bg-[linear-gradient(90deg,#2d4d2f,#597154)] transition-[width] duration-300" style={{ width: `${progressPercent}%` }} />
         </div>
-        <div className="rounded-[1.5rem] bg-[rgba(243,239,230,0.58)] px-4 py-3 text-center ring-1 ring-[rgba(61,84,52,0.14)]">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.skippedCount')}</p>
-        <p className="mt-2 text-3xl font-black text-[var(--forest-950)]">{summary.skippedCount}</p>
-        </div>
-        <div className="rounded-[1.5rem] bg-[rgba(243,239,230,0.58)] px-4 py-3 text-center ring-1 ring-[rgba(61,84,52,0.14)]">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.remaining')}</p>
-        <p className="mt-2 text-3xl font-black text-[var(--forest-950)]">{summary.remainingCount}</p>
-        </div>
+        <p className="mt-3 text-sm leading-6 text-[var(--forest-700)]">{t('challenge.progressBreakdown', { completed: summary.completedCount, skipped: summary.skippedCount, remaining: summary.remainingCount })}</p>
       </div>
 
       {task && progress.activeRun ? (
         <div className="mt-6 min-w-0">
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded-full bg-[rgba(255,255,255,0.58)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--forest-700)] ring-1 ring-[rgba(61,84,52,0.12)]">{task.category}</span>
-          <span className="rounded-full bg-[rgba(255,255,255,0.58)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--forest-700)] ring-1 ring-[rgba(61,84,52,0.12)]">{task.difficulty}</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-[rgba(255,247,229,0.74)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.12)]">{categoryLabel}</span>
+          <span className="rounded-full bg-[rgba(255,255,255,0.62)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--forest-700)] ring-1 ring-[rgba(61,84,52,0.12)]">{difficultyLabel}</span>
           {statusBadge ? <span className="rounded-full bg-[rgba(201,148,62,0.16)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.12)]">{statusBadge}</span> : null}
         </div>
         <p className="mt-5 section-kicker">{t('challenge.title')}</p>
-        <h1 className="mt-2 break-words text-[2.15rem] font-black leading-tight text-[var(--forest-950)] sm:text-[2.55rem]">{localize(task.title, language)}</h1>
-        <p className="mt-4 text-base leading-7 text-[var(--forest-800)]">{localize(task.description, language)}</p>
+        <h2 className="mt-2 break-words text-[2rem] font-black leading-tight text-[var(--forest-950)] sm:text-[2.5rem]">{localizedTaskTitle}</h2>
+        <div className="mt-4 flex flex-wrap gap-2 text-sm text-[var(--forest-900)]">
+          <span className="rounded-full bg-[rgba(255,247,229,0.78)] px-3.5 py-2 font-black ring-1 ring-[rgba(112,79,39,0.12)]">{task.points} {t('challenge.points')}</span>
+          <span className="rounded-full bg-[rgba(255,255,255,0.66)] px-3.5 py-2 font-black ring-1 ring-[rgba(61,84,52,0.12)]">{t('challenge.radius')} {task.gps.radius}m</span>
+        </div>
+        <div className="mt-5 rounded-[1.45rem] bg-[rgba(255,255,255,0.44)] px-4 py-4 ring-1 ring-[rgba(61,84,52,0.1)]">
+          {instructionsExpanded ? (
+            <div className="space-y-3 text-base leading-7 text-[var(--forest-800)]">
+              {instructionParagraphs.map((paragraph) => <p key={paragraph} style={{ whiteSpace: 'pre-line' }}>{paragraph}</p>)}
+            </div>
+          ) : (
+            <div className="line-clamp-4 text-base leading-7 text-[var(--forest-800)]" style={{ whiteSpace: 'pre-line' }}>{localizedTaskDescription}</div>
+          )}
+          <button
+            type="button"
+            onClick={() => setExpandedInstructionsTaskId(instructionsExpanded ? null : task.id)}
+            className="mt-3 inline-flex min-h-[2.75rem] items-center rounded-full px-4 py-2 text-sm font-black text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)] transition hover:bg-[rgba(255,255,255,0.52)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)]"
+          >
+            {instructionsExpanded ? t('challenge.collapseInstructions') : t('challenge.viewFullInstructions')}
+          </button>
+        </div>
         {taskLocationIntro ? (
-          <div className="mt-4 rounded-[1.35rem] bg-[rgba(255,255,255,0.58)] p-4 ring-1 ring-[rgba(61,84,52,0.12)]">
+          <div className="mt-4 rounded-[1.35rem] bg-[rgba(255,255,255,0.5)] p-4 ring-1 ring-[rgba(61,84,52,0.1)]">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.locationIntroLabel')}</p>
             <p className="mt-2 text-sm leading-6 text-[var(--forest-800)]">{taskLocationIntro}</p>
           </div>
@@ -417,16 +474,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
             {t('challenge.externalAction')}
           </a>
         ) : null}
-        <div className="mt-5 flex flex-wrap gap-3 text-sm text-[var(--forest-900)]">
-          <div className="rounded-[1.25rem] bg-[rgba(255,247,229,0.68)] px-4 py-3 ring-1 ring-[rgba(112,79,39,0.12)]">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--earth-800)]">{t('challenge.radius')}</p>
-          <p className="mt-1 font-black">{task.gps.radius}m</p>
-          </div>
-          <div className="rounded-[1.25rem] bg-[rgba(255,255,255,0.62)] px-4 py-3 ring-1 ring-[rgba(61,84,52,0.12)]">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.score')}</p>
-          <p className="mt-1 font-black">{task.points} {t('challenge.points')}</p>
-          </div>
-        </div>
         </div>
       ) : (
         <div className="mt-6 rounded-[1.6rem] bg-[rgba(255,255,255,0.56)] p-5 ring-1 ring-[rgba(61,84,52,0.12)]">
@@ -435,11 +482,11 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         </div>
       )}
 
-      <div className="mt-5 rounded-[1.45rem] border border-[rgba(61,84,52,0.12)] bg-[rgba(234,241,229,0.76)] p-4 text-[var(--forest-900)]">
+      <div className="mt-5 rounded-[1.45rem] border border-[rgba(61,84,52,0.12)] bg-[rgba(234,241,229,0.84)] p-4 text-[var(--forest-900)] shadow-[0_12px_28px_rgba(37,52,30,0.05)]">
         {message}
       </div>
       <p className="mt-3 text-sm leading-6 text-[var(--forest-700)]">{gpsStatus !== 'idle' ? `${t('challenge.gpsStatus')}: ${t(`challenge.status.${gpsStatus}`)}` : t('challenge.ready')}</p>
-      <p className="mt-3 rounded-[1.35rem] border border-[rgba(112,79,39,0.16)] bg-[rgba(255,247,229,0.72)] p-4 text-sm leading-6 text-[var(--earth-900)]">
+      <p className="mt-3 rounded-[1.35rem] border border-[rgba(112,79,39,0.14)] bg-[rgba(255,247,229,0.54)] p-4 text-sm leading-6 text-[var(--earth-900)]">
         {t('challenge.safetyNotice')}
       </p>
 
@@ -472,12 +519,14 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         <span>{t('challenge.headphoneRecommendation')}</span>
       </p>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <Button onClick={() => { void startGame(); }} disabled={isMutating} variant="secondary" className="w-full"><RotateCcw className="h-5 w-5" />{t('challenge.newGame')}</Button>
-        <Button onClick={() => { void startNextChallenge(); }} disabled={canComplete || isMutating} className="w-full"><Trophy className="h-5 w-5" />{t('challenge.next')}</Button>
-        <Button onClick={() => { void verifyGps(); }} disabled={!canComplete || isMutating} className="w-full"><ShieldCheck className="h-5 w-5" />{t('challenge.verifyGps')}</Button>
-        <Button onClick={() => { void skipChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full"><XCircle className="h-5 w-5" />{t('challenge.skip')}</Button>
-        <Button onClick={() => { void failChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full sm:col-span-2"><Flag className="h-5 w-5" />{t('challenge.fail')}</Button>
+      <div className="mt-5">
+        <Button onClick={() => { void verifyGps(); }} disabled={!canComplete || isMutating} className="w-full bg-[linear-gradient(180deg,#2f4e30,#1f331f)] text-[var(--fabric-100)] shadow-[0_16px_30px_rgba(28,44,24,0.22)] hover:brightness-[1.05]" style={{ scrollMarginBottom: '7rem' }}><ShieldCheck className="h-5 w-5" />{t('challenge.verifyGps')}</Button>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Button onClick={() => { void startGame(); }} disabled={isMutating} variant="secondary" className="w-full border border-[rgba(91,67,38,0.14)] bg-[rgba(247,242,231,0.86)]"><RotateCcw className="h-5 w-5" />{t('challenge.newGame')}</Button>
+          <Button onClick={() => { void startNextChallenge(); }} disabled={canComplete || isMutating} variant="secondary" className="w-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.68)]"><Trophy className="h-5 w-5" />{t('challenge.next')}</Button>
+          <Button onClick={() => { void skipChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full"><XCircle className="h-5 w-5" />{t('challenge.skip')}</Button>
+          <Button onClick={() => { void failChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full text-[var(--brocade-red)]"><Flag className="h-5 w-5" />{t('challenge.fail')}</Button>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3 text-sm text-[var(--forest-700)]">
