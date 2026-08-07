@@ -541,12 +541,12 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const taskExternalUrl = task && isValidExternalChallengeUrl(task.externalUrl) ? task.externalUrl : null;
   const taskLocationIntro = task?.locationIntro ? localize(task.locationIntro, language).trim() : '';
   const taskExperienceNote = task?.experienceNote ? localize(task.experienceNote, language).trim() : '';
-  const taskCoverImage = task?.image ?? '';
+  const taskCoverImage = task?.image.trim() ?? '';
   const additionalTaskImages = task?.images
     ?.filter((imagePath): imagePath is string => typeof imagePath === 'string')
     .map((imagePath) => imagePath.trim())
     .filter((imagePath) => imagePath.length > 0 && imagePath !== taskCoverImage) ?? [];
-  const taskGalleryImages = task ? [task.image, ...additionalTaskImages] : [];
+  const taskGalleryImages = task ? [...(taskCoverImage ? [taskCoverImage] : []), ...additionalTaskImages] : [];
   const hasAdditionalTaskImages = additionalTaskImages.length > 0;
   const categoryLabel = task ? (() => {
     const translated = t(`challenge.category.${task.category}`);
