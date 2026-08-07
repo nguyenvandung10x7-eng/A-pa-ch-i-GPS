@@ -22,10 +22,12 @@ export const getChallengeClearVersion = (): number => parseClearVersion(localSto
 
 const cloneTasks = (tasks: ChallengeTask[]) => structuredClone(tasks);
 
+type OptionalLocalizedField = ChallengeTask['locationIntro'] | ChallengeTask['experienceNote'];
+
 const mergeLocalizedOptionalField = (
-  current: ChallengeTask['locationIntro'],
-  fallback: ChallengeTask['locationIntro'],
-): ChallengeTask['locationIntro'] => {
+  current: OptionalLocalizedField,
+  fallback: OptionalLocalizedField,
+): OptionalLocalizedField => {
   if (!fallback) return current;
   if (current == null) return fallback;
 
@@ -77,6 +79,21 @@ const normalizeOptionalStringField = (value: unknown, fallback: string | undefin
   if (typeof value !== 'string') return fallback;
   const normalized = value.trim();
   if (normalized) return normalized;
+  return fallback;
+};
+
+const normalizeOptionalStringArrayField = (value: unknown, fallback: string[] | undefined): string[] | undefined => {
+  if (!Array.isArray(value)) return fallback;
+
+  const normalized = value
+    .filter((entry): entry is string => typeof entry === 'string')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  if (normalized.length > 0) {
+    return normalized;
+  }
+
   return fallback;
 };
 
@@ -146,6 +163,12 @@ const mergeTaskWithDefault = (task: ChallengeTask, defaultTask: ChallengeTask): 
     nextTask = { ...nextTask, locationIntro: nextLocationIntro };
   }
 
+  const nextExperienceNote = mergeLocalizedOptionalField(nextTask.experienceNote, defaultTask.experienceNote);
+  if (nextExperienceNote !== nextTask.experienceNote) {
+    changed = true;
+    nextTask = { ...nextTask, experienceNote: nextExperienceNote };
+  }
+
   const nextCategory = normalizeStringField(nextTask.category, defaultTask.category);
   if (nextCategory !== nextTask.category) {
     changed = true;
@@ -193,6 +216,12 @@ const mergeTaskWithDefault = (task: ChallengeTask, defaultTask: ChallengeTask): 
   if (nextExternalUrl !== nextTask.externalUrl) {
     changed = true;
     nextTask = { ...nextTask, externalUrl: nextExternalUrl };
+  }
+
+  const nextImages = normalizeOptionalStringArrayField(nextTask.images, defaultTask.images);
+  if (nextImages !== nextTask.images) {
+    changed = true;
+    nextTask = { ...nextTask, images: nextImages };
   }
 
   return { task: nextTask, changed };

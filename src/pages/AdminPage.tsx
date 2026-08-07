@@ -20,6 +20,20 @@ export const AdminPage = ({ tasks, setTasks, t }: AdminPageProps) => {
       [field]: value,
     },
   });
+  const updateExperienceNote = (id: string, task: ChallengeTask, field: IntroField, value: string) => updateTask(id, {
+    experienceNote: {
+      ...(task.experienceNote ?? { vi: '', en: '' }),
+      [field]: value,
+    },
+  });
+  const updateAdditionalImages = (id: string, value: string) => {
+    const images = value
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    updateTask(id, { images: images.length > 0 ? images : undefined });
+  };
+  const updateAdditionalImagesDraft = (id: string, value: string) => updateTask(id, { images: value.split(/\r?\n/) });
   const addTask = () => setTasks([createEmptyTask(), ...tasks]);
   const deleteTask = (id: string) => setTasks(tasks.filter((task) => task.id !== id));
   const restoreDefaults = () => setTasks(resetTasks());
@@ -53,11 +67,14 @@ export const AdminPage = ({ tasks, setTasks, t }: AdminPageProps) => {
       <label className="text-sm font-semibold text-[var(--forest-900)] md:col-span-2">{t('admin.descriptionEn')}<textarea value={task.description.en} onChange={(event) => updateTask(task.id, { description: { ...task.description, en: event.target.value } })} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
       <label className="text-sm font-semibold text-[var(--forest-900)] md:col-span-2">{t('admin.locationIntroVi')}<textarea value={task.locationIntro?.vi ?? ''} onChange={(event) => updateLocationIntro(task.id, task, 'vi', event.target.value)} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
       <label className="text-sm font-semibold text-[var(--forest-900)] md:col-span-2">{t('admin.locationIntroEn')}<textarea value={task.locationIntro?.en ?? ''} onChange={(event) => updateLocationIntro(task.id, task, 'en', event.target.value)} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
+      <label className="text-sm font-semibold text-[var(--forest-900)] md:col-span-2">{t('admin.experienceNoteVi')}<textarea value={task.experienceNote?.vi ?? ''} onChange={(event) => updateExperienceNote(task.id, task, 'vi', event.target.value)} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
+      <label className="text-sm font-semibold text-[var(--forest-900)] md:col-span-2">{t('admin.experienceNoteEn')}<textarea value={task.experienceNote?.en ?? ''} onChange={(event) => updateExperienceNote(task.id, task, 'en', event.target.value)} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
       <label className="text-sm font-semibold text-[var(--forest-900)]">{t('admin.points')}<input type="number" value={task.points} onChange={(event) => updateNumber(task.id, 'points', Number(event.target.value))} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
       <label className="text-sm font-semibold text-[var(--forest-900)]">{t('admin.latitude')}<input type="number" value={task.gps.lat} onChange={(event) => updateGps(task.id, task, 'lat', Number(event.target.value))} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
       <label className="text-sm font-semibold text-[var(--forest-900)]">{t('admin.longitude')}<input type="number" value={task.gps.lng} onChange={(event) => updateGps(task.id, task, 'lng', Number(event.target.value))} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
       <label className="text-sm font-semibold text-[var(--forest-900)]">{t('admin.radius')}<input type="number" value={task.gps.radius} onChange={(event) => updateGps(task.id, task, 'radius', Number(event.target.value))} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
       <label className="text-sm font-semibold text-[var(--forest-900)] md:col-span-2">{t('admin.image')}<input value={task.image} onChange={(event) => updateText(task.id, 'image', event.target.value)} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
+      <label className="text-sm font-semibold text-[var(--forest-900)] md:col-span-2">{t('admin.additionalImages')}<textarea value={(task.images ?? []).join('\n')} onChange={(event) => updateAdditionalImagesDraft(task.id, event.target.value)} onBlur={(event) => updateAdditionalImages(task.id, event.target.value)} className="mt-1 min-h-[8rem] w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" placeholder={t('admin.additionalImagesHint')} /></label>
             <div className="flex items-end gap-2 md:col-span-2"><Button onClick={() => updateTask(task.id, { enabled: !task.enabled })} variant="secondary">{task.enabled ? t('admin.enabled') : t('admin.disabled')}</Button><Button onClick={() => deleteTask(task.id)} variant="danger">{t('admin.delete')}</Button></div>
           </article>
         ))}

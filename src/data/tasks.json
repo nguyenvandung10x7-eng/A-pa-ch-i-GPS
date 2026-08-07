@@ -348,6 +348,10 @@
       "vi": "Đồi A1 thuộc phường Mường Thanh, thành phố Điện Biên Phủ, tỉnh Điện Biên. Đây là một cứ điểm quan trọng trong tập đoàn cứ điểm Điện Biên Phủ và là nơi diễn ra những trận đánh quyết liệt của chiến dịch năm 1954. Hiện nay khu vực vẫn còn nhiều dấu tích lịch sử như hầm hào, xác xe tăng và hố bộc phá.",
       "en": "A1 Hill is in Muong Thanh Ward, Dien Bien Phu City, Dien Bien Province. It was one of the key strongpoints in the Dien Bien Phu fortified complex and the site of some of the campaign's fiercest fighting in 1954. The area still preserves historical remains such as trenches, a tank wreck, and a large demolition crater."
     },
+    "experienceNote": {
+      "vi": "Nhập vai • Trải nghiệm âm thanh • Lịch sử",
+      "en": "Role-play • Audio experience • History"
+    },
     "category": "reflection",
     "difficulty": "hard",
     "points": 400,
@@ -444,6 +448,10 @@
     "locationIntro": {
       "vi": "Khu vực ruộng bậc thang dùng cho nhiệm vụ này nằm ở xã Tà Lèng, thành phố Điện Biên Phủ, tỉnh Điện Biên. Trên Cổng thông tin du lịch Điện Biên, bản Kê Nênh trong xã Tà Lèng được giới thiệu với ruộng bậc thang, rừng phòng hộ và khí hậu mát mẻ. Vào mùa lúa, khu vực thường được nhắc tới nhờ những triền ruộng vàng trên sườn dốc.",
       "en": "The terraced-field area used for this task is in Ta Leng Commune, Dien Bien Phu City, Dien Bien Province. On the Dien Bien tourism portal, Ke Nenh Village in Ta Leng is presented with terraced fields, protected forest, and a cool climate. In the rice season, the area is noted for golden terraces running along the slopes."
+    },
+    "experienceNote": {
+      "vi": "Scout địa phương • Giàu năng lượng",
+      "en": "Local Scout • High energy"
     },
     "category": "mthen",
     "difficulty": "hard",

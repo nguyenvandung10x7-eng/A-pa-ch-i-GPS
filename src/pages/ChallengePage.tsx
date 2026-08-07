@@ -90,6 +90,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
   const [isMutating, setIsMutating] = useState(false);
   const [failedTaskImageKey, setFailedTaskImageKey] = useState<string | null>(null);
+  const [failedGalleryImageKeys, setFailedGalleryImageKeys] = useState<string[]>([]);
   const [completionPanelRunId, setCompletionPanelRunId] = useState<string | null>(null);
   const [expandedInstructionsTaskId, setExpandedInstructionsTaskId] = useState<string | null>(null);
   const scopeTransitionRef = useRef<string | null>(null);
@@ -539,6 +540,14 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const statusBadge = progress.activeRun?.status === 'active' ? t('history.active') : progress.activeRun?.status;
   const taskExternalUrl = task && isValidExternalChallengeUrl(task.externalUrl) ? task.externalUrl : null;
   const taskLocationIntro = task?.locationIntro ? localize(task.locationIntro, language).trim() : '';
+  const taskExperienceNote = task?.experienceNote ? localize(task.experienceNote, language).trim() : '';
+  const taskCoverImage = task?.image.trim() ?? '';
+  const additionalTaskImages = task?.images
+    ?.filter((imagePath): imagePath is string => typeof imagePath === 'string')
+    .map((imagePath) => imagePath.trim())
+    .filter((imagePath) => imagePath.length > 0 && imagePath !== taskCoverImage) ?? [];
+  const taskGalleryImages = task ? [...(taskCoverImage ? [taskCoverImage] : []), ...additionalTaskImages] : [];
+  const hasAdditionalTaskImages = additionalTaskImages.length > 0;
   const categoryLabel = task ? (() => {
     const translated = t(`challenge.category.${task.category}`);
     return translated === `challenge.category.${task.category}` ? formatTokenLabel(task.category) : translated;
@@ -552,7 +561,41 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,1.02fr)]">
     <Card className="overflow-visible p-0">
     <div className="overflow-hidden rounded-[1.9rem]">
-      {task?.image && failedTaskImageKey !== currentTaskImageKey ? (
+      {task && hasAdditionalTaskImages ? (
+      <div className="relative">
+        <div key={task.id} className="flex snap-x snap-mandatory overflow-x-auto" aria-label={t('admin.additionalImages')}>
+          {taskGalleryImages.map((imagePath, index) => {
+            const imageKey = `${task.id}:${index}:${imagePath}`;
+            const imageFailed = failedGalleryImageKeys.includes(imageKey);
+
+            return (
+              <div key={imageKey} className="relative aspect-[4/3] min-h-[16rem] w-full shrink-0 snap-start sm:aspect-[16/10] sm:min-h-[18rem]">
+                {imageFailed ? (
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(161,189,177,0.64),rgba(46,72,44,0.9))]" />
+                ) : (
+                  <img
+                    src={imagePath}
+                    alt={localizedTaskTitle}
+                    className="h-full w-full object-cover object-center"
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    onError={() => setFailedGalleryImageKeys((previousKeys) => (previousKeys.includes(imageKey) ? previousKeys : [...previousKeys, imageKey]))}
+                  />
+                )}
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,20,12,0.02)_22%,rgba(10,18,12,0.18)_48%,rgba(14,22,16,0.84)_100%)]" />
+                <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+                  <div className="max-w-[min(100%,34rem)]">
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-[rgba(247,240,226,0.82)]">{t('challenge.title')}</p>
+                    <h1 className="mt-2 text-[1.9rem] font-black leading-tight text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.45)] sm:text-[2.3rem]">{locationName}</h1>
+                    {locationSubtitle ? <p className="mt-2 max-w-[28rem] text-sm leading-6 text-[rgba(247,240,226,0.92)]">{locationSubtitle}</p> : null}
+                    {imageFailed ? <p className="mt-2 text-xs font-semibold text-[rgba(247,240,226,0.88)]">{t('challenge.imageUnavailable')}</p> : null}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      ) : task?.image && failedTaskImageKey !== currentTaskImageKey ? (
       <div className="relative aspect-[4/3] min-h-[16rem] sm:aspect-[16/10] sm:min-h-[18rem]">
         <img
           src={task.image}
@@ -604,6 +647,11 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           <span className="rounded-full bg-[rgba(255,255,255,0.62)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--forest-700)] ring-1 ring-[rgba(61,84,52,0.12)]">{difficultyLabel}</span>
           {statusBadge ? <span className="rounded-full bg-[rgba(201,148,62,0.16)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.12)]">{statusBadge}</span> : null}
         </div>
+        {taskExperienceNote ? (
+          <p className="mt-2 text-xs leading-6 text-[var(--forest-700)]">
+            <span className="font-bold uppercase tracking-[0.16em]">{t('challenge.experienceNoteLabel')}:</span> {taskExperienceNote}
+          </p>
+        ) : null}
         <p className="mt-5 section-kicker">{t('challenge.title')}</p>
         <h2 className="mt-2 break-words text-[2rem] font-black leading-tight text-[var(--forest-950)] sm:text-[2.5rem]">{localizedTaskTitle}</h2>
         <div className="mt-4 flex flex-wrap gap-2 text-sm text-[var(--forest-900)]">
