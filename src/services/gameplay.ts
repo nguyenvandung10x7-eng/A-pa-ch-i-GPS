@@ -566,7 +566,7 @@ const runLockedMutation = async <T>(
   tasks: ChallengeTask[],
   gate: MutationGate,
   staleResultFactory: (authoritative: PlayerProgress) => T,
-  handler: (authoritative: PlayerProgress) => T | Promise<T>,
+  handler: (authoritative: PlayerProgress) => T,
   options?: MutationOptions,
 ): Promise<T> => (
   withChallengeStorageLock(() => {
@@ -688,7 +688,7 @@ export const reassignActiveRunForScope = async (
     catalogTasks,
     gate,
     (authoritative) => ({ progress: authoritative, stale: true, reassigned: false }),
-    async (authoritative) => {
+    (authoritative) => {
       if (options?.isOperationValid && !options.isOperationValid()) {
         return { progress: authoritative, stale: true, reassigned: false };
       }
@@ -699,6 +699,10 @@ export const reassignActiveRunForScope = async (
       }
 
       const candidatePool = resolveCandidatePool(catalogTasks, candidateTasks);
+      if (candidatePool.length === 0) {
+        return { progress: authoritative, stale: false, reassigned: false };
+      }
+
       const candidateIds = new Set(candidatePool.map((task) => task.id));
       if (candidateIds.has(activeRun.taskId)) {
         return { progress: authoritative, stale: false, reassigned: false };

@@ -1,8 +1,9 @@
 import { Building2, History, ListChecks, MapPinned, Mountain, Sparkles, Trophy, Waves } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { Card } from '../components/Card';
 import { experienceCards, type ExperienceCardConfig } from '../data/experiences';
+import { GAMEPLAY_MUSIC_ACTION_EVENT } from '../services/gameplayMusicEvents';
 
 const iconByCardId: Record<string, typeof Sparkles> = {
   'terraced-fields': ListChecks,
@@ -40,10 +41,33 @@ const ExperienceCard = ({
   const Icon = iconByCardId[card.id] ?? Sparkles;
   const hasImage = !imageFailed;
   const fallbackBackground = fallbackGradientByTheme[card.theme ?? 'surprise'];
+  const dispatchStartMusic = () => {
+    window.dispatchEvent(new CustomEvent<'start'>(GAMEPLAY_MUSIC_ACTION_EVENT, { detail: 'start' }));
+  };
+
+  const handleActivateCard = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.defaultPrevented) return;
+    if (event.detail === 0) return;
+    if (event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    dispatchStartMusic();
+  };
+
+  const handleKeyboardActivateCard = (event: KeyboardEvent<HTMLAnchorElement>) => {
+    if (event.defaultPrevented) return;
+    if (event.key !== 'Enter') return;
+    if (event.repeat) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    dispatchStartMusic();
+  };
 
   return (
     <Link
       to={card.route}
+      onClick={handleActivateCard}
+      onKeyDown={handleKeyboardActivateCard}
       className="group relative isolate block min-h-[20rem] overflow-hidden rounded-[1.9rem] bg-[rgba(38,53,35,0.92)] shadow-[0_22px_42px_rgba(20,27,17,0.24)] ring-1 ring-[rgba(239,224,191,0.18)] motion-safe:transition-transform motion-safe:duration-300 motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0 motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(226,184,92,0.45)]"
       aria-label={`${t(card.titleKey)}. ${t(card.actionKey)}`}
     >

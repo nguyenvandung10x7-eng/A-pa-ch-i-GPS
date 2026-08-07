@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, Flag, Headphones, RotateCcw, ShieldCheck, Trophy, XCircle } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
@@ -15,6 +15,12 @@ import {
 } from '../services/gameplay';
 import { ChallengeStorageLockUnavailableError } from '../services/challengeStorageLock';
 import { getEligibleTasksForExperience, getScopedExperienceModeFromSearch } from '../services/experienceFilters';
+import {
+  GAMEPLAY_MUSIC_ACTION_EVENT,
+  GAMEPLAY_MUSIC_ADVANCE_EVENT,
+  GAMEPLAY_MUSIC_CANCEL_EVENT,
+  GAMEPLAY_MUSIC_PREPARE_EVENT,
+} from '../services/gameplayMusicEvents';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
 import { GeolocationRequestError, getCurrentPosition } from '../utils/geo';
@@ -60,10 +66,6 @@ const getScopedProgressSummary = (tasks: ChallengeTask[], progress: ReturnType<t
 };
 
 type GpsStatus = 'idle' | 'requestingPermission' | 'locating' | 'permissionDenied' | 'unavailable' | 'inaccurateLocation' | 'outsideTargetRadius' | 'verified';
-const GAMEPLAY_MUSIC_ACTION_EVENT = 'gps:challenge-music-action';
-const GAMEPLAY_MUSIC_PREPARE_EVENT = 'gps:challenge-music-prepare';
-const GAMEPLAY_MUSIC_ADVANCE_EVENT = 'gps:challenge-task-received';
-const GAMEPLAY_MUSIC_CANCEL_EVENT = 'gps:challenge-music-cancel';
 const SAMPLE_TIKTOK_URL = 'https://www.tiktok.com/@1954.theater';
 
 const isValidExternalChallengeUrl = (value?: string): value is string => {
@@ -91,11 +93,12 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const [completionPanelRunId, setCompletionPanelRunId] = useState<string | null>(null);
   const [expandedInstructionsTaskId, setExpandedInstructionsTaskId] = useState<string | null>(null);
   const scopeTransitionRef = useRef<string | null>(null);
+  const scopeTransitionOwnerTokenRef = useRef<number | null>(null);
   const scopeReassignTokenRef = useRef(0);
   const scopeMutatingTokenRef = useRef<number | null>(null);
   const latestScopeContextRef = useRef<string>('');
   const previousResetStateRef = useRef<{ activeTasks: ChallengeTask[]; clearVersion: number } | null>(null);
-  const task = findRunTask(activeTasks, progress.activeRun?.taskId);
+  const task = findRunTask(scopedExperienceMode ? eligibleTasks : activeTasks, progress.activeRun?.taskId);
   const eligibleTaskIdSet = useMemo(() => new Set(eligibleTasks.map((candidate) => candidate.id)), [eligibleTasks]);
   const summary = useMemo(() => getScopedProgressSummary(eligibleTasks, progress), [eligibleTasks, progress]);
   const canComplete = Boolean(task && progress.activeRun?.status === 'active');
@@ -132,17 +135,29 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     };
   }, [activeTasks, clearVersion, t]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     latestScopeContextRef.current = scopeContext;
   }, [scopeContext]);
 
   useEffect(() => {
     const cancelInFlightScopeReassign = () => {
-      if (scopeMutatingTokenRef.current === null) return;
+      const cancelToken = scopeMutatingTokenRef.current;
+      const ownerToken = scopeTransitionOwnerTokenRef.current;
+      if (cancelToken === null && ownerToken === null) {
+        scopeTransitionRef.current = null;
+        return;
+      }
+
       // Invalidate any pending scope reassign request result for the old scope context.
       scopeReassignTokenRef.current += 1;
-      scopeMutatingTokenRef.current = null;
-      setIsMutating(false);
+
+      if (cancelToken !== null) {
+        scopeMutatingTokenRef.current = null;
+        setIsMutating(false);
+      }
+
+      scopeTransitionRef.current = null;
+      scopeTransitionOwnerTokenRef.current = null;
     };
 
     if (!scopedExperienceMode) {
@@ -162,12 +177,13 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     }
 
     const transitionKey = `${scopedExperienceMode}:${progress.gameId}:${activeRun.id}:${activeRun.taskId}`;
-    if (scopeTransitionRef.current === transitionKey) {
+    if (scopeTransitionRef.current === transitionKey && scopeTransitionOwnerTokenRef.current !== null) {
       return;
     }
     scopeTransitionRef.current = transitionKey;
 
     const requestToken = ++scopeReassignTokenRef.current;
+    scopeTransitionOwnerTokenRef.current = requestToken;
     scopeMutatingTokenRef.current = requestToken;
     const requestContext = latestScopeContextRef.current;
     let applied = false;
@@ -212,8 +228,9 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           setIsMutating(false);
         }
 
-        if (scopeReassignTokenRef.current === requestToken && !applied) {
+        if (scopeTransitionOwnerTokenRef.current === requestToken && !applied) {
           scopeTransitionRef.current = null;
+          scopeTransitionOwnerTokenRef.current = null;
         }
       });
   }, [activeTasks, eligibleTaskIdSet, eligibleTasks, progress, scopedExperienceMode, scopeContext, t]);
