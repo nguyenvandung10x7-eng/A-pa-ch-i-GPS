@@ -86,7 +86,7 @@ const ExperienceCard = ({
         />
       )}
 
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,20,12,0)_40%,rgba(10,20,13,0.24)_66%,rgba(10,18,12,0.74)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,20,12,0)_34%,rgba(10,20,13,0.34)_58%,rgba(10,18,12,0.82)_100%)]" />
 
       <div className="relative z-10 flex h-full min-h-[17rem] flex-col justify-between px-3.5 py-3.5 sm:px-4 sm:py-4">
         <div className="flex items-start justify-between gap-3">
