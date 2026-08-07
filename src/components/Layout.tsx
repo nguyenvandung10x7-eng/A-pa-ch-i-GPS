@@ -3,6 +3,13 @@ import { ChevronDown, Compass, Loader2, Menu, Music2, Pause, Play, Volume2, X } 
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdminStatus } from '../hooks/useAdminStatus';
+import {
+  GAMEPLAY_MUSIC_ACTION_EVENT,
+  GAMEPLAY_MUSIC_ADVANCE_EVENT,
+  GAMEPLAY_MUSIC_CANCEL_EVENT,
+  GAMEPLAY_MUSIC_PREPARE_EVENT,
+  type GameplayMusicAction,
+} from '../services/gameplayMusicEvents';
 import { LanguageSwitch } from './LanguageSwitch';
 import type { LanguageCode } from '../types/task';
 
@@ -14,10 +21,6 @@ type MusicPreparationSnapshot = { trackId: string | null; currentTime: number; w
 type PlayMusicOptions = { restart?: boolean; muted?: boolean; preserveShuffleQueue?: boolean; context: string };
 
 const MUSIC_STORAGE_KEY = 'gps-music-settings-v1';
-const GAMEPLAY_MUSIC_ACTION_EVENT = 'gps:challenge-music-action';
-const GAMEPLAY_MUSIC_PREPARE_EVENT = 'gps:challenge-music-prepare';
-const GAMEPLAY_MUSIC_ADVANCE_EVENT = 'gps:challenge-task-received';
-const GAMEPLAY_MUSIC_CANCEL_EVENT = 'gps:challenge-music-cancel';
 const MUSIC_TRACKS: MusicTrack[] = [
   { id: 'hmong-ballad-1', fileName: 'hmong-ballad-1.mp3', labelKey: 'music.track.hmongBallad1' },
   { id: 'hmong-ballad-2', fileName: 'hmong-ballad-2.mp3', labelKey: 'music.track.hmongBallad2' },
@@ -116,17 +119,20 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
   const musicShuffleQueueRef = useRef<string[]>(createShuffleQueue(MUSIC_TRACKS, musicTrackId));
   const selectedTrack = useMemo(() => MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0], [musicTrackId]);
   const navItems: Array<[string, string]> = [
-    ['/challenge', 'nav.challenge'],
-    ['/history', 'nav.history'],
+    ['/experiences', 'nav.experiences'],
     ['/discover', 'nav.discover'],
     ['/leaderboard', 'nav.leaderboard'],
+    ['/history', 'nav.history'],
   ];
   const mobilePrimaryNavItems: Array<[string, string]> = [
-    ['/challenge', 'nav.challenge'],
+    ['/experiences', 'nav.experiences'],
     ['/discover', 'nav.discover'],
     ['/leaderboard', 'nav.leaderboard'],
   ];
-  const mobileSecondaryNavItems: Array<[string, string]> = [['/history', 'nav.history']];
+  const mobileSecondaryNavItems: Array<[string, string]> = [
+    ['/challenge', 'nav.challenge'],
+    ['/history', 'nav.history'],
+  ];
 
   if (user && !checkingAdmin && isAdmin) {
     navItems.push(['/moderation', 'nav.moderation']);
@@ -552,7 +558,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
 
   useEffect(() => {
     const handleMusicAction = (event: Event) => {
-      const action = (event as CustomEvent<'start' | 'next'>).detail;
+      const action = (event as CustomEvent<GameplayMusicAction>).detail;
       if (action === 'start') {
         startMusicFromUserGesture();
         return;
