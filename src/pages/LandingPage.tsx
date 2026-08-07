@@ -7,7 +7,7 @@ import { loadHistory } from '../services/history';
 import type { ChallengeTask } from '../types/task';
 
 const Stat = ({ icon: Icon, label, value }: { icon: typeof Trophy; label: string; value: string }) => (
-  <Card className="p-4 sm:p-4">
+  <Card className="!p-4 sm:!p-4">
     <div className="flex items-center justify-between gap-3">
     <div className="min-w-0">
       <p className="section-kicker text-[0.68rem] text-[var(--forest-700)]">{label}</p>
