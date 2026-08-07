@@ -40,6 +40,15 @@ type MutationGate = {
   bootstrapProgress: PlayerProgress;
 };
 
+type MutationOptions = {
+  ignoreSnapshotMismatch?: boolean;
+  allowBootstrapFromExpected?: boolean;
+};
+
+type ScopeReassignOptions = {
+  isOperationValid?: () => boolean;
+};
+
 type StorageTaskIdMigrationResult = {
   changed: boolean;
   nextRaw?: string;
@@ -557,8 +566,8 @@ const runLockedMutation = async <T>(
   tasks: ChallengeTask[],
   gate: MutationGate,
   staleResultFactory: (authoritative: PlayerProgress) => T,
-  handler: (authoritative: PlayerProgress) => T,
-  options?: { ignoreSnapshotMismatch?: boolean; allowBootstrapFromExpected?: boolean },
+  handler: (authoritative: PlayerProgress) => T | Promise<T>,
+  options?: MutationOptions,
 ): Promise<T> => (
   withChallengeStorageLock(() => {
     if (getChallengeClearVersion() !== gate.actionClearVersion) {
@@ -672,13 +681,18 @@ export const reassignActiveRunForScope = async (
   catalogTasks: ChallengeTask[],
   progress: PlayerProgress,
   candidateTasks: ChallengeTask[],
+  options?: ScopeReassignOptions,
 ): Promise<ScopeReassignmentResult> => {
   const gate = captureMutationGate(progress);
   return runLockedMutation(
     catalogTasks,
     gate,
     (authoritative) => ({ progress: authoritative, stale: true, reassigned: false }),
-    (authoritative) => {
+    async (authoritative) => {
+      if (options?.isOperationValid && !options.isOperationValid()) {
+        return { progress: authoritative, stale: true, reassigned: false };
+      }
+
       const activeRun = authoritative.activeRun;
       if (!activeRun || activeRun.status !== 'active') {
         return { progress: authoritative, stale: false, reassigned: false };
@@ -688,6 +702,10 @@ export const reassignActiveRunForScope = async (
       const candidateIds = new Set(candidatePool.map((task) => task.id));
       if (candidateIds.has(activeRun.taskId)) {
         return { progress: authoritative, stale: false, reassigned: false };
+      }
+
+      if (options?.isOperationValid && !options.isOperationValid()) {
+        return { progress: authoritative, stale: true, reassigned: false };
       }
 
       const reassignedProgress = assignRandomChallengeWhileLocked(

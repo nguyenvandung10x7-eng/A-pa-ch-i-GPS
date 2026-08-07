@@ -137,11 +137,26 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   }, [scopeContext]);
 
   useEffect(() => {
-    if (!scopedExperienceMode) return;
+    const cancelInFlightScopeReassign = () => {
+      if (scopeMutatingTokenRef.current === null) return;
+      // Invalidate any pending scope reassign request result for the old scope context.
+      scopeReassignTokenRef.current += 1;
+      scopeMutatingTokenRef.current = null;
+      setIsMutating(false);
+    };
+
+    if (!scopedExperienceMode) {
+      cancelInFlightScopeReassign();
+      return;
+    }
 
     const activeRun = progress.activeRun;
-    if (!activeRun || activeRun.status !== 'active') return;
+    if (!activeRun || activeRun.status !== 'active') {
+      cancelInFlightScopeReassign();
+      return;
+    }
     if (eligibleTaskIdSet.has(activeRun.taskId)) {
+      cancelInFlightScopeReassign();
       scopeTransitionRef.current = null;
       return;
     }
@@ -159,7 +174,9 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
     setIsMutating(true);
 
-    void reassignActiveRunForScope(activeTasks, progress, eligibleTasks)
+    void reassignActiveRunForScope(activeTasks, progress, eligibleTasks, {
+      isOperationValid: () => scopeReassignTokenRef.current === requestToken && latestScopeContextRef.current === requestContext,
+    })
       .then((result) => {
         if (scopeReassignTokenRef.current !== requestToken) return;
         if (latestScopeContextRef.current !== requestContext) return;
