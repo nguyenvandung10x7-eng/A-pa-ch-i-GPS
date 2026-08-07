@@ -51,7 +51,7 @@ export const LandingPage = ({ tasks, clearVersion, t }: { tasks: ChallengeTask[]
       >
         {t('landing.start')}
       </Link>
-      <Link to="/admin" className="inline-flex min-h-[3.25rem] items-center justify-center rounded-full bg-[rgba(235,230,220,0.46)] px-5 py-3 text-base font-semibold text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.12)] transition hover:bg-[rgba(239,234,223,0.62)]">
+      <Link to="/admin" className="inline-flex min-h-[3.25rem] items-center justify-center rounded-full bg-[rgba(235,230,220,0.46)] px-5 py-3 text-[1rem] font-semibold text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.12)] transition hover:bg-[rgba(239,234,223,0.62)]">
         {t('landing.admin')}
       </Link>
       </div>
