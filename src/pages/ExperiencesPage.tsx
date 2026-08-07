@@ -68,14 +68,14 @@ const ExperienceCard = ({
       to={card.route}
       onClick={handleActivateCard}
       onKeyDown={handleKeyboardActivateCard}
-      className="group relative isolate block min-h-[20rem] overflow-hidden rounded-[1.9rem] bg-[rgba(38,53,35,0.92)] shadow-[0_22px_42px_rgba(20,27,17,0.24)] ring-1 ring-[rgba(239,224,191,0.18)] motion-safe:transition-transform motion-safe:duration-300 motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0 motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(226,184,92,0.45)]"
+      className="group relative isolate block min-h-[17rem] overflow-hidden rounded-[1.75rem] bg-[rgba(255,247,230,0.72)] shadow-[0_14px_28px_rgba(42,58,35,0.16)] ring-1 ring-[rgba(239,224,191,0.3)] motion-safe:transition-transform motion-safe:duration-300 motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0 motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(226,184,92,0.45)]"
       aria-label={`${t(card.titleKey)}. ${t(card.actionKey)}`}
     >
       {hasImage ? (
         <img
           src={card.image}
           alt={t(card.imageAltKey)}
-          className="absolute inset-0 h-full w-full object-cover object-center motion-safe:transition-transform motion-safe:duration-500 group-hover:scale-[1.02]"
+          className="absolute inset-0 h-full w-full object-cover object-center motion-safe:transition-transform motion-safe:duration-500 group-hover:scale-[1.03]"
           onError={onImageError}
         />
       ) : (
@@ -86,28 +86,26 @@ const ExperienceCard = ({
         />
       )}
 
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,22,15,0.08)_18%,rgba(13,22,17,0.42)_50%,rgba(12,19,14,0.9)_100%)]" />
-      <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,248,229,0.22),transparent_70%)]" aria-hidden="true" />
-      <div className="absolute right-4 top-4 h-20 w-20 rounded-full border border-[rgba(223,183,95,0.3)] bg-[radial-gradient(circle,rgba(255,245,218,0.18),transparent_68%)]" aria-hidden="true" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,20,12,0)_34%,rgba(10,20,13,0.34)_58%,rgba(10,18,12,0.82)_100%)]" />
 
-      <div className="relative z-10 flex h-full min-h-[20rem] flex-col justify-between px-5 py-5 sm:px-6 sm:py-6">
+      <div className="relative z-10 flex h-full min-h-[17rem] flex-col justify-between px-3.5 py-3.5 sm:px-4 sm:py-4">
         <div className="flex items-start justify-between gap-3">
-          <div className="inline-flex min-h-[2.1rem] min-w-[2.1rem] items-center justify-center rounded-full bg-[rgba(240,214,156,0.24)] px-2 text-sm font-black text-[rgba(253,243,224,0.98)] ring-1 ring-[rgba(240,214,156,0.36)]">
+          <div className="inline-flex min-h-[1.9rem] min-w-[1.9rem] items-center justify-center rounded-full bg-[rgba(255,243,208,0.84)] px-2 text-xs font-black text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.22)]">
             {String(card.order).padStart(2, '0')}
           </div>
-          <span className="inline-flex min-h-[2.2rem] min-w-[2.2rem] items-center justify-center rounded-full bg-[rgba(15,28,16,0.42)] text-[rgba(247,233,205,0.98)] ring-1 ring-[rgba(240,214,156,0.25)]">
+          <span className="inline-flex min-h-[2rem] min-w-[2rem] items-center justify-center rounded-full bg-[rgba(255,255,255,0.8)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.24)]">
             <Icon className="h-4 w-4" />
           </span>
         </div>
 
         <div className="min-w-0">
-          <h2 className="text-[1.85rem] font-black leading-tight text-[rgba(255,248,233,0.98)] drop-shadow-[0_8px_22px_rgba(0,0,0,0.45)] sm:text-[2.1rem]">
+          <h2 className="text-[1.22rem] font-black leading-tight text-[rgba(255,252,244,0.98)] [text-shadow:0_3px_14px_rgba(0,0,0,0.5)] sm:text-[1.45rem]">
             {t(card.titleKey)}
           </h2>
-          <p className="mt-2 max-w-[34rem] text-sm leading-6 text-[rgba(243,230,203,0.95)] sm:text-base">
+          <p className="mt-1.5 line-clamp-2 text-[0.82rem] leading-5 text-[rgba(248,239,220,0.96)] sm:text-sm sm:leading-5">
             {t(card.descriptionKey)}
           </p>
-          <p className="mt-4 inline-flex min-h-[2.75rem] items-center rounded-full border border-[rgba(245,217,158,0.34)] bg-[rgba(20,34,21,0.5)] px-4 text-sm font-black text-[rgba(252,241,220,0.98)] motion-safe:transition-colors group-hover:bg-[rgba(31,48,31,0.64)] group-active:bg-[rgba(24,39,25,0.7)]">
+          <p className="mt-3 inline-flex min-h-[2.6rem] items-center rounded-full border border-[rgba(255,232,180,0.42)] bg-[rgba(250,241,221,0.9)] px-3.5 text-[0.78rem] font-black uppercase tracking-[0.04em] text-[var(--earth-900)] shadow-[0_6px_16px_rgba(0,0,0,0.16)] motion-safe:transition-colors group-hover:bg-[rgba(255,246,226,0.98)] group-active:bg-[rgba(252,236,204,0.96)] sm:text-xs">
             {t(card.actionKey)}
           </p>
         </div>
@@ -124,22 +122,21 @@ export const ExperiencesPage = ({ t }: { t: (key: string) => string }) => {
   return (
     <div className="grid gap-6">
       <Card className="overflow-hidden p-0">
-        <section className="relative overflow-hidden rounded-[1.9rem] px-5 py-7 sm:px-7 sm:py-9 lg:px-9">
-          <div className="absolute inset-0 bg-[linear-gradient(140deg,rgba(234,220,193,0.72),rgba(212,200,176,0.58),rgba(207,219,194,0.62))]" aria-hidden="true" />
-          <div className="absolute inset-x-0 bottom-0 h-14 bg-[repeating-linear-gradient(90deg,rgba(111,76,46,0.2)_0_18px,rgba(198,153,77,0.18)_18px_36px,rgba(35,55,36,0.2)_36px_54px)]" aria-hidden="true" />
+        <section className="relative overflow-hidden rounded-[1.9rem] px-5 py-6 sm:px-7 sm:py-8 lg:px-9">
+          <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(245,235,214,0.78),rgba(231,224,203,0.58),rgba(228,237,218,0.52))]" aria-hidden="true" />
           <div className="relative z-10">
             <p className="section-kicker">{t('nav.experiences')}</p>
-            <h1 className="mt-2 text-[2rem] font-black leading-tight text-[var(--forest-950)] sm:text-[2.6rem]">
+            <h1 className="mt-2 text-[1.85rem] font-black leading-tight text-[var(--forest-950)] sm:text-[2.35rem]">
               {t('experiences.heading')}
             </h1>
-            <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--forest-800)] sm:text-lg">
+            <p className="mt-3 max-w-3xl text-[0.98rem] leading-7 text-[var(--forest-800)] sm:text-[1.05rem]">
               {t('experiences.subheading')}
             </p>
           </div>
         </section>
       </Card>
 
-      <section className="grid gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-4">
         {cards.map((card) => (
           <ExperienceCard
             key={card.id}
