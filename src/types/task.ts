@@ -13,11 +13,13 @@ export type ChallengeTask = {
   title: LocalizedText;
   description: LocalizedText;
   locationIntro?: LocalizedText;
+  experienceNote?: LocalizedText;
   category: string;
   difficulty: string;
   points: number;
   gps: GpsPoint;
   image: string;
+  images?: string[];
   externalUrl?: string;
   enabled: boolean;
 };
