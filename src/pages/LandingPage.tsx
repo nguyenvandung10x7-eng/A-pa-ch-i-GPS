@@ -10,7 +10,7 @@ const Stat = ({ icon: Icon, label, value }: { icon: typeof Trophy; label: string
   <Card className="!p-4 sm:!p-4">
     <div className="flex items-center justify-between gap-3">
     <div className="min-w-0">
-      <p className="section-kicker text-[0.68rem] text-[var(--forest-700)]">{label}</p>
+      <p className="section-kicker !text-[0.68rem] text-[var(--forest-700)]">{label}</p>
       <p className="mt-2 text-2xl font-black text-[var(--forest-900)] sm:text-3xl">{value}</p>
     </div>
     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] bg-[rgba(236,229,214,0.62)] text-[var(--earth-700)] ring-1 ring-[rgba(91,67,38,0.1)]">
