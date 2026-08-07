@@ -563,7 +563,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     <div className="overflow-hidden rounded-[1.9rem]">
       {task && hasAdditionalTaskImages ? (
       <div className="relative">
-        <div className="flex snap-x snap-mandatory overflow-x-auto" aria-label={t('admin.additionalImages')}>
+        <div key={task.id} className="flex snap-x snap-mandatory overflow-x-auto" aria-label={t('admin.additionalImages')}>
           {taskGalleryImages.map((imagePath, index) => {
             const imageKey = `${task.id}:${index}:${imagePath}`;
             const imageFailed = failedGalleryImageKeys.includes(imageKey);
