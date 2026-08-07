@@ -584,7 +584,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,20,12,0.02)_22%,rgba(10,18,12,0.18)_48%,rgba(14,22,16,0.84)_100%)]" />
                 <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
                   <div className="max-w-[min(100%,34rem)]">
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-[rgba(247,240,226,0.82)]">{t('challenge.title')}</p>
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-[rgba(247,240,226,0.78)]">{t('challenge.title')}</p>
                     <h1 className="mt-2 text-[1.9rem] font-black leading-tight text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.45)] sm:text-[2.3rem]">{locationName}</h1>
                     {locationSubtitle ? <p className="mt-2 max-w-[28rem] text-sm leading-6 text-[rgba(247,240,226,0.92)]">{locationSubtitle}</p> : null}
                     {imageFailed ? <p className="mt-2 text-xs font-semibold text-[rgba(247,240,226,0.88)]">{t('challenge.imageUnavailable')}</p> : null}
@@ -606,7 +606,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,20,12,0.02)_22%,rgba(10,18,12,0.18)_48%,rgba(14,22,16,0.84)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
           <div className="max-w-[min(100%,34rem)]">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[rgba(247,240,226,0.82)]">{t('challenge.title')}</p>
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-[rgba(247,240,226,0.78)]">{t('challenge.title')}</p>
             <h1 className="mt-2 text-[1.9rem] font-black leading-tight text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.45)] sm:text-[2.3rem]">{locationName}</h1>
             {locationSubtitle ? <p className="mt-2 max-w-[28rem] text-sm leading-6 text-[rgba(247,240,226,0.92)]">{locationSubtitle}</p> : null}
           </div>
@@ -625,40 +625,25 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       )}
 
       <div className="p-5 sm:p-6">
-      <div className="rounded-[1.65rem] bg-[rgba(247,243,234,0.78)] px-4 py-4 ring-1 ring-[rgba(61,84,52,0.12)] shadow-[0_12px_28px_rgba(37,52,30,0.06)] sm:px-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="section-kicker">{t('challenge.journeyProgress')}</p>
-            <p className="mt-2 text-lg font-black text-[var(--forest-950)]">{t('challenge.progressCompletedLine', { completed: summary.completedCount, total: summary.enabledCount })}</p>
-            <p className="mt-1 text-sm text-[var(--forest-700)]">{t('challenge.progressRemainingLine', { remaining: summary.remainingCount })}</p>
-          </div>
-          <p className="shrink-0 text-sm font-black text-[var(--forest-800)]">{progressPercent}%</p>
-        </div>
-        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[rgba(61,84,52,0.12)]">
-          <div className="h-full rounded-full bg-[linear-gradient(90deg,#2d4d2f,#597154)] transition-[width] duration-300" style={{ width: `${progressPercent}%` }} />
-        </div>
-        <p className="mt-3 text-sm leading-6 text-[var(--forest-700)]">{t('challenge.progressBreakdown', { completed: summary.completedCount, skipped: summary.skippedCount, remaining: summary.remainingCount })}</p>
-      </div>
-
       {task && progress.activeRun ? (
-        <div className="mt-6 min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-[rgba(255,247,229,0.74)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.12)]">{categoryLabel}</span>
-          <span className="rounded-full bg-[rgba(255,255,255,0.62)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--forest-700)] ring-1 ring-[rgba(61,84,52,0.12)]">{difficultyLabel}</span>
-          {statusBadge ? <span className="rounded-full bg-[rgba(201,148,62,0.16)] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.12)]">{statusBadge}</span> : null}
-        </div>
+        <div className="min-w-0">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-[var(--forest-700)]">{t('challenge.title')}</p>
+        <h2 className="mt-2 break-words text-[1.95rem] font-black leading-tight text-[var(--forest-950)] sm:text-[2.4rem]">{localizedTaskTitle}</h2>
         {taskExperienceNote ? (
-          <p className="mt-2 text-xs leading-6 text-[var(--forest-700)]">
-            <span className="font-bold uppercase tracking-[0.16em]">{t('challenge.experienceNoteLabel')}:</span> {taskExperienceNote}
+          <p className="mt-2 text-sm leading-6 text-[var(--forest-800)]">
+            <span className="font-semibold uppercase tracking-[0.12em] text-[var(--forest-700)]">{t('challenge.experienceNoteLabel')}:</span> {taskExperienceNote}
           </p>
         ) : null}
-        <p className="mt-5 section-kicker">{t('challenge.title')}</p>
-        <h2 className="mt-2 break-words text-[2rem] font-black leading-tight text-[var(--forest-950)] sm:text-[2.5rem]">{localizedTaskTitle}</h2>
-        <div className="mt-4 flex flex-wrap gap-2 text-sm text-[var(--forest-900)]">
-          <span className="rounded-full bg-[rgba(255,247,229,0.78)] px-3.5 py-2 font-black ring-1 ring-[rgba(112,79,39,0.12)]">{task.points} {t('challenge.points')}</span>
-          <span className="rounded-full bg-[rgba(255,255,255,0.66)] px-3.5 py-2 font-black ring-1 ring-[rgba(61,84,52,0.12)]">{t('challenge.radius')} {task.gps.radius}m</span>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[var(--forest-900)]">
+          <span className="rounded-full bg-[rgba(255,247,229,0.62)] px-3 py-1.5 font-bold ring-1 ring-[rgba(112,79,39,0.1)]">{task.points} {t('challenge.points')}</span>
+          <span className="rounded-full bg-[rgba(255,255,255,0.58)] px-3 py-1.5 font-bold ring-1 ring-[rgba(61,84,52,0.1)]">{t('challenge.radius')} {task.gps.radius}m</span>
         </div>
-        <div className="mt-5 rounded-[1.45rem] bg-[rgba(255,255,255,0.44)] px-4 py-4 ring-1 ring-[rgba(61,84,52,0.1)]">
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <span className="rounded-full bg-[rgba(255,247,229,0.52)] px-2.5 py-1 font-semibold uppercase tracking-[0.14em] text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.1)]">{categoryLabel}</span>
+          <span className="rounded-full bg-[rgba(255,255,255,0.5)] px-2.5 py-1 font-semibold uppercase tracking-[0.12em] text-[var(--forest-700)] ring-1 ring-[rgba(61,84,52,0.1)]">{difficultyLabel}</span>
+          {statusBadge ? <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(201,148,62,0.14)] px-2.5 py-1 font-semibold uppercase tracking-[0.12em] text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.12)]"><span className="h-1.5 w-1.5 rounded-full bg-[var(--earth-800)]" aria-hidden="true" />{statusBadge}</span> : null}
+        </div>
+        <div className="mt-5 rounded-[1.25rem] bg-[rgba(255,255,255,0.34)] px-4 py-4 ring-1 ring-[rgba(61,84,52,0.08)]">
           {instructionsExpanded ? (
             <div className="space-y-3 text-base leading-7 text-[var(--forest-800)]">
               {instructionParagraphs.map((paragraph) => <p key={paragraph} style={{ whiteSpace: 'pre-line' }}>{paragraph}</p>)}
@@ -669,14 +654,14 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           <button
             type="button"
             onClick={() => setExpandedInstructionsTaskId(instructionsExpanded ? null : task.id)}
-            className="mt-3 inline-flex min-h-[2.75rem] items-center rounded-full px-4 py-2 text-sm font-black text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)] transition hover:bg-[rgba(255,255,255,0.52)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)]"
+            className="mt-3 inline-flex min-h-[2.75rem] items-center rounded-full px-4 py-2 text-sm font-black text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.12)] transition hover:bg-[rgba(255,255,255,0.46)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)]"
           >
             {instructionsExpanded ? t('challenge.collapseInstructions') : t('challenge.viewFullInstructions')}
           </button>
         </div>
         {taskLocationIntro ? (
-          <div className="mt-4 rounded-[1.35rem] bg-[rgba(255,255,255,0.5)] p-4 ring-1 ring-[rgba(61,84,52,0.1)]">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.locationIntroLabel')}</p>
+          <div className="mt-4 rounded-[1.2rem] bg-[rgba(255,255,255,0.34)] px-4 py-3 ring-1 ring-[rgba(61,84,52,0.08)]">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.locationIntroLabel')}</p>
             <p className="mt-2 text-sm leading-6 text-[var(--forest-800)]">{taskLocationIntro}</p>
           </div>
         ) : null}
@@ -685,55 +670,77 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
             href={taskExternalUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 inline-flex min-h-[3rem] items-center justify-center rounded-full bg-[rgba(255,255,255,0.68)] px-5 py-3 text-sm font-black text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)] transition hover:bg-white"
+            className="mt-4 inline-flex min-h-[3rem] items-center justify-center rounded-full bg-[rgba(255,255,255,0.62)] px-5 py-3 text-sm font-black text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.12)] transition hover:bg-white"
           >
             {t('challenge.externalAction')}
           </a>
         ) : null}
         </div>
       ) : (
-        <div className="mt-6 rounded-[1.6rem] bg-[rgba(255,255,255,0.56)] p-5 ring-1 ring-[rgba(61,84,52,0.12)]">
+        <div className="mt-1 rounded-[1.35rem] bg-[rgba(255,255,255,0.44)] p-5 ring-1 ring-[rgba(61,84,52,0.1)]">
         <h1 className="text-3xl font-black text-[var(--forest-950)]">{isFinished ? t('challenge.allDone') : t('challenge.pending')}</h1>
         <p className="mt-3 text-[var(--forest-800)]">{t('challenge.pendingDescription')}</p>
         </div>
       )}
 
-      <div className="mt-5 rounded-[1.45rem] border border-[rgba(61,84,52,0.12)] bg-[rgba(234,241,229,0.84)] p-4 text-[var(--forest-900)] shadow-[0_12px_28px_rgba(37,52,30,0.05)]">
-        {message}
+      <div className="mt-5 rounded-[1.35rem] bg-[rgba(255,255,255,0.38)] px-4 py-3 ring-1 ring-[rgba(61,84,52,0.08)]">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-[var(--forest-700)]">{t('challenge.journeyProgress')}</p>
+            <p className="mt-2 text-base font-black text-[var(--forest-900)]">{t('challenge.progressCompletedLine', { completed: summary.completedCount, total: summary.enabledCount })}</p>
+            <p className="mt-1 text-sm text-[var(--forest-700)]">{t('challenge.progressRemainingLine', { remaining: summary.remainingCount })}</p>
+          </div>
+          <p className="shrink-0 text-sm font-black text-[var(--forest-800)]">{progressPercent}%</p>
+        </div>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-[rgba(61,84,52,0.12)]">
+          <div className="h-full rounded-full bg-[linear-gradient(90deg,#2d4d2f,#597154)] transition-[width] duration-300" style={{ width: `${progressPercent}%` }} />
+        </div>
+        <p className="mt-2 text-sm leading-6 text-[var(--forest-700)]">{t('challenge.progressBreakdown', { completed: summary.completedCount, skipped: summary.skippedCount, remaining: summary.remainingCount })}</p>
       </div>
-      <p className="mt-3 text-sm leading-6 text-[var(--forest-700)]">{gpsStatus !== 'idle' ? `${t('challenge.gpsStatus')}: ${t(`challenge.status.${gpsStatus}`)}` : t('challenge.ready')}</p>
-      <p className="mt-3 rounded-[1.35rem] border border-[rgba(112,79,39,0.14)] bg-[rgba(255,247,229,0.54)] p-4 text-sm leading-6 text-[var(--earth-900)]">
-        {t('challenge.safetyNotice')}
-      </p>
 
-      {completionPanelRunId && (
-        <div className="mt-4 rounded-[1.5rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.68)] p-4 text-[var(--forest-900)] shadow-[0_16px_30px_rgba(42,52,31,0.08)]">
-        <p className="text-base font-bold text-[var(--forest-950)]">{t('challenge.completionHandoff.title')}</p>
-        <p className="mt-2 text-sm leading-6 text-[var(--forest-800)]">{t('challenge.completionHandoff.description')}</p>
-        <p className="mt-2 text-sm leading-6 text-[var(--forest-700)]">{t('challenge.completionHandoff.sampleHint')}</p>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <a
-          href={SAMPLE_TIKTOK_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex min-h-[3rem] items-center justify-center rounded-full border border-[rgba(61,84,52,0.16)] bg-[rgba(255,255,255,0.58)] px-4 py-2 text-sm font-black text-[var(--forest-900)] transition hover:bg-white"
-          >
-          {t('challenge.completionHandoff.sampleAction')}
-          </a>
-          <Button type="button" onClick={handleNavigateToTikTokSubmission}>
-          {t('challenge.completionHandoff.submitAction')}
-          </Button>
-          <Button type="button" onClick={handleDismissCompletionPanel} variant="secondary">
-          {t('challenge.completionHandoff.laterAction')}
-          </Button>
+      <div className="mt-5 space-y-3 rounded-[1.35rem] bg-[rgba(245,242,233,0.52)] p-4 ring-1 ring-[rgba(61,84,52,0.08)]">
+        <div className="rounded-[1.05rem] bg-[rgba(234,241,229,0.72)] px-3.5 py-3 text-[var(--forest-900)]">
+          {message}
         </div>
-        </div>
-      )}
+        <p className="text-sm leading-6 text-[var(--forest-700)]">{gpsStatus !== 'idle' ? `${t('challenge.gpsStatus')}: ${t(`challenge.status.${gpsStatus}`)}` : t('challenge.ready')}</p>
+        <p className="rounded-[1rem] border border-[rgba(112,79,39,0.14)] bg-[rgba(255,247,229,0.5)] p-3 text-sm leading-6 text-[var(--earth-900)]">
+          {t('challenge.safetyNotice')}
+        </p>
 
-      <p className="mt-6 inline-flex items-start gap-2 rounded-[1.2rem] bg-[rgba(255,255,255,0.54)] px-3 py-2 text-sm text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.12)]">
-        <Headphones className="mt-0.5 h-4 w-4 shrink-0" />
-        <span>{t('challenge.headphoneRecommendation')}</span>
-      </p>
+        {completionPanelRunId && (
+          <div className="rounded-[1.2rem] border border-[rgba(61,84,52,0.12)] bg-[rgba(255,255,255,0.62)] p-4 text-[var(--forest-900)]">
+          <p className="text-base font-bold text-[var(--forest-950)]">{t('challenge.completionHandoff.title')}</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--forest-800)]">{t('challenge.completionHandoff.description')}</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--forest-700)]">{t('challenge.completionHandoff.sampleHint')}</p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <a
+            href={SAMPLE_TIKTOK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[3rem] items-center justify-center rounded-full border border-[rgba(61,84,52,0.16)] bg-[rgba(255,255,255,0.58)] px-4 py-2 text-sm font-black text-[var(--forest-900)] transition hover:bg-white"
+            >
+            {t('challenge.completionHandoff.sampleAction')}
+            </a>
+            <Button type="button" onClick={handleNavigateToTikTokSubmission}>
+            {t('challenge.completionHandoff.submitAction')}
+            </Button>
+            <Button type="button" onClick={handleDismissCompletionPanel} variant="secondary">
+            {t('challenge.completionHandoff.laterAction')}
+            </Button>
+          </div>
+          </div>
+        )}
+
+        <p className="inline-flex items-start gap-2 rounded-[1rem] bg-[rgba(255,255,255,0.5)] px-3 py-2 text-sm text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.1)]">
+          <Headphones className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{t('challenge.headphoneRecommendation')}</span>
+        </p>
+
+        <div className="flex flex-wrap gap-3 text-sm text-[var(--forest-700)]">
+          {progress.activeRun?.gpsVerified ? <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(234,241,229,0.72)] px-3 py-1.5 ring-1 ring-[rgba(61,84,52,0.12)]"><CheckCircle2 className="h-4 w-4 text-[var(--forest-700)]" />{t('challenge.gpsStatus')}</span> : null}
+          {progress.completedTaskIds.includes(task?.id ?? '') ? <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(255,247,229,0.72)] px-3 py-1.5 ring-1 ring-[rgba(112,79,39,0.12)]"><CheckCircle2 className="h-4 w-4 text-[var(--earth-800)]" />{t('challenge.completedStatus')}</span> : null}
+        </div>
+      </div>
 
       <div className="mt-5">
         <Button onClick={() => { void verifyGps(); }} disabled={!canComplete || isMutating} variant="gpsPrimary" className="w-full" style={{ scrollMarginBottom: '7rem' }}><ShieldCheck className="h-5 w-5" />{t('challenge.verifyGps')}</Button>
@@ -743,11 +750,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           <Button onClick={() => { void skipChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full"><XCircle className="h-5 w-5" />{t('challenge.skip')}</Button>
           <Button onClick={() => { void failChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full text-[var(--brocade-red)]"><Flag className="h-5 w-5" />{t('challenge.fail')}</Button>
         </div>
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-3 text-sm text-[var(--forest-700)]">
-        {progress.activeRun?.gpsVerified ? <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(234,241,229,0.72)] px-3 py-1.5 ring-1 ring-[rgba(61,84,52,0.12)]"><CheckCircle2 className="h-4 w-4 text-[var(--forest-700)]" />{t('challenge.gpsStatus')}</span> : null}
-        {progress.completedTaskIds.includes(task?.id ?? '') ? <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(255,247,229,0.72)] px-3 py-1.5 ring-1 ring-[rgba(112,79,39,0.12)]"><CheckCircle2 className="h-4 w-4 text-[var(--earth-800)]" />{t('challenge.completedStatus')}</span> : null}
       </div>
       </div>
     </div>
