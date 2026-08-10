@@ -120,7 +120,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!location.pathname.startsWith('/book/page/')) return;
+    const isBookRoute = location.pathname === '/book' || location.pathname.startsWith('/book/');
+    if (!isBookRoute) return;
     if (navigationType === 'POP') return;
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [location.pathname, navigationType]);
