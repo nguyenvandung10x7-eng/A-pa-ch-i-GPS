@@ -8,6 +8,7 @@ import { useTasks } from './hooks/useTasks';
 import { useTranslation } from './hooks/useTranslation';
 import { useAdminStatus } from './hooks/useAdminStatus';
 import { AdminPage } from './pages/AdminPage';
+import { BookPage } from './pages/BookPage';
 import { ChallengePage } from './pages/ChallengePage';
 import { DiscoverPage } from './pages/DiscoverPage';
 import { ExperiencesPage } from './pages/ExperiencesPage';
@@ -120,6 +121,9 @@ export default function App() {
     <Layout language={language} setLanguage={setLanguage} t={t}>
       <Routes>
         <Route path="/" element={<LandingPage tasks={tasks} clearVersion={clearVersion} t={t} />} />
+        <Route path="/book" element={<BookPage language={language} />} />
+        <Route path="/book/chapter/:chapterId" element={<BookPage language={language} />} />
+        <Route path="/book/page/:pageId" element={<BookPage language={language} />} />
         <Route path="/experiences" element={<ExperiencesPage t={t} />} />
         <Route path="/challenge" element={<ChallengePage tasks={activeTasks} clearVersion={clearVersion} language={language} t={t} />} />
         <Route path="/history" element={<HistoryPage clearVersion={clearVersion} language={language} t={t} />} />
