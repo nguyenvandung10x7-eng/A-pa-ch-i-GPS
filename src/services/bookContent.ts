@@ -32,23 +32,42 @@ const findDuplicateIds = <T extends { id: string }>(items: T[]): string[] => {
   return [...duplicates];
 };
 
+const isPublishedChapter = (chapterId: BookChapter['id']): boolean =>
+  BOOK_CHAPTERS.some((chapter) => chapter.id === chapterId && chapter.status === 'published');
+
 export const getPublishedChapters = (): BookChapter[] =>
   sortByOrder(BOOK_CHAPTERS.filter((chapter) => chapter.status === 'published'));
 
-export const getChapterPages = (chapterId: BookChapter['id']): BookPage[] =>
-  sortByOrder(
+export const getChapterPages = (chapterId: BookChapter['id']): BookPage[] => {
+  if (!isPublishedChapter(chapterId)) {
+    return [];
+  }
+
+  return sortByOrder(
     BOOK_PAGES.filter((page) => page.chapterId === chapterId && page.status === 'published')
   );
+};
 
-export const getPage = (pageId: BookPage['id']): BookPage | undefined =>
-  BOOK_PAGES.find((page) => page.id === pageId && page.status === 'published');
+export const getPage = (pageId: BookPage['id']): BookPage | undefined => {
+  const page = BOOK_PAGES.find((candidate) => candidate.id === pageId && candidate.status === 'published');
+  if (!page || !isPublishedChapter(page.chapterId)) {
+    return undefined;
+  }
 
-export const getChapterExperiences = (chapterId: BookChapter['id']): BookExperience[] =>
-  sortByOrder(
+  return page;
+};
+
+export const getChapterExperiences = (chapterId: BookChapter['id']): BookExperience[] => {
+  if (!isPublishedChapter(chapterId)) {
+    return [];
+  }
+
+  return sortByOrder(
     BOOK_EXPERIENCES.filter(
       (experience) => experience.chapterId === chapterId && experience.status === 'published'
     )
   );
+};
 
 export const validateBookContent = (): BookContentValidationIssue[] => {
   const issues: BookContentValidationIssue[] = [];
