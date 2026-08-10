@@ -144,7 +144,6 @@ export type BookExperienceType = 'sideQuest' | 'walk' | 'location' | 'audio' | '
 type BookExperienceBase = {
   id: string;
   chapterId: BookChapter['id'];
-  pageId?: BookPage['id'];
   title: BookLocalizedText;
   description?: BookLocalizedText;
   instruction?: BookLocalizedText;
@@ -213,6 +212,7 @@ export type SavedStateV1 = {
 export type BookStateV1 = {
   version: 1;
   readPageIds: BookPage['id'][];
+  completedChapterIds: BookChapter['id'][];
   visitedPageIds: BookPage['id'][];
   completedExperienceIds: BookExperience['id'][];
   updatedAt: string;
