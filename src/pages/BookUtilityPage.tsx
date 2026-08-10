@@ -46,7 +46,7 @@ export const BookUtilityPage = ({ language, mode }: BookUtilityPageProps) => {
   const Icon = mode === 'near-me' ? MapPin : Bookmark;
 
   return (
-    <main className="mx-auto max-w-4xl py-8 sm:py-14">
+    <div className="mx-auto max-w-4xl py-8 sm:py-14">
       <Link to="/book" className="text-sm font-bold text-[var(--forest-700)] hover:text-[var(--forest-950)]">
         ← {c.back}
       </Link>
@@ -62,6 +62,6 @@ export const BookUtilityPage = ({ language, mode }: BookUtilityPageProps) => {
           {content.note}
         </p>
       </section>
-    </main>
+    </div>
   );
 };
