@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { Loader2, LogIn, ShieldCheck } from 'lucide-react';
 import { Layout } from './components/Layout';
 import { Card } from './components/Card';
@@ -8,6 +8,7 @@ import { useTasks } from './hooks/useTasks';
 import { useTranslation } from './hooks/useTranslation';
 import { useAdminStatus } from './hooks/useAdminStatus';
 import { AdminPage } from './pages/AdminPage';
+import { BookPage } from './pages/BookPage';
 import { ChallengePage } from './pages/ChallengePage';
 import { DiscoverPage } from './pages/DiscoverPage';
 import { ExperiencesPage } from './pages/ExperiencesPage';
@@ -24,6 +25,9 @@ const parseClearVersion = (value: string | null): number => {
   if (!Number.isFinite(parsed) || parsed < 0) return 0;
   return parsed;
 };
+
+const isBookPath = (pathname: string): boolean =>
+  pathname === '/book' || pathname.startsWith('/book/');
 
 const AdminOnlyRoute = ({
   t,
@@ -97,6 +101,9 @@ export default function App() {
   const { language, setLanguage, t } = useTranslation();
   const { tasks, setTasks, activeTasks } = useTasks();
   const [clearVersion, setClearVersion] = useState(() => getChallengeClearVersion());
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const previousPathRef = useRef(location.pathname);
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -116,10 +123,23 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const previousPath = previousPathRef.current;
+    previousPathRef.current = location.pathname;
+
+    if (navigationType === 'POP') return;
+    if (!isBookPath(previousPath) && !isBookPath(location.pathname)) return;
+
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname, navigationType]);
+
   return (
     <Layout language={language} setLanguage={setLanguage} t={t}>
       <Routes>
         <Route path="/" element={<LandingPage tasks={tasks} clearVersion={clearVersion} t={t} />} />
+        <Route path="/book" element={<BookPage language={language} />} />
+        <Route path="/book/chapter/:chapterId" element={<BookPage language={language} />} />
+        <Route path="/book/page/:pageId" element={<BookPage language={language} />} />
         <Route path="/experiences" element={<ExperiencesPage t={t} />} />
         <Route path="/challenge" element={<ChallengePage tasks={activeTasks} clearVersion={clearVersion} language={language} t={t} />} />
         <Route path="/history" element={<HistoryPage clearVersion={clearVersion} language={language} t={t} />} />

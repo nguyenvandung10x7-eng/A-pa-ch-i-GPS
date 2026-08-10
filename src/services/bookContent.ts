@@ -38,6 +38,9 @@ const isPublishedChapter = (chapterId: BookChapter['id']): boolean =>
 export const getPublishedChapters = (): BookChapter[] =>
   sortByOrder(BOOK_CHAPTERS.filter((chapter) => chapter.status === 'published'));
 
+export const getChapter = (chapterId: BookChapter['id']): BookChapter | undefined =>
+  BOOK_CHAPTERS.find((chapter) => chapter.id === chapterId && chapter.status === 'published');
+
 export const getChapterPages = (chapterId: BookChapter['id']): BookPage[] => {
   if (!isPublishedChapter(chapterId)) {
     return [];
