@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { Loader2, LogIn, ShieldCheck } from 'lucide-react';
 import { Layout } from './components/Layout';
 import { Card } from './components/Card';
@@ -98,6 +98,8 @@ export default function App() {
   const { language, setLanguage, t } = useTranslation();
   const { tasks, setTasks, activeTasks } = useTasks();
   const [clearVersion, setClearVersion] = useState(() => getChallengeClearVersion());
+  const location = useLocation();
+  const navigationType = useNavigationType();
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -116,6 +118,12 @@ export default function App() {
       window.removeEventListener('storage', handleStorage);
     };
   }, []);
+
+  useEffect(() => {
+    if (!location.pathname.startsWith('/book/page/')) return;
+    if (navigationType === 'POP') return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname, navigationType]);
 
   return (
     <Layout language={language} setLanguage={setLanguage} t={t}>
