@@ -38,13 +38,23 @@ export type MediaItem = {
   credit?: BookLocalizedText;
 };
 
-export type AudioAsset = {
-  src?: string;
-  externalUrl?: string;
+type AudioAssetMetadata = {
   title?: BookLocalizedText;
   caption?: BookLocalizedText;
   durationSeconds?: number;
 };
+
+export type AudioAsset = AudioAssetMetadata &
+  (
+    | {
+        src: string;
+        externalUrl?: string;
+      }
+    | {
+        src?: string;
+        externalUrl: string;
+      }
+  );
 
 export type GeoPoint = {
   lat: number;
@@ -131,18 +141,13 @@ export type RouteDefinition = {
 
 export type BookExperienceType = 'sideQuest' | 'walk' | 'location' | 'audio' | 'external';
 
-export type BookExperience = {
+type BookExperienceBase = {
   id: string;
   chapterId: BookChapter['id'];
   pageId?: BookPage['id'];
-  type: BookExperienceType;
   title: BookLocalizedText;
   description?: BookLocalizedText;
   instruction?: BookLocalizedText;
-  location?: Location;
-  route?: RouteDefinition;
-  audio?: AudioAsset;
-  externalUrl?: string;
   estimatedDurationMinutes?: number;
   recommendedTime?: BookLocalizedText;
   requirements?: BookLocalizedText[];
@@ -152,6 +157,53 @@ export type BookExperience = {
   status: PublicationStatus;
   legacyTaskId?: string;
 };
+
+export type SideQuestExperience = BookExperienceBase & {
+  type: 'sideQuest';
+  location?: Location;
+  route?: RouteDefinition;
+  audio?: AudioAsset;
+  externalUrl?: string;
+};
+
+export type WalkExperience = BookExperienceBase & {
+  type: 'walk';
+  route: RouteDefinition;
+  location?: Location;
+  audio?: AudioAsset;
+  externalUrl?: string;
+};
+
+export type LocationExperience = BookExperienceBase & {
+  type: 'location';
+  location: Location;
+  route?: RouteDefinition;
+  audio?: AudioAsset;
+  externalUrl?: string;
+};
+
+export type AudioExperience = BookExperienceBase & {
+  type: 'audio';
+  audio: AudioAsset;
+  location?: Location;
+  route?: RouteDefinition;
+  externalUrl?: string;
+};
+
+export type ExternalExperience = BookExperienceBase & {
+  type: 'external';
+  externalUrl: string;
+  location?: Location;
+  route?: RouteDefinition;
+  audio?: AudioAsset;
+};
+
+export type BookExperience =
+  | SideQuestExperience
+  | WalkExperience
+  | LocationExperience
+  | AudioExperience
+  | ExternalExperience;
 
 export type SavedStateV1 = {
   version: 1;
