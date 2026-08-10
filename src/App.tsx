@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { Loader2, LogIn, ShieldCheck } from 'lucide-react';
 import { Layout } from './components/Layout';
@@ -100,6 +100,7 @@ export default function App() {
   const [clearVersion, setClearVersion] = useState(() => getChallengeClearVersion());
   const location = useLocation();
   const navigationType = useNavigationType();
+  const previousPathRef = useRef(location.pathname);
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -120,9 +121,16 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const isBookRoute = location.pathname === '/book' || location.pathname.startsWith('/book/');
-    if (!isBookRoute) return;
+    const previousPath = previousPathRef.current;
+    previousPathRef.current = location.pathname;
+
     if (navigationType === 'POP') return;
+
+    const isBookRoute = location.pathname === '/book' || location.pathname.startsWith('/book/');
+    const wasBookRoute = previousPath === '/book' || previousPath.startsWith('/book/');
+    const isBookToChallenge = wasBookRoute && location.pathname === '/challenge';
+    if (!isBookRoute && !isBookToChallenge) return;
+
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [location.pathname, navigationType]);
 
