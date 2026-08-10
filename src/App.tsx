@@ -26,6 +26,9 @@ const parseClearVersion = (value: string | null): number => {
   return parsed;
 };
 
+const isBookPath = (pathname: string): boolean =>
+  pathname === '/book' || pathname.startsWith('/book/');
+
 const AdminOnlyRoute = ({
   t,
   redirectPath,
@@ -125,11 +128,7 @@ export default function App() {
     previousPathRef.current = location.pathname;
 
     if (navigationType === 'POP') return;
-
-    const isBookRoute = location.pathname === '/book' || location.pathname.startsWith('/book/');
-    const wasBookRoute = previousPath === '/book' || previousPath.startsWith('/book/');
-    const isBookToChallenge = wasBookRoute && location.pathname === '/challenge';
-    if (!isBookRoute && !isBookToChallenge) return;
+    if (!isBookPath(previousPath) && !isBookPath(location.pathname)) return;
 
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [location.pathname, navigationType]);
