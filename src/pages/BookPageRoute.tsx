@@ -19,12 +19,13 @@ const copy = {
 export const BookPageRoute = ({ language }: BookPageRouteProps) => {
   const { pageId } = useParams<{ pageId?: string }>();
   const page = pageId ? getPage(pageId) : undefined;
+  const currentPageId = page?.id;
   const { bookState, savedState } = useBookState();
   const c = copy[language];
 
   useEffect(() => {
-    if (page) markBookPageRead(page.id);
-  }, [page?.id]);
+    if (currentPageId) markBookPageRead(currentPageId);
+  }, [currentPageId]);
 
   if (!page) return <BookPage language={language} />;
 
