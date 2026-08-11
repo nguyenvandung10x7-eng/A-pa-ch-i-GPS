@@ -105,9 +105,9 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
   const musicShuffleQueueRef = useRef<string[]>(createShuffleQueue(MUSIC_TRACKS, musicTrackId));
   const selectedTrack = useMemo(() => MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0], [musicTrackId]);
   const primaryNavItems: Array<[string, string]> = [
-    ['/book', 'BOOK'],
-    ['/near-me', 'NEAR ME'],
-    ['/saved', 'SAVED'],
+    ['/book', 'nav.book'],
+    ['/near-me', 'nav.nearMe'],
+    ['/saved', 'nav.saved'],
   ];
   const desktopSecondaryNavItems: Array<[string, string]> = [
     ['/experiences', 'nav.experiences'],
@@ -797,13 +797,13 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
 
         <div className="hidden min-w-0 flex-1 flex-col gap-3 lg:flex xl:items-end">
           <div className="flex flex-wrap items-center gap-2 text-[0.99rem] font-semibold text-[var(--forest-900)] xl:justify-end">
-          {primaryNavItems.map(([to, label]) => (
+          {primaryNavItems.map(([to, key]) => (
             <NavLink
             key={to}
             to={to}
             className={({ isActive }) => `rounded-full px-4 py-2.5 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)] ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.16)]' : 'bg-[rgba(231,225,212,0.82)] ring-1 ring-[rgba(61,84,52,0.16)] hover:bg-[rgba(238,233,222,0.94)]'}`}
             >
-            {label}
+            {t(key)}
             </NavLink>
           ))}
           </div>
@@ -844,14 +844,14 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
 
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[rgba(91,67,38,0.14)] bg-[rgba(239,232,218,0.96)] px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-16px_34px_rgba(29,40,24,0.14)] backdrop-blur lg:hidden">
       <div className="mx-auto grid max-w-7xl grid-cols-4 gap-2">
-        {mobilePrimaryNavItems.map(([to, label]) => (
+        {mobilePrimaryNavItems.map(([to, key]) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) => `flex min-h-[3rem] min-w-0 items-center justify-center rounded-[1.2rem] px-2 py-2 text-center text-xs font-black leading-4 transition ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.14)]' : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]'}`}
             onClick={closeMobileMenu}
           >
-            <span className="break-words">{label}</span>
+            <span className="break-words">{t(key)}</span>
           </NavLink>
         ))}
         <button
