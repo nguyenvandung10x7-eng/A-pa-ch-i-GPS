@@ -9,6 +9,7 @@ import { useTranslation } from './hooks/useTranslation';
 import { useAdminStatus } from './hooks/useAdminStatus';
 import { AdminPage } from './pages/AdminPage';
 import { BookPage } from './pages/BookPage';
+import { BookPageRoute } from './pages/BookPageRoute';
 import { BookUtilityPage } from './pages/BookUtilityPage';
 import { ChallengePage } from './pages/ChallengePage';
 import { DiscoverPage } from './pages/DiscoverPage';
@@ -18,6 +19,7 @@ import { LandingPage } from './pages/LandingPage';
 import { LegalSafetyPage } from './pages/LegalSafetyPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ModerationPage } from './pages/ModerationPage';
+import { SavedBookPage } from './pages/SavedBookPage';
 import { TikTokSubmissionPage } from './pages/TikTokSubmissionPage';
 import { CHALLENGE_CLEAR_VERSION_KEY, getChallengeClearVersion } from './services/tasks';
 
@@ -140,9 +142,9 @@ export default function App() {
         <Route path="/" element={<LandingPage tasks={tasks} clearVersion={clearVersion} t={t} />} />
         <Route path="/book" element={<BookPage language={language} />} />
         <Route path="/book/chapter/:chapterId" element={<BookPage language={language} />} />
-        <Route path="/book/page/:pageId" element={<BookPage language={language} />} />
+        <Route path="/book/page/:pageId" element={<BookPageRoute language={language} />} />
         <Route path="/near-me" element={<BookUtilityPage language={language} mode="near-me" />} />
-        <Route path="/saved" element={<BookUtilityPage language={language} mode="saved" />} />
+        <Route path="/saved" element={<SavedBookPage language={language} />} />
         <Route path="/experiences" element={<ExperiencesPage t={t} />} />
         <Route path="/challenge" element={<ChallengePage tasks={activeTasks} clearVersion={clearVersion} language={language} t={t} />} />
         <Route path="/history" element={<HistoryPage clearVersion={clearVersion} language={language} t={t} />} />
