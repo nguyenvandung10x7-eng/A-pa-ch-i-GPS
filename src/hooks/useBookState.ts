@@ -19,7 +19,11 @@ export const useBookState = () => {
 
     const handleStorage = (event: StorageEvent) => {
       if (event.storageArea !== window.localStorage) return;
-      if (event.key !== BOOK_STATE_STORAGE_KEY && event.key !== SAVED_STATE_STORAGE_KEY) return;
+      if (
+        event.key !== null &&
+        event.key !== BOOK_STATE_STORAGE_KEY &&
+        event.key !== SAVED_STATE_STORAGE_KEY
+      ) return;
       refresh();
     };
 
