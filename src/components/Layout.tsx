@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ChevronDown, Compass, Loader2, Menu, Music2, Pause, Play, Volume2, X } from 'lucide-react';
+import { BookOpen, ChevronDown, Loader2, Menu, Music2, Pause, Play, Volume2, X } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdminStatus } from '../hooks/useAdminStatus';
@@ -104,25 +104,24 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
   const musicPreparationSnapshotRef = useRef<MusicPreparationSnapshot | null>(null);
   const musicShuffleQueueRef = useRef<string[]>(createShuffleQueue(MUSIC_TRACKS, musicTrackId));
   const selectedTrack = useMemo(() => MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0], [musicTrackId]);
-  const navItems: Array<[string, string]> = [
-    ['/experiences', 'nav.experiences'],
-    ['/discover', 'nav.discover'],
-    ['/leaderboard', 'nav.leaderboard'],
-    ['/history', 'nav.history'],
+  const primaryNavItems: Array<[string, string]> = [
+    ['/book', 'BOOK'],
+    ['/near-me', 'NEAR ME'],
+    ['/saved', 'SAVED'],
   ];
-  const mobilePrimaryNavItems: Array<[string, string]> = [
+  const desktopSecondaryNavItems: Array<[string, string]> = [
     ['/experiences', 'nav.experiences'],
-    ['/discover', 'nav.discover'],
-    ['/leaderboard', 'nav.leaderboard'],
-  ];
-  const mobileSecondaryNavItems: Array<[string, string]> = [
     ['/challenge', 'nav.challenge'],
+    ['/discover', 'nav.discover'],
+    ['/leaderboard', 'nav.leaderboard'],
     ['/history', 'nav.history'],
   ];
+  const mobilePrimaryNavItems: Array<[string, string]> = primaryNavItems;
+  const mobileSecondaryNavItems: Array<[string, string]> = [...desktopSecondaryNavItems];
 
   if (user && !checkingAdmin && isAdmin) {
-    navItems.push(['/moderation', 'nav.moderation']);
-    navItems.push(['/admin', 'nav.admin']);
+    desktopSecondaryNavItems.push(['/moderation', 'nav.moderation']);
+    desktopSecondaryNavItems.push(['/admin', 'nav.admin']);
     mobileSecondaryNavItems.push(['/moderation', 'nav.moderation']);
     mobileSecondaryNavItems.push(['/admin', 'nav.admin']);
   }
@@ -755,6 +754,10 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     );
   };
 
+  const bookTagline = language === 'vi'
+    ? 'Ký ức, nơi chốn và những năm tháng đã đi qua.'
+    : 'Memories, places, and years gone by.';
+
   return (
   <div className="app-shell text-[var(--forest-950)]">
     <div className="mountain-scene" aria-hidden="true">
@@ -778,34 +781,43 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
         <div className="textile-divider absolute inset-x-6 bottom-0 h-2" />
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex min-w-0 items-center gap-4">
-          <Link to="/" className="flex min-w-0 items-center gap-3 rounded-[1.5rem] pr-2 transition hover:opacity-90">
+          <Link to="/book" className="flex min-w-0 items-center gap-3 rounded-[1.5rem] pr-2 transition hover:opacity-90">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.25rem] bg-[rgba(255,248,233,0.72)] text-[var(--earth-800)] shadow-[0_12px_24px_rgba(103,76,44,0.16)] ring-1 ring-[rgba(91,67,38,0.12)]">
-            <Compass className="h-6 w-6" />
+            <BookOpen className="h-6 w-6" />
           </span>
           <span className="min-w-0">
-            <span className="block text-[0.7rem] font-bold uppercase tracking-[0.28em] text-[var(--forest-700)]">A Pa Chai Route</span>
-            <span className="block truncate text-xl font-black tracking-tight text-[var(--forest-950)] sm:text-2xl">{t('app.name')}</span>
+            <span className="block text-[0.7rem] font-bold uppercase tracking-[0.28em] text-[var(--forest-700)]">BOOK OF DIEN BIEN</span>
+            <span className="block truncate text-xl font-black tracking-tight text-[var(--forest-950)] sm:text-2xl">BOOK OF DIEN BIEN</span>
           </span>
           </Link>
           <p className="hidden max-w-sm text-sm leading-6 text-[var(--forest-700)] lg:block">
-          {t('landing.description')}
+          {bookTagline}
           </p>
         </div>
 
         <div className="hidden min-w-0 flex-1 flex-col gap-3 lg:flex xl:items-end">
           <div className="flex flex-wrap items-center gap-2 text-[0.99rem] font-semibold text-[var(--forest-900)] xl:justify-end">
-          {navItems.map(([to, key]) => (
+          {primaryNavItems.map(([to, label]) => (
             <NavLink
             key={to}
             to={to}
             className={({ isActive }) => `rounded-full px-4 py-2.5 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)] ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.16)]' : 'bg-[rgba(231,225,212,0.82)] ring-1 ring-[rgba(61,84,52,0.16)] hover:bg-[rgba(238,233,222,0.94)]'}`}
             >
-            {t(key)}
+            {label}
             </NavLink>
           ))}
           </div>
 
           <div className="flex min-w-0 flex-wrap items-center gap-2 xl:justify-end">
+          {desktopSecondaryNavItems.map(([to, key]) => (
+            <NavLink
+              key={`secondary-${to}`}
+              to={to}
+              className={({ isActive }) => `rounded-full px-3 py-2 text-[0.9rem] font-semibold transition ${isActive ? 'bg-[rgba(219,185,102,0.3)] text-[var(--earth-900)]' : 'bg-[rgba(231,225,212,0.7)] text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.12)] hover:bg-[rgba(238,233,222,0.9)]'}`}
+            >
+              {t(key)}
+            </NavLink>
+          ))}
           <div ref={musicMenuRef} className="relative z-50">
             <button
             type="button"
@@ -832,14 +844,14 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
 
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[rgba(91,67,38,0.14)] bg-[rgba(239,232,218,0.96)] px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-16px_34px_rgba(29,40,24,0.14)] backdrop-blur lg:hidden">
       <div className="mx-auto grid max-w-7xl grid-cols-4 gap-2">
-        {mobilePrimaryNavItems.map(([to, key]) => (
+        {mobilePrimaryNavItems.map(([to, label]) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) => `flex min-h-[3rem] min-w-0 items-center justify-center rounded-[1.2rem] px-2 py-2 text-center text-xs font-black leading-4 transition ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.14)]' : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]'}`}
             onClick={closeMobileMenu}
           >
-            <span className="break-words">{t(key)}</span>
+            <span className="break-words">{label}</span>
           </NavLink>
         ))}
         <button
@@ -877,7 +889,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="section-kicker">{t('nav.menu')}</p>
-              <p className="mt-1 break-words text-lg font-black text-[var(--forest-950)]">{t('app.name')}</p>
+              <p className="mt-1 break-words text-lg font-black text-[var(--forest-950)]">BOOK OF DIEN BIEN</p>
             </div>
             <button type="button" onClick={closeMobileMenu} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]">
               <X className="h-5 w-5" />
