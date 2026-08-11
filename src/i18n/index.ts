@@ -2,6 +2,22 @@ import en from './en.json';
 import vi from './vi.json';
 import type { LanguageCode } from '../types/task';
 
-export const resources: Record<LanguageCode, Record<string, string>> = { en, vi };
+const bookNavigationResources: Record<LanguageCode, Record<string, string>> = {
+  en: {
+    'nav.book': 'BOOK',
+    'nav.nearMe': 'NEAR ME',
+    'nav.saved': 'SAVED',
+  },
+  vi: {
+    'nav.book': 'SÁCH',
+    'nav.nearMe': 'GẦN TÔI',
+    'nav.saved': 'ĐÃ LƯU',
+  },
+};
+
+export const resources: Record<LanguageCode, Record<string, string>> = {
+  en: { ...en, ...bookNavigationResources.en },
+  vi: { ...vi, ...bookNavigationResources.vi },
+};
 export const supportedLanguages = Object.keys(resources) as LanguageCode[];
 export const defaultLanguage: LanguageCode = 'vi';
