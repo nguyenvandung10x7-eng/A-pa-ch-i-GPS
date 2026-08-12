@@ -1,6 +1,8 @@
 import { ArrowRight, ExternalLink, MapPin, Route, Sparkles } from 'lucide-react';
+import { type KeyboardEvent, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { BOOK_CHAPTERS, BOOK_EXPERIENCES } from '../data/bookContent';
+import { GAMEPLAY_MUSIC_ACTION_EVENT } from '../services/gameplayMusicEvents';
 import type { BookExperience, BookLocalizedText } from '../types/book';
 import type { LanguageCode } from '../types/task';
 
@@ -52,11 +54,33 @@ const typeLabel = (experience: BookExperience, language: LanguageCode) => {
 };
 
 const legacyExperienceModeByTaskId: Record<string, string> = {
-  'canh-dong-muong-thanh-cat-banh': 'dien-bien-plain',
+  'canh-dong-muong-thanh-cat-banh': 'muong-thanh-mooncake',
   'doi-a1-chuyen-tau-thoi-gian-1954': 'time-train',
 };
 
 const actionClassName = 'inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white';
+
+const dispatchStartGameplayMusic = () => {
+  window.dispatchEvent(new CustomEvent<'start'>(GAMEPLAY_MUSIC_ACTION_EVENT, { detail: 'start' }));
+};
+
+const handleLegacyChallengeClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented) return;
+  if (event.detail === 0) return;
+  if (event.button !== 0) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+  dispatchStartGameplayMusic();
+};
+
+const handleLegacyChallengeKeyDown = (event: KeyboardEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented) return;
+  if (event.key !== 'Enter') return;
+  if (event.repeat) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+  dispatchStartGameplayMusic();
+};
 
 const ExperienceActions = ({ experience, language }: { experience: BookExperience; language: LanguageCode }) => {
   const c = copy[language];
@@ -74,7 +98,13 @@ const ExperienceActions = ({ experience, language }: { experience: BookExperienc
     const experienceMode = legacyExperienceModeByTaskId[experience.legacyTaskId];
     if (experienceMode) {
       actions.push(
-        <Link key="legacy" to={`/challenge?experience=${encodeURIComponent(experienceMode)}`} className={actionClassName}>
+        <Link
+          key="legacy"
+          to={`/challenge?experience=${encodeURIComponent(experienceMode)}`}
+          onClick={handleLegacyChallengeClick}
+          onKeyDown={handleLegacyChallengeKeyDown}
+          className={actionClassName}
+        >
           {c.openChallenge}<ArrowRight className="h-4 w-4" />
         </Link>
       );
