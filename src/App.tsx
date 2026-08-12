@@ -145,7 +145,7 @@ export default function App() {
         <Route path="/book/page/:pageId" element={<BookPageRoute language={language} />} />
         <Route path="/near-me" element={<BookUtilityPage language={language} mode="near-me" />} />
         <Route path="/saved" element={<SavedBookPage language={language} />} />
-        <Route path="/experiences" element={<ExperiencesPage t={t} />} />
+        <Route path="/experiences" element={<ExperiencesPage language={language} t={t} />} />
         <Route path="/challenge" element={<ChallengePage tasks={activeTasks} clearVersion={clearVersion} language={language} t={t} />} />
         <Route path="/history" element={<HistoryPage clearVersion={clearVersion} language={language} t={t} />} />
         <Route path="/discover" element={<DiscoverPage language={language} t={t} />} />

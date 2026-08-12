@@ -1,151 +1,196 @@
-import { Building2, History, ListChecks, MapPinned, Mountain, Sparkles, Trophy, Waves } from 'lucide-react';
+import { ArrowRight, ExternalLink, MapPin, Route, Sparkles } from 'lucide-react';
+import { type KeyboardEvent, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react';
-import { Card } from '../components/Card';
-import { experienceCards, type ExperienceCardConfig } from '../data/experiences';
+import { BOOK_CHAPTERS, BOOK_EXPERIENCES } from '../data/bookContent';
 import { GAMEPLAY_MUSIC_ACTION_EVENT } from '../services/gameplayMusicEvents';
+import type { BookExperience, BookLocalizedText } from '../types/book';
+import type { LanguageCode } from '../types/task';
 
-const iconByCardId: Record<string, typeof Sparkles> = {
-  'terraced-fields': ListChecks,
-  waterfalls: Sparkles,
-  'time-train': History,
-  'apa-chai': Mountain,
-  'historical-sites': Building2,
-  'dien-bien-plain': Waves,
-  'in-the-city': MapPinned,
-  'surprise-missions': Trophy,
+const localized = (value: BookLocalizedText | undefined, language: LanguageCode): string =>
+  value?.[language] ?? value?.vi ?? value?.en ?? '';
+
+const copy = {
+  vi: {
+    eyebrow: 'BOOK OF DIEN BIEN · EXPERIENCES',
+    title: 'Bước ra ngoài',
+    intro: 'Các trải nghiệm nối phần đọc với những nơi có thật. Không cần hoàn thành tất cả; chỉ mở một trải nghiệm khi một chương khiến bạn muốn đi tiếp.',
+    chapter: 'Chương',
+    location: 'Vị trí',
+    sideQuest: 'Side quest',
+    external: 'Trải nghiệm ngoài',
+    walk: 'Đi bộ',
+    audio: 'Âm thanh',
+    openMap: 'Mở bản đồ',
+    openExternal: 'Mở trải nghiệm',
+    openChallenge: 'Mở thử thách',
+    noAction: 'Nội dung trải nghiệm đang được hoàn thiện.',
+    backToBook: 'Về Book',
+  },
+  en: {
+    eyebrow: 'BOOK OF DIEN BIEN · EXPERIENCES',
+    title: 'Step outside',
+    intro: 'Experiences connect the reading with real places. You do not need to complete everything; open one only when a chapter makes you want to continue outside.',
+    chapter: 'Chapter',
+    location: 'Location',
+    sideQuest: 'Side quest',
+    external: 'External experience',
+    walk: 'Walk',
+    audio: 'Audio',
+    openMap: 'Open map',
+    openExternal: 'Open experience',
+    openChallenge: 'Open challenge',
+    noAction: 'This experience is still being prepared.',
+    backToBook: 'Back to Book',
+  },
+} as const;
+
+const typeLabel = (experience: BookExperience, language: LanguageCode) => {
+  const c = copy[language];
+  if (experience.type === 'sideQuest') return c.sideQuest;
+  if (experience.type === 'external') return c.external;
+  if (experience.type === 'walk') return c.walk;
+  if (experience.type === 'audio') return c.audio;
+  return c.location;
 };
 
-const fallbackGradientByTheme: Record<string, string> = {
-  terrace: 'linear-gradient(180deg, rgba(101, 127, 90, 0.85), rgba(37, 58, 34, 0.92))',
-  waterfall: 'linear-gradient(180deg, rgba(63, 111, 117, 0.82), rgba(22, 49, 54, 0.9))',
-  timeTrain: 'linear-gradient(180deg, rgba(126, 92, 58, 0.85), rgba(56, 37, 24, 0.92))',
-  apaChai: 'linear-gradient(180deg, rgba(77, 101, 72, 0.86), rgba(26, 45, 30, 0.92))',
-  historical: 'linear-gradient(180deg, rgba(114, 93, 64, 0.85), rgba(53, 39, 25, 0.9))',
-  plain: 'linear-gradient(180deg, rgba(104, 118, 82, 0.84), rgba(43, 58, 34, 0.92))',
-  city: 'linear-gradient(180deg, rgba(74, 97, 91, 0.85), rgba(32, 50, 47, 0.9))',
-  surprise: 'linear-gradient(180deg, rgba(87, 80, 51, 0.84), rgba(33, 43, 28, 0.94))',
+const legacyExperienceModeByTaskId: Record<string, string> = {
+  'canh-dong-muong-thanh-cat-banh': 'muong-thanh-mooncake',
+  'doi-a1-chuyen-tau-thoi-gian-1954': 'time-train',
 };
 
-const ExperienceCard = ({
-  card,
+const actionClassName = 'inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white';
+
+const dispatchStartGameplayMusic = () => {
+  window.dispatchEvent(new CustomEvent<'start'>(GAMEPLAY_MUSIC_ACTION_EVENT, { detail: 'start' }));
+};
+
+const handleLegacyChallengeClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented) return;
+  if (event.detail === 0) return;
+  if (event.button !== 0) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+  dispatchStartGameplayMusic();
+};
+
+const handleLegacyChallengeKeyDown = (event: KeyboardEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented) return;
+  if (event.key !== 'Enter') return;
+  if (event.repeat) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+  dispatchStartGameplayMusic();
+};
+
+const ExperienceActions = ({ experience, language }: { experience: BookExperience; language: LanguageCode }) => {
+  const c = copy[language];
+  const actions = [];
+
+  if (experience.externalUrl) {
+    actions.push(
+      <a key="external" href={experience.externalUrl} target="_blank" rel="noreferrer" className={actionClassName}>
+        {c.openExternal}<ExternalLink className="h-4 w-4" />
+      </a>
+    );
+  }
+
+  if (experience.legacyTaskId) {
+    const experienceMode = legacyExperienceModeByTaskId[experience.legacyTaskId];
+    if (experienceMode) {
+      actions.push(
+        <Link
+          key="legacy"
+          to={`/challenge?experience=${encodeURIComponent(experienceMode)}`}
+          onClick={handleLegacyChallengeClick}
+          onKeyDown={handleLegacyChallengeKeyDown}
+          className={actionClassName}
+        >
+          {c.openChallenge}<ArrowRight className="h-4 w-4" />
+        </Link>
+      );
+    }
+  }
+
+  if (experience.location) {
+    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${experience.location.lat},${experience.location.lng}`;
+    actions.push(
+      <a key="map" href={mapUrl} target="_blank" rel="noreferrer" className={actionClassName}>
+        {c.openMap}<MapPin className="h-4 w-4" />
+      </a>
+    );
+  }
+
+  if (actions.length === 0) {
+    return <p className="text-sm italic text-[var(--forest-600)]">{c.noAction}</p>;
+  }
+
+  return <div className="flex flex-wrap gap-2">{actions}</div>;
+};
+
+export const ExperiencesPage = ({
+  language,
   t,
-  imageFailed,
-  onImageError,
 }: {
-  card: ExperienceCardConfig;
+  language: LanguageCode;
   t: (key: string) => string;
-  imageFailed: boolean;
-  onImageError: () => void;
 }) => {
-  const Icon = iconByCardId[card.id] ?? Sparkles;
-  const hasImage = !imageFailed;
-  const fallbackBackground = fallbackGradientByTheme[card.theme ?? 'surprise'];
-  const dispatchStartMusic = () => {
-    window.dispatchEvent(new CustomEvent<'start'>(GAMEPLAY_MUSIC_ACTION_EVENT, { detail: 'start' }));
-  };
-
-  const handleActivateCard = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (event.defaultPrevented) return;
-    if (event.detail === 0) return;
-    if (event.button !== 0) return;
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-    dispatchStartMusic();
-  };
-
-  const handleKeyboardActivateCard = (event: KeyboardEvent<HTMLAnchorElement>) => {
-    if (event.defaultPrevented) return;
-    if (event.key !== 'Enter') return;
-    if (event.repeat) return;
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-    dispatchStartMusic();
-  };
+  const c = copy[language];
+  const experiences = BOOK_EXPERIENCES.filter((experience) => experience.status !== 'hidden')
+    .slice()
+    .sort((a, b) => {
+      const chapterA = BOOK_CHAPTERS.find((chapter) => chapter.id === a.chapterId)?.order ?? Number.MAX_SAFE_INTEGER;
+      const chapterB = BOOK_CHAPTERS.find((chapter) => chapter.id === b.chapterId)?.order ?? Number.MAX_SAFE_INTEGER;
+      if (chapterA !== chapterB) return chapterA - chapterB;
+      return (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER);
+    });
 
   return (
-    <Link
-      to={card.route}
-      onClick={handleActivateCard}
-      onKeyDown={handleKeyboardActivateCard}
-      className="group relative isolate block min-h-[17rem] overflow-hidden rounded-[1.75rem] bg-[rgba(255,247,230,0.72)] shadow-[0_14px_28px_rgba(42,58,35,0.16)] ring-1 ring-[rgba(239,224,191,0.3)] motion-safe:transition-transform motion-safe:duration-300 motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0 motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(226,184,92,0.45)]"
-      aria-label={`${t(card.titleKey)}. ${t(card.actionKey)}`}
-    >
-      {hasImage ? (
-        <img
-          src={card.image}
-          alt={t(card.imageAltKey)}
-          className="absolute inset-0 h-full w-full object-cover object-center motion-safe:transition-transform motion-safe:duration-500 group-hover:scale-[1.03]"
-          onError={onImageError}
-        />
-      ) : (
-        <div
-          className="absolute inset-0"
-          style={{ background: fallbackBackground }}
-          aria-hidden="true"
-        />
-      )}
+    <div className="mx-auto max-w-5xl py-5 sm:py-10">
+      <Link to="/book" className="text-sm font-bold text-[var(--forest-700)] hover:text-[var(--forest-950)]">← {c.backToBook}</Link>
 
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,20,12,0)_34%,rgba(10,20,13,0.34)_58%,rgba(10,18,12,0.82)_100%)]" />
-
-      <div className="relative z-10 flex h-full min-h-[17rem] flex-col justify-between px-3.5 py-3.5 sm:px-4 sm:py-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="inline-flex min-h-[1.9rem] min-w-[1.9rem] items-center justify-center rounded-full bg-[rgba(255,243,208,0.84)] px-2 text-xs font-black text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.22)]">
-            {String(card.order).padStart(2, '0')}
-          </div>
-          <span className="inline-flex min-h-[2rem] min-w-[2rem] items-center justify-center rounded-full bg-[rgba(255,255,255,0.8)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.24)]">
-            <Icon className="h-4 w-4" />
-          </span>
+      <header className="mt-8 max-w-3xl border-b border-[rgba(91,67,38,0.16)] pb-8">
+        <div className="flex items-center gap-3 text-[var(--earth-700)]">
+          <Sparkles className="h-5 w-5" />
+          <p className="text-xs font-black uppercase tracking-[0.26em]">{c.eyebrow}</p>
         </div>
+        <h1 className="mt-4 text-4xl font-black tracking-tight text-[var(--forest-950)] sm:text-6xl">{c.title}</h1>
+        <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--forest-700)]">{c.intro}</p>
+        <span className="sr-only">{t('nav.experiences')}</span>
+      </header>
 
-        <div className="min-w-0">
-          <h2 className="text-[1.22rem] font-black leading-tight text-[rgba(255,252,244,0.98)] [text-shadow:0_3px_14px_rgba(0,0,0,0.5)] sm:text-[1.45rem]">
-            {t(card.titleKey)}
-          </h2>
-          <p className="mt-1.5 line-clamp-2 text-[0.82rem] leading-5 text-[rgba(248,239,220,0.96)] sm:text-sm sm:leading-5">
-            {t(card.descriptionKey)}
-          </p>
-          <p className="mt-3 inline-flex min-h-[2.6rem] items-center rounded-full border border-[rgba(255,232,180,0.42)] bg-[rgba(250,241,221,0.9)] px-3.5 text-[0.78rem] font-black uppercase tracking-[0.04em] text-[var(--earth-900)] shadow-[0_6px_16px_rgba(0,0,0,0.16)] motion-safe:transition-colors group-hover:bg-[rgba(255,246,226,0.98)] group-active:bg-[rgba(252,236,204,0.96)] sm:text-xs">
-            {t(card.actionKey)}
-          </p>
-        </div>
-      </div>
-    </Link>
-  );
-};
+      <section className="mt-8 grid gap-4 md:grid-cols-2">
+        {experiences.map((experience) => {
+          const chapter = BOOK_CHAPTERS.find((candidate) => candidate.id === experience.chapterId);
+          const locationLabel = experience.location?.label ? localized(experience.location.label, language) : '';
 
-export const ExperiencesPage = ({ t }: { t: (key: string) => string }) => {
-  const [failedImageIds, setFailedImageIds] = useState<Record<string, boolean>>({});
+          return (
+            <article
+              key={experience.id}
+              className="flex min-h-[15rem] flex-col justify-between rounded-[1.8rem] bg-[rgba(247,242,231,0.76)] p-5 shadow-[0_18px_42px_rgba(50,45,32,0.07)] ring-1 ring-[rgba(91,67,38,0.11)] sm:p-6"
+            >
+              <div>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--forest-600)]">
+                      {chapter ? `${c.chapter} ${chapter.number} · ${localized(chapter.title, language)}` : c.eyebrow}
+                    </p>
+                    <h2 className="mt-2 text-2xl font-black leading-tight text-[var(--forest-950)]">
+                      {localized(experience.title, language)}
+                    </h2>
+                  </div>
+                  {experience.location ? <MapPin className="mt-1 h-5 w-5 shrink-0 text-[var(--earth-700)]" /> : <Route className="mt-1 h-5 w-5 shrink-0 text-[var(--earth-700)]" />}
+                </div>
 
-  const cards = useMemo(() => experienceCards, []);
+                <p className="mt-2 text-xs font-bold uppercase tracking-[0.14em] text-[var(--earth-700)]">{typeLabel(experience, language)}</p>
+                {experience.description ? <p className="mt-4 text-sm leading-7 text-[var(--forest-800)]">{localized(experience.description, language)}</p> : null}
+                {experience.instruction ? <p className="mt-3 rounded-[1.2rem] bg-[rgba(230,220,196,0.56)] px-4 py-3 text-sm leading-6 text-[var(--forest-800)]">{localized(experience.instruction, language)}</p> : null}
+                {locationLabel ? <p className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[var(--forest-700)]"><MapPin className="h-4 w-4" />{locationLabel}</p> : null}
+              </div>
 
-  return (
-    <div className="grid gap-6">
-      <Card className="overflow-hidden p-0">
-        <section className="relative overflow-hidden rounded-[1.9rem] px-5 py-6 sm:px-7 sm:py-8 lg:px-9">
-          <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(245,235,214,0.78),rgba(231,224,203,0.58),rgba(228,237,218,0.52))]" aria-hidden="true" />
-          <div className="relative z-10">
-            <p className="section-kicker">{t('nav.experiences')}</p>
-            <h1 className="mt-2 text-[1.85rem] font-black leading-tight text-[var(--forest-950)] sm:text-[2.35rem]">
-              {t('experiences.heading')}
-            </h1>
-            <p className="mt-3 max-w-3xl text-[0.98rem] leading-7 text-[var(--forest-800)] sm:text-[1.05rem]">
-              {t('experiences.subheading')}
-            </p>
-          </div>
-        </section>
-      </Card>
-
-      <section className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-4">
-        {cards.map((card) => (
-          <ExperienceCard
-            key={card.id}
-            card={card}
-            t={t}
-            imageFailed={Boolean(failedImageIds[card.id])}
-            onImageError={() => setFailedImageIds((current) => ({ ...current, [card.id]: true }))}
-          />
-        ))}
+              <div className="mt-6"><ExperienceActions experience={experience} language={language} /></div>
+            </article>
+          );
+        })}
       </section>
     </div>
   );
