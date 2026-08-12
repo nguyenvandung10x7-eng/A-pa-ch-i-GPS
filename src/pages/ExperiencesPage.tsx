@@ -1,7 +1,6 @@
 import { ArrowRight, ExternalLink, MapPin, Route, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BOOK_CHAPTERS, BOOK_EXPERIENCES } from '../data/bookContent';
-import { useTranslation } from '../hooks/useTranslation';
 import type { BookExperience, BookLocalizedText } from '../types/book';
 import type { LanguageCode } from '../types/task';
 
@@ -52,52 +51,51 @@ const typeLabel = (experience: BookExperience, language: LanguageCode) => {
   return c.location;
 };
 
-const ExperienceAction = ({ experience, language }: { experience: BookExperience; language: LanguageCode }) => {
+const actionClassName = 'inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white';
+
+const ExperienceActions = ({ experience, language }: { experience: BookExperience; language: LanguageCode }) => {
   const c = copy[language];
+  const actions = [];
 
   if (experience.externalUrl) {
-    return (
-      <a
-        href={experience.externalUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white"
-      >
+    actions.push(
+      <a key="external" href={experience.externalUrl} target="_blank" rel="noreferrer" className={actionClassName}>
         {c.openExternal}<ExternalLink className="h-4 w-4" />
       </a>
     );
   }
 
-  if (experience.location) {
-    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${experience.location.lat},${experience.location.lng}`;
-    return (
-      <a
-        href={mapUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white"
-      >
-        {c.openMap}<MapPin className="h-4 w-4" />
-      </a>
-    );
-  }
-
   if (experience.legacyTaskId) {
-    return (
-      <Link
-        to="/challenge"
-        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white"
-      >
+    actions.push(
+      <Link key="legacy" to="/challenge" className={actionClassName}>
         {c.openChallenge}<ArrowRight className="h-4 w-4" />
       </Link>
     );
   }
 
-  return <p className="text-sm italic text-[var(--forest-600)]">{c.noAction}</p>;
+  if (experience.location) {
+    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${experience.location.lat},${experience.location.lng}`;
+    actions.push(
+      <a key="map" href={mapUrl} target="_blank" rel="noreferrer" className={actionClassName}>
+        {c.openMap}<MapPin className="h-4 w-4" />
+      </a>
+    );
+  }
+
+  if (actions.length === 0) {
+    return <p className="text-sm italic text-[var(--forest-600)]">{c.noAction}</p>;
+  }
+
+  return <div className="flex flex-wrap gap-2">{actions}</div>;
 };
 
-export const ExperiencesPage = ({ t }: { t: (key: string) => string }) => {
-  const { language } = useTranslation();
+export const ExperiencesPage = ({
+  language,
+  t,
+}: {
+  language: LanguageCode;
+  t: (key: string) => string;
+}) => {
   const c = copy[language];
   const experiences = BOOK_EXPERIENCES.filter((experience) => experience.status !== 'hidden')
     .slice()
@@ -151,7 +149,7 @@ export const ExperiencesPage = ({ t }: { t: (key: string) => string }) => {
                 {locationLabel ? <p className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[var(--forest-700)]"><MapPin className="h-4 w-4" />{locationLabel}</p> : null}
               </div>
 
-              <div className="mt-6"><ExperienceAction experience={experience} language={language} /></div>
+              <div className="mt-6"><ExperienceActions experience={experience} language={language} /></div>
             </article>
           );
         })}
