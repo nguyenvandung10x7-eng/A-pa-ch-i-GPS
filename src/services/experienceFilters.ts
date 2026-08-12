@@ -4,12 +4,14 @@ export const SPECIALIZED_TASK_IDS = {
   terracedFields: 'ruong-bac-thang-ta-leng-mthen',
   waterfalls: 'thac-ke-nenh-mthen',
   timeTrain: 'doi-a1-chuyen-tau-thoi-gian-1954',
+  muongThanhMooncake: 'canh-dong-muong-thanh-cat-banh',
 } as const;
 
 export type ExperienceMode =
   | 'terraced-fields'
   | 'waterfalls'
   | 'time-train'
+  | 'muong-thanh-mooncake'
   | 'apa-chai'
   | 'historical-sites'
   | 'dien-bien-plain'
@@ -22,6 +24,7 @@ const ALL_MODES = new Set<ExperienceMode>([
   'terraced-fields',
   'waterfalls',
   'time-train',
+  'muong-thanh-mooncake',
   'apa-chai',
   'historical-sites',
   'dien-bien-plain',
@@ -33,6 +36,7 @@ const MODE_TASK_IDS: Record<ExperienceMode, Set<string>> = {
   'terraced-fields': new Set([SPECIALIZED_TASK_IDS.terracedFields]),
   waterfalls: new Set([SPECIALIZED_TASK_IDS.waterfalls]),
   'time-train': new Set([SPECIALIZED_TASK_IDS.timeTrain]),
+  'muong-thanh-mooncake': new Set([SPECIALIZED_TASK_IDS.muongThanhMooncake]),
   'apa-chai': new Set([
     'cho-muong-nhe-tang-banh-trung-thu',
     'cau-ta-ko-khu-tang-banh-trung-thu',
