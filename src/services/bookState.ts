@@ -1,4 +1,5 @@
 import type { BookPage, BookStateV1, SavedStateV1 } from '../types/book';
+import { getCompletedBookExperienceIdsFromLegacyProgress } from './bookLegacyProgressBridge';
 
 export const BOOK_STATE_STORAGE_KEY = 'book-of-dien-bien-state-v1';
 export const SAVED_STATE_STORAGE_KEY = 'book-of-dien-bien-saved-v1';
@@ -29,7 +30,7 @@ const emitChange = () => {
   }
 };
 
-export const readBookState = (): BookStateV1 => {
+const readStoredBookState = (): BookStateV1 => {
   if (typeof window === 'undefined') return emptyBookState();
 
   try {
@@ -49,6 +50,22 @@ export const readBookState = (): BookStateV1 => {
   } catch {
     return emptyBookState();
   }
+};
+
+export const readBookState = (): BookStateV1 => {
+  const stored = readStoredBookState();
+  if (typeof window === 'undefined') return stored;
+
+  const legacyCompletedExperienceIds = getCompletedBookExperienceIdsFromLegacyProgress();
+  if (legacyCompletedExperienceIds.length === 0) return stored;
+
+  return {
+    ...stored,
+    completedExperienceIds: [...new Set([
+      ...stored.completedExperienceIds,
+      ...legacyCompletedExperienceIds,
+    ])],
+  };
 };
 
 export const readSavedState = (): SavedStateV1 => {
