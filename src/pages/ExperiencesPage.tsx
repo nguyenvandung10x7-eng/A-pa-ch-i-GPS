@@ -51,6 +51,11 @@ const typeLabel = (experience: BookExperience, language: LanguageCode) => {
   return c.location;
 };
 
+const legacyExperienceModeByTaskId: Record<string, string> = {
+  'canh-dong-muong-thanh-cat-banh': 'dien-bien-plain',
+  'doi-a1-chuyen-tau-thoi-gian-1954': 'time-train',
+};
+
 const actionClassName = 'inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white';
 
 const ExperienceActions = ({ experience, language }: { experience: BookExperience; language: LanguageCode }) => {
@@ -66,11 +71,14 @@ const ExperienceActions = ({ experience, language }: { experience: BookExperienc
   }
 
   if (experience.legacyTaskId) {
-    actions.push(
-      <Link key="legacy" to="/challenge" className={actionClassName}>
-        {c.openChallenge}<ArrowRight className="h-4 w-4" />
-      </Link>
-    );
+    const experienceMode = legacyExperienceModeByTaskId[experience.legacyTaskId];
+    if (experienceMode) {
+      actions.push(
+        <Link key="legacy" to={`/challenge?experience=${encodeURIComponent(experienceMode)}`} className={actionClassName}>
+          {c.openChallenge}<ArrowRight className="h-4 w-4" />
+        </Link>
+      );
+    }
   }
 
   if (experience.location) {
