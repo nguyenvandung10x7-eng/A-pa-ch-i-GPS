@@ -24,7 +24,6 @@ export const PRODUCT_NAVIGATION_ITEMS: ProductNavigationItem[] = [
   { path: '/discover', labelKey: 'nav.discover', surface: 'challenge', role: 'utility' },
   { path: '/leaderboard', labelKey: 'nav.leaderboard', surface: 'challenge', role: 'utility' },
   { path: '/history', labelKey: 'nav.history', surface: 'challenge', role: 'utility' },
-  { path: '/submit-tiktok', labelKey: 'nav.submitTikTok', surface: 'challenge', role: 'utility' },
 ];
 
 export const PRODUCT_ENTRY_NAVIGATION = PRODUCT_NAVIGATION_ITEMS.filter(
