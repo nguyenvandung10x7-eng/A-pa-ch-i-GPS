@@ -40,8 +40,8 @@ const CHALLENGE_PATH_PREFIXES = [
 ] as const;
 
 const matchesPath = (pathname: string, prefix: string): boolean => {
-  const normalizedPathname = pathname.toLocaleLowerCase();
-  const normalizedPrefix = prefix.toLocaleLowerCase();
+  const normalizedPathname = pathname.toLowerCase();
+  const normalizedPrefix = prefix.toLowerCase();
   return normalizedPathname === normalizedPrefix || normalizedPathname.startsWith(`${normalizedPrefix}/`);
 };
 
@@ -52,19 +52,15 @@ export const resolveProductSurface = (pathname: string): ProductSurface | null =
 };
 
 /**
- * Until the edited challenge workbook is imported, keep existing Book data intact
- * and classify only the obvious ownership boundary:
- * - pure side quests belong to CHALLENGE
- * - legacy-backed non-external actions belong to CHALLENGE
- * - editorial external experiences stay BOOK-owned even when they expose a legacy
- *   challenge action as one of their available actions
- * - walk/audio/location experiences remain BOOK experiences
+ * Until the edited challenge workbook is imported, preserve Book experiences as
+ * editorial objects and classify only explicit side quests as Challenge-owned.
+ *
+ * A legacyTaskId is a bridge to a Challenge action, not ownership of the whole
+ * Book experience. That lets walk/audio/location/external experiences remain in
+ * Book even when they can launch or reflect a legacy challenge task.
  */
-export const getBookExperienceSurface = (experience: BookExperience): ProductSurface => {
-  if (experience.type === 'external') return 'book';
-  if (experience.type === 'sideQuest' || experience.legacyTaskId) return 'challenge';
-  return 'book';
-};
+export const getBookExperienceSurface = (experience: BookExperience): ProductSurface =>
+  experience.type === 'sideQuest' ? 'challenge' : 'book';
 
 export const isBookOwnedExperience = (experience: BookExperience): boolean =>
   getBookExperienceSurface(experience) === 'book';
