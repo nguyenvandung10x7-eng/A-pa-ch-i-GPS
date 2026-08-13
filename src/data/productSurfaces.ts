@@ -39,8 +39,11 @@ const CHALLENGE_PATH_PREFIXES = [
   ...PRODUCT_SURFACES.challenge.utilityPaths,
 ] as const;
 
-const matchesPath = (pathname: string, prefix: string): boolean =>
-  pathname === prefix || pathname.startsWith(`${prefix}/`);
+const matchesPath = (pathname: string, prefix: string): boolean => {
+  const normalizedPathname = pathname.toLocaleLowerCase();
+  const normalizedPrefix = prefix.toLocaleLowerCase();
+  return normalizedPathname === normalizedPrefix || normalizedPathname.startsWith(`${normalizedPrefix}/`);
+};
 
 export const resolveProductSurface = (pathname: string): ProductSurface | null => {
   if (BOOK_PATH_PREFIXES.some((prefix) => matchesPath(pathname, prefix))) return 'book';
