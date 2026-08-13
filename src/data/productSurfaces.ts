@@ -44,12 +44,15 @@ export const resolveProductSurface = (pathname: string): ProductSurface | null =
 /**
  * Until the edited challenge workbook is imported, keep existing Book data intact
  * and classify only the obvious ownership boundary:
- * - legacy-backed actions belong to CHALLENGE
  * - pure side quests belong to CHALLENGE
- * - walk/audio/location/editorial external experiences remain BOOK experiences
+ * - legacy-backed non-external actions belong to CHALLENGE
+ * - editorial external experiences stay BOOK-owned even when they expose a legacy
+ *   challenge action as one of their available actions
+ * - walk/audio/location experiences remain BOOK experiences
  */
 export const getBookExperienceSurface = (experience: BookExperience): ProductSurface => {
-  if (experience.legacyTaskId || experience.type === 'sideQuest') return 'challenge';
+  if (experience.type === 'external') return 'book';
+  if (experience.type === 'sideQuest' || experience.legacyTaskId) return 'challenge';
   return 'book';
 };
 
