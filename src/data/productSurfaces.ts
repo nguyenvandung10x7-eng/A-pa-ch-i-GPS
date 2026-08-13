@@ -18,7 +18,7 @@ export const PRODUCT_SURFACES = {
   challenge: {
     id: 'challenge' as const,
     rootPath: '/challenge',
-    utilityPaths: ['/history', '/leaderboard', '/submit-tiktok'] as const,
+    utilityPaths: ['/discover', '/history', '/leaderboard', '/submit-tiktok'] as const,
   },
 } as const;
 
