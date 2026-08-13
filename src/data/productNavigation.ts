@@ -78,6 +78,13 @@ export const CHALLENGE_NAVIGATION_ITEMS: ReadonlyArray<ProductNavigationItem> = 
     surface: 'challenge',
     kind: 'utility',
   },
+  {
+    id: 'submit-tiktok',
+    path: '/submit-tiktok',
+    labelKey: 'tiktok.title',
+    surface: 'challenge',
+    kind: 'utility',
+  },
 ];
 
 export const CHALLENGE_STAFF_NAVIGATION_ITEMS: ReadonlyArray<ProductNavigationItem> = [
