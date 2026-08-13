@@ -24,8 +24,12 @@ const utilityIcon = (item: ProductNavigationItem) => {
 
 export const ProductNavigationRail = ({ t, compact = false }: ProductNavigationRailProps) => {
   const location = useLocation();
-  const activeSurface = resolveProductSurface(location.pathname) ?? 'book';
-  const utilityItems = activeSurface === 'book' ? BOOK_NAVIGATION_ITEMS : CHALLENGE_NAVIGATION_ITEMS;
+  const activeSurface = resolveProductSurface(location.pathname);
+  const utilityItems = activeSurface === 'book'
+    ? BOOK_NAVIGATION_ITEMS
+    : activeSurface === 'challenge'
+      ? CHALLENGE_NAVIGATION_ITEMS
+      : [];
 
   return (
     <nav aria-label={t('nav.menu')} className="space-y-2">
@@ -53,27 +57,29 @@ export const ProductNavigationRail = ({ t, compact = false }: ProductNavigationR
         })}
       </div>
 
-      <div className={`flex flex-wrap ${compact ? 'gap-1.5' : 'gap-2'}`}>
-        {utilityItems.map((item) => {
-          const Icon = utilityIcon(item);
-          return (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              className={({ isActive }) => `inline-flex min-h-[2.6rem] items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition ${
-                isActive
-                  ? activeSurface === 'book'
-                    ? 'bg-[rgba(219,185,102,0.34)] text-[var(--earth-900)]'
-                    : 'bg-[rgba(176,96,48,0.16)] text-[var(--earth-900)] ring-1 ring-[rgba(176,96,48,0.18)]'
-                  : 'bg-[rgba(231,225,212,0.7)] text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.1)] hover:bg-[rgba(238,233,222,0.9)]'
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
-              <span>{t(item.labelKey)}</span>
-            </NavLink>
-          );
-        })}
-      </div>
+      {activeSurface ? (
+        <div className={`flex flex-wrap ${compact ? 'gap-1.5' : 'gap-2'}`}>
+          {utilityItems.map((item) => {
+            const Icon = utilityIcon(item);
+            return (
+              <NavLink
+                key={item.id}
+                to={item.path}
+                className={({ isActive }) => `inline-flex min-h-[2.6rem] items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition ${
+                  isActive
+                    ? activeSurface === 'book'
+                      ? 'bg-[rgba(219,185,102,0.34)] text-[var(--earth-900)]'
+                      : 'bg-[rgba(176,96,48,0.16)] text-[var(--earth-900)] ring-1 ring-[rgba(176,96,48,0.18)]'
+                    : 'bg-[rgba(231,225,212,0.7)] text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.1)] hover:bg-[rgba(238,233,222,0.9)]'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span>{t(item.labelKey)}</span>
+              </NavLink>
+            );
+          })}
+        </div>
+      ) : null}
     </nav>
   );
 };
