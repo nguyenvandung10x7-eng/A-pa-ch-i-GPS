@@ -12,7 +12,7 @@ export const ProductSurfaceFrame = ({ surface, children }: ProductSurfaceFramePr
   const identity = PRODUCT_VISUAL_IDENTITIES[surface];
   const isChallenge = identity.emphasis === 'energetic';
   const surfaceClass = isChallenge
-    ? 'overflow-hidden bg-[linear-gradient(180deg,rgba(195,112,57,0.18),rgba(245,223,184,0.28)_18%,rgba(248,244,235,0.62)_46%,rgba(248,244,235,0.72))] ring-[rgba(176,96,48,0.2)] shadow-[0_18px_50px_rgba(92,48,22,0.09)]'
+    ? 'bg-[linear-gradient(180deg,rgba(195,112,57,0.18),rgba(245,223,184,0.28)_18%,rgba(248,244,235,0.62)_46%,rgba(248,244,235,0.72))] ring-[rgba(176,96,48,0.2)] shadow-[0_18px_50px_rgba(92,48,22,0.09)]'
     : 'bg-[rgba(248,244,235,0.48)] ring-[rgba(91,67,38,0.08)]';
   const contentClass = isChallenge ? 'relative z-10 pt-12 sm:pt-14' : '';
 
