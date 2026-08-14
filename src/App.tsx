@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { Loader2, LogIn, ShieldCheck } from 'lucide-react';
 import { Layout } from './components/Layout';
+import { ProductNavigationRail } from './components/ProductNavigationRail';
 import { Card } from './components/Card';
 import { useAuth } from './contexts/AuthContext';
 import { useTasks } from './hooks/useTasks';
@@ -138,6 +139,10 @@ export default function App() {
 
   return (
     <Layout language={language} setLanguage={setLanguage} t={t}>
+      <div className="mb-4 rounded-[1.75rem] bg-[rgba(239,232,218,0.72)] p-3 ring-1 ring-[rgba(91,67,38,0.12)] backdrop-blur-sm sm:mb-5 sm:p-4">
+        <ProductNavigationRail t={t} compact />
+      </div>
+
       <Routes>
         <Route path="/" element={<LandingPage tasks={tasks} clearVersion={clearVersion} t={t} />} />
         <Route path="/book" element={<BookPage language={language} />} />
