@@ -3,6 +3,7 @@ import { Route, Routes, useLocation, useNavigationType } from 'react-router-dom'
 import { Loader2, LogIn, ShieldCheck } from 'lucide-react';
 import { Layout } from './components/Layout';
 import { ProductNavigationRail } from './components/ProductNavigationRail';
+import { ProductSurfaceFrame } from './components/ProductSurfaceFrame';
 import { Card } from './components/Card';
 import { useAuth } from './contexts/AuthContext';
 import { useTasks } from './hooks/useTasks';
@@ -151,11 +152,11 @@ export default function App() {
         <Route path="/near-me" element={<BookUtilityPage language={language} mode="near-me" />} />
         <Route path="/saved" element={<SavedBookPage language={language} />} />
         <Route path="/experiences" element={<ExperiencesPage language={language} t={t} />} />
-        <Route path="/challenge" element={<ChallengePage tasks={activeTasks} clearVersion={clearVersion} language={language} t={t} />} />
-        <Route path="/history" element={<HistoryPage clearVersion={clearVersion} language={language} t={t} />} />
-        <Route path="/discover" element={<DiscoverPage language={language} t={t} />} />
-        <Route path="/leaderboard" element={<LeaderboardPage language={language} t={t} />} />
-        <Route path="/submit-tiktok" element={<TikTokSubmissionPage clearVersion={clearVersion} language={language} t={t} />} />
+        <Route path="/challenge" element={<ProductSurfaceFrame surface="challenge"><ChallengePage tasks={activeTasks} clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>} />
+        <Route path="/history" element={<ProductSurfaceFrame surface="challenge"><HistoryPage clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>} />
+        <Route path="/discover" element={<ProductSurfaceFrame surface="challenge"><DiscoverPage language={language} t={t} /></ProductSurfaceFrame>} />
+        <Route path="/leaderboard" element={<ProductSurfaceFrame surface="challenge"><LeaderboardPage language={language} t={t} /></ProductSurfaceFrame>} />
+        <Route path="/submit-tiktok" element={<ProductSurfaceFrame surface="challenge"><TikTokSubmissionPage clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>} />
         <Route path="/privacy" element={<LegalSafetyPage t={t} />} />
         <Route path="/legal" element={<LegalSafetyPage t={t} />} />
         <Route path="/moderation" element={<ModerationPage language={language} t={t} />} />
