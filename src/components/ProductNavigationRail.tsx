@@ -7,6 +7,7 @@ import {
   type ProductNavigationItem,
 } from '../data/productNavigation';
 import { resolveProductSurface, type ProductSurface } from '../data/productSurfaces';
+import { PRODUCT_VISUAL_IDENTITIES } from '../data/productVisualIdentity';
 
 type ProductNavigationRailProps = {
   t: (key: string) => string;
@@ -20,6 +21,20 @@ const utilityIcon = (item: ProductNavigationItem) => {
   if (item.id === 'near-me') return MapPin;
   if (item.id === 'leaderboard') return Trophy;
   return item.surface === 'book' ? BookOpen : Flag;
+};
+
+const activeEntryClass = (surface: ProductSurface) => {
+  const identity = PRODUCT_VISUAL_IDENTITIES[surface];
+  return identity.emphasis === 'quiet'
+    ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.16)]'
+    : 'bg-[rgba(176,96,48,0.92)] text-white shadow-[0_10px_20px_rgba(100,54,28,0.2)]';
+};
+
+const activeUtilityClass = (surface: ProductSurface) => {
+  const identity = PRODUCT_VISUAL_IDENTITIES[surface];
+  return identity.emphasis === 'quiet'
+    ? 'bg-[rgba(219,185,102,0.34)] text-[var(--earth-900)]'
+    : 'bg-[rgba(176,96,48,0.16)] text-[var(--earth-900)] ring-1 ring-[rgba(176,96,48,0.18)]';
 };
 
 export const ProductNavigationRail = ({ t, compact = false }: ProductNavigationRailProps) => {
@@ -44,9 +59,7 @@ export const ProductNavigationRail = ({ t, compact = false }: ProductNavigationR
               to={item.path}
               className={`flex min-h-[3rem] items-center justify-center gap-2 rounded-[1.2rem] px-3 py-2.5 text-sm font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)] ${
                 isSurfaceActive
-                  ? item.surface === 'book'
-                    ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.16)]'
-                    : 'bg-[rgba(176,96,48,0.92)] text-white shadow-[0_10px_20px_rgba(100,54,28,0.2)]'
+                  ? activeEntryClass(item.surface)
                   : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)] hover:bg-[rgba(255,255,255,0.9)]'
               }`}
             >
@@ -67,9 +80,7 @@ export const ProductNavigationRail = ({ t, compact = false }: ProductNavigationR
                 to={item.path}
                 className={({ isActive }) => `inline-flex min-h-[2.6rem] items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition ${
                   isActive
-                    ? activeSurface === 'book'
-                      ? 'bg-[rgba(219,185,102,0.34)] text-[var(--earth-900)]'
-                      : 'bg-[rgba(176,96,48,0.16)] text-[var(--earth-900)] ring-1 ring-[rgba(176,96,48,0.18)]'
+                    ? activeUtilityClass(activeSurface)
                     : 'bg-[rgba(231,225,212,0.7)] text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.1)] hover:bg-[rgba(238,233,222,0.9)]'
                 }`}
               >
