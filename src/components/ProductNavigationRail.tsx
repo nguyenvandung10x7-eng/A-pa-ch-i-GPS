@@ -34,7 +34,7 @@ const entryInteractionClass = (surface: ProductSurface) => {
   const identity = PRODUCT_VISUAL_IDENTITIES[surface];
   return identity.emphasis === 'quiet'
     ? 'hover:bg-[rgba(255,255,255,0.9)]'
-    : 'motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-[1.01] active:scale-[0.98]';
+    : 'motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-[1.01] motion-safe:active:!scale-[0.98]';
 };
 
 const activeUtilityClass = (surface: ProductSurface) => {
@@ -48,7 +48,7 @@ const utilityInteractionClass = (surface: ProductSurface) => {
   const identity = PRODUCT_VISUAL_IDENTITIES[surface];
   return identity.emphasis === 'quiet'
     ? 'hover:bg-[rgba(238,233,222,0.9)]'
-    : 'motion-safe:hover:-translate-y-0.5 hover:bg-[rgba(239,215,193,0.8)] active:scale-[0.98]';
+    : 'motion-safe:hover:-translate-y-0.5 hover:bg-[rgba(239,215,193,0.8)] motion-safe:active:!scale-[0.98]';
 };
 
 export const ProductNavigationRail = ({ t, compact = false }: ProductNavigationRailProps) => {
