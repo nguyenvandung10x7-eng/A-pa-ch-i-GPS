@@ -30,11 +30,25 @@ const activeEntryClass = (surface: ProductSurface) => {
     : 'bg-[rgba(176,96,48,0.92)] text-white shadow-[0_10px_20px_rgba(100,54,28,0.2)]';
 };
 
+const entryInteractionClass = (surface: ProductSurface) => {
+  const identity = PRODUCT_VISUAL_IDENTITIES[surface];
+  return identity.emphasis === 'quiet'
+    ? 'hover:bg-[rgba(255,255,255,0.9)]'
+    : 'motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-[1.01] motion-safe:active:!scale-[0.98]';
+};
+
 const activeUtilityClass = (surface: ProductSurface) => {
   const identity = PRODUCT_VISUAL_IDENTITIES[surface];
   return identity.emphasis === 'quiet'
     ? 'bg-[rgba(219,185,102,0.34)] text-[var(--earth-900)]'
     : 'bg-[rgba(176,96,48,0.16)] text-[var(--earth-900)] ring-1 ring-[rgba(176,96,48,0.18)]';
+};
+
+const utilityInteractionClass = (surface: ProductSurface) => {
+  const identity = PRODUCT_VISUAL_IDENTITIES[surface];
+  return identity.emphasis === 'quiet'
+    ? 'hover:bg-[rgba(238,233,222,0.9)]'
+    : 'motion-safe:hover:-translate-y-0.5 hover:bg-[rgba(239,215,193,0.8)] motion-safe:active:!scale-[0.98]';
 };
 
 export const ProductNavigationRail = ({ t, compact = false }: ProductNavigationRailProps) => {
@@ -57,10 +71,10 @@ export const ProductNavigationRail = ({ t, compact = false }: ProductNavigationR
             <NavLink
               key={item.id}
               to={item.path}
-              className={`flex min-h-[3rem] items-center justify-center gap-2 rounded-[1.2rem] px-3 py-2.5 text-sm font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)] ${
+              className={`flex min-h-[3rem] items-center justify-center gap-2 rounded-[1.2rem] px-3 py-2.5 text-sm font-black transition duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)] ${entryInteractionClass(item.surface)} ${
                 isSurfaceActive
                   ? activeEntryClass(item.surface)
-                  : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)] hover:bg-[rgba(255,255,255,0.9)]'
+                  : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]'
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -78,10 +92,10 @@ export const ProductNavigationRail = ({ t, compact = false }: ProductNavigationR
               <NavLink
                 key={item.id}
                 to={item.path}
-                className={({ isActive }) => `inline-flex min-h-[2.6rem] items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition ${
+                className={({ isActive }) => `inline-flex min-h-[2.6rem] items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition duration-200 ${utilityInteractionClass(activeSurface)} ${
                   isActive
                     ? activeUtilityClass(activeSurface)
-                    : 'bg-[rgba(231,225,212,0.7)] text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.1)] hover:bg-[rgba(238,233,222,0.9)]'
+                    : 'bg-[rgba(231,225,212,0.7)] text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.1)]'
                 }`}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" />
