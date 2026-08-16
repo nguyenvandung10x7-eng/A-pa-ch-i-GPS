@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowRight, BookOpen, ExternalLink, MapPin } from 'lucide-react';
+import { type KeyboardEvent, type MouseEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   getChapter,
@@ -8,6 +9,7 @@ import {
   getPublishedChapters,
 } from '../services/bookContent';
 import { createExactTaskExperienceMode } from '../services/experienceFilters';
+import { GAMEPLAY_MUSIC_ACTION_EVENT } from '../services/gameplayMusicEvents';
 import type { BookExperience, BookLocalizedText, ContentBlock } from '../types/book';
 import type { LanguageCode } from '../types/task';
 
@@ -100,6 +102,26 @@ const renderBlock = (block: ContentBlock, language: LanguageCode, key: string) =
   }
 };
 
+const dispatchStartGameplayMusic = () => {
+  window.dispatchEvent(new CustomEvent<'start'>(GAMEPLAY_MUSIC_ACTION_EVENT, { detail: 'start' }));
+};
+
+const handleChallengeClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented) return;
+  if (event.detail === 0) return;
+  if (event.button !== 0) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  dispatchStartGameplayMusic();
+};
+
+const handleChallengeKeyDown = (event: KeyboardEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented) return;
+  if (event.key !== 'Enter') return;
+  if (event.repeat) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  dispatchStartGameplayMusic();
+};
+
 const ExperienceCard = ({ experience, language }: { experience: BookExperience; language: LanguageCode }) => {
   const c = copy[language];
   const href = experience.externalUrl;
@@ -125,7 +147,12 @@ const ExperienceCard = ({ experience, language }: { experience: BookExperience; 
             </a>
           ) : null}
           {challengePath ? (
-            <Link to={challengePath} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white">
+            <Link
+              to={challengePath}
+              onClick={handleChallengeClick}
+              onKeyDown={handleChallengeKeyDown}
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white"
+            >
               {c.openLegacy}<ArrowRight className="h-4 w-4" />
             </Link>
           ) : null}
