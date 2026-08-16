@@ -2,6 +2,7 @@ import { ArrowRight, ExternalLink, MapPin, Route, Sparkles } from 'lucide-react'
 import { type KeyboardEvent, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { BOOK_CHAPTERS, BOOK_EXPERIENCES } from '../data/bookContent';
+import { createExactTaskExperienceMode } from '../services/experienceFilters';
 import { GAMEPLAY_MUSIC_ACTION_EVENT } from '../services/gameplayMusicEvents';
 import type { BookExperience, BookLocalizedText } from '../types/book';
 import type { LanguageCode } from '../types/task';
@@ -53,11 +54,6 @@ const typeLabel = (experience: BookExperience, language: LanguageCode) => {
   return c.location;
 };
 
-const legacyExperienceModeByTaskId: Record<string, string> = {
-  'canh-dong-muong-thanh-cat-banh': 'muong-thanh-mooncake',
-  'doi-a1-chuyen-tau-thoi-gian-1954': 'time-train',
-};
-
 const actionClassName = 'inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white';
 
 const dispatchStartGameplayMusic = () => {
@@ -95,20 +91,18 @@ const ExperienceActions = ({ experience, language }: { experience: BookExperienc
   }
 
   if (experience.legacyTaskId) {
-    const experienceMode = legacyExperienceModeByTaskId[experience.legacyTaskId];
-    if (experienceMode) {
-      actions.push(
-        <Link
-          key="legacy"
-          to={`/challenge?experience=${encodeURIComponent(experienceMode)}`}
-          onClick={handleLegacyChallengeClick}
-          onKeyDown={handleLegacyChallengeKeyDown}
-          className={actionClassName}
-        >
-          {c.openChallenge}<ArrowRight className="h-4 w-4" />
-        </Link>
-      );
-    }
+    const experienceMode = createExactTaskExperienceMode(experience.legacyTaskId);
+    actions.push(
+      <Link
+        key="legacy"
+        to={`/challenge?experience=${encodeURIComponent(experienceMode)}`}
+        onClick={handleLegacyChallengeClick}
+        onKeyDown={handleLegacyChallengeKeyDown}
+        className={actionClassName}
+      >
+        {c.openChallenge}<ArrowRight className="h-4 w-4" />
+      </Link>
+    );
   }
 
   if (experience.location) {
