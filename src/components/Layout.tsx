@@ -4,6 +4,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdminStatus } from '../hooks/useAdminStatus';
 import { MUSIC_TRACKS, type MusicTrack } from '../data/music';
+import { CHALLENGE_STAFF_NAVIGATION_ITEMS, PRODUCT_ENTRY_POINTS } from '../data/productNavigation';
 import {
   GAMEPLAY_MUSIC_ACTION_EVENT,
   GAMEPLAY_MUSIC_ADVANCE_EVENT,
@@ -104,27 +105,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
   const musicPreparationSnapshotRef = useRef<MusicPreparationSnapshot | null>(null);
   const musicShuffleQueueRef = useRef<string[]>(createShuffleQueue(MUSIC_TRACKS, musicTrackId));
   const selectedTrack = useMemo(() => MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0], [musicTrackId]);
-  const primaryNavItems: Array<[string, string]> = [
-    ['/book', 'nav.book'],
-    ['/near-me', 'nav.nearMe'],
-    ['/saved', 'nav.saved'],
-  ];
-  const desktopSecondaryNavItems: Array<[string, string]> = [
-    ['/experiences', 'nav.experiences'],
-    ['/challenge', 'nav.challenge'],
-    ['/discover', 'nav.discover'],
-    ['/leaderboard', 'nav.leaderboard'],
-    ['/history', 'nav.history'],
-  ];
-  const mobilePrimaryNavItems: Array<[string, string]> = primaryNavItems;
-  const mobileSecondaryNavItems: Array<[string, string]> = [...desktopSecondaryNavItems];
-
-  if (user && !checkingAdmin && isAdmin) {
-    desktopSecondaryNavItems.push(['/moderation', 'nav.moderation']);
-    desktopSecondaryNavItems.push(['/admin', 'nav.admin']);
-    mobileSecondaryNavItems.push(['/moderation', 'nav.moderation']);
-    mobileSecondaryNavItems.push(['/admin', 'nav.admin']);
-  }
+  const staffNavItems = user && !checkingAdmin && isAdmin ? CHALLENGE_STAFF_NAVIGATION_ITEMS : [];
 
   const handleSignIn = async () => {
     try {
@@ -795,27 +776,14 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
           </p>
         </div>
 
-        <div className="hidden min-w-0 flex-1 flex-col gap-3 lg:flex xl:items-end">
-          <div className="flex flex-wrap items-center gap-2 text-[0.99rem] font-semibold text-[var(--forest-900)] xl:justify-end">
-          {primaryNavItems.map(([to, key]) => (
+        <div className="hidden min-w-0 flex-1 flex-wrap items-center gap-2 lg:flex xl:justify-end">
+          {staffNavItems.map((item) => (
             <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) => `rounded-full px-4 py-2.5 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)] ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.16)]' : 'bg-[rgba(231,225,212,0.82)] ring-1 ring-[rgba(61,84,52,0.16)] hover:bg-[rgba(238,233,222,0.94)]'}`}
-            >
-            {t(key)}
-            </NavLink>
-          ))}
-          </div>
-
-          <div className="flex min-w-0 flex-wrap items-center gap-2 xl:justify-end">
-          {desktopSecondaryNavItems.map(([to, key]) => (
-            <NavLink
-              key={`secondary-${to}`}
-              to={to}
+              key={`staff-${item.id}`}
+              to={item.path}
               className={({ isActive }) => `rounded-full px-3 py-2 text-[0.9rem] font-semibold transition ${isActive ? 'bg-[rgba(219,185,102,0.3)] text-[var(--earth-900)]' : 'bg-[rgba(231,225,212,0.7)] text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.12)] hover:bg-[rgba(238,233,222,0.9)]'}`}
             >
-              {t(key)}
+              {t(item.labelKey)}
             </NavLink>
           ))}
           <div ref={musicMenuRef} className="relative z-50">
@@ -835,7 +803,6 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
           <LanguageSwitch language={language} label={t('language.switch')} onChange={setLanguage} />
 
           {renderAccountControls()}
-          </div>
         </div>
         </div>
       </div>
@@ -843,15 +810,15 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
     </header>
 
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[rgba(91,67,38,0.14)] bg-[rgba(239,232,218,0.96)] px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-16px_34px_rgba(29,40,24,0.14)] backdrop-blur lg:hidden">
-      <div className="mx-auto grid max-w-7xl grid-cols-4 gap-2">
-        {mobilePrimaryNavItems.map(([to, key]) => (
+      <div className="mx-auto grid max-w-7xl grid-cols-3 gap-2">
+        {PRODUCT_ENTRY_POINTS.map((item) => (
           <NavLink
-            key={to}
-            to={to}
+            key={item.id}
+            to={item.path}
             className={({ isActive }) => `flex min-h-[3rem] min-w-0 items-center justify-center rounded-[1.2rem] px-2 py-2 text-center text-xs font-black leading-4 transition ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.14)]' : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]'}`}
             onClick={closeMobileMenu}
           >
-            <span className="break-words">{t(key)}</span>
+            <span className="break-words">{t(item.labelKey)}</span>
           </NavLink>
         ))}
         <button
@@ -897,14 +864,14 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
           </div>
 
           <div className="mt-4 grid gap-3">
-            {mobileSecondaryNavItems.map(([to, key]) => (
+            {staffNavItems.map((item) => (
               <NavLink
-                key={`mobile-${to}`}
-                to={to}
+                key={`mobile-staff-${item.id}`}
+                to={item.path}
                 className={({ isActive }) => `flex min-h-[3rem] min-w-0 items-center justify-between gap-3 rounded-[1.25rem] px-4 py-3 text-left text-sm font-black transition ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_12px_24px_rgba(101,75,40,0.14)]' : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]'}`}
                 onClick={closeMobileMenu}
               >
-                <span className="min-w-0 break-words">{t(key)}</span>
+                <span className="min-w-0 break-words">{t(item.labelKey)}</span>
               </NavLink>
             ))}
 
