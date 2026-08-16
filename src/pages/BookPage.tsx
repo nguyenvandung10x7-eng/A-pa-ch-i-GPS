@@ -7,6 +7,7 @@ import {
   getPage,
   getPublishedChapters,
 } from '../services/bookContent';
+import { createExactTaskExperienceMode } from '../services/experienceFilters';
 import type { BookExperience, BookLocalizedText, ContentBlock } from '../types/book';
 import type { LanguageCode } from '../types/task';
 
@@ -89,7 +90,7 @@ const renderBlock = (block: ContentBlock, language: LanguageCode, key: string) =
         <div key={key} className="rounded-[1.5rem] bg-[rgba(255,255,255,0.58)] p-4 ring-1 ring-[rgba(61,84,52,0.12)]">
           {block.audio.title ? <p className="mb-3 font-bold text-[var(--forest-900)]">{localized(block.audio.title, language)}</p> : null}
           {block.audio.src ? <audio controls preload="none" src={block.audio.src} className="w-full" /> : null}
-          {block.audio.externalUrl ? <a href={block.audio.externalUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[var(--earth-900)]"><ExternalLink className="h-4 w-4" />{block.audio.externalUrl}</a> : null}
+          {block.audio.externalUrl ? <a href={block.audio.externalUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-w-0 items-center gap-2 break-all text-sm font-bold text-[var(--earth-900)]"><ExternalLink className="h-4 w-4 shrink-0" />{block.audio.externalUrl}</a> : null}
         </div>
       );
     case 'divider':
@@ -101,7 +102,10 @@ const renderBlock = (block: ContentBlock, language: LanguageCode, key: string) =
 
 const ExperienceCard = ({ experience, language }: { experience: BookExperience; language: LanguageCode }) => {
   const c = copy[language];
-  const href = experience.type === 'external' ? experience.externalUrl : experience.externalUrl;
+  const href = experience.externalUrl;
+  const challengePath = experience.legacyTaskId
+    ? `/challenge?experience=${encodeURIComponent(createExactTaskExperienceMode(experience.legacyTaskId))}`
+    : null;
 
   return (
     <article className="rounded-[1.6rem] bg-[rgba(255,255,255,0.62)] p-5 ring-1 ring-[rgba(61,84,52,0.13)]">
@@ -117,8 +121,8 @@ const ExperienceCard = ({ experience, language }: { experience: BookExperience; 
         <a href={href} target="_blank" rel="noreferrer" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white">
           {c.openExperience}<ExternalLink className="h-4 w-4" />
         </a>
-      ) : experience.legacyTaskId ? (
-        <Link to="/challenge" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white">
+      ) : challengePath ? (
+        <Link to={challengePath} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white">
           {c.openLegacy}<ArrowRight className="h-4 w-4" />
         </Link>
       ) : null}
