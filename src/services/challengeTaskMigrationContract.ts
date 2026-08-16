@@ -1,12 +1,23 @@
 export type ChallengeTaskMigrationAction = 'rename' | 'retire';
 
-export type ChallengeTaskMigrationEntry = {
+type ChallengeTaskMigrationBase = {
   sourceTaskId: string;
-  action: ChallengeTaskMigrationAction;
-  targetTaskId?: string;
   preserveProgress: boolean;
   note: string;
 };
+
+export type ChallengeTaskRenameMigrationEntry = ChallengeTaskMigrationBase & {
+  action: 'rename';
+  targetTaskId: string;
+};
+
+export type ChallengeTaskRetireMigrationEntry = ChallengeTaskMigrationBase & {
+  action: 'retire';
+};
+
+export type ChallengeTaskMigrationEntry =
+  | ChallengeTaskRenameMigrationEntry
+  | ChallengeTaskRetireMigrationEntry;
 
 /**
  * Single migration boundary for Challenge task catalog changes.
@@ -69,14 +80,12 @@ const renameTargets = new Map<string, string>();
 const retiredTaskIds = new Set<string>();
 
 CHALLENGE_TASK_MIGRATIONS.forEach((entry) => {
-  if (entry.action === 'rename' && entry.targetTaskId) {
+  if (entry.action === 'rename') {
     renameTargets.set(entry.sourceTaskId, entry.targetTaskId);
     return;
   }
 
-  if (entry.action === 'retire') {
-    retiredTaskIds.add(entry.sourceTaskId);
-  }
+  retiredTaskIds.add(entry.sourceTaskId);
 });
 
 export const resolveCanonicalChallengeTaskId = (taskId: string): string => {
