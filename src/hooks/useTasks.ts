@@ -2,9 +2,21 @@ import { useEffect, useMemo, useState } from 'react';
 import { enabledTasks, loadTasks, saveTasks } from '../services/tasks';
 import { migrateAllGameplayStorageTaskIds } from '../services/gameplay';
 import { applyChallengeCatalogWorkbookImport } from '../services/challengeCatalogWorkbookImport';
+import { applyChapter13ChallengeImport } from '../services/chapter13ChallengeImport';
 import type { ChallengeTask } from '../types/task';
 
-const loadImportedTasks = (): ChallengeTask[] => applyChallengeCatalogWorkbookImport(loadTasks());
+const CATALOG_IMPORT_VERSION_KEY = 'book-of-dien-bien-challenge-catalog-import-version';
+const CATALOG_IMPORT_VERSION = '2026-08-16-chapter-13';
+
+const loadImportedTasks = (): ChallengeTask[] => {
+  const tasks = loadTasks();
+  if (localStorage.getItem(CATALOG_IMPORT_VERSION_KEY) === CATALOG_IMPORT_VERSION) return tasks;
+
+  const imported = applyChapter13ChallengeImport(applyChallengeCatalogWorkbookImport(tasks));
+  saveTasks(imported);
+  localStorage.setItem(CATALOG_IMPORT_VERSION_KEY, CATALOG_IMPORT_VERSION);
+  return imported;
+};
 
 export const useTasks = () => {
   const [tasks, setTasksState] = useState<ChallengeTask[]>(() => loadImportedTasks());
