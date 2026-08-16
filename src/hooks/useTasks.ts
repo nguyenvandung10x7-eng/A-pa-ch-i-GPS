@@ -27,9 +27,8 @@ export const useTasks = () => {
   }, []);
 
   const setTasks = (next: ChallengeTask[]) => {
-    const imported = applyChallengeCatalogWorkbookImport(next);
-    setTasksState(imported);
-    saveTasks(imported);
+    setTasksState(next);
+    saveTasks(next);
   };
   const activeTasks = useMemo(() => enabledTasks(tasks), [tasks]);
   return { tasks, setTasks, activeTasks };
