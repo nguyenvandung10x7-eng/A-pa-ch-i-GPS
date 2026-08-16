@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { BookOpen, ChevronDown, Loader2, Menu, Music2, Pause, Play, Volume2, X } from 'lucide-react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdminStatus } from '../hooks/useAdminStatus';
 import { MUSIC_TRACKS, type MusicTrack } from '../data/music';
 import { CHALLENGE_STAFF_NAVIGATION_ITEMS, PRODUCT_ENTRY_POINTS } from '../data/productNavigation';
+import { resolveProductSurface } from '../data/productSurfaces';
 import {
   GAMEPLAY_MUSIC_ACTION_EVENT,
   GAMEPLAY_MUSIC_ADVANCE_EVENT,
@@ -84,6 +85,7 @@ const logMusicPlaybackWarning = (context: string, error: unknown) => {
 export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
   const { user, loading, signIn, signOutUser } = useAuth();
   const { isAdmin, checkingAdmin } = useAdminStatus();
+  const location = useLocation();
   const [authBusy, setAuthBusy] = useState(false);
   const [musicPickerOpen, setMusicPickerOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -106,6 +108,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
   const musicShuffleQueueRef = useRef<string[]>(createShuffleQueue(MUSIC_TRACKS, musicTrackId));
   const selectedTrack = useMemo(() => MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0], [musicTrackId]);
   const staffNavItems = user && !checkingAdmin && isAdmin ? CHALLENGE_STAFF_NAVIGATION_ITEMS : [];
+  const activeProductSurface = resolveProductSurface(location.pathname);
 
   const handleSignIn = async () => {
     try {
@@ -815,7 +818,7 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
           <NavLink
             key={item.id}
             to={item.path}
-            className={({ isActive }) => `flex min-h-[3rem] min-w-0 items-center justify-center rounded-[1.2rem] px-2 py-2 text-center text-xs font-black leading-4 transition ${isActive ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.14)]' : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]'}`}
+            className={`flex min-h-[3rem] min-w-0 items-center justify-center rounded-[1.2rem] px-2 py-2 text-center text-xs font-black leading-4 transition ${activeProductSurface === item.surface ? 'wood-panel text-[var(--earth-900)] shadow-[0_10px_20px_rgba(101,75,40,0.14)]' : 'bg-[rgba(255,255,255,0.72)] text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.14)]'}`}
             onClick={closeMobileMenu}
           >
             <span className="break-words">{t(item.labelKey)}</span>
