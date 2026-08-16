@@ -61,7 +61,27 @@ const MODE_TASK_IDS: Record<NamedExperienceMode, Set<string>> = {
   'surprise-missions': new Set(),
 };
 
+const RETIRED_EXACT_TASK_IDS = new Set<string>([
+  'ruong-bac-thang-ta-leng-mthen',
+  'thac-ke-nenh-mthen',
+  'doi-a1-chuyen-tau-thoi-gian-1954',
+  'canh-dong-muong-thanh-cat-banh',
+  'quang-truong-7-5-mthen',
+  'bao-tang-chien-thang-dien-bien-phu-trai-nghiem',
+  'ho-huoi-pha-mthen',
+  'khu-du-lich-him-lam-trai-ban',
+  'ho-pa-khoang-trai-ban',
+  'cong-vien-vu-a-dinh-trai-ban',
+  'phadin-coffee-cat-banh',
+  'cong-vien-noong-bua-mthen',
+  'cho-noong-bua-trai-ban',
+  'cong-vien-hoa-ban-mthen',
+  'ca-phe-ke-nenh-cat-banh',
+]);
+
 const specializedIdSet = new Set<string>(Object.values(SPECIALIZED_TASK_IDS));
+const activeCatalogFallback = (tasks: ChallengeTask[]): ChallengeTask[] =>
+  tasks.filter((task) => task.enabled && !specializedIdSet.has(task.id));
 
 const getExactTaskId = (mode: ExperienceMode): string | null => {
   if (!mode.startsWith('task:')) return null;
@@ -88,18 +108,20 @@ export const resolveExperienceMode = (value: string | null): ExperienceMode => {
 export const getEligibleTasksForExperience = (tasks: ChallengeTask[], mode: ExperienceMode): ChallengeTask[] => {
   const exactTaskId = getExactTaskId(mode);
   if (exactTaskId) {
-    return tasks.filter((task) => task.enabled && task.id === exactTaskId);
+    const exactTasks = tasks.filter((task) => task.enabled && task.id === exactTaskId);
+    if (exactTasks.length > 0) return exactTasks;
+    return RETIRED_EXACT_TASK_IDS.has(exactTaskId) ? activeCatalogFallback(tasks) : [];
   }
 
   if (mode === 'surprise-missions') {
-    return tasks.filter((task) => task.enabled && !specializedIdSet.has(task.id));
+    return activeCatalogFallback(tasks);
   }
 
   const scopedIds = MODE_TASK_IDS[mode as NamedExperienceMode];
   const scopedTasks = tasks.filter((task) => task.enabled && scopedIds.has(task.id));
   // Old experience cards/bookmarks may outlive editorial retirement of their sole task.
   // Preserve the route but fall back to the active catalog instead of challenge.empty.
-  return scopedTasks.length > 0 ? scopedTasks : tasks.filter((task) => task.enabled && !specializedIdSet.has(task.id));
+  return scopedTasks.length > 0 ? scopedTasks : activeCatalogFallback(tasks);
 };
 
 export const getExperienceModeFromSearch = (search: string): ExperienceMode => {
