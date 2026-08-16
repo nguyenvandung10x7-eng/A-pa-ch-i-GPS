@@ -1,6 +1,7 @@
 import tasksJson from '../data/tasks.json';
 import type { ChallengeTask } from '../types/task';
 import { withChallengeStorageLock } from './challengeStorageLock';
+import { isRetiredChallengeTaskId } from './challengeTaskMigrationContract';
 import { migrateTaskId } from './taskIdMigration';
 
 const TASKS_KEY = 'gps-challenge-tasks';
@@ -132,10 +133,6 @@ export const defaultTasks = tasksJson as ChallengeTask[];
 
 const LEGACY_A1_TASK_ID = 'doi-a1-khoanh-khac-tuong-niem';
 const TIME_TRAIN_TASK_ID = 'doi-a1-chuyen-tau-thoi-gian-1954';
-const LEGACY_REMOVED_TASK_IDS = new Set([
-  'deo-pha-din-cat-banh',
-  'cong-vien-tai-dinh-cu-him-lam-cat-banh',
-]);
 
 const CHO_MUONG_NHE_OBSOLETE_IMAGE_PATHS = new Set([
   '/images/tasks/cho-muong-nhe-mthen.webp',
@@ -241,7 +238,7 @@ const mergeStoredTasksWithDefaults = (storedTasks: ChallengeTask[]): ChallengeTa
   };
 
   const merged = storedTasks.flatMap((task) => {
-    if (LEGACY_REMOVED_TASK_IDS.has(task.id)) {
+    if (isRetiredChallengeTaskId(task.id)) {
       changed = true;
       return [];
     }
