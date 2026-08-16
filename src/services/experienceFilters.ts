@@ -1,4 +1,5 @@
 import type { ChallengeTask } from '../types/task';
+import { migrateTaskId } from './taskIdMigration';
 
 export const SPECIALIZED_TASK_IDS = {
   terracedFields: 'ruong-bac-thang-ta-leng-mthen',
@@ -7,7 +8,7 @@ export const SPECIALIZED_TASK_IDS = {
   muongThanhMooncake: 'canh-dong-muong-thanh-cat-banh',
 } as const;
 
-export type ExperienceMode =
+type NamedExperienceMode =
   | 'terraced-fields'
   | 'waterfalls'
   | 'time-train'
@@ -18,9 +19,12 @@ export type ExperienceMode =
   | 'in-the-city'
   | 'surprise-missions';
 
-const DEFAULT_MODE: ExperienceMode = 'surprise-missions';
+export type ExactTaskExperienceMode = `task:${string}`;
+export type ExperienceMode = NamedExperienceMode | ExactTaskExperienceMode;
 
-const ALL_MODES = new Set<ExperienceMode>([
+const DEFAULT_MODE: NamedExperienceMode = 'surprise-missions';
+
+const ALL_MODES = new Set<NamedExperienceMode>([
   'terraced-fields',
   'waterfalls',
   'time-train',
@@ -32,7 +36,7 @@ const ALL_MODES = new Set<ExperienceMode>([
   'surprise-missions',
 ]);
 
-const MODE_TASK_IDS: Record<ExperienceMode, Set<string>> = {
+const MODE_TASK_IDS: Record<NamedExperienceMode, Set<string>> = {
   'terraced-fields': new Set([SPECIALIZED_TASK_IDS.terracedFields]),
   waterfalls: new Set([SPECIALIZED_TASK_IDS.waterfalls]),
   'time-train': new Set([SPECIALIZED_TASK_IDS.timeTrain]),
@@ -70,17 +74,39 @@ const MODE_TASK_IDS: Record<ExperienceMode, Set<string>> = {
 
 const specializedIdSet = new Set<string>(Object.values(SPECIALIZED_TASK_IDS));
 
+const getExactTaskId = (mode: ExperienceMode): string | null => {
+  if (!mode.startsWith('task:')) return null;
+  const rawTaskId = mode.slice('task:'.length).trim();
+  if (!rawTaskId) return null;
+  return migrateTaskId(rawTaskId).taskId;
+};
+
+export const createExactTaskExperienceMode = (taskId: string): ExactTaskExperienceMode =>
+  `task:${migrateTaskId(taskId.trim()).taskId}`;
+
 export const resolveExperienceMode = (value: string | null): ExperienceMode => {
   if (!value) return DEFAULT_MODE;
-  return ALL_MODES.has(value as ExperienceMode) ? (value as ExperienceMode) : DEFAULT_MODE;
+
+  if (value.startsWith('task:')) {
+    const rawTaskId = value.slice('task:'.length).trim();
+    if (rawTaskId) return createExactTaskExperienceMode(rawTaskId);
+    return DEFAULT_MODE;
+  }
+
+  return ALL_MODES.has(value as NamedExperienceMode) ? (value as NamedExperienceMode) : DEFAULT_MODE;
 };
 
 export const getEligibleTasksForExperience = (tasks: ChallengeTask[], mode: ExperienceMode): ChallengeTask[] => {
+  const exactTaskId = getExactTaskId(mode);
+  if (exactTaskId) {
+    return tasks.filter((task) => task.enabled && task.id === exactTaskId);
+  }
+
   if (mode === 'surprise-missions') {
     return tasks.filter((task) => task.enabled && !specializedIdSet.has(task.id));
   }
 
-  const scopedIds = MODE_TASK_IDS[mode];
+  const scopedIds = MODE_TASK_IDS[mode as NamedExperienceMode];
   return tasks.filter((task) => task.enabled && scopedIds.has(task.id));
 };
 
