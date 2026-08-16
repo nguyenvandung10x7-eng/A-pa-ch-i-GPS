@@ -52,15 +52,15 @@ const chapter13Page: BookPage = {
 const chapter13Experience: BookExperience = {
   id: 'experience-chapter-13-overnight-motorbike',
   chapterId: CHAPTER_13_ID,
-  type: 'sideQuest',
+  type: 'location',
   title: { vi: 'Để xe máy ngoài trời qua đêm', en: 'Leave a Motorbike Outside Overnight' },
   description: {
-    vi: 'Challenge BOTH của chương: một phép thử nhỏ về niềm tin và chút bất cần trong thành phố ban đêm.',
-    en: 'The chapter’s BOTH challenge: a small test of trust and a little defiance in the city at night.',
+    vi: 'Challenge BOTH của chương. Tọa độ và ý tưởng đã chốt; phần gameplay đang được hoàn thiện để xác minh đúng hai bước qua đêm trước khi cho nhận điểm.',
+    en: 'The chapter’s BOTH challenge. The location and concept are fixed; gameplay is still being completed so the overnight two-step requirement can be verified before points are awarded.',
   },
   instruction: {
-    vi: 'Đỗ xe ở vị trí hợp pháp trong khu vực GPS, khóa xe bình thường, không để tài sản giá trị. Chụp một ảnh lúc để xe và một ảnh khi quay lại sáng hôm sau.',
-    en: 'Park legally within the GPS area, lock the bike normally, and leave no valuables. Take one photo when parking and one when you return the next morning.',
+    vi: 'Hiện chỉ mở vị trí để đọc và xem trước. Chưa thể hoàn thành Challenge hoặc nhận điểm cho đến khi có xác minh ảnh lúc để xe và ảnh sáng hôm sau.',
+    en: 'For now this only exposes the place for reading and preview. The Challenge cannot be completed or award points until parking-time and next-morning photo verification exists.',
   },
   location: {
     lat: 21.394221,
@@ -68,7 +68,6 @@ const chapter13Experience: BookExperience = {
     radius: 100,
     label: { vi: 'Điểm thử thách thành phố ban đêm', en: 'Night-city challenge point' },
   },
-  legacyTaskId: CHAPTER_13_CHALLENGE_ID,
   musicMode: 'inherit-chapter',
   order: 1,
   status: 'published',
