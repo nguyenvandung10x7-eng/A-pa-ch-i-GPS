@@ -117,14 +117,19 @@ const ExperienceCard = ({ experience, language }: { experience: BookExperience; 
         {experience.location ? <MapPin className="mt-1 h-5 w-5 shrink-0 text-[var(--earth-700)]" /> : null}
       </div>
       {experience.description ? <p className="mt-3 text-sm leading-7 text-[var(--forest-800)]">{localized(experience.description, language)}</p> : null}
-      {href ? (
-        <a href={href} target="_blank" rel="noreferrer" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white">
-          {c.openExperience}<ExternalLink className="h-4 w-4" />
-        </a>
-      ) : challengePath ? (
-        <Link to={challengePath} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white">
-          {c.openLegacy}<ArrowRight className="h-4 w-4" />
-        </Link>
+      {href || challengePath ? (
+        <div className="mt-5 flex flex-wrap gap-2">
+          {href ? (
+            <a href={href} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white">
+              {c.openExperience}<ExternalLink className="h-4 w-4" />
+            </a>
+          ) : null}
+          {challengePath ? (
+            <Link to={challengePath} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white">
+              {c.openLegacy}<ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : null}
+        </div>
       ) : null}
     </article>
   );
