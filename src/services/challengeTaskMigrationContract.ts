@@ -134,7 +134,10 @@ export const migrateChallengeTaskIdList = (taskIds: string[]): { taskIds: string
   return { taskIds: migratedTaskIds, changed };
 };
 
-export const isRetiredChallengeTaskId = (taskId: string): boolean => retiredTaskIds.has(taskId);
+export const isRetiredChallengeTaskId = (taskId: string): boolean => {
+  const canonicalTaskId = resolveCanonicalChallengeTaskId(taskId);
+  return retiredTaskIds.has(taskId) || retiredTaskIds.has(canonicalTaskId);
+};
 
 export const getChallengeTaskMigrationEntry = (taskId: string): ChallengeTaskMigrationEntry | undefined =>
   CHALLENGE_TASK_MIGRATIONS.find((entry) => entry.sourceTaskId === taskId);
