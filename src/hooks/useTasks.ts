@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { enabledTasks, loadTasks, saveTasks } from '../services/tasks';
+import { defaultTasks, enabledTasks, loadTasks, saveTasks } from '../services/tasks';
 import { migrateAllGameplayStorageTaskIds } from '../services/gameplay';
 import { applyChallengeCatalogWorkbookImport } from '../services/challengeCatalogWorkbookImport';
 import { applyChapter13ChallengeImport } from '../services/chapter13ChallengeImport';
@@ -8,15 +8,21 @@ import type { ChallengeTask } from '../types/task';
 const CATALOG_IMPORT_VERSION_KEY = 'book-of-dien-bien-challenge-catalog-import-version';
 const CATALOG_IMPORT_VERSION = '2026-08-16-chapter-13';
 
+const applyCurrentCatalogMigration = (tasks: ChallengeTask[]): ChallengeTask[] =>
+  applyChapter13ChallengeImport(applyChallengeCatalogWorkbookImport(tasks));
+
 const loadImportedTasks = (): ChallengeTask[] => {
   const tasks = loadTasks();
   if (localStorage.getItem(CATALOG_IMPORT_VERSION_KEY) === CATALOG_IMPORT_VERSION) return tasks;
 
-  const imported = applyChapter13ChallengeImport(applyChallengeCatalogWorkbookImport(tasks));
+  const imported = applyCurrentCatalogMigration(tasks);
   saveTasks(imported);
   localStorage.setItem(CATALOG_IMPORT_VERSION_KEY, CATALOG_IMPORT_VERSION);
   return imported;
 };
+
+const isCanonicalDefaultsReset = (tasks: ChallengeTask[]): boolean =>
+  JSON.stringify(tasks) === JSON.stringify(defaultTasks);
 
 export const useTasks = () => {
   const [tasks, setTasksState] = useState<ChallengeTask[]>(() => loadImportedTasks());
@@ -39,8 +45,15 @@ export const useTasks = () => {
   }, []);
 
   const setTasks = (next: ChallengeTask[]) => {
-    setTasksState(next);
-    saveTasks(next);
+    // Admin "Restore defaults" returns the canonical pre-workbook tasks.json array.
+    // Restore the current editorial catalog immediately so the version marker and saved
+    // catalog cannot drift apart, while ordinary Admin edits remain untouched.
+    const tasksToSave = isCanonicalDefaultsReset(next) ? applyCurrentCatalogMigration(next) : next;
+    if (tasksToSave !== next) {
+      localStorage.setItem(CATALOG_IMPORT_VERSION_KEY, CATALOG_IMPORT_VERSION);
+    }
+    setTasksState(tasksToSave);
+    saveTasks(tasksToSave);
   };
   const activeTasks = useMemo(() => enabledTasks(tasks), [tasks]);
   return { tasks, setTasks, activeTasks };
