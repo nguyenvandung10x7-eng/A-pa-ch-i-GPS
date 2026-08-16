@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowRight, BookOpen, ExternalLink, MapPin } from 'lucide-react';
+import { type KeyboardEvent, type MouseEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   getChapter,
@@ -7,6 +8,8 @@ import {
   getPage,
   getPublishedChapters,
 } from '../services/bookContent';
+import { createExactTaskExperienceMode } from '../services/experienceFilters';
+import { GAMEPLAY_MUSIC_ACTION_EVENT } from '../services/gameplayMusicEvents';
 import type { BookExperience, BookLocalizedText, ContentBlock } from '../types/book';
 import type { LanguageCode } from '../types/task';
 
@@ -89,7 +92,7 @@ const renderBlock = (block: ContentBlock, language: LanguageCode, key: string) =
         <div key={key} className="rounded-[1.5rem] bg-[rgba(255,255,255,0.58)] p-4 ring-1 ring-[rgba(61,84,52,0.12)]">
           {block.audio.title ? <p className="mb-3 font-bold text-[var(--forest-900)]">{localized(block.audio.title, language)}</p> : null}
           {block.audio.src ? <audio controls preload="none" src={block.audio.src} className="w-full" /> : null}
-          {block.audio.externalUrl ? <a href={block.audio.externalUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[var(--earth-900)]"><ExternalLink className="h-4 w-4" />{block.audio.externalUrl}</a> : null}
+          {block.audio.externalUrl ? <a href={block.audio.externalUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-w-0 items-center gap-2 break-all text-sm font-bold text-[var(--earth-900)]"><ExternalLink className="h-4 w-4 shrink-0" />{block.audio.externalUrl}</a> : null}
         </div>
       );
     case 'divider':
@@ -99,9 +102,32 @@ const renderBlock = (block: ContentBlock, language: LanguageCode, key: string) =
   }
 };
 
+const dispatchStartGameplayMusic = () => {
+  window.dispatchEvent(new CustomEvent<'start'>(GAMEPLAY_MUSIC_ACTION_EVENT, { detail: 'start' }));
+};
+
+const handleChallengeClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented) return;
+  if (event.detail === 0) return;
+  if (event.button !== 0) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  dispatchStartGameplayMusic();
+};
+
+const handleChallengeKeyDown = (event: KeyboardEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented) return;
+  if (event.key !== 'Enter') return;
+  if (event.repeat) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  dispatchStartGameplayMusic();
+};
+
 const ExperienceCard = ({ experience, language }: { experience: BookExperience; language: LanguageCode }) => {
   const c = copy[language];
-  const href = experience.type === 'external' ? experience.externalUrl : experience.externalUrl;
+  const href = experience.externalUrl;
+  const challengePath = experience.legacyTaskId
+    ? `/challenge?experience=${encodeURIComponent(createExactTaskExperienceMode(experience.legacyTaskId))}`
+    : null;
 
   return (
     <article className="rounded-[1.6rem] bg-[rgba(255,255,255,0.62)] p-5 ring-1 ring-[rgba(61,84,52,0.13)]">
@@ -113,14 +139,24 @@ const ExperienceCard = ({ experience, language }: { experience: BookExperience; 
         {experience.location ? <MapPin className="mt-1 h-5 w-5 shrink-0 text-[var(--earth-700)]" /> : null}
       </div>
       {experience.description ? <p className="mt-3 text-sm leading-7 text-[var(--forest-800)]">{localized(experience.description, language)}</p> : null}
-      {href ? (
-        <a href={href} target="_blank" rel="noreferrer" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white">
-          {c.openExperience}<ExternalLink className="h-4 w-4" />
-        </a>
-      ) : experience.legacyTaskId ? (
-        <Link to="/challenge" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white">
-          {c.openLegacy}<ArrowRight className="h-4 w-4" />
-        </Link>
+      {href || challengePath ? (
+        <div className="mt-5 flex flex-wrap gap-2">
+          {href ? (
+            <a href={href} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white">
+              {c.openExperience}<ExternalLink className="h-4 w-4" />
+            </a>
+          ) : null}
+          {challengePath ? (
+            <Link
+              to={challengePath}
+              onClick={handleChallengeClick}
+              onKeyDown={handleChallengeKeyDown}
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--earth-800)] px-4 py-2 text-sm font-black text-white"
+            >
+              {c.openLegacy}<ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : null}
+        </div>
       ) : null}
     </article>
   );
