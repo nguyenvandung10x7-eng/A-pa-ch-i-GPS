@@ -2,10 +2,10 @@ import type { ChallengeTask } from '../types/task';
 import { migrateTaskId } from './taskIdMigration';
 
 export const SPECIALIZED_TASK_IDS = {
-  terracedFields: 'tim-cay-xoai-co-thu',
-  waterfalls: 'tim-cay-xoai-co-thu',
-  timeTrain: 'nhin-xuong-long-chao-cua-chung-ta',
-  muongThanhMooncake: 'nhin-xuong-long-chao-cua-chung-ta',
+  terracedFields: 'ruong-bac-thang-ta-leng-mthen',
+  waterfalls: 'thac-ke-nenh-mthen',
+  timeTrain: 'doi-a1-chuyen-tau-thoi-gian-1954',
+  muongThanhMooncake: 'canh-dong-muong-thanh-cat-banh',
 } as const;
 
 type NamedExperienceMode =
@@ -97,8 +97,8 @@ export const getEligibleTasksForExperience = (tasks: ChallengeTask[], mode: Expe
 
   const scopedIds = MODE_TASK_IDS[mode as NamedExperienceMode];
   const scopedTasks = tasks.filter((task) => task.enabled && scopedIds.has(task.id));
-  // Retired editorial surfaces can remain linked from old cards/bookmarks. Fall back to
-  // the active Challenge catalog rather than presenting a dead challenge.empty screen.
+  // Old experience cards/bookmarks may outlive editorial retirement of their sole task.
+  // Preserve the route but fall back to the active catalog instead of challenge.empty.
   return scopedTasks.length > 0 ? scopedTasks : tasks.filter((task) => task.enabled && !specializedIdSet.has(task.id));
 };
 
