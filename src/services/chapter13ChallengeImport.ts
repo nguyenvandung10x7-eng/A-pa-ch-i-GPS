@@ -11,6 +11,14 @@ export const applyChapter13ChallengeImport = (tasks: ChallengeTask[]): Challenge
   tasks.map((task) => task.id === OVERNIGHT_MOTORBIKE_TASK_ID
     ? {
         ...task,
+        title: {
+          vi: 'Niềm tin Điện Biên – Để xe máy ngoài trời qua đêm',
+          en: 'Dien Bien Trust Test – Leave a Motorbike Outside Overnight',
+        },
+        description: {
+          vi: 'Đến điểm đã chốt trong thành phố ban đêm. Khi bạn vào trong bán kính 100 m, GPS xác nhận bạn đã tới nơi và Challenge được hoàn thành. Ý tưởng để xe máy ngoài trời qua đêm là phần trải nghiệm mà Chapter 13 gợi ra; app không yêu cầu ảnh, không bắt chờ đến sáng và không cố xác minh bạn có thực sự để xe qua đêm hay không.',
+          en: 'Reach the fixed point in the city at night. Once you enter the 100 m radius, GPS confirms your arrival and the Challenge is complete. Leaving a motorbike outside overnight is the experience Chapter 13 invites you to consider; the app does not require photos, make you wait until morning, or try to prove that you actually left the bike overnight.',
+        },
         gps: { lat: 21.394221, lng: 103.020336, radius: 100 },
         enabled: true,
         experienceNote: {
