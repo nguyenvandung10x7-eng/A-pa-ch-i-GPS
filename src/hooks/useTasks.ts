@@ -6,7 +6,7 @@ import { applyChapter13ChallengeImport } from '../services/chapter13ChallengeImp
 import type { ChallengeTask } from '../types/task';
 
 const CATALOG_IMPORT_VERSION_KEY = 'book-of-dien-bien-challenge-catalog-import-version';
-const CATALOG_IMPORT_VERSION = '2026-08-16-chapter-13';
+const CATALOG_IMPORT_VERSION = '2026-08-17-chapter-13-gps-arrival';
 
 const applyCurrentCatalogMigration = (tasks: ChallengeTask[]): ChallengeTask[] =>
   applyChapter13ChallengeImport(applyChallengeCatalogWorkbookImport(tasks));

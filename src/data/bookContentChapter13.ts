@@ -33,8 +33,8 @@ const chapter13Page: BookPage = {
   blocks: [{
     type: 'text',
     body: {
-      vi: 'Sự nổi loạn ở đây không phải một khẩu hiệu. Nó nằm trong cảm giác muốn lệch khỏi thói quen một chút: đi trong gió đêm, qua những đoạn phố đang thưa người, rồi để chiếc xe máy lại ngoài trời ở một chỗ đỗ hợp pháp. Khóa xe như bình thường, không để tài sản giá trị, chụp một tấm ảnh và đi tiếp. Sáng hôm sau quay lại. Phần còn lại thuộc về đêm và thành phố, không cần bịa thêm.',
-      en: 'Rebellion here is not a slogan. It lives in the urge to step slightly outside routine: ride through the night air and quieter streets, then leave the motorbike outdoors in a legal parking place. Lock it normally, leave no valuables, take one photo, and walk away. Return the next morning. The rest belongs to the night and the city; nothing more needs to be invented.',
+      vi: 'Sự nổi loạn ở đây không phải một khẩu hiệu. Nó nằm trong cảm giác muốn lệch khỏi thói quen một chút: đi trong gió đêm, qua những đoạn phố đang thưa người, rồi để chiếc xe máy lại ngoài trời ở một chỗ đỗ hợp pháp. Khóa xe như bình thường, không để tài sản giá trị, rồi đi tiếp. Sáng hôm sau quay lại. App không cần chứng minh phần đó; nó chỉ đưa bạn đến nơi câu chuyện bắt đầu.',
+      en: 'Rebellion here is not a slogan. It lives in the urge to step slightly outside routine: ride through the night air and quieter streets, then leave the motorbike outdoors in a legal parking place. Lock it normally, leave no valuables, and walk away. Return the next morning. The app does not need to prove that part; it only takes you to where the story begins.',
     },
   }],
   location: {
@@ -55,12 +55,12 @@ const chapter13Experience: BookExperience = {
   type: 'location',
   title: { vi: 'Để xe máy ngoài trời qua đêm', en: 'Leave a Motorbike Outside Overnight' },
   description: {
-    vi: 'Challenge BOTH của chương. Tọa độ và ý tưởng đã chốt; phần gameplay đang được hoàn thiện để xác minh đúng hai bước qua đêm trước khi cho nhận điểm.',
-    en: 'The chapter’s BOTH challenge. The location and concept are fixed; gameplay is still being completed so the overnight two-step requirement can be verified before points are awarded.',
+    vi: 'Challenge BOTH của chương. Chỉ cần đến điểm đã chốt; GPS xác nhận bạn đã bước vào nơi trải nghiệm bắt đầu.',
+    en: 'The chapter’s BOTH challenge. Simply reach the fixed location; GPS confirms that you have arrived where the experience begins.',
   },
   instruction: {
-    vi: 'Hiện chỉ mở vị trí để đọc và xem trước. Chưa thể hoàn thành Challenge hoặc nhận điểm cho đến khi có xác minh ảnh lúc để xe và ảnh sáng hôm sau.',
-    en: 'For now this only exposes the place for reading and preview. The Challenge cannot be completed or award points until parking-time and next-morning photo verification exists.',
+    vi: 'Đến trong bán kính 100 m để hoàn thành Challenge. Việc có để xe qua đêm hay không thuộc về trải nghiệm của bạn, không phải thứ app cố xác minh.',
+    en: 'Reach the 100 m radius to complete the Challenge. Whether you actually leave the motorbike overnight belongs to your experience rather than something the app tries to verify.',
   },
   location: {
     lat: 21.394221,
@@ -68,6 +68,7 @@ const chapter13Experience: BookExperience = {
     radius: 100,
     label: { vi: 'Điểm thử thách thành phố ban đêm', en: 'Night-city challenge point' },
   },
+  legacyTaskId: CHAPTER_13_CHALLENGE_ID,
   musicMode: 'inherit-chapter',
   order: 1,
   status: 'published',
