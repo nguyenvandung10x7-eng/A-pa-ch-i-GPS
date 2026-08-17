@@ -1,7 +1,7 @@
 import { ArrowRight, ExternalLink, MapPin, Route, Sparkles } from 'lucide-react';
 import { type KeyboardEvent, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { BOOK_CHAPTERS, BOOK_EXPERIENCES } from '../data/bookContent';
+import { BOOK_CHAPTERS, BOOK_EXPERIENCES } from '../data/bookContentChapter13';
 import { createExactTaskExperienceMode } from '../services/experienceFilters';
 import { GAMEPLAY_MUSIC_ACTION_EVENT } from '../services/gameplayMusicEvents';
 import type { BookExperience, BookLocalizedText } from '../types/book';

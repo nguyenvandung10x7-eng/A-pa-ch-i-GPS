@@ -1,4 +1,4 @@
-import { BOOK_CHAPTERS, BOOK_EXPERIENCES, BOOK_PAGES } from '../data/bookContent';
+import { BOOK_CHAPTERS, BOOK_EXPERIENCES, BOOK_PAGES } from '../data/bookContentChapter13';
 import { MUSIC_TRACKS } from '../data/music';
 import type { BookChapter, BookExperience, BookPage } from '../types/book';
 

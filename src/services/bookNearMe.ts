@@ -1,4 +1,4 @@
-import { BOOK_CHAPTERS, BOOK_EXPERIENCES, BOOK_PAGES } from '../data/bookContent';
+import { BOOK_CHAPTERS, BOOK_EXPERIENCES, BOOK_PAGES } from '../data/bookContentChapter13';
 import type { BookExperience, BookPage, Location } from '../types/book';
 import { distanceMeters } from '../utils/geo';
 
