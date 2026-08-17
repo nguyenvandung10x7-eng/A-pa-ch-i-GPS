@@ -68,7 +68,7 @@ const chapter13Experience: BookExperience = {
     radius: 100,
     label: { vi: 'Điểm thử thách thành phố ban đêm', en: 'Night-city challenge point' },
   },
-  challengeTaskId: CHAPTER_13_CHALLENGE_ID,
+  legacyTaskId: CHAPTER_13_CHALLENGE_ID,
   musicMode: 'inherit-chapter',
   order: 1,
   status: 'published',
