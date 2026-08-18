@@ -16,21 +16,27 @@ const applyCurrentDefaults = (tasks: ChallengeTask[]): ChallengeTask[] =>
 const loadImportedTasks = (): ChallengeTask[] => {
   let tasks = loadTasks();
   let changed = false;
+  const pendingMarkers: Array<readonly [string, string]> = [];
 
   if (localStorage.getItem(CATALOG_IMPORT_VERSION_KEY) !== CATALOG_IMPORT_VERSION) {
-    tasks = applyChallengeCatalogWorkbookImport(tasks);
-    localStorage.setItem(CATALOG_IMPORT_VERSION_KEY, CATALOG_IMPORT_VERSION);
-    changed = true;
+    const imported = applyChallengeCatalogWorkbookImport(tasks);
+    changed = changed || imported !== tasks;
+    tasks = imported;
+    pendingMarkers.push([CATALOG_IMPORT_VERSION_KEY, CATALOG_IMPORT_VERSION]);
   }
 
   if (localStorage.getItem(PUBLIC_POLISH_VERSION_KEY) !== PUBLIC_POLISH_VERSION) {
     const polished = applyPublicChallengePolish(tasks);
     changed = changed || polished !== tasks;
     tasks = polished;
-    localStorage.setItem(PUBLIC_POLISH_VERSION_KEY, PUBLIC_POLISH_VERSION);
+    pendingMarkers.push([PUBLIC_POLISH_VERSION_KEY, PUBLIC_POLISH_VERSION]);
   }
 
+  // Persist the migrated catalog before advancing any version marker. If persistence
+  // fails, the markers remain untouched so the migration is retried on next startup.
   if (changed) saveTasks(tasks);
+  pendingMarkers.forEach(([key, value]) => localStorage.setItem(key, value));
+
   return tasks;
 };
 
@@ -62,12 +68,15 @@ export const useTasks = () => {
     // Rebuild the current defaults only for that explicit reset. Ordinary Admin edits
     // are stored verbatim and are never replayed through an older catalog migration.
     const tasksToSave = isCanonicalDefaultsReset(next) ? applyCurrentDefaults(next) : next;
+
+    // Save first, then advance markers so a failed persistence cannot strand the
+    // browser in a state that claims current defaults without actually storing them.
+    saveTasks(tasksToSave);
     if (tasksToSave !== next) {
       localStorage.setItem(CATALOG_IMPORT_VERSION_KEY, CATALOG_IMPORT_VERSION);
       localStorage.setItem(PUBLIC_POLISH_VERSION_KEY, PUBLIC_POLISH_VERSION);
     }
     setTasksState(tasksToSave);
-    saveTasks(tasksToSave);
   };
 
   const activeTasks = useMemo(() => enabledTasks(tasks), [tasks]);
