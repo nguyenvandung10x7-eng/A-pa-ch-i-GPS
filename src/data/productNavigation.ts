@@ -47,13 +47,6 @@ export const BOOK_NAVIGATION_ITEMS: ReadonlyArray<ProductNavigationItem> = [
     surface: 'book',
     kind: 'utility',
   },
-  {
-    id: 'experiences',
-    path: '/experiences',
-    labelKey: 'nav.experiences',
-    surface: 'book',
-    kind: 'utility',
-  },
 ];
 
 export const CHALLENGE_NAVIGATION_ITEMS: ReadonlyArray<ProductNavigationItem> = [
