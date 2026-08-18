@@ -28,7 +28,10 @@ const DISABLED_TASK_IDS = new Set<string>([
 
 type TaskPatch = Partial<Omit<ChallengeTask, 'id'>>;
 
-const overnightMotorbikePatch: TaskPatch = {
+// Existing users may already have customized category/difficulty/points/image fields.
+// Match the former Chapter 13 bridge exactly: patch only the editorial fields that must
+// change to support the GPS-only BOTH challenge.
+const overnightMotorbikeExistingPatch: TaskPatch = {
   title: {
     vi: 'Niềm tin Điện Biên – Để xe máy ngoài trời qua đêm',
     en: 'Dien Bien Trust Test – Leave a Motorbike Outside Overnight',
@@ -37,11 +40,7 @@ const overnightMotorbikePatch: TaskPatch = {
     vi: 'Đến điểm đã chốt trong thành phố ban đêm. Khi bạn vào trong bán kính 100 m, GPS xác nhận bạn đã tới nơi và Challenge được hoàn thành. Ý tưởng để xe máy ngoài trời qua đêm là phần trải nghiệm mà Chapter 13 gợi ra; app không yêu cầu ảnh, không bắt chờ đến sáng và không cố xác minh bạn có thực sự để xe qua đêm hay không.',
     en: 'Reach the fixed point in the city at night. Once you enter the 100 m radius, GPS confirms your arrival and the Challenge is complete. Leaving a motorbike outside overnight is the experience Chapter 13 invites you to consider; the app does not require photos, make you wait until morning, or try to prove that you actually left the bike overnight.',
   },
-  category: 'surprise',
-  difficulty: 'medium',
-  points: 180,
   gps: { lat: 21.394221, lng: 103.020336, radius: 100 },
-  image: '',
   enabled: true,
   experienceNote: {
     vi: 'Challenge BOTH của Chương 13 “Sự nổi loạn và thành phố ban đêm”. Chỉ cần đến trong bán kính 100 m để hoàn thành; việc để xe qua đêm là lời mời trải nghiệm, không phải điều app cố xác minh.',
@@ -159,7 +158,7 @@ const TASK_PATCHES: Record<string, TaskPatch> = {
       en: 'Photograph one detail rather than a portrait. Do not enter private yards or homes unless invited, and do not photograph people close-up without permission.',
     },
   },
-  'de-xe-may-ngoai-troi-qua-dem': overnightMotorbikePatch,
+  'de-xe-may-ngoai-troi-qua-dem': overnightMotorbikeExistingPatch,
 };
 
 const ADDED_TASKS: readonly ChallengeTask[] = [
@@ -186,15 +185,15 @@ const ADDED_TASKS: readonly ChallengeTask[] = [
   },
   {
     id: 'de-xe-may-ngoai-troi-qua-dem',
-    title: overnightMotorbikePatch.title!,
-    description: overnightMotorbikePatch.description!,
-    category: overnightMotorbikePatch.category!,
-    difficulty: overnightMotorbikePatch.difficulty!,
-    points: overnightMotorbikePatch.points!,
-    gps: overnightMotorbikePatch.gps!,
+    title: overnightMotorbikeExistingPatch.title!,
+    description: overnightMotorbikeExistingPatch.description!,
+    category: 'surprise',
+    difficulty: 'medium',
+    points: 180,
+    gps: overnightMotorbikeExistingPatch.gps!,
     image: '',
     enabled: true,
-    experienceNote: overnightMotorbikePatch.experienceNote,
+    experienceNote: overnightMotorbikeExistingPatch.experienceNote,
   },
   {
     id: 'nhin-xuong-long-chao-cua-chung-ta',
