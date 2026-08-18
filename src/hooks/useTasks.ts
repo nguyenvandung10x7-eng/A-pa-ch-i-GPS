@@ -2,14 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { defaultTasks, enabledTasks, loadTasks, saveTasks } from '../services/tasks';
 import { migrateAllGameplayStorageTaskIds } from '../services/gameplay';
 import { applyChallengeCatalogWorkbookImport } from '../services/challengeCatalogWorkbookImport';
-import { applyChapter13ChallengeImport } from '../services/chapter13ChallengeImport';
 import type { ChallengeTask } from '../types/task';
 
 const CATALOG_IMPORT_VERSION_KEY = 'book-of-dien-bien-challenge-catalog-import-version';
 const CATALOG_IMPORT_VERSION = '2026-08-17-chapter-13-gps-arrival';
 
 const applyCurrentCatalogMigration = (tasks: ChallengeTask[]): ChallengeTask[] =>
-  applyChapter13ChallengeImport(applyChallengeCatalogWorkbookImport(tasks));
+  applyChallengeCatalogWorkbookImport(tasks);
 
 const loadImportedTasks = (): ChallengeTask[] => {
   const tasks = loadTasks();
