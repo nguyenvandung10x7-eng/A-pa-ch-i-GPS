@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Để xe máy ngoài trời qua đêm</title><desc id="desc">Minh họa thành phố ban đêm và xe máy cho Challenge Chương 13.</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#172a2d"/><stop offset="1" stop-color="#526451"/></linearGradient></defs>
+  <rect width="1200" height="900" fill="url(#bg)"/><circle cx="960" cy="170" r="92" fill="#f3dfb0" opacity=".85"/>
+  <path d="M0 640l160-115 135 85 185-145 175 160 145-105 180 120 120-85 100 85v260H0z" fill="#263b35"/>
+  <g fill="none" stroke="#e9dcc0" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"><circle cx="435" cy="672" r="72"/><circle cx="685" cy="672" r="72"/><path d="M435 672l92-138h108l50 138M527 534l-44-70M554 598h108M635 534l55-50"/></g>
+  <text x="90" y="115" font-family="system-ui,sans-serif" font-size="42" font-weight="800" fill="#d8d5ba">CHALLENGE · CHƯƠNG 13</text>
+  <text x="90" y="205" font-family="system-ui,sans-serif" font-size="67" font-weight="900" fill="#fff6df">Thành phố ban đêm</text>
+  <text x="90" y="272" font-family="system-ui,sans-serif" font-size="34" fill="#d7dfcf">Đến điểm GPS · phần còn lại là trải nghiệm của bạn</text>
+</svg>
