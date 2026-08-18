@@ -1,3 +1,4 @@
+import './mobile-shell.css';
 import { useEffect, useRef, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { Loader2, LogIn, ShieldCheck } from 'lucide-react';
