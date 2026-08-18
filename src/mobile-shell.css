@@ -1,0 +1,65 @@
+/* Public UI rebuild: keep legacy Layout mounted for audio/auth behavior but remove its old visual chrome. */
+.app-shell > .mountain-scene,
+.app-shell > .relative > header,
+.app-shell > .relative > nav,
+.app-shell > .relative > footer {
+  display: none !important;
+}
+
+.app-shell > .relative {
+  padding-bottom: 0 !important;
+}
+
+.app-shell > .relative > main {
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+body {
+  background: #f4efe3 !important;
+}
+
+body::before,
+body::after {
+  display: none !important;
+}
+
+.new-public-shell {
+  font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
+}
+
+.new-public-shell h1,
+.new-public-shell h2,
+.new-public-shell h3,
+.new-public-shell .book-display-title {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: -0.025em;
+}
+
+.new-public-shell .wood-panel,
+.new-public-shell .glass,
+.new-public-shell .textile-border {
+  background: #faf6ec;
+  border: 1px solid #ded5c4;
+  box-shadow: none;
+}
+
+.new-public-shell .textile-divider,
+.new-public-shell .mountain-scene,
+.new-public-shell .ban-flower::after {
+  display: none;
+}
+
+.new-public-shell .leaflet-container {
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+@media (min-width: 900px) {
+  .new-public-shell {
+    border-left: 1px solid #ded5c4;
+    border-right: 1px solid #ded5c4;
+  }
+}
