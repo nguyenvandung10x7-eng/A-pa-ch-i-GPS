@@ -1,10 +1,19 @@
 export type MusicTrack = {
   id: string;
   fileName: string;
-  labelKey?: string;
-  label?: { vi: string; en: string };
+  labelKey: string;
 };
 
+export type BookMusicTrack = {
+  id: string;
+  fileName: string;
+  label: { vi: string; en: string };
+};
+
+/**
+ * Global Challenge/background music. Keep this list isolated from Book chapter
+ * audio so Challenge shuffle behavior does not change when Book assets are added.
+ */
 export const MUSIC_TRACKS: MusicTrack[] = [
   { id: 'hmong-ballad-1', fileName: 'hmong-ballad-1.mp3', labelKey: 'music.track.hmongBallad1' },
   { id: 'hmong-ballad-2', fileName: 'hmong-ballad-2.mp3', labelKey: 'music.track.hmongBallad2' },
@@ -17,7 +26,10 @@ export const MUSIC_TRACKS: MusicTrack[] = [
   { id: 'hatthai', fileName: 'HATTHAI.mp3', labelKey: 'music.track.hatthai' },
   { id: 'hmong', fileName: 'HMONG.mp3', labelKey: 'music.track.hmong' },
   { id: 'hmongrock2', fileName: 'HMONGrock2.mp3', labelKey: 'music.track.hmongrock2' },
+];
 
+/** Audio selected specifically for Book of Dien Bien chapters. */
+export const BOOK_MUSIC_TRACKS: BookMusicTrack[] = [
   { id: 'chapter-01-dong-song-track-01', fileName: 'chapter-01-dong-song-track-01.mp3', label: { vi: 'Chương 01 · Dòng sông', en: 'Chapter 01 · The River' } },
   { id: 'chapter-02-mua-he-track-01', fileName: 'chapter-02-mua-he-track-01.mp3', label: { vi: 'Chương 02 · Mùa hè', en: 'Chapter 02 · Summer' } },
   { id: 'chapter-03-nha-ba-noi-track-01', fileName: 'chapter-03-nha-ba-noi-track-01.mp3', label: { vi: 'Chương 03 · Một Điện Biên rất nhỏ', en: 'Chapter 03 · A Very Small Dien Bien' } },
@@ -42,3 +54,8 @@ export const MUSIC_TRACKS: MusicTrack[] = [
     label: { vi: 'Chương 13 · Sự nổi loạn và thành phố ban đêm · Track 2', en: 'Chapter 13 · Rebellion and the City at Night · Track 2' },
   },
 ];
+
+export const ALL_MUSIC_TRACK_IDS = new Set([
+  ...MUSIC_TRACKS.map((track) => track.id),
+  ...BOOK_MUSIC_TRACKS.map((track) => track.id),
+]);
