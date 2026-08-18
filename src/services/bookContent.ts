@@ -1,5 +1,5 @@
 import { BOOK_CHAPTERS, BOOK_EXPERIENCES, BOOK_PAGES } from '../data/bookContentChapter13';
-import { MUSIC_TRACKS } from '../data/music';
+import { ALL_MUSIC_TRACK_IDS } from '../data/music';
 import type { BookChapter, BookExperience, BookPage } from '../types/book';
 
 export type BookContentValidationIssue = {
@@ -75,7 +75,6 @@ export const getChapterExperiences = (chapterId: BookChapter['id']): BookExperie
 export const validateBookContent = (): BookContentValidationIssue[] => {
   const issues: BookContentValidationIssue[] = [];
   const chapterIds = new Set(BOOK_CHAPTERS.map((chapter) => chapter.id));
-  const musicTrackIds = new Set(MUSIC_TRACKS.map((track) => track.id));
 
   for (const id of findDuplicateIds(BOOK_CHAPTERS)) {
     issues.push({
@@ -102,12 +101,15 @@ export const validateBookContent = (): BookContentValidationIssue[] => {
   }
 
   for (const chapter of BOOK_CHAPTERS) {
-    if (!musicTrackIds.has(chapter.music.trackId)) {
-      issues.push({
-        code: 'missing-chapter-track',
-        id: chapter.id,
-        message: `Chapter ${chapter.id} references unknown music track ${chapter.music.trackId}`,
-      });
+    const trackIds = chapter.music.trackIds?.length ? chapter.music.trackIds : [chapter.music.trackId];
+    for (const trackId of new Set(trackIds)) {
+      if (!ALL_MUSIC_TRACK_IDS.has(trackId)) {
+        issues.push({
+          code: 'missing-chapter-track',
+          id: chapter.id,
+          message: `Chapter ${chapter.id} references unknown music track ${trackId}`,
+        });
+      }
     }
   }
 

@@ -3,10 +3,45 @@ import {
   BOOK_EXPERIENCES as BASE_BOOK_EXPERIENCES,
   BOOK_PAGES as BASE_BOOK_PAGES,
 } from './bookContent';
+import { BOOK_MUSIC_TRACKS } from './music';
 import type { BookChapter, BookExperience, BookPage } from '../types/book';
 
 export const CHAPTER_13_ID = 'chapter-13-su-noi-loan-va-thanh-pho-ban-dem';
 export const CHAPTER_13_CHALLENGE_ID = 'de-xe-may-ngoai-troi-qua-dem';
+
+const CHAPTER_TRACK_IDS_BY_NUMBER: Record<string, string[]> = {
+  '01': ['chapter-01-dong-song-track-01'],
+  '02': ['chapter-02-mua-he-track-01'],
+  '03': ['chapter-03-nha-ba-noi-track-01'],
+  '04': ['chapter-04-pho-cu-track-01'],
+  '05': ['chapter-05-thi-xa-track-01'],
+  '06': ['chapter-06-nhung-nam-2000-track-01'],
+  '07': ['chapter-07-long-chao-track-01'],
+  '08': ['chapter-08-nhung-ngon-doi-track-01'],
+  '09': ['chapter-09-1954-track-01', 'chapter-09-1954-track-02'],
+  '10': ['chapter-10-con-vat-track-01'],
+  '11': ['chapter-11-nguoi-song-nguoi-chet-track-01'],
+  '12': ['chapter-12-di-ve-phia-tay-track-01'],
+};
+
+const withUploadedChapterAudio = (chapter: BookChapter): BookChapter => {
+  const trackIds = CHAPTER_TRACK_IDS_BY_NUMBER[chapter.number];
+  if (!trackIds?.length) return chapter;
+
+  return {
+    ...chapter,
+    music: {
+      ...chapter.music,
+      trackId: trackIds[0],
+      trackIds,
+    },
+  };
+};
+
+const chapter13TrackIds = [
+  'chapter-13-su-noi-loan-va-thanh-pho-ban-dem-track-01',
+  'chapter-13-su-noi-loan-va-thanh-pho-ban-dem-track-02',
+];
 
 const chapter13: BookChapter = {
   id: CHAPTER_13_ID,
@@ -16,7 +51,7 @@ const chapter13: BookChapter = {
     vi: 'Sau khi trời tối, những trật tự ban ngày lỏng ra: đường, đèn, xe máy và những khoảng vắng làm thành phố quen thuộc hiện lên theo một cách khác.',
     en: 'After dark, daytime order loosens: roads, lights, motorbikes, and empty stretches make the familiar city appear differently.',
   },
-  music: { mood: 'piano', trackId: 'hmong-ballad-2' },
+  music: { mood: 'piano', trackId: chapter13TrackIds[0], trackIds: chapter13TrackIds },
   order: 13,
   status: 'published',
 };
@@ -74,6 +109,46 @@ const chapter13Experience: BookExperience = {
   status: 'published',
 };
 
-export const BOOK_CHAPTERS: BookChapter[] = [...BASE_BOOK_CHAPTERS, chapter13];
-export const BOOK_PAGES: BookPage[] = [...BASE_BOOK_PAGES, chapter13Page];
+const chapterNumberById = new Map<string, string>([
+  ...BASE_BOOK_CHAPTERS.map((chapter) => [chapter.id, chapter.number] as const),
+  [CHAPTER_13_ID, '13'],
+]);
+
+const bookMusicTrackById = new Map(BOOK_MUSIC_TRACKS.map((track) => [track.id, track]));
+
+const withUploadedChapterAudioBlocks = (page: BookPage): BookPage => {
+  if (page.order !== 1) return page;
+
+  const chapterNumber = chapterNumberById.get(page.chapterId);
+  if (!chapterNumber) return page;
+
+  const trackIds = chapterNumber === '13' ? chapter13TrackIds : CHAPTER_TRACK_IDS_BY_NUMBER[chapterNumber];
+  if (!trackIds?.length) return page;
+
+  const audioBlocks: BookPage['blocks'] = trackIds.flatMap((trackId) => {
+    const track = bookMusicTrackById.get(trackId);
+    if (!track) return [];
+
+    return [{
+      type: 'audio' as const,
+      audio: {
+        src: `/audio/${track.fileName}`,
+        title: track.label,
+      },
+    }];
+  });
+
+  if (!audioBlocks.length) return page;
+
+  return {
+    ...page,
+    blocks: [...audioBlocks, ...page.blocks],
+  };
+};
+
+export const BOOK_CHAPTERS: BookChapter[] = [...BASE_BOOK_CHAPTERS.map(withUploadedChapterAudio), chapter13];
+export const BOOK_PAGES: BookPage[] = [
+  ...BASE_BOOK_PAGES.map(withUploadedChapterAudioBlocks),
+  withUploadedChapterAudioBlocks(chapter13Page),
+];
 export const BOOK_EXPERIENCES: BookExperience[] = [...BASE_BOOK_EXPERIENCES, chapter13Experience];

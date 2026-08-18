@@ -17,6 +17,7 @@ export type MusicTrack = {
 export type ChapterMusic = {
   mood: ChapterMusicMood;
   trackId: MusicTrack['id'];
+  trackIds?: MusicTrack['id'][];
 };
 
 export type BookChapter = {
