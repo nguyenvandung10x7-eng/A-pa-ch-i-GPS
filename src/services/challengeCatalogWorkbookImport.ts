@@ -28,6 +28,27 @@ const DISABLED_TASK_IDS = new Set<string>([
 
 type TaskPatch = Partial<Omit<ChallengeTask, 'id'>>;
 
+const overnightMotorbikePatch: TaskPatch = {
+  title: {
+    vi: 'Niềm tin Điện Biên – Để xe máy ngoài trời qua đêm',
+    en: 'Dien Bien Trust Test – Leave a Motorbike Outside Overnight',
+  },
+  description: {
+    vi: 'Đến điểm đã chốt trong thành phố ban đêm. Khi bạn vào trong bán kính 100 m, GPS xác nhận bạn đã tới nơi và Challenge được hoàn thành. Ý tưởng để xe máy ngoài trời qua đêm là phần trải nghiệm mà Chapter 13 gợi ra; app không yêu cầu ảnh, không bắt chờ đến sáng và không cố xác minh bạn có thực sự để xe qua đêm hay không.',
+    en: 'Reach the fixed point in the city at night. Once you enter the 100 m radius, GPS confirms your arrival and the Challenge is complete. Leaving a motorbike outside overnight is the experience Chapter 13 invites you to consider; the app does not require photos, make you wait until morning, or try to prove that you actually left the bike overnight.',
+  },
+  category: 'surprise',
+  difficulty: 'medium',
+  points: 180,
+  gps: { lat: 21.394221, lng: 103.020336, radius: 100 },
+  image: '',
+  enabled: true,
+  experienceNote: {
+    vi: 'Challenge BOTH của Chương 13 “Sự nổi loạn và thành phố ban đêm”. Chỉ cần đến trong bán kính 100 m để hoàn thành; việc để xe qua đêm là lời mời trải nghiệm, không phải điều app cố xác minh.',
+    en: 'A BOTH challenge for Chapter 13, “Rebellion and the City at Night”. Reaching the 100 m radius completes it; leaving the motorbike overnight is an invitation to experience, not something the app tries to verify.',
+  },
+};
+
 const TASK_PATCHES: Record<string, TaskPatch> = {
   'cho-muong-nhe-tang-banh-trung-thu': {
     title: {
@@ -138,6 +159,7 @@ const TASK_PATCHES: Record<string, TaskPatch> = {
       en: 'Photograph one detail rather than a portrait. Do not enter private yards or homes unless invited, and do not photograph people close-up without permission.',
     },
   },
+  'de-xe-may-ngoai-troi-qua-dem': overnightMotorbikePatch,
 };
 
 const ADDED_TASKS: readonly ChallengeTask[] = [
@@ -164,26 +186,15 @@ const ADDED_TASKS: readonly ChallengeTask[] = [
   },
   {
     id: 'de-xe-may-ngoai-troi-qua-dem',
-    title: {
-      vi: 'Niềm tin Điện Biên – Để xe máy ngoài trời qua đêm',
-      en: 'Dien Bien Trust Test – Leave a Motorbike Outside Overnight',
-    },
-    description: {
-      vi: 'Chọn một vị trí đỗ xe hợp pháp ngoài trời, có sự đồng ý của chủ địa điểm hoặc người quản lý nếu cần. Khóa xe như bình thường, không để tài sản giá trị trên xe, chụp một ảnh lúc gửi và quay lại vào sáng hôm sau. Đây không phải thử thách để bỏ xe ở nơi vắng hoặc cố tình tạo rủi ro.',
-      en: 'Choose a legal outdoor parking place, with permission from the property owner or manager when needed. Lock the motorbike normally, leave no valuables on it, take one photo when parking, and return the next morning. This is not a challenge to abandon a vehicle in an isolated place or deliberately create risk.',
-    },
-    category: 'surprise',
-    difficulty: 'medium',
-    points: 180,
-    // Technical hold: the current gameplay engine requires a GPS checkpoint to complete a task.
-    // Keep a harmless placeholder while disabled; enable only after non-GPS/manual verification exists.
-    gps: { lat: 21.3865, lng: 103.0169, radius: 1 },
+    title: overnightMotorbikePatch.title!,
+    description: overnightMotorbikePatch.description!,
+    category: overnightMotorbikePatch.category!,
+    difficulty: overnightMotorbikePatch.difficulty!,
+    points: overnightMotorbikePatch.points!,
+    gps: overnightMotorbikePatch.gps!,
     image: '',
-    enabled: false,
-    experienceNote: {
-      vi: 'Một ảnh lúc đỗ và một ảnh sáng hôm sau. Chỉ dùng vị trí đỗ hợp pháp, đủ an toàn; không để chìa khóa hoặc tài sản giá trị trên xe.',
-      en: 'Take one photo when parking and one the next morning. Use only a legal, reasonably safe parking place and leave no key or valuables on the vehicle.',
-    },
+    enabled: true,
+    experienceNote: overnightMotorbikePatch.experienceNote,
   },
   {
     id: 'nhin-xuong-long-chao-cua-chung-ta',
