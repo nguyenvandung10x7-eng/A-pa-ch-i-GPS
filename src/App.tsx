@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { Loader2, LogIn, ShieldCheck } from 'lucide-react';
 import { Layout } from './components/Layout';
-import { ProductNavigationRail } from './components/ProductNavigationRail';
+import { MobileAppShell } from './components/MobileAppShell';
 import { ProductSurfaceFrame } from './components/ProductSurfaceFrame';
 import { Card } from './components/Card';
 import { useAuth } from './contexts/AuthContext';
@@ -16,7 +16,6 @@ import { BookUtilityPage } from './pages/BookUtilityPage';
 import { ChallengePage } from './pages/ChallengePage';
 import { DiscoverPage } from './pages/DiscoverPage';
 import { HistoryPage } from './pages/HistoryPage';
-import { LandingPage } from './pages/LandingPage';
 import { LegalSafetyPage } from './pages/LegalSafetyPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ModerationPage } from './pages/ModerationPage';
@@ -137,30 +136,41 @@ export default function App() {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [location.pathname, navigationType]);
 
+  const publicRoutes = (
+    <Routes>
+      <Route path="/" element={<Navigate to="/book" replace />} />
+      <Route path="/book" element={<BookPage language={language} />} />
+      <Route path="/book/chapter/:chapterId" element={<BookPage language={language} />} />
+      <Route path="/book/page/:pageId" element={<BookPageRoute language={language} />} />
+      <Route path="/recent" element={<HistoryPage clearVersion={clearVersion} language={language} t={t} />} />
+      <Route path="/saved" element={<SavedBookPage language={language} />} />
+      <Route path="/nearby" element={<BookUtilityPage language={language} mode="near-me" />} />
+      <Route path="/challenge" element={<ChallengePage tasks={activeTasks} clearVersion={clearVersion} language={language} t={t} />} />
+
+      <Route path="/near-me" element={<Navigate to="/nearby" replace />} />
+      <Route path="/history" element={<Navigate to="/recent" replace />} />
+      <Route path="/experiences" element={<Navigate to="/challenge" replace />} />
+
+      <Route path="/discover" element={<ProductSurfaceFrame surface="challenge"><DiscoverPage language={language} t={t} /></ProductSurfaceFrame>} />
+      <Route path="/leaderboard" element={<ProductSurfaceFrame surface="challenge"><LeaderboardPage language={language} t={t} /></ProductSurfaceFrame>} />
+      <Route path="/submit-tiktok" element={<ProductSurfaceFrame surface="challenge"><TikTokSubmissionPage clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>} />
+    </Routes>
+  );
+
+  const staffOrLegalRoute = ['/admin', '/moderation', '/privacy', '/legal'].includes(location.pathname);
+
   return (
     <Layout language={language} setLanguage={setLanguage} t={t}>
-      <div className="mb-4 rounded-[1.75rem] bg-[rgba(239,232,218,0.72)] p-3 ring-1 ring-[rgba(91,67,38,0.12)] backdrop-blur-sm sm:mb-5 sm:p-4">
-        <ProductNavigationRail t={t} compact />
-      </div>
-
-      <Routes>
-        <Route path="/" element={<LandingPage tasks={tasks} clearVersion={clearVersion} t={t} />} />
-        <Route path="/book" element={<BookPage language={language} />} />
-        <Route path="/book/chapter/:chapterId" element={<BookPage language={language} />} />
-        <Route path="/book/page/:pageId" element={<BookPageRoute language={language} />} />
-        <Route path="/near-me" element={<BookUtilityPage language={language} mode="near-me" />} />
-        <Route path="/saved" element={<SavedBookPage language={language} />} />
-        <Route path="/experiences" element={<Navigate to="/challenge" replace />} />
-        <Route path="/challenge" element={<ProductSurfaceFrame surface="challenge"><ChallengePage tasks={activeTasks} clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>} />
-        <Route path="/history" element={<ProductSurfaceFrame surface="challenge"><HistoryPage clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>} />
-        <Route path="/discover" element={<ProductSurfaceFrame surface="challenge"><DiscoverPage language={language} t={t} /></ProductSurfaceFrame>} />
-        <Route path="/leaderboard" element={<ProductSurfaceFrame surface="challenge"><LeaderboardPage language={language} t={t} /></ProductSurfaceFrame>} />
-        <Route path="/submit-tiktok" element={<ProductSurfaceFrame surface="challenge"><TikTokSubmissionPage clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>} />
-        <Route path="/privacy" element={<LegalSafetyPage t={t} />} />
-        <Route path="/legal" element={<LegalSafetyPage t={t} />} />
-        <Route path="/moderation" element={<ModerationPage language={language} t={t} />} />
-        <Route path="/admin" element={<AdminOnlyRoute t={t} redirectPath="/admin"><AdminPage tasks={tasks} setTasks={setTasks} t={t} /></AdminOnlyRoute>} />
-      </Routes>
+      {staffOrLegalRoute ? (
+        <Routes>
+          <Route path="/privacy" element={<LegalSafetyPage t={t} />} />
+          <Route path="/legal" element={<LegalSafetyPage t={t} />} />
+          <Route path="/moderation" element={<ModerationPage language={language} t={t} />} />
+          <Route path="/admin" element={<AdminOnlyRoute t={t} redirectPath="/admin"><AdminPage tasks={tasks} setTasks={setTasks} t={t} /></AdminOnlyRoute>} />
+        </Routes>
+      ) : (
+        <MobileAppShell language={language}>{publicRoutes}</MobileAppShell>
+      )}
     </Layout>
   );
 }
