@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Quán cơm Hưng Hà</title><desc id="desc">Minh họa trung tính cho thử thách gặp chủ quán.</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e9ddc1"/><stop offset="1" stop-color="#8da28a"/></linearGradient></defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <circle cx="930" cy="180" r="115" fill="#f7efd9" opacity=".6"/>
+  <path d="M120 650h960v130H120z" fill="#344a37" opacity=".9"/>
+  <path d="M260 590h420l-55-215H315z" fill="#f4ead2" stroke="#4d5e46" stroke-width="18"/>
+  <path d="M320 375h310M360 455h235" stroke="#9c633e" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="805" cy="480" r="92" fill="#5b6e54"/><path d="M805 572v132M735 640h140" stroke="#5b6e54" stroke-width="32" stroke-linecap="round"/>
+  <text x="95" y="120" font-family="system-ui,sans-serif" font-size="42" font-weight="800" fill="#304333">CHALLENGE · ĐIỆN BIÊN</text>
+  <text x="95" y="210" font-family="system-ui,sans-serif" font-size="72" font-weight="900" fill="#203429">Quán cơm Hưng Hà</text>
+  <text x="95" y="280" font-family="system-ui,sans-serif" font-size="34" fill="#405545">Gặp chủ quán · trò chuyện · GPS</text>
+</svg>
