@@ -1,0 +1,54 @@
+name: Patch PR59 remaining feedback
+
+on:
+  push:
+    branches:
+      - agent/retire-experiences-surface
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/retire-experiences-surface
+          fetch-depth: 0
+
+      - name: Apply remaining PR59 fixes
+        shell: python
+        run: |
+          from pathlib import Path
+
+          challenge_path = Path('src/pages/ChallengePage.tsx')
+          challenge = challenge_path.read_text()
+          old_button = '''          <Button onClick={() => { void startNextChallenge(); }} disabled={canComplete || isMutating || eligibleTasks.length === 0} variant="secondary" className="w-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.68)]"><Trophy className="h-5 w-5" />{t('challenge.next')}</Button>'''
+          new_button = '''          {!isScopedCompleted ? (
+          <Button onClick={() => { void startNextChallenge(); }} disabled={canComplete || isMutating || eligibleTasks.length === 0} variant="secondary" className="w-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.68)]"><Trophy className="h-5 w-5" />{t('challenge.next')}</Button>
+          ) : null}'''
+          if challenge.count(old_button) != 1:
+              raise SystemExit('Expected exactly one scoped Next challenge button')
+          challenge_path.write_text(challenge.replace(old_button, new_button, 1))
+
+          replacements = {
+              Path('src/i18n/en.json'): ('"landing.start": "Explore experiences"', '"landing.start": "Open Challenge"'),
+              Path('src/i18n/vi.json'): ('"landing.start": "Chọn trải nghiệm"', '"landing.start": "Mở Thử thách"'),
+          }
+          for path, (old, new) in replacements.items():
+              text = path.read_text()
+              if text.count(old) != 1:
+                  raise SystemExit(f'Expected exactly one landing.start in {path}')
+              path.write_text(text.replace(old, new, 1))
+
+      - name: Commit patch and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/patch-pr59.yml
+          git add src/pages/ChallengePage.tsx src/i18n/en.json src/i18n/vi.json
+          git diff --cached --check
+          git commit -m "Finish PR59 feedback fixes"
+          git push origin HEAD:agent/retire-experiences-surface
