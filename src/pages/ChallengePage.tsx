@@ -107,7 +107,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const isFinished = summary.enabledCount > 0 && summary.remainingCount === 0 && !canComplete;
   const isScopedMode = scopedExperienceMode !== null;
   const isScopedCompleted = isScopedMode && isFinished;
-  const scopeCompletionPrimaryLabel = language === 'vi' ? 'Chọn trải nghiệm khác' : 'Choose another experience';
+  const scopeCompletionPrimaryLabel = language === 'vi' ? 'Quay lại Sách' : 'Back to Book';
 
   const scopeContext = useMemo(() => [
     scopedExperienceMode ?? 'all',
@@ -261,7 +261,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     if (isMutating) return;
 
     if (isScopedCompleted) {
-      void navigate('/experiences');
+      void navigate('/book');
       return;
     }
 
@@ -301,7 +301,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     if (isMutating) return;
 
     if (isScopedCompleted) {
-      void navigate('/experiences');
+      void navigate('/book');
       return;
     }
 
