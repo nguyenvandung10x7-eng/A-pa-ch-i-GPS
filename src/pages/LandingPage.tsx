@@ -46,7 +46,7 @@ export const LandingPage = ({ tasks, clearVersion, t }: { tasks: ChallengeTask[]
       </p>
       <div className="mt-7 flex flex-wrap gap-3">
       <Link
-        to="/experiences"
+        to="/challenge"
         className="wood-panel inline-flex min-h-[3.25rem] items-center justify-center rounded-full px-7 py-3 text-[1.1rem] font-black text-[var(--earth-900)] shadow-[0_18px_30px_rgba(104,76,41,0.2)] transition hover:-translate-y-px"
       >
         {t('landing.start')}
