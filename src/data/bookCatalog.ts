@@ -4,10 +4,17 @@ import {
   BOOK_PAGES as BASE_BOOK_PAGES,
 } from './bookContent';
 import { BOOK_MUSIC_TRACKS } from './music';
-import type { BookChapter, BookExperience, BookPage } from '../types/book';
+import type { BookChapter, BookExperience, BookPage, ContentBlock } from '../types/book';
 
 export const CHAPTER_13_ID = 'chapter-13-su-noi-loan-va-thanh-pho-ban-dem';
 export const CHAPTER_13_CHALLENGE_ID = 'de-xe-may-ngoai-troi-qua-dem';
+
+const CHAPTER_01_ID = 'chapter-01-dong-song';
+const NAM_ROM_PAGE_ID = 'nam-rom-buoi-chieu';
+
+const CHAPTER_01_HERO_IMAGE = '/images/book/chapter-01-dong-song/chapter-01-dong-song-hero-01.webp';
+const NAM_ROM_INLINE_IMAGE = '/images/book/chapter-01-dong-song/nam-rom-buoi-chieu-inline-01.jpg';
+const CHAPTER_13_HERO_IMAGE = '/images/book/chapter-13-su-noi-loan-va-thanh-pho-ban-dem/chapter-13-thanh-pho-ban-dem-hero-01.webp';
 
 const CHAPTER_TRACK_IDS_BY_NUMBER: Record<string, string[]> = {
   '01': ['chapter-01-dong-song-track-01'],
@@ -24,17 +31,22 @@ const CHAPTER_TRACK_IDS_BY_NUMBER: Record<string, string[]> = {
   '12': ['chapter-12-di-ve-phia-tay-track-01'],
 };
 
-const withUploadedChapterAudio = (chapter: BookChapter): BookChapter => {
+const withUploadedChapterAssets = (chapter: BookChapter): BookChapter => {
   const trackIds = CHAPTER_TRACK_IDS_BY_NUMBER[chapter.number];
-  if (!trackIds?.length) return chapter;
+  const coverImage = chapter.id === CHAPTER_01_ID ? CHAPTER_01_HERO_IMAGE : chapter.coverImage;
 
   return {
     ...chapter,
-    music: {
-      ...chapter.music,
-      trackId: trackIds[0],
-      trackIds,
-    },
+    ...(coverImage ? { coverImage } : {}),
+    ...(trackIds?.length
+      ? {
+          music: {
+            ...chapter.music,
+            trackId: trackIds[0],
+            trackIds,
+          },
+        }
+      : {}),
   };
 };
 
@@ -51,6 +63,7 @@ const chapter13: BookChapter = {
     vi: 'Sau khi trời tối, những trật tự ban ngày lỏng ra: đường, đèn, xe máy và những khoảng vắng làm thành phố quen thuộc hiện lên theo một cách khác.',
     en: 'After dark, daytime order loosens: roads, lights, motorbikes, and empty stretches make the familiar city appear differently.',
   },
+  coverImage: CHAPTER_13_HERO_IMAGE,
   music: { mood: 'piano', trackId: chapter13TrackIds[0], trackIds: chapter13TrackIds },
   order: 13,
   status: 'published',
@@ -72,6 +85,7 @@ const chapter13Page: BookPage = {
       en: 'Rebellion here is not a slogan. It lives in the urge to step slightly outside routine: ride through the night air and quieter streets, then leave the motorbike outdoors in a legal parking place. Lock it normally, leave no valuables, and walk away. Return the next morning. The app does not need to prove that part; it only takes you to where the story begins.',
     },
   }],
+  coverImage: CHAPTER_13_HERO_IMAGE,
   location: {
     lat: 21.394221,
     lng: 103.020336,
@@ -116,6 +130,56 @@ const chapterNumberById = new Map<string, string>([
 
 const bookMusicTrackById = new Map(BOOK_MUSIC_TRACKS.map((track) => [track.id, track]));
 
+const imageBlock = (src: string, viAlt: string, enAlt: string, viCaption?: string, enCaption?: string): ContentBlock => ({
+  type: 'image',
+  image: {
+    src,
+    alt: { vi: viAlt, en: enAlt },
+    ...(viCaption && enCaption ? { caption: { vi: viCaption, en: enCaption } } : {}),
+  },
+});
+
+const withUploadedPageImages = (page: BookPage): BookPage => {
+  if (page.id === NAM_ROM_PAGE_ID) {
+    return {
+      ...page,
+      coverImage: CHAPTER_01_HERO_IMAGE,
+      blocks: [
+        imageBlock(
+          CHAPTER_01_HERO_IMAGE,
+          'Sông Nậm Rốm đi qua cánh đồng Điện Biên',
+          'The Nậm Rốm River crossing the Dien Bien plain'
+        ),
+        imageBlock(
+          NAM_ROM_INLINE_IMAGE,
+          'Sông Nậm Rốm nhìn từ mặt đất',
+          'The Nậm Rốm River seen from ground level',
+          'Nậm Rốm ở gần hơn: nước, bờ sông và một buổi chiều bình thường.',
+          'Nậm Rốm up close: water, riverbank, and an ordinary afternoon.'
+        ),
+        ...page.blocks,
+      ],
+    };
+  }
+
+  if (page.chapterId === CHAPTER_13_ID && page.order === 1) {
+    return {
+      ...page,
+      coverImage: CHAPTER_13_HERO_IMAGE,
+      blocks: [
+        imageBlock(
+          CHAPTER_13_HERO_IMAGE,
+          'Thành phố Điện Biên Phủ về đêm nhìn từ trên cao',
+          'Dien Bien Phu at night seen from above'
+        ),
+        ...page.blocks,
+      ],
+    };
+  }
+
+  return page;
+};
+
 const withUploadedChapterAudioBlocks = (page: BookPage): BookPage => {
   if (page.order !== 1) return page;
 
@@ -146,9 +210,12 @@ const withUploadedChapterAudioBlocks = (page: BookPage): BookPage => {
   };
 };
 
-export const BOOK_CHAPTERS: BookChapter[] = [...BASE_BOOK_CHAPTERS.map(withUploadedChapterAudio), chapter13];
+const withUploadedPageAssets = (page: BookPage): BookPage =>
+  withUploadedChapterAudioBlocks(withUploadedPageImages(page));
+
+export const BOOK_CHAPTERS: BookChapter[] = [...BASE_BOOK_CHAPTERS.map(withUploadedChapterAssets), chapter13];
 export const BOOK_PAGES: BookPage[] = [
-  ...BASE_BOOK_PAGES.map(withUploadedChapterAudioBlocks),
-  withUploadedChapterAudioBlocks(chapter13Page),
+  ...BASE_BOOK_PAGES.map(withUploadedPageAssets),
+  withUploadedPageAssets(chapter13Page),
 ];
 export const BOOK_EXPERIENCES: BookExperience[] = [...BASE_BOOK_EXPERIENCES, chapter13Experience];
