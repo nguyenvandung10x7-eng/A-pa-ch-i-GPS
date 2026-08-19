@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { Loader2, LogIn, ShieldCheck } from 'lucide-react';
 import { Layout } from './components/Layout';
 import { ProductNavigationRail } from './components/ProductNavigationRail';
@@ -15,7 +15,6 @@ import { BookPageRoute } from './pages/BookPageRoute';
 import { BookUtilityPage } from './pages/BookUtilityPage';
 import { ChallengePage } from './pages/ChallengePage';
 import { DiscoverPage } from './pages/DiscoverPage';
-import { ExperiencesPage } from './pages/ExperiencesPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { LandingPage } from './pages/LandingPage';
 import { LegalSafetyPage } from './pages/LegalSafetyPage';
@@ -151,7 +150,7 @@ export default function App() {
         <Route path="/book/page/:pageId" element={<BookPageRoute language={language} />} />
         <Route path="/near-me" element={<BookUtilityPage language={language} mode="near-me" />} />
         <Route path="/saved" element={<SavedBookPage language={language} />} />
-        <Route path="/experiences" element={<ExperiencesPage language={language} t={t} />} />
+        <Route path="/experiences" element={<Navigate to="/challenge" replace />} />
         <Route path="/challenge" element={<ProductSurfaceFrame surface="challenge"><ChallengePage tasks={activeTasks} clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>} />
         <Route path="/history" element={<ProductSurfaceFrame surface="challenge"><HistoryPage clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>} />
         <Route path="/discover" element={<ProductSurfaceFrame surface="challenge"><DiscoverPage language={language} t={t} /></ProductSurfaceFrame>} />
