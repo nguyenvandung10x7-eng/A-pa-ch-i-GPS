@@ -5,6 +5,7 @@ import {
 } from './bookContent';
 import { BOOK_MUSIC_TRACKS } from './music';
 import { withLiteraryChapterCopy } from './bookLiteraryCopy';
+import { withLiteraryPageCopy } from './bookLiteraryPageCopy';
 import type { BookChapter, BookExperience, BookPage, ContentBlock } from '../types/book';
 
 export const CHAPTER_13_ID = 'chapter-13-su-noi-loan-va-thanh-pho-ban-dem';
@@ -219,7 +220,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   withLiteraryChapterCopy(chapter13),
 ];
 export const BOOK_PAGES: BookPage[] = [
-  ...BASE_BOOK_PAGES.map(withUploadedPageAssets),
-  withUploadedPageAssets(chapter13Page),
+  ...BASE_BOOK_PAGES.map(withLiteraryPageCopy).map(withUploadedPageAssets),
+  withUploadedPageAssets(withLiteraryPageCopy(chapter13Page)),
 ];
 export const BOOK_EXPERIENCES: BookExperience[] = [...BASE_BOOK_EXPERIENCES, chapter13Experience];
