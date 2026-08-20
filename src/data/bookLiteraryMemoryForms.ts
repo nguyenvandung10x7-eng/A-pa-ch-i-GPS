@@ -166,6 +166,42 @@ const MEMORY_FORMS: Record<string, MemoryForm> = {
       },
     ],
   },
+  'thanh-pho-ban-dem-va-mot-phep-thu-nho': {
+    intro: {
+      vi: 'Đến đây thì đừng nhớ nữa. Đi ra ngoài.',
+      en: 'Stop remembering here. Go outside.',
+    },
+    paragraphs: [
+      {
+        vi: 'Đêm xuống. Thành phố thưa đi. Những con đường vẫn là những con đường ban ngày, nhưng không còn ai bắt chúng phải cư xử như ban ngày nữa.',
+        en: 'Night falls. The city thins out. The roads are the same roads as by day, but nobody is asking them to behave like daytime anymore.',
+      },
+      {
+        vi: 'Đi thêm một đoạn. Qua ngã tư. Qua ánh đèn. Qua những căn nhà đã đóng cửa. Không có việc gì phải làm. Không có nơi nào bắt buộc phải đến.',
+        en: 'Go a little farther. Past an intersection. Past the lights. Past houses already closed for the night. There is nothing you have to do. Nowhere you are required to reach.',
+      },
+      {
+        vi: 'Xe phải vào nhà. Người phải về nhà. Đêm đến thì phải ngủ. Người lớn lên rồi vẫn có vô số câu như thế nằm sẵn trong đầu, dù chẳng còn nhớ ai đã nói chúng đầu tiên.',
+        en: 'The motorbike should be indoors. People should go home. Night is for sleeping. You grow up and still carry countless sentences like these in your head, even when you no longer remember who said them first.',
+      },
+      {
+        vi: 'Tối nay thử bỏ một câu đi.',
+        en: 'Tonight, drop one of them.',
+      },
+      {
+        vi: 'Để chiếc xe lại ở một chỗ đỗ hợp pháp. Khóa xe. Mang theo thứ có giá trị. Rồi đi khỏi đó.',
+        en: 'Leave the motorbike in a legal parking place. Lock it. Take anything valuable with you. Then walk away.',
+      },
+      {
+        vi: 'Không cần biến chuyện ấy thành biểu tượng. Không cần chứng minh mình tự do. Chỉ cần biết rằng có một đêm mình đã không làm mọi thứ theo quán tính.',
+        en: 'Do not turn it into a symbol. Do not prove that you are free. Just know there was one night when you did not do everything by reflex.',
+      },
+      {
+        vi: 'Đêm còn dài.',
+        en: 'The night is still long.',
+      },
+    ],
+  },
 };
 
 const CHAPTER_INTROS: Record<string, BookLocalizedText> = {
@@ -200,6 +236,10 @@ const CHAPTER_INTROS: Record<string, BookLocalizedText> = {
   'chapter-11-di-ve-phia-tay': {
     vi: 'Cứ đi về phía Tây. Qua thành phố, qua những con đường dài hơn, qua rừng và các bản. Đến một lúc, ký ức sẽ tự biết phải nằm lại ở đâu.',
     en: 'Keep going west. Past the city, onto longer roads, through forests and villages. At some point memory will know for itself where to remain.',
+  },
+  'chapter-13-su-noi-loan-va-thanh-pho-ban-dem': {
+    vi: 'Mười hai chương trước đã nhìn lại. Chương này không nhìn lại nữa. Đêm xuống rồi. Đi thôi.',
+    en: 'The twelve chapters before this looked back. This one does not. Night has fallen. Go.',
   },
 };
 
