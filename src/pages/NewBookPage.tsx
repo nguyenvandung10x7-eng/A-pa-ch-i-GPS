@@ -60,7 +60,7 @@ export const NewBookPage = ({ language }: BookPageProps) => {
           <Headphones aria-hidden="true" />
         </header>
 
-        {hero ? <div className="new-book-hero"><img src={hero} alt="" /><span>{c.chapter} {chapter.number}</span></div> : null}
+        {hero ? <div className="new-book-hero"><img src={hero} alt="" loading="eager" decoding="async" /><span>{c.chapter} {chapter.number}</span></div> : null}
 
         <article className="new-book-paper">
           <p className="new-book-overline">{c.kicker} · {chapter.number}</p>
@@ -90,7 +90,7 @@ export const NewBookPage = ({ language }: BookPageProps) => {
   return (
     <div className="new-book-home">
       <section className="new-book-cover">
-        {featuredImage ? <img src={featuredImage} alt="" /> : null}
+        {featuredImage ? <img src={featuredImage} alt="" loading="eager" decoding="async" /> : null}
         <div className="new-book-cover-copy">
           <p>{c.kicker}</p>
           <h1>BOOK OF<br />DIEN BIEN</h1>
@@ -106,7 +106,7 @@ export const NewBookPage = ({ language }: BookPageProps) => {
             const pages = getChapterPages(chapter.id);
             return (
               <Link key={chapter.id} to={`/book/chapter/${chapter.id}`} className="new-book-chapter">
-                <div className="new-book-thumb">{image ? <img src={image} alt="" /> : <span>{chapter.number}</span>}</div>
+                <div className="new-book-thumb">{image ? <img src={image} alt="" loading="lazy" decoding="async" /> : <span>{chapter.number}</span>}</div>
                 <div className="new-book-chapter-copy">
                   <div><span>{chapter.number}</span><strong>{localized(chapter.title, language)}</strong></div>
                   <p>{localized(chapter.intro, language)}</p>

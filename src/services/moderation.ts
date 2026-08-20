@@ -118,7 +118,7 @@ const mapModerationRpcError = (message: string): ModerationError => {
 };
 
 export const checkCurrentUserIsAdmin = async (): Promise<boolean> => {
-  const { data, error } = await supabase.rpc<boolean>('is_current_user_admin');
+  const { data, error } = await supabase.rpc('is_current_user_admin');
 
   if (error) {
     throw new ModerationError('SUPABASE_ERROR', 'moderation.error.adminCheckFailed');
@@ -192,7 +192,7 @@ const moderateSubmission = async ({
   action: 'approve' | 'reject';
   rejectionReason?: string;
 }): Promise<ModerationActionResult> => {
-  const { data, error } = await supabase.rpc<ModerationRpcRow>('moderate_video_submission', {
+  const { data, error } = await supabase.rpc('moderate_video_submission', {
     p_submission_id: submissionId,
     p_action: action,
     p_rejection_reason: rejectionReason ?? null,
@@ -202,7 +202,8 @@ const moderateSubmission = async ({
     throw mapModerationRpcError(error.message ?? '');
   }
 
-  const row = Array.isArray(data) ? data[0] : null;
+  const rows = data as ModerationRpcRow[] | null;
+  const row = Array.isArray(rows) ? rows[0] : null;
   if (!row) {
     throw new ModerationError('SUPABASE_ERROR', 'moderation.error.actionFailed');
   }
