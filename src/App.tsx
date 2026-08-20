@@ -137,8 +137,18 @@ export default function App() {
     if (navigationType === 'POP') return;
     if (!isBookPath(previousPath) && !isBookPath(location.pathname)) return;
 
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  }, [location.pathname, navigationType]);
+    const frameId = window.requestAnimationFrame(() => {
+      const targetId = location.hash.startsWith('#') ? location.hash.slice(1) : '';
+      const target = targetId ? document.getElementById(targetId) : null;
+      if (target) {
+        target.scrollIntoView({ block: 'start', behavior: 'auto' });
+        return;
+      }
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [location.hash, location.pathname, navigationType]);
 
   const publicRoutes = (
     <Routes>
