@@ -1,8 +1,9 @@
 import { Bookmark, BookmarkCheck, MapPin, ArrowRight } from 'lucide-react';
 import { useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useBookState } from '../hooks/useBookState';
 import { getChapterPages, getPage } from '../services/bookContent';
+import { bookLocationMapUrl } from '../services/bookNearMe';
 import { markBookPageRead, toggleSavedBookPage } from '../services/bookState';
 import type { BookLocalizedText } from '../types/book';
 import type { LanguageCode } from '../types/task';
@@ -23,7 +24,7 @@ const copy = {
     places: 'Những nơi trong chương này',
     placeIntro: 'Câu chuyện kết thúc ở đây. Những nơi dưới đây thì vẫn còn ngoài đời.',
     challenge: 'Có thử thách',
-    open: 'Mở nơi này',
+    open: 'Đi tới đó',
   },
   en: {
     save: 'Save page',
@@ -31,7 +32,7 @@ const copy = {
     places: 'Places in this chapter',
     placeIntro: 'The story ends here. These places still exist outside the book.',
     challenge: 'Challenge available',
-    open: 'Open this place',
+    open: 'Go there',
   },
 } as const;
 
@@ -79,19 +80,29 @@ export const BookPageRoute = ({ language }: BookPageRouteProps) => {
           </header>
 
           <div className="book-reading-v2__place-list">
-            {chapterPlaces.map((placePage) => (
-              <Link key={placePage.id} to={`/book/page/${placePage.id}`}>
-                <MapPin aria-hidden="true" />
-                <div>
-                  <strong>{localized(placePage.location?.label, language) || localized(placePage.title, language)}</strong>
-                  <small>
-                    {placePage.location?.lat.toFixed(6)}, {placePage.location?.lng.toFixed(6)}
-                    {placePage.legacyTaskIds?.length ? <em>{c.challenge}</em> : null}
-                  </small>
-                </div>
-                <span>{c.open}<ArrowRight aria-hidden="true" /></span>
-              </Link>
-            ))}
+            {chapterPlaces.map((placePage) => {
+              const location = placePage.location;
+              if (!location) return null;
+
+              return (
+                <a
+                  key={placePage.id}
+                  href={bookLocationMapUrl(location)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <MapPin aria-hidden="true" />
+                  <div>
+                    <strong>{localized(location.label, language) || localized(placePage.title, language)}</strong>
+                    <small>
+                      {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+                      {placePage.legacyTaskIds?.length ? <em>{c.challenge}</em> : null}
+                    </small>
+                  </div>
+                  <span>{c.open}<ArrowRight aria-hidden="true" /></span>
+                </a>
+              );
+            })}
           </div>
         </section>
       ) : null}
