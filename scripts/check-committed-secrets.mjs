@@ -21,7 +21,7 @@ const placeholder = /^(?:your[_-]|replace[_-]|example|placeholder|changeme|xxx+|
 const quotedCredentialShape = /^[A-Za-z0-9_+\/=.-]{16,}$/;
 const unquotedCredentialShape = /^[A-Za-z0-9_+\/=-]{16,}$/;
 const jwtPattern = /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g;
-const assignmentPattern = /(?<![\p{ID_Continue}$\u200C\u200D])(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|([A-Za-z_$][A-Za-z0-9_$]*))\s*[:=]\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|`((?:\\.|[^`\\])*)`|([^\s,;#]+))/gu;
+const assignmentPattern = /(?=(?<![\p{ID_Continue}$\u200C\u200D])(?:"((?:\\(?:\r\n|\n|\r|[\s\S])|[^"\\\r\n])*)"|'((?:\\(?:\r\n|\n|\r|[\s\S])|[^'\\\r\n])*)'|([A-Za-z_$][A-Za-z0-9_$]*))\s*[:=]\s*(?:"((?:\\(?:\r\n|\n|\r|[\s\S])|[^"\\\r\n])*)"|'((?:\\(?:\r\n|\n|\r|[\s\S])|[^'\\\r\n])*)'|`((?:\\(?:\r\n|\n|\r|[\s\S])|[^`\\])*)`|([^\s,;#]+)))/gu;
 
 const decodeStringLiteral = (raw) => {
   const decodeCodePoint = (hex) => {
@@ -44,7 +44,7 @@ const decodeStringLiteral = (raw) => {
     .replace(/\\b/g, '\b')
     .replace(/\\f/g, '\f')
     .replace(/\\v/g, '\v')
-    .replace(/\\\r?\n/g, '')
+    .replace(/\\(?:\r\n|\n|\r)/g, '')
     .replace(/\\([^\r\n])/g, '$1');
 };
 
@@ -66,7 +66,8 @@ const scanText = (file, text) => {
 
   for (const match of text.matchAll(assignmentPattern)) {
     const quotedKey = match[1] ?? match[2];
-    const key = quotedKey === undefined ? (match[3] ?? '') : decodeStringLiteral(quotedKey);
+    const rawKey = quotedKey === undefined ? (match[3] ?? '') : decodeStringLiteral(quotedKey);
+    const key = rawKey.toUpperCase();
     const name = credentialNames.get(key);
     if (!name) continue;
 
