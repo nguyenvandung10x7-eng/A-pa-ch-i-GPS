@@ -1,26 +1,45 @@
-import { Bookmark, BookmarkCheck } from 'lucide-react';
+import { Bookmark, BookmarkCheck, MapPin, ArrowRight } from 'lucide-react';
 import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useBookState } from '../hooks/useBookState';
-import { getPage } from '../services/bookContent';
+import { getChapterPages, getPage } from '../services/bookContent';
 import { markBookPageRead, toggleSavedBookPage } from '../services/bookState';
+import type { BookLocalizedText } from '../types/book';
 import type { LanguageCode } from '../types/task';
 import { BookPage } from './BookPage';
+import './book-reading-v2.css';
 
 type BookPageRouteProps = {
   language: LanguageCode;
 };
 
+const localized = (value: BookLocalizedText | undefined, language: LanguageCode): string =>
+  value?.[language] ?? value?.vi ?? value?.en ?? '';
+
 const copy = {
-  vi: { save: 'Lưu trang', saved: 'Đã lưu', read: 'Đã đọc' },
-  en: { save: 'Save page', saved: 'Saved', read: 'Read' },
+  vi: {
+    save: 'Lưu trang',
+    saved: 'Đã lưu',
+    places: 'Những nơi trong chương này',
+    placeIntro: 'Câu chuyện kết thúc ở đây. Những nơi dưới đây thì vẫn còn ngoài đời.',
+    challenge: 'Có thử thách',
+    open: 'Mở nơi này',
+  },
+  en: {
+    save: 'Save page',
+    saved: 'Saved',
+    places: 'Places in this chapter',
+    placeIntro: 'The story ends here. These places still exist outside the book.',
+    challenge: 'Challenge available',
+    open: 'Open this place',
+  },
 } as const;
 
 export const BookPageRoute = ({ language }: BookPageRouteProps) => {
   const { pageId } = useParams<{ pageId?: string }>();
   const page = pageId ? getPage(pageId) : undefined;
   const currentPageId = page?.id;
-  const { bookState, savedState } = useBookState();
+  const { savedState } = useBookState();
   const c = copy[language];
 
   useEffect(() => {
@@ -30,27 +49,50 @@ export const BookPageRoute = ({ language }: BookPageRouteProps) => {
   if (!page) return <BookPage language={language} />;
 
   const saved = savedState.pageIds.includes(page.id);
-  const read = bookState.readPageIds.includes(page.id);
+  const chapterPages = getChapterPages(page.chapterId);
+  const isLastPage = chapterPages[chapterPages.length - 1]?.id === page.id;
+  const chapterPlaces = isLastPage ? chapterPages.filter((candidate) => candidate.location) : [];
 
   return (
-    <div>
-      <div className="mx-auto flex max-w-3xl items-center justify-end gap-2 px-1 pt-4 sm:pt-6">
-        {read ? (
-          <span className="rounded-full bg-[rgba(231,225,212,0.8)] px-3 py-2 text-xs font-bold text-[var(--forest-700)] ring-1 ring-[rgba(61,84,52,0.12)]">
-            {c.read}
-          </span>
-        ) : null}
+    <div className="book-reading-v2">
+      <div className="book-reading-v2__utility">
         <button
           type="button"
           onClick={() => toggleSavedBookPage(page.id)}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[rgba(247,242,231,0.88)] px-4 py-2 text-sm font-black text-[var(--forest-900)] ring-1 ring-[rgba(91,67,38,0.14)] transition hover:-translate-y-px"
           aria-pressed={saved}
+          aria-label={saved ? c.saved : c.save}
         >
-          {saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
-          {saved ? c.saved : c.save}
+          {saved ? <BookmarkCheck aria-hidden="true" /> : <Bookmark aria-hidden="true" />}
+          <span>{saved ? c.saved : c.save}</span>
         </button>
       </div>
+
       <BookPage language={language} />
+
+      {chapterPlaces.length > 0 ? (
+        <section className="book-reading-v2__places">
+          <header>
+            <p>{c.places}</p>
+            <div>{c.placeIntro}</div>
+          </header>
+
+          <div className="book-reading-v2__place-list">
+            {chapterPlaces.map((placePage) => (
+              <Link key={placePage.id} to={`/book/page/${placePage.id}`}>
+                <MapPin aria-hidden="true" />
+                <div>
+                  <strong>{localized(placePage.location?.label, language) || localized(placePage.title, language)}</strong>
+                  <small>
+                    {placePage.location?.lat.toFixed(6)}, {placePage.location?.lng.toFixed(6)}
+                    {placePage.legacyTaskIds?.length ? <em>{c.challenge}</em> : null}
+                  </small>
+                </div>
+                <span>{c.open}<ArrowRight aria-hidden="true" /></span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 };
