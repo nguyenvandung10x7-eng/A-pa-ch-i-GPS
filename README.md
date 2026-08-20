@@ -1,66 +1,48 @@
-# GPS Challenge
+# Book of Dien Bien
 
-GPS Challenge is a configurable React, Vite, TypeScript, TailwindCSS, React Router, Leaflet, Geolocation API, i18n, and LocalStorage web application for location-based scavenger hunts.
+Book of Dien Bien is a bilingual React/Vite web experience about Điện Biên built around two public surfaces:
 
-## Features
+- **BOOK** — a literary, memory-led digital book with chapters, pages, audio, saved/read state, nearby places, and optional real-world continuations.
+- **CHALLENGE** — GPS-based discovery tasks with progress, points, history, moderation/admin tooling, and location verification.
 
-- Challenges are loaded from `src/data/tasks.json` instead of React components.
-- Vietnamese and English UI translations live in `src/i18n/vi.json` and `src/i18n/en.json`.
-- Language switcher supports VI / EN and can be extended with new language resources.
-- Admin page can add, edit, delete, enable, disable, score, GPS, and image URL fields using the same task JSON structure.
-- GPS verification uses the browser Geolocation API and a Haversine distance calculation.
-- QR check-in, score history, and admin overrides are stored in LocalStorage.
-- Leaflet renders task checkpoints with OpenStreetMap tiles.
-- Netlify configuration supports production SPA routing.
+The former standalone Experiences surface is retired; `/experiences` remains only as a compatibility redirect to `/challenge`.
 
-## Project structure
+## Product structure
 
-```text
-src/
-  assets/       Static assets for future images/icons
-  components/   Reusable layout, card, button, language, and map components
-  data/         Configurable challenge JSON (`tasks.json`)
-  hooks/        State hooks for tasks and translations
-  i18n/         Translation JSON and react-i18next setup
-  pages/        Route-level pages
-  services/     LocalStorage, task, history, and i18n services
-  types/        Strong TypeScript domain types
-  utils/        Shared utilities such as GPS distance helpers
-```
+- `/book` — Book contents.
+- `/book/chapter/:chapterId` — chapter entry.
+- `/book/page/:pageId` — full literary page.
+- `/recent` — recent Challenge/history activity.
+- `/saved` — saved Book pages.
+- `/nearby` — nearby Book locations.
+- `/challenge` — public Challenge experience.
+- `/privacy`, `/legal` — legal/safety pages.
+- `/admin`, `/moderation` — staff surfaces.
 
-## Add a challenge
+The public mobile shell keeps BOOK and CHALLENGE distinct. Book reading/saved state is stored separately from Challenge progress.
 
-Edit `src/data/tasks.json` and add an object with this shape:
+## Book content
 
-```json
-{
-  "id": "unique-task-id",
-  "title": { "vi": "Tiêu đề", "en": "Title" },
-  "description": { "vi": "Mô tả", "en": "Description" },
-  "category": "landmark",
-  "difficulty": "easy",
-  "points": 100,
-  "gps": { "lat": 10.7756, "lng": 106.7039, "radius": 50 },
-  "image": "https://example.com/image.jpg",
-  "enabled": true
-}
-```
+The canonical Book catalog lives in `src/data/bookCatalog.ts`. Literary copy is layered separately so editorial work does not mutate structural IDs, GPS, media, or Challenge links:
 
-No React code changes are required. The random challenge generator automatically uses every enabled task in this file.
+- `src/data/bookLiteraryCopy.ts`
+- `src/data/bookLiteraryPageCopy.ts`
+- `src/data/bookLiteraryMemoryForms.ts`
+- `src/data/bookLiteraryMiddleForms.ts`
 
-## Edit a challenge
+The published book currently contains 13 chapters. Chapter 13 intentionally breaks the quieter cadence of the preceding chapters with a short, present-tense, rebellious night-city form.
 
-- For source-controlled defaults, edit `src/data/tasks.json`.
-- For browser-local changes, open the Admin page and update title, description, category, difficulty, points, GPS latitude, GPS longitude, radius, image URL, or enabled state.
-- Admin changes are stored in LocalStorage using the same structure as `tasks.json`.
-- Use **Reset JSON defaults** in Admin to discard local overrides and reload `src/data/tasks.json` defaults.
+## Challenge content and persistence
 
-## Add a new language
+Challenge defaults live in `src/data/tasks.json`. Browser-local task edits and progress use LocalStorage. Catalog migrations are designed to preserve existing user/admin customizations while filling canonical fields only where required.
 
-1. Create a new translation file in `src/i18n/`, for example `fr.json`.
-2. Add the language code and resource to `src/i18n/index.ts`.
-3. Add the same language key to each task's `title` and `description` in `src/data/tasks.json`.
-4. The language switcher is generated from configured resources, so no route or page logic needs to change.
+Book state uses its own storage keys for read pages and saved pages. Challenge migrations and Book state are intentionally separate.
+
+## Audio and media
+
+Book chapter audio is mapped independently from Challenge/global gameplay audio. Book playback coordinates with other audio elements so starting one track pauses competing playback.
+
+Static assets are served from `public/`. Images used in production should have confirmed permission/license/source before release; do not remove third-party watermarks to bypass rights requirements.
 
 ## Development
 
@@ -69,37 +51,37 @@ npm install
 npm run dev
 ```
 
-## Production build
+## Production verification
 
 ```bash
+npm run verify
+```
+
+`npm run verify` runs strict TypeScript checking first, then the Vite production build. Netlify uses the same command so a deploy cannot pass while TypeScript errors remain.
+
+Other useful commands:
+
+```bash
+npm run typecheck
 npm run build
+npm run lint
 npm run preview
 ```
 
-`npm run build` runs Vite's production build and writes the bundled app to `dist/`.
+## Netlify
 
-## Package the repository
+`netlify.toml` publishes `dist/` and redirects all SPA routes to `index.html` for React Router deep links.
 
-Create a downloadable ZIP containing all source-controlled project files:
+Deploy previews are expected to pass on the exact pull-request head before merge.
+
+## Packaging
 
 ```bash
 npm run package
 ```
 
-The archive is written to `../A-pa-ch-i-GPS.zip` by default. Pass a custom path
-directly to the packaging script when needed, for example
-`bash scripts/package.sh ./release/A-pa-ch-i-GPS.zip`. Generated dependencies,
-build output, and Git metadata are intentionally excluded.
-
-## Netlify deployment
-
-This project includes `netlify.toml`.
-
-- Build command: `npm run build`
-- Publish directory: `dist`
-
-The redirect rule sends all routes to `index.html` so React Router deep links work in production.
+The packaging script creates a source archive while excluding generated dependencies, build output, and Git metadata.
 
 ## Privacy
 
-GPS Challenge runs entirely in the browser. Task overrides and history are stored in LocalStorage on the user's device. Location is requested only when a participant presses the GPS verification button.
+Location is requested only for location-based Challenge/Book interactions that need it. Reading state, saved pages, Challenge overrides, and local progress are stored in the browser unless a specific connected service explicitly handles a feature.
