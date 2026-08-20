@@ -21,7 +21,7 @@ const placeholder = /^(?:your[_-]|replace[_-]|example|placeholder|changeme|xxx+|
 const quotedCredentialShape = /^[A-Za-z0-9_+\/=.-]{16,}$/;
 const unquotedCredentialShape = /^[A-Za-z0-9_+\/=-]{16,}$/;
 const jwtPattern = /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g;
-const assignmentPattern = /(?=(?<![\p{ID_Continue}$\u200C\u200D])(?:"((?:\\(?:\r\n|\n|\r|[\s\S])|[^"\\\r\n])*)"|'((?:\\(?:\r\n|\n|\r|[\s\S])|[^'\\\r\n])*)'|([A-Za-z_$][A-Za-z0-9_$]*))\s*[:=]\s*(?:"((?:\\(?:\r\n|\n|\r|[\s\S])|[^"\\\r\n])*)"|'((?:\\(?:\r\n|\n|\r|[\s\S])|[^'\\\r\n])*)'|`((?:\\(?:\r\n|\n|\r|[\s\S])|[^`\\])*)`|([^\s,;#]+)))/gu;
+const keyCandidatePattern = /(?<![\p{ID_Continue}$\u200C\u200D])(?:"((?:\\(?:\r\n|\n|\r|[\s\S])|[^"\\\r\n])*)"|'((?:\\(?:\r\n|\n|\r|[\s\S])|[^'\\\r\n])*)'|([A-Za-z_$][A-Za-z0-9_$]*))/gu;
 
 const decodeStringLiteral = (raw) => {
   const decodeCodePoint = (hex) => {
@@ -59,21 +59,148 @@ const decodeJwtPayload = (token) => {
   }
 };
 
+const skipWhitespace = (text, start) => {
+  let index = start;
+  while (index < text.length && /\s/u.test(text[index])) index += 1;
+  return index;
+};
+
+const isSingleAssignment = (text, index) =>
+  text[index] === '='
+  && !/[=<>!]/.test(text[index - 1] ?? '')
+  && !/[=>]/.test(text[index + 1] ?? '');
+
+const readStringToken = (text, start, quote) => {
+  let index = start + 1;
+  let raw = '';
+
+  while (index < text.length) {
+    const char = text[index];
+    if (char === quote) return { raw, end: index + 1, quoted: true };
+
+    if (char === '\\') {
+      raw += char;
+      if (text[index + 1] === '\r' && text[index + 2] === '\n') {
+        raw += '\r\n';
+        index += 3;
+        continue;
+      }
+      if (text[index + 1] !== undefined) {
+        raw += text[index + 1];
+        index += 2;
+        continue;
+      }
+    }
+
+    if ((quote === '"' || quote === "'") && (char === '\n' || char === '\r')) return null;
+    raw += char;
+    index += 1;
+  }
+
+  return null;
+};
+
+const readValueToken = (text, start) => {
+  let index = skipWhitespace(text, start);
+  if (index >= text.length) return null;
+
+  const quote = text[index];
+  if (quote === '"' || quote === "'" || quote === '`') {
+    return readStringToken(text, index, quote);
+  }
+
+  const tokenStart = index;
+  while (index < text.length && !/[\s,;#}\])]/u.test(text[index])) index += 1;
+  return index > tokenStart
+    ? { raw: text.slice(tokenStart, index), end: index, quoted: false }
+    : null;
+};
+
+const findTypedInitializer = (text, start) => {
+  let index = skipWhitespace(text, start);
+  let parentheses = 0;
+  let brackets = 0;
+  let braces = 0;
+  let angles = 0;
+  let quote = null;
+
+  for (; index < text.length; index += 1) {
+    const char = text[index];
+
+    if (quote) {
+      if (char === '\\') {
+        if (text[index + 1] === '\r' && text[index + 2] === '\n') index += 2;
+        else if (text[index + 1] !== undefined) index += 1;
+        continue;
+      }
+      if (char === quote) quote = null;
+      continue;
+    }
+
+    if (char === '"' || char === "'" || char === '`') {
+      quote = char;
+      continue;
+    }
+    if (char === '(') { parentheses += 1; continue; }
+    if (char === ')') { if (parentheses) parentheses -= 1; continue; }
+    if (char === '[') { brackets += 1; continue; }
+    if (char === ']') { if (brackets) brackets -= 1; continue; }
+    if (char === '{') { braces += 1; continue; }
+    if (char === '}') {
+      if (braces) braces -= 1;
+      else if (!parentheses && !brackets && !angles) return -1;
+      continue;
+    }
+    if (char === '<') { angles += 1; continue; }
+    if (char === '>') { if (angles) angles -= 1; continue; }
+
+    if (!parentheses && !brackets && !braces && !angles) {
+      if (isSingleAssignment(text, index)) return index;
+      if (char === '\n' || char === '\r' || char === ';' || char === ',') return -1;
+    }
+  }
+
+  return -1;
+};
+
+const valueAfterCredentialKey = (text, keyEnd, quotedKey) => {
+  let index = skipWhitespace(text, keyEnd);
+
+  // Bracket notation such as process.env["OPENAI_API_KEY"] = "...".
+  if (quotedKey && text[index] === ']') index = skipWhitespace(text, index + 1);
+
+  if (isSingleAssignment(text, index)) return readValueToken(text, index + 1);
+  if (text[index] !== ':') return null;
+
+  // A colon can be an object-property separator or a TypeScript type annotation.
+  // Prefer a later top-level single '=' when present; otherwise treat the colon as
+  // the property separator and read the value immediately after it.
+  const typedInitializer = findTypedInitializer(text, index + 1);
+  if (typedInitializer >= 0) return readValueToken(text, typedInitializer + 1);
+  return readValueToken(text, index + 1);
+};
+
 const scanText = (file, text) => {
   if (/-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----/.test(text)) {
     findings.push(`${file}: private key material`);
   }
 
-  for (const match of text.matchAll(assignmentPattern)) {
+  for (const match of text.matchAll(keyCandidatePattern)) {
     const quotedKey = match[1] ?? match[2];
     const rawKey = quotedKey === undefined ? (match[3] ?? '') : decodeStringLiteral(quotedKey);
     const key = rawKey.toUpperCase();
     const name = credentialNames.get(key);
     if (!name) continue;
 
-    const quotedValue = match[4] ?? match[5] ?? match[6];
-    const value = quotedValue === undefined ? (match[7] ?? '') : decodeStringLiteral(quotedValue);
-    const shape = quotedValue === undefined ? unquotedCredentialShape : quotedCredentialShape;
+    const token = valueAfterCredentialKey(
+      text,
+      (match.index ?? 0) + match[0].length,
+      quotedKey !== undefined,
+    );
+    if (!token) continue;
+
+    const value = token.quoted ? decodeStringLiteral(token.raw) : token.raw;
+    const shape = token.quoted ? quotedCredentialShape : unquotedCredentialShape;
     if (shape.test(value) && !placeholder.test(value)) {
       findings.push(`${file}: ${name}`);
     }
