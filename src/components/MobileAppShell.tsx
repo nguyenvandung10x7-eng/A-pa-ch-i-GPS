@@ -121,6 +121,11 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     return BOOK_MUSIC_TRACKS.find((track) => track.id === activeChapter.music.trackId);
   }, [activeChapter]);
 
+  const rememberPlayingAppAudio = () => {
+    const appAudio = getGlobalAppAudio();
+    if (appAudio && !appAudio.paused) pausedAppAudioRef.current = appAudio;
+  };
+
   const restorePausedAppAudio = () => {
     const appAudio = pausedAppAudioRef.current;
     pausedAppAudioRef.current = null;
@@ -152,10 +157,6 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     if (!audio) return;
 
     const handlePlay = () => {
-      const appAudio = getGlobalAppAudio();
-      if (appAudio && appAudio !== audio && !appAudio.paused) {
-        pausedAppAudioRef.current = appAudio;
-      }
       coordinateAudioPlayback(audio);
       setBookSoundPlaying(true);
     };
@@ -193,6 +194,9 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
       return;
     }
 
+    // Capture the currently playing Challenge/Layout audio before BookPage's
+    // capture-phase play listener has a chance to pause it.
+    rememberPlayingAppAudio();
     void audio.play()
       .then(() => setBookSoundBlocked(false))
       .catch(() => {
@@ -221,6 +225,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
       audio.load();
     }
 
+    rememberPlayingAppAudio();
     void audio.play()
       .then(() => setBookSoundBlocked(false))
       .catch(() => setBookSoundBlocked(true));
@@ -233,7 +238,8 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
 
   const handleSignIn = () => {
     setAccountOpen(false);
-    void signIn(`${window.location.origin}${window.location.pathname}`);
+    const { origin, pathname: currentPathname, search, hash } = window.location;
+    void signIn(`${origin}${currentPathname}${search}${hash}`);
   };
 
   return (
