@@ -110,7 +110,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pausedAppAudioRef = useRef<HTMLAudioElement | null>(null);
   const copy = labels[language];
-  const normalizedPathname = pathname.toLowerCase();
+  const normalizedPathname = pathname.toLowerCase().replace(/\/+$/, '') || '/';
   const onBookSurface = isBookSurface(normalizedPathname);
   const readingMode = normalizedPathname.startsWith('/book/page/');
   const userLabel = useMemo(() => getUserLabel(user), [user]);
@@ -209,6 +209,12 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     const audio = audioRef.current;
     if (!audio) return;
 
+    if (!activeBookTrack) {
+      setBookSoundEnabled((current) => !current);
+      setBookSoundBlocked(false);
+      return;
+    }
+
     if (bookSoundPlaying) {
       audio.pause();
       setBookSoundEnabled(false);
@@ -217,7 +223,6 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     }
 
     setBookSoundEnabled(true);
-    if (!activeBookTrack) return;
 
     if (audio.dataset.trackId !== activeBookTrack.id) {
       audio.src = `/audio/${activeBookTrack.fileName}`;
