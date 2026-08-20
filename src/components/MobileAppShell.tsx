@@ -70,6 +70,12 @@ const readBookSoundEnabled = (): boolean => {
   return window.localStorage.getItem(BOOK_SOUND_STORAGE_KEY) === '1';
 };
 
+const coordinateAudioPlayback = (activeAudio: HTMLAudioElement) => {
+  document.querySelectorAll<HTMLAudioElement>('audio').forEach((audio) => {
+    if (audio !== activeAudio && !audio.paused) audio.pause();
+  });
+};
+
 const getChapterIdFromPath = (pathname: string): string | null => {
   const chapterMatch = pathname.match(/^\/book\/chapter\/([^/]+)/i);
   if (chapterMatch?.[1]) return decodeURIComponent(chapterMatch[1]);
@@ -125,7 +131,10 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handlePlay = () => setBookSoundPlaying(true);
+    const handlePlay = () => {
+      coordinateAudioPlayback(audio);
+      setBookSoundPlaying(true);
+    };
     const handlePause = () => setBookSoundPlaying(false);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
