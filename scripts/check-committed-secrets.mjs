@@ -9,27 +9,21 @@ const tracked = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
 const findings = [];
 const allowedEnvExamples = new Set(['.env.example', '.env.sample', '.env.template']);
 
-const credentialNames = [
+const credentialNames = new Map([
   ['SUPABASE_SERVICE_ROLE_KEY', 'Supabase service-role key'],
   ['AWS_SECRET_ACCESS_KEY', 'AWS secret access key'],
   ['OPENAI_API_KEY', 'OpenAI API key'],
   ['NETLIFY_AUTH_TOKEN', 'Netlify auth token'],
   ['GOOGLE_CLIENT_SECRET', 'Google client secret'],
-];
+]);
 
 const placeholder = /^(?:your[_-]|replace[_-]|example|placeholder|changeme|xxx+|<)/i;
 const quotedCredentialShape = /^[A-Za-z0-9_+\/=.-]{16,}$/;
 const unquotedCredentialShape = /^[A-Za-z0-9_+\/=-]{16,}$/;
 const jwtPattern = /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g;
+const assignmentPattern = /(?<![\p{ID_Continue}$\u200C\u200D])(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|([A-Za-z_$][A-Za-z0-9_$]*))\s*[:=]\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|`((?:\\.|[^`\\])*)`|([^\s,;#]+))/gu;
 
-const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-const credentialAssignmentRegex = (key) => new RegExp(
-  `(?<![\\p{ID_Continue}$\\u200C\\u200D])(?:["']${escapeRegex(key)}["']|${escapeRegex(key)})\\s*[:=]\\s*(?:"((?:\\\\.|[^"\\\\]){16,})"|'((?:\\\\.|[^'\\\\]){16,})'|([^\\s,;#]{16,}))`,
-  'giu',
-);
-
-const decodeQuotedValue = (raw) => {
+const decodeStringLiteral = (raw) => {
   const decodeCodePoint = (hex) => {
     try {
       const codePoint = Number.parseInt(hex, 16);
@@ -43,7 +37,15 @@ const decodeQuotedValue = (raw) => {
     .replace(/\\u\{([0-9a-fA-F]{1,6})\}/g, (_, hex) => decodeCodePoint(hex))
     .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => decodeCodePoint(hex))
     .replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) => decodeCodePoint(hex))
-    .replace(/\\(["'\\/])/g, '$1');
+    .replace(/\\0(?![0-9])/g, '\0')
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\r')
+    .replace(/\\t/g, '\t')
+    .replace(/\\b/g, '\b')
+    .replace(/\\f/g, '\f')
+    .replace(/\\v/g, '\v')
+    .replace(/\\\r?\n/g, '')
+    .replace(/\\([^\r\n])/g, '$1');
 };
 
 const decodeJwtPayload = (token) => {
@@ -62,15 +64,17 @@ const scanText = (file, text) => {
     findings.push(`${file}: private key material`);
   }
 
-  for (const [key, name] of credentialNames) {
-    const regex = credentialAssignmentRegex(key);
-    for (const match of text.matchAll(regex)) {
-      const quoted = match[1] ?? match[2];
-      const value = quoted === undefined ? (match[3] ?? '') : decodeQuotedValue(quoted);
-      const shape = quoted === undefined ? unquotedCredentialShape : quotedCredentialShape;
-      if (shape.test(value) && !placeholder.test(value)) {
-        findings.push(`${file}: ${name}`);
-      }
+  for (const match of text.matchAll(assignmentPattern)) {
+    const quotedKey = match[1] ?? match[2];
+    const key = quotedKey === undefined ? (match[3] ?? '') : decodeStringLiteral(quotedKey);
+    const name = credentialNames.get(key);
+    if (!name) continue;
+
+    const quotedValue = match[4] ?? match[5] ?? match[6];
+    const value = quotedValue === undefined ? (match[7] ?? '') : decodeStringLiteral(quotedValue);
+    const shape = quotedValue === undefined ? unquotedCredentialShape : quotedCredentialShape;
+    if (shape.test(value) && !placeholder.test(value)) {
+      findings.push(`${file}: ${name}`);
     }
   }
 
