@@ -109,6 +109,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   const pausedAppAudioRef = useRef<HTMLAudioElement | null>(null);
   const copy = labels[language];
   const normalizedPathname = pathname.toLowerCase();
+  const onBookSurface = isBookSurface(normalizedPathname);
   const readingMode = normalizedPathname.startsWith('/book/page/');
   const userLabel = useMemo(() => getUserLabel(user), [user]);
   const activeChapterId = useMemo(() => getChapterIdFromPath(pathname), [pathname]);
@@ -156,11 +157,11 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     const audio = audioRef.current;
     if (!audio) return;
 
-    if (!activeBookTrack || !isBookSurface(normalizedPathname)) {
+    if (!activeBookTrack || !onBookSurface) {
       audio.pause();
       setBookSoundBlocked(false);
 
-      if (!isBookSurface(normalizedPathname) && pausedAppAudioRef.current) {
+      if (!onBookSurface && pausedAppAudioRef.current) {
         const appAudio = pausedAppAudioRef.current;
         pausedAppAudioRef.current = null;
         if (appAudio.isConnected && appAudio.paused) {
@@ -193,7 +194,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
         setBookSoundPlaying(false);
         setBookSoundBlocked(true);
       });
-  }, [activeBookTrack, bookSoundEnabled, normalizedPathname]);
+  }, [activeBookTrack, bookSoundEnabled, onBookSurface]);
 
   const toggleBookSound = () => {
     const audio = audioRef.current;
@@ -237,16 +238,18 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
             BOOK OF DIEN BIEN
           </Link>
           <div className="editorial-shell__header-actions">
-            <button
-              type="button"
-              onClick={toggleBookSound}
-              className={`editorial-shell__sound ${bookSoundEnabled ? 'is-enabled' : ''}`}
-              aria-pressed={bookSoundEnabled}
-              title={bookSoundBlocked ? copy.soundBlocked : bookSoundEnabled ? copy.soundOn : copy.soundOff}
-            >
-              {bookSoundPlaying ? <Pause aria-hidden="true" /> : bookSoundEnabled ? <Music2 aria-hidden="true" /> : <Play aria-hidden="true" />}
-              <span>{bookSoundBlocked ? copy.soundBlocked : copy.sound}</span>
-            </button>
+            {onBookSurface ? (
+              <button
+                type="button"
+                onClick={toggleBookSound}
+                className={`editorial-shell__sound ${bookSoundEnabled ? 'is-enabled' : ''}`}
+                aria-pressed={bookSoundEnabled}
+                title={bookSoundBlocked ? copy.soundBlocked : bookSoundEnabled ? copy.soundOn : copy.soundOff}
+              >
+                {bookSoundPlaying ? <Pause aria-hidden="true" /> : bookSoundEnabled ? <Music2 aria-hidden="true" /> : <Play aria-hidden="true" />}
+                <span>{bookSoundBlocked ? copy.soundBlocked : copy.sound}</span>
+              </button>
+            ) : null}
             <button type="button" onClick={handleAccountAction} className="editorial-shell__account">
               {user ? <UserRound aria-hidden="true" /> : <LogIn aria-hidden="true" />}
               <span>{loading ? '…' : userLabel ?? copy.signIn}</span>
@@ -273,7 +276,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
       {!readingMode && (
         <nav aria-label={language === 'vi' ? 'Hai không gian chính' : 'Primary surfaces'} className="editorial-shell__surface-nav">
           <div className="editorial-shell__surface-nav-inner">
-            <NavLink to="/book" className={() => isBookSurface(normalizedPathname) ? 'is-active' : ''}>{copy.book}</NavLink>
+            <NavLink to="/book" className={() => onBookSurface ? 'is-active' : ''}>{copy.book}</NavLink>
             <span aria-hidden="true" />
             <NavLink to="/challenge" className={() => isFieldSurface(normalizedPathname) ? 'is-active' : ''}>{copy.field}</NavLink>
           </div>
@@ -294,9 +297,11 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
 
             <div className="editorial-account-sheet__links">
               <Link to="/saved" onClick={() => setAccountOpen(false)}><Bookmark /><span>{copy.saved}</span><ChevronRight /></Link>
-              <button type="button" onClick={toggleBookSound}>
-                <Music2 /><span>{copy.sound}</span><strong>{bookSoundEnabled ? copy.soundOn : copy.soundOff}</strong>
-              </button>
+              {onBookSurface ? (
+                <button type="button" onClick={toggleBookSound}>
+                  <Music2 /><span>{copy.sound}</span><strong>{bookSoundEnabled ? copy.soundOn : copy.soundOff}</strong>
+                </button>
+              ) : null}
               <button type="button" onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}>
                 <span className="editorial-account-sheet__text-icon">Aa</span><span>{copy.language}</span><strong>{language === 'vi' ? 'Tiếng Việt' : 'English'}</strong>
               </button>
