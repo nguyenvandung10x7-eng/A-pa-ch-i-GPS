@@ -27,3 +27,13 @@
 .book-reading-v2--rebellion .book-reading-v2__content > div > section article > div:first-child p {
   color: #88847e !important;
 }
+
+.book-reading-v2--rebellion .book-reading-v2__content article div[class*="bg-[rgba(255,255,255,0.58)]"] {
+  background: rgba(255, 255, 255, .045) !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content article div[class*="bg-[rgba(255,255,255,0.58)]"] > p {
+  color: #e4dfd7 !important;
+}
