@@ -5,6 +5,7 @@ import { getChapter, getChapterPages, getPage, getPublishedChapters } from '../s
 import type { BookLocalizedText } from '../types/book';
 import type { LanguageCode } from '../types/task';
 import './book-rebuild.css';
+import './chapter13-night.css';
 
 type BookPageProps = { language: LanguageCode };
 
