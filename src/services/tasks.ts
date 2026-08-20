@@ -114,19 +114,19 @@ const normalizeGps = (value: unknown, fallback: ChallengeTask['gps']): Challenge
   }
 
   const candidate = value as Partial<ChallengeTask['gps']>;
-  const hasValidLat = typeof candidate.lat === 'number' && Number.isFinite(candidate.lat);
-  const hasValidLng = typeof candidate.lng === 'number' && Number.isFinite(candidate.lng);
-  const hasValidRadius = typeof candidate.radius === 'number' && Number.isFinite(candidate.radius) && candidate.radius > 0;
+  const lat = candidate.lat;
+  const lng = candidate.lng;
+  const radius = candidate.radius;
 
-  if (!hasValidLat || !hasValidLng || !hasValidRadius) {
+  if (
+    typeof lat !== 'number' || !Number.isFinite(lat)
+    || typeof lng !== 'number' || !Number.isFinite(lng)
+    || typeof radius !== 'number' || !Number.isFinite(radius) || radius <= 0
+  ) {
     return fallback;
   }
 
-  return {
-    lat: candidate.lat,
-    lng: candidate.lng,
-    radius: candidate.radius,
-  };
+  return { lat, lng, radius };
 };
 
 export const defaultTasks = tasksJson as ChallengeTask[];

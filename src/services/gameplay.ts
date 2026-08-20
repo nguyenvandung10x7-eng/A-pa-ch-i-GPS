@@ -664,7 +664,7 @@ export const assignRandomChallenge = async (
   candidateTasks?: ChallengeTask[],
 ): Promise<NextChallengeResult> => {
   const gate = captureMutationGate(progress);
-  return runLockedMutation(
+  return runLockedMutation<NextChallengeResult>(
     catalogTasks,
     gate,
     (authoritative) => ({ progress: authoritative, stale: true, assigned: false }),

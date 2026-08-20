@@ -34,7 +34,7 @@ export const loadVoteCountMap = async (): Promise<VoteCountMap> => {
   let cursor: string | null = null;
 
   while (true) {
-    const { data, error } = await supabase.rpc<VoteCountRow>('get_submission_vote_counts', {
+    const { data, error } = await supabase.rpc('get_submission_vote_counts', {
       p_cursor: cursor,
       p_limit: pageSize,
     });
