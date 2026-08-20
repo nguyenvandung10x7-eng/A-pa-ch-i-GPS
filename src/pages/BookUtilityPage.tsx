@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Bookmark, Loader2, Map, MapPin, Navigation } from 'lucide-react';
+import { ArrowRight, Loader2, MapPin, Navigation } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { bookLocationMapUrl, getLocatedBookItems, type NearMeBookItem } from '../services/bookNearMe';
 import { GeolocationRequestError, getCurrentPosition } from '../utils/geo';
 import type { LanguageCode } from '../types/task';
+import './book-utility-v2.css';
 
 type BookUtilityPageProps = {
   language: LanguageCode;
@@ -16,14 +17,14 @@ const copy = {
   vi: {
     back: 'Về Book',
     nearMe: {
-      eyebrow: 'BOOK OF DIEN BIEN · NEAR ME',
+      eyebrow: 'BOOK OF DIEN BIEN · GẦN TÔI',
       title: 'Gần tôi',
-      description: 'Dùng vị trí hiện tại để tìm những trang ký ức và trải nghiệm ở gần bạn. Book vẫn đọc đầy đủ nếu bạn không bật GPS.',
-      privacy: 'Vị trí chỉ được lấy khi bạn bấm nút bên dưới. Trang này không ghi vị trí vào localStorage và không thay đổi dữ liệu thử thách cũ.',
+      description: 'Dùng vị trí hiện tại để tìm những nơi trong cuốn sách đang ở quanh bạn.',
+      privacy: 'Vị trí chỉ được lấy sau khi bạn bấm nút. Book không lưu tọa độ hiện tại vào localStorage.',
       useLocation: 'Dùng vị trí của tôi',
       refresh: 'Cập nhật vị trí',
       locating: 'Đang xác định vị trí…',
-      results: 'Gần bạn lúc này',
+      results: 'Những nơi quanh bạn',
       page: 'Trang',
       experience: 'Trải nghiệm',
       read: 'Đọc trang',
@@ -36,10 +37,10 @@ const copy = {
       genericError: 'Không thể lấy vị trí lúc này. Hãy thử lại.',
     },
     saved: {
-      eyebrow: 'BOOK OF DIEN BIEN · SAVED',
-      title: 'Đã lưu',
-      description: 'Những trang bạn muốn quay lại sẽ xuất hiện ở đây khi lớp trạng thái Book được bổ sung.',
-      note: 'Hiện tại đây chỉ là route shell. Chưa có dữ liệu Saved mới được ghi vào localStorage.',
+      eyebrow: 'BOOK OF DIEN BIEN · DẤU TRANG',
+      title: 'Dấu trang',
+      description: 'Dấu trang hiện được mở từ mục Tài khoản.',
+      note: 'Hãy quay lại Book và mở Dấu trang từ utility sheet.',
     },
   },
   en: {
@@ -47,12 +48,12 @@ const copy = {
     nearMe: {
       eyebrow: 'BOOK OF DIEN BIEN · NEAR ME',
       title: 'Near me',
-      description: 'Use your current location to find nearby memory pages and experiences. The Book remains fully readable without GPS.',
-      privacy: 'Your location is requested only after you tap the button below. This page does not store your position in localStorage or change legacy challenge data.',
+      description: 'Use your current location to find places from the Book around you.',
+      privacy: 'Location is requested only after you tap the button. The Book does not store your current coordinates in localStorage.',
       useLocation: 'Use my location',
       refresh: 'Refresh location',
       locating: 'Finding your location…',
-      results: 'Near you now',
+      results: 'Places around you',
       page: 'Page',
       experience: 'Experience',
       read: 'Read page',
@@ -65,10 +66,10 @@ const copy = {
       genericError: 'Your location could not be retrieved. Please try again.',
     },
     saved: {
-      eyebrow: 'BOOK OF DIEN BIEN · SAVED',
-      title: 'Saved',
-      description: 'Pages you want to return to will appear here once Book state is added.',
-      note: 'This is currently only a route shell. No new Saved data is written to localStorage yet.',
+      eyebrow: 'BOOK OF DIEN BIEN · BOOKMARKS',
+      title: 'Bookmarks',
+      description: 'Bookmarks are available from the Account utility sheet.',
+      note: 'Return to the Book and open Bookmarks from the utility sheet.',
     },
   },
 } as const;
@@ -90,7 +91,7 @@ const errorMessageFor = (error: unknown, language: LanguageCode): string => {
   return c.genericError;
 };
 
-const NearMeResultCard = ({ item, language }: { item: NearMeBookItem; language: LanguageCode }) => {
+const NearMeResultRow = ({ item, language }: { item: NearMeBookItem; language: LanguageCode }) => {
   const c = copy[language].nearMe;
   const title = item.title[language] ?? item.title.vi;
   const description = item.description?.[language] ?? item.description?.vi;
@@ -101,45 +102,21 @@ const NearMeResultCard = ({ item, language }: { item: NearMeBookItem; language: 
   const external = !isPage;
 
   return (
-    <article className="rounded-[1.55rem] bg-[rgba(252,249,241,0.88)] p-5 ring-1 ring-[rgba(91,67,38,0.1)] sm:p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[var(--earth-700)]">
-            {isPage ? c.page : c.experience} · {item.chapterNumber}
-          </p>
-          <h2 className="mt-2 text-xl font-black leading-tight text-[var(--forest-950)]">{title}</h2>
-        </div>
-        <div className="shrink-0 rounded-full bg-[rgba(230,220,196,0.72)] px-3 py-1.5 text-sm font-black text-[var(--forest-800)]">
-          {formatDistance(item.distanceMeters, language)}
+    <article className="book-utility-v2__row">
+      <div>
+        <p className="book-utility-v2__meta">{isPage ? c.page : c.experience} · {item.chapterNumber}</p>
+        <h3>{title}</h3>
+        {description ? <p>{description}</p> : null}
+        {locationLabel ? <div className="book-utility-v2__place"><MapPin />{locationLabel}</div> : null}
+        <div className="book-utility-v2__row-actions">
+          {external ? (
+            <a href={href} target="_blank" rel="noreferrer">{actionLabel}<ArrowRight /></a>
+          ) : (
+            <Link to={href}>{actionLabel}<ArrowRight /></Link>
+          )}
         </div>
       </div>
-
-      {description && <p className="mt-3 text-sm leading-6 text-[var(--forest-700)]">{description}</p>}
-      {locationLabel && (
-        <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-[var(--earth-700)]">
-          <MapPin className="h-4 w-4" />
-          {locationLabel}
-        </p>
-      )}
-
-      {external ? (
-        <a
-          href={href}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--forest-900)] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[var(--forest-700)]"
-        >
-          {item.externalUrl ? <Navigation className="h-4 w-4" /> : <Map className="h-4 w-4" />}
-          {actionLabel}
-        </a>
-      ) : (
-        <Link
-          to={href}
-          className="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--forest-900)] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[var(--forest-700)]"
-        >
-          {actionLabel}
-        </Link>
-      )}
+      <span className="book-utility-v2__distance">{formatDistance(item.distanceMeters, language)}</span>
     </article>
   );
 };
@@ -167,14 +144,14 @@ export const BookUtilityPage = ({ language, mode }: BookUtilityPageProps) => {
   if (mode === 'saved') {
     const content = c.saved;
     return (
-      <div className="mx-auto max-w-4xl py-8 sm:py-14">
-        <Link to="/book" className="text-sm font-bold text-[var(--forest-700)] hover:text-[var(--forest-950)]">← {c.back}</Link>
-        <section className="mt-8 rounded-[2rem] bg-[rgba(247,242,231,0.76)] px-5 py-9 shadow-[0_24px_60px_rgba(50,45,32,0.08)] ring-1 ring-[rgba(91,67,38,0.1)] sm:px-10 sm:py-12">
-          <div className="flex items-center gap-3 text-[var(--earth-700)]"><Bookmark className="h-5 w-5" /><p className="text-xs font-black uppercase tracking-[0.24em]">{content.eyebrow}</p></div>
-          <h1 className="mt-5 text-4xl font-black tracking-tight text-[var(--forest-950)] sm:text-6xl">{content.title}</h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--forest-700)]">{content.description}</p>
-          <p className="mt-8 rounded-[1.4rem] bg-[rgba(230,220,196,0.58)] px-5 py-4 text-sm leading-7 text-[var(--forest-700)] ring-1 ring-[rgba(91,67,38,0.1)]">{content.note}</p>
-        </section>
+      <div className="book-utility-v2">
+        <Link to="/book" className="book-utility-v2__back">← {c.back}</Link>
+        <header className="book-utility-v2__header">
+          <p className="book-utility-v2__eyebrow">{content.eyebrow}</p>
+          <h1>{content.title}</h1>
+          <p>{content.description}</p>
+        </header>
+        <p className="book-utility-v2__empty">{content.note}</p>
       </div>
     );
   }
@@ -182,49 +159,46 @@ export const BookUtilityPage = ({ language, mode }: BookUtilityPageProps) => {
   const content = c.nearMe;
 
   return (
-    <div className="mx-auto max-w-4xl py-8 sm:py-14">
-      <Link to="/book" className="text-sm font-bold text-[var(--forest-700)] hover:text-[var(--forest-950)]">← {c.back}</Link>
+    <div className="book-utility-v2">
+      <Link to="/book" className="book-utility-v2__back">← {c.back}</Link>
 
-      <section className="mt-8 rounded-[2rem] bg-[rgba(247,242,231,0.76)] px-5 py-9 shadow-[0_24px_60px_rgba(50,45,32,0.08)] ring-1 ring-[rgba(91,67,38,0.1)] sm:px-10 sm:py-12">
-        <div className="flex items-center gap-3 text-[var(--earth-700)]"><MapPin className="h-5 w-5" /><p className="text-xs font-black uppercase tracking-[0.24em]">{content.eyebrow}</p></div>
-        <h1 className="mt-5 text-4xl font-black tracking-tight text-[var(--forest-950)] sm:text-6xl">{content.title}</h1>
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--forest-700)]">{content.description}</p>
-        <p className="mt-7 max-w-2xl text-sm leading-7 text-[var(--forest-600)]">{content.privacy}</p>
-
+      <header className="book-utility-v2__header">
+        <p className="book-utility-v2__eyebrow">{content.eyebrow}</p>
+        <h1>{content.title}</h1>
+        <p>{content.description}</p>
+        <div className="book-utility-v2__privacy">{content.privacy}</div>
         <button
           type="button"
           onClick={() => { void locate(); }}
           disabled={nearMeState === 'loading'}
-          className="mt-7 inline-flex items-center gap-2 rounded-full bg-[var(--forest-900)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--forest-700)] disabled:cursor-wait disabled:opacity-70"
+          className="book-utility-v2__action"
         >
-          {nearMeState === 'loading' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+          {nearMeState === 'loading' ? <Loader2 className="animate-spin" /> : <Navigation />}
           {nearMeState === 'loading' ? content.locating : nearMeState === 'ready' ? content.refresh : content.useLocation}
         </button>
+      </header>
 
-        {nearMeState === 'error' && (
-          <p className="mt-6 rounded-[1.4rem] bg-[rgba(230,220,196,0.58)] px-5 py-4 text-sm leading-7 text-[var(--forest-700)] ring-1 ring-[rgba(91,67,38,0.1)]">{nearMeError}</p>
-        )}
-      </section>
+      {nearMeState === 'error' ? <p className="book-utility-v2__error">{nearMeError}</p> : null}
 
-      {nearMeState === 'ready' && (
-        <section className="mt-8">
-          <div className="mb-4 flex items-end justify-between gap-4 px-1">
+      {nearMeState === 'ready' ? (
+        <section className="book-utility-v2__section">
+          <div className="book-utility-v2__section-head">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--earth-700)]">BOOK OF DIEN BIEN</p>
-              <h2 className="mt-1 text-2xl font-black text-[var(--forest-950)]">{content.results}</h2>
+              <p>BOOK OF DIEN BIEN</p>
+              <h2>{content.results}</h2>
             </div>
-            <p className="text-sm font-bold text-[var(--forest-600)]">{nearMeItems.length}</p>
+            <span>{nearMeItems.length}</span>
           </div>
 
           {nearMeItems.length === 0 ? (
-            <p className="rounded-[1.4rem] bg-[rgba(247,242,231,0.76)] px-5 py-5 text-sm leading-7 text-[var(--forest-700)] ring-1 ring-[rgba(91,67,38,0.1)]">{content.noResults}</p>
+            <p className="book-utility-v2__empty">{content.noResults}</p>
           ) : (
-            <div className="space-y-4">
-              {nearMeItems.map((item) => <NearMeResultCard key={item.id} item={item} language={language} />)}
+            <div className="book-utility-v2__list">
+              {nearMeItems.map((item) => <NearMeResultRow key={item.id} item={item} language={language} />)}
             </div>
           )}
         </section>
-      )}
+      ) : null}
     </div>
   );
 };
