@@ -96,9 +96,10 @@ const writeSavedState = (state: SavedStateV1) => {
 
 export const markBookPageRead = (pageId: BookPage['id']) => {
   const current = readStoredBookState();
-  const readPageIds = current.readPageIds.includes(pageId)
-    ? current.readPageIds
-    : [...current.readPageIds, pageId];
+  const readPageIds = [
+    ...current.readPageIds.filter((id) => id !== pageId),
+    pageId,
+  ];
 
   writeBookState({
     ...current,

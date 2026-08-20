@@ -1,0 +1,286 @@
+.book-reading-v2 {
+  --paper: #f1eee7;
+  --ink: #171717;
+  --muted: #77736c;
+  --line: #d8d3c9;
+  --signal: #9d382c;
+  color: var(--ink);
+}
+
+.book-reading-v2__utility {
+  position: sticky;
+  top: calc(3.65rem + env(safe-area-inset-top));
+  z-index: 45;
+  display: flex;
+  justify-content: flex-end;
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: .55rem 1rem 0;
+  pointer-events: none;
+}
+
+.book-reading-v2__utility button {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 1px solid rgba(23, 23, 23, .12);
+  border-radius: 999px;
+  background: rgba(241, 238, 231, .9);
+  color: var(--ink);
+  padding: 0;
+  pointer-events: auto;
+  backdrop-filter: blur(14px);
+  cursor: pointer;
+}
+
+.book-reading-v2__utility svg {
+  width: .95rem;
+  height: .95rem;
+  stroke-width: 1.5;
+}
+
+/* The legacy BookPage keeps content semantics. This layer removes its app-card chrome. */
+.book-reading-v2__content > div {
+  max-width: 46rem !important;
+  margin: 0 auto !important;
+  padding: 1rem 1rem 0 !important;
+}
+
+.book-reading-v2__content > div > a:first-child {
+  display: inline-flex !important;
+  align-items: center;
+  gap: .45rem;
+  color: var(--muted) !important;
+  font-size: .66rem !important;
+  font-weight: 600 !important;
+  letter-spacing: .08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.book-reading-v2__content article {
+  margin-top: 2.6rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+}
+
+.book-reading-v2__content article > p:first-child {
+  color: var(--signal) !important;
+  font-size: .62rem !important;
+  font-weight: 700 !important;
+  letter-spacing: .16em !important;
+}
+
+.book-reading-v2__content article > h1 {
+  max-width: 38rem;
+  margin-top: .85rem !important;
+  color: var(--ink) !important;
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(2.55rem, 8vw, 4.9rem) !important;
+  font-weight: 500 !important;
+  line-height: .98 !important;
+  letter-spacing: -.035em !important;
+}
+
+.book-reading-v2__content article > h1 + p {
+  max-width: 34rem;
+  margin-top: 1.35rem !important;
+  color: #59554e !important;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.12rem !important;
+  line-height: 1.7 !important;
+}
+
+.book-reading-v2__content article > div {
+  margin-top: 3rem !important;
+}
+
+.book-reading-v2__content article > div > p {
+  margin: 0 0 1.65rem !important;
+  color: var(--ink) !important;
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(1.08rem, 2.8vw, 1.22rem) !important;
+  line-height: 1.82 !important;
+}
+
+.book-reading-v2__content article figure {
+  margin: 3rem -1rem !important;
+}
+
+.book-reading-v2__content article figure img,
+.book-reading-v2__content article div > img {
+  border-radius: 0 !important;
+}
+
+.book-reading-v2__content article figcaption {
+  padding: .65rem 1rem 0 !important;
+  color: var(--muted) !important;
+  font-size: .68rem !important;
+  line-height: 1.45 !important;
+}
+
+.book-reading-v2__content article blockquote {
+  margin: 3rem 0 !important;
+  border-left: 1px solid var(--signal) !important;
+  color: var(--ink) !important;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.42rem !important;
+  font-weight: 400;
+  line-height: 1.55 !important;
+}
+
+.book-reading-v2__content article aside {
+  margin: 2.6rem 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 1.2rem 0 1.2rem 1rem !important;
+  border-left: 1px solid var(--line) !important;
+  color: var(--muted) !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+}
+
+.book-reading-v2__content audio {
+  border-radius: 0 !important;
+}
+
+.book-reading-v2__content > div > nav {
+  margin-top: 4rem !important;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.book-reading-v2__content > div > nav a {
+  min-height: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--ink) !important;
+  padding: .65rem 0 !important;
+  font-size: .68rem !important;
+  letter-spacing: .06em;
+  --tw-ring-shadow: 0 0 #0000 !important;
+}
+
+.book-reading-v2__content > div > section {
+  margin-top: 4.5rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 1.2rem 0 0 !important;
+  border-top: 2px solid var(--ink) !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+}
+
+.book-reading-v2__content > div > section article {
+  border-top: 1px solid var(--line) !important;
+  padding: 1rem 0 !important;
+}
+
+.book-reading-v2__places {
+  max-width: 46rem;
+  margin: 4.5rem auto 7rem;
+  padding: 0 1rem;
+}
+
+.book-reading-v2__places > header {
+  border-top: 2px solid var(--ink);
+  padding: 1.15rem 0 1.6rem;
+}
+
+.book-reading-v2__places > header p {
+  margin: 0;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.book-reading-v2__places > header div {
+  max-width: 35rem;
+  margin-top: .65rem;
+  color: #55514b;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.book-reading-v2__place-list {
+  border-top: 1px solid var(--line);
+}
+
+.book-reading-v2__place-list > a {
+  display: grid;
+  grid-template-columns: 1.2rem 1fr auto;
+  gap: .75rem;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.book-reading-v2__place-list > a > svg {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 1.5;
+}
+
+.book-reading-v2__place-list strong {
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.book-reading-v2__place-list small {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .45rem;
+  margin-top: .3rem;
+  color: var(--muted);
+  font-size: .63rem;
+}
+
+.book-reading-v2__place-list small em {
+  color: var(--signal);
+  font-style: normal;
+  font-weight: 650;
+}
+
+.book-reading-v2__place-list > a > span {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  color: var(--muted);
+  font-size: .66rem;
+  white-space: nowrap;
+}
+
+.book-reading-v2__place-list > a > span svg {
+  width: .9rem;
+  height: .9rem;
+  stroke-width: 1.4;
+}
+
+@media (min-width: 720px) {
+  .book-reading-v2__content article figure {
+    margin-inline: -3.5rem !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .book-reading-v2__place-list > a {
+    grid-template-columns: 1.1rem 1fr 1rem;
+  }
+
+  .book-reading-v2__place-list > a > span {
+    font-size: 0;
+  }
+}

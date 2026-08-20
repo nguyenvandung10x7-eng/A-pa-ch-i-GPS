@@ -1,4 +1,3 @@
-/* Public UI rebuild: keep legacy Layout mounted for audio/auth behavior but remove its old visual chrome only while the public shell is mounted. */
 body.public-shell-active .app-shell > .mountain-scene,
 body.public-shell-active .app-shell > .relative > header,
 body.public-shell-active .app-shell > .relative > nav,
@@ -16,8 +15,10 @@ body.public-shell-active .app-shell > .relative > main {
   margin: 0 !important;
 }
 
-body.public-shell-active {
-  background: #f4efe3 !important;
+body.public-shell-active,
+body.public-shell-active::before,
+body.public-shell-active::after {
+  background: #f1eee7 !important;
 }
 
 body.public-shell-active::before,
@@ -25,41 +26,339 @@ body.public-shell-active::after {
   display: none !important;
 }
 
-.new-public-shell {
-  font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
+.editorial-shell {
+  --paper: #f1eee7;
+  --ink: #171717;
+  --muted: #77736c;
+  --line: #d8d3c9;
+  --signal: #9d382c;
+  --field: #11110f;
+  --field-ink: #f2eee6;
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", "Be Vietnam Pro", "Segoe UI", sans-serif;
 }
 
-.new-public-shell h1,
-.new-public-shell h2,
-.new-public-shell h3,
-.new-public-shell .book-display-title {
+.editorial-shell__frame {
+  position: relative;
+  background: var(--paper);
+}
+
+.editorial-shell__header {
+  position: relative;
+  z-index: 70;
+  display: flex;
+  min-height: 3.65rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--line);
+  padding: calc(.55rem + env(safe-area-inset-top)) 1rem .55rem;
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.editorial-shell__brand {
+  color: inherit;
   font-family: Georgia, "Times New Roman", serif;
-  letter-spacing: -0.025em;
+  font-size: .78rem;
+  letter-spacing: .09em;
+  text-decoration: none;
 }
 
-.new-public-shell .wood-panel,
-.new-public-shell .glass,
-.new-public-shell .textile-border {
-  background: #faf6ec;
-  border: 1px solid #ded5c4;
+.editorial-shell__account {
+  display: inline-flex;
+  align-items: center;
+  gap: .42rem;
+  max-width: 48%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: .72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.editorial-shell__account svg {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 1.6;
+  flex: none;
+}
+
+.editorial-shell__account span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editorial-shell__surface-nav {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 80;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper) 96%, transparent);
+  padding-bottom: env(safe-area-inset-bottom);
+  backdrop-filter: blur(16px);
+}
+
+.editorial-shell__surface-nav-inner {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  align-items: center;
+  max-width: 60rem;
+  min-height: 4.2rem;
+  margin: 0 auto;
+}
+
+.editorial-shell__surface-nav-inner > span {
+  width: 1px;
+  height: 1.4rem;
+  background: var(--line);
+}
+
+.editorial-shell__surface-nav a {
+  position: relative;
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: .76rem;
+  font-weight: 650;
+  letter-spacing: .18em;
+  text-decoration: none;
+}
+
+.editorial-shell__surface-nav a::after {
+  content: "";
+  position: absolute;
+  bottom: .7rem;
+  left: 50%;
+  width: 1.8rem;
+  height: 1px;
+  transform: translateX(-50%) scaleX(0);
+  background: var(--signal);
+  transition: transform 180ms ease;
+}
+
+.editorial-shell__surface-nav a.is-active {
+  color: var(--ink);
+}
+
+.editorial-shell__surface-nav a.is-active::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+.editorial-shell--field,
+.editorial-shell--field .editorial-shell__frame {
+  background: var(--field);
+  color: var(--field-ink);
+}
+
+.editorial-shell--field .editorial-shell__header,
+.editorial-shell--field .editorial-shell__surface-nav {
+  border-color: rgba(242, 238, 230, .17);
+  background: rgba(17, 17, 15, .94);
+}
+
+.editorial-shell--field .editorial-shell__surface-nav-inner > span {
+  background: rgba(242, 238, 230, .17);
+}
+
+.editorial-shell--field .editorial-shell__surface-nav a {
+  color: #8f8b84;
+}
+
+.editorial-shell--field .editorial-shell__surface-nav a.is-active {
+  color: var(--field-ink);
+}
+
+.editorial-account-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(10, 10, 9, .36);
+  backdrop-filter: blur(3px);
+}
+
+.editorial-account-sheet {
+  width: min(100%, 30rem);
+  max-height: min(82dvh, 42rem);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 1rem 1rem 0 0;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 1.2rem 1.1rem calc(1.25rem + env(safe-area-inset-bottom));
+  box-shadow: 0 -1.5rem 4rem rgba(0, 0, 0, .12);
+}
+
+.editorial-account-sheet__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.editorial-account-sheet__head p {
+  margin: 0 0 .4rem;
+  color: var(--muted);
+  font-size: .68rem;
+  font-weight: 650;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.editorial-account-sheet__head strong,
+.editorial-account-sheet__head small {
+  display: block;
+}
+
+.editorial-account-sheet__head strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.editorial-account-sheet__head small {
+  margin-top: .25rem;
+  color: var(--muted);
+  font-size: .73rem;
+}
+
+.editorial-account-sheet__head button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.editorial-account-sheet__head svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.editorial-account-sheet__links {
+  display: grid;
+  padding: .75rem 0;
+}
+
+.editorial-account-sheet__links a,
+.editorial-account-sheet__links button {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr auto;
+  align-items: center;
+  gap: .65rem;
+  min-height: 3.2rem;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  padding: 0 .1rem;
+  font: inherit;
+  font-size: .82rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.editorial-account-sheet__links svg {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 1.5;
+}
+
+.editorial-account-sheet__links strong {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 500;
+}
+
+.editorial-account-sheet__text-icon {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .9rem;
+}
+
+.editorial-account-sheet__logout,
+.editorial-account-sheet__login {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .8rem;
+  border: 0;
+  background: transparent;
+  font-size: .78rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.editorial-account-sheet__logout {
+  color: var(--signal);
+}
+
+.editorial-account-sheet__login {
+  width: 100%;
+  min-height: 2.85rem;
+  justify-content: center;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+}
+
+.editorial-account-sheet__logout svg,
+.editorial-account-sheet__login svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.editorial-shell h1,
+.editorial-shell h2,
+.editorial-shell h3,
+.editorial-shell .book-display-title {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: -.025em;
+}
+
+.editorial-shell .wood-panel,
+.editorial-shell .glass,
+.editorial-shell .textile-border {
+  border: 1px solid var(--line);
+  background: #f7f3ea;
   box-shadow: none;
 }
 
-.new-public-shell .textile-divider,
-.new-public-shell .mountain-scene,
-.new-public-shell .ban-flower::after {
+.editorial-shell .textile-divider,
+.editorial-shell .mountain-scene,
+.editorial-shell .ban-flower::after {
   display: none;
 }
 
-.new-public-shell .leaflet-container {
-  border-radius: 0;
+.editorial-shell .leaflet-container {
   border: 0;
+  border-radius: 0;
   box-shadow: none;
 }
 
-@media (min-width: 900px) {
-  .new-public-shell {
-    border-left: 1px solid #ded5c4;
-    border-right: 1px solid #ded5c4;
+@media (min-width: 720px) {
+  .editorial-shell__header {
+    padding-inline: 1.5rem;
+  }
+
+  .editorial-account-layer {
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 4.5rem 1.4rem 1.4rem;
+  }
+
+  .editorial-account-sheet {
+    border-bottom: 1px solid var(--line);
+    border-radius: .8rem;
   }
 }
