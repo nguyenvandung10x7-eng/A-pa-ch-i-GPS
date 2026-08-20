@@ -7,6 +7,7 @@ import './i18n/reactI18next';
 import './index.css';
 import './book-soundtrack.css';
 import './field-v2.css';
+import './typography-v2.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
