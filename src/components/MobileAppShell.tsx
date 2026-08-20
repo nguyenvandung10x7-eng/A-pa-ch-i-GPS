@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Bookmark, ChevronRight, LogIn, LogOut, Music2, Pause, Play, UserRound, X } from 'lucide-react';
+import { Bookmark, ChevronRight, LogIn, LogOut, MapPin, Music2, Pause, Play, UserRound, X } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { BOOK_MUSIC_TRACKS } from '../data/music';
@@ -15,6 +15,7 @@ const labels = {
     field: 'FIELD',
     signIn: 'Đăng nhập',
     saved: 'Dấu trang',
+    nearby: 'Gần tôi',
     language: 'Ngôn ngữ',
     privacy: 'Quyền riêng tư',
     legal: 'Pháp lý',
@@ -31,6 +32,7 @@ const labels = {
     field: 'FIELD',
     signIn: 'Sign in',
     saved: 'Bookmarks',
+    nearby: 'Near me',
     language: 'Language',
     privacy: 'Privacy',
     legal: 'Legal',
@@ -119,11 +121,24 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     return BOOK_MUSIC_TRACKS.find((track) => track.id === activeChapter.music.trackId);
   }, [activeChapter]);
 
+  const restorePausedAppAudio = () => {
+    const appAudio = pausedAppAudioRef.current;
+    pausedAppAudioRef.current = null;
+    if (!appAudio || !appAudio.isConnected || !appAudio.paused) return;
+    void appAudio.play().catch(() => {
+      // Challenge owns its own playback preference/error state. Restoration here
+      // only yields control back to that existing engine after Book audio paused it.
+    });
+  };
+
   useLayoutEffect(() => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     document.body.classList.add('public-shell-active');
 
     return () => {
+      const bookAudio = audioRef.current;
+      if (bookAudio) bookAudio.pause();
+      restorePausedAppAudio();
       document.body.classList.remove('public-shell-active');
     };
   }, []);
@@ -160,17 +175,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     if (!activeBookTrack || !onBookSurface) {
       audio.pause();
       setBookSoundBlocked(false);
-
-      if (!onBookSurface && pausedAppAudioRef.current) {
-        const appAudio = pausedAppAudioRef.current;
-        pausedAppAudioRef.current = null;
-        if (appAudio.isConnected && appAudio.paused) {
-          void appAudio.play().catch(() => {
-            // Challenge audio already has its own blocked/play UI. Do not mutate
-            // its preference here; simply yield restoration back to that engine.
-          });
-        }
-      }
+      if (!onBookSurface) restorePausedAppAudio();
       return;
     }
 
@@ -200,7 +205,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     const audio = audioRef.current;
     if (!audio) return;
 
-    if (bookSoundEnabled && !bookSoundBlocked) {
+    if (bookSoundPlaying) {
       audio.pause();
       setBookSoundEnabled(false);
       setBookSoundBlocked(false);
@@ -298,6 +303,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
 
             <div className="editorial-account-sheet__links">
               <Link to="/saved" onClick={() => setAccountOpen(false)}><Bookmark /><span>{copy.saved}</span><ChevronRight /></Link>
+              <Link to="/nearby" onClick={() => setAccountOpen(false)}><MapPin /><span>{copy.nearby}</span><ChevronRight /></Link>
               {onBookSurface ? (
                 <button type="button" onClick={toggleBookSound}>
                   <Music2 /><span>{copy.sound}</span><strong>{bookSoundEnabled ? copy.soundOn : copy.soundOff}</strong>
