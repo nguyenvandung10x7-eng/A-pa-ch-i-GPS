@@ -15,7 +15,6 @@ import { BookPageRoute } from './pages/BookPageRoute';
 import { BookUtilityPage } from './pages/BookUtilityPage';
 import { ChallengePage } from './pages/ChallengePage';
 import { DiscoverPage } from './pages/DiscoverPage';
-import { HistoryPage } from './pages/HistoryPage';
 import { LegalSafetyPage } from './pages/LegalSafetyPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ModerationPage } from './pages/ModerationPage';
@@ -147,12 +146,12 @@ export default function App() {
       <Route path="/book" element={<NewBookPage language={language} />} />
       <Route path="/book/chapter/:chapterId" element={<NewBookPage language={language} />} />
       <Route path="/book/page/:pageId" element={<BookPageRoute language={language} />} />
-      <Route path="/recent" element={<HistoryPage clearVersion={clearVersion} language={language} t={t} />} />
+      <Route path="/recent" element={<Navigate to="/book" replace />} />
       <Route path="/saved" element={<SavedBookPage language={language} />} />
       <Route path="/nearby" element={<BookUtilityPage language={language} mode="near-me" />} />
       <Route path="/challenge" element={<ChallengePage tasks={activeTasks} clearVersion={clearVersion} language={language} t={t} />} />
       <Route path="/near-me" element={<Navigate to="/nearby" replace />} />
-      <Route path="/history" element={<Navigate to="/recent" replace />} />
+      <Route path="/history" element={<Navigate to="/book" replace />} />
       <Route path="/experiences" element={<Navigate to="/challenge" replace />} />
       <Route path="/discover" element={<ProductSurfaceFrame surface="challenge"><DiscoverPage language={language} t={t} /></ProductSurfaceFrame>} />
       <Route path="/leaderboard" element={<ProductSurfaceFrame surface="challenge"><LeaderboardPage language={language} t={t} /></ProductSurfaceFrame>} />
