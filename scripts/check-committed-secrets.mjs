@@ -1,10 +1,14 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import path from 'node:path';
 
-const tracked = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
-  .split('\0')
-  .filter(Boolean);
+const trackedBytes = execFileSync('git', ['ls-files', '-z']);
+const tracked = [];
+let trackedStart = 0;
+for (let index = 0; index < trackedBytes.length; index += 1) {
+  if (trackedBytes[index] !== 0) continue;
+  if (index > trackedStart) tracked.push(Buffer.from(trackedBytes.subarray(trackedStart, index)));
+  trackedStart = index + 1;
+}
 
 const findings = [];
 const allowedEnvExamples = new Set(['.env.example', '.env.sample', '.env.template']);
@@ -24,28 +28,94 @@ const jwtPattern = /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{1
 const keyCandidatePattern = /(?<![\p{ID_Continue}$\u200C\u200D])(?:"((?:\\(?:\r\n|\n|\r|[\s\S])|[^"\\\r\n])*)"|'((?:\\(?:\r\n|\n|\r|[\s\S])|[^'\\\r\n])*)'|([A-Za-z_$][A-Za-z0-9_$]*))/gu;
 
 const decodeStringLiteral = (raw) => {
-  const decodeCodePoint = (hex) => {
-    try {
-      const codePoint = Number.parseInt(hex, 16);
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : '';
-    } catch {
-      return '';
-    }
-  };
+  let decoded = '';
 
-  return raw
-    .replace(/\\u\{([0-9a-fA-F]{1,6})\}/g, (_, hex) => decodeCodePoint(hex))
-    .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => decodeCodePoint(hex))
-    .replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) => decodeCodePoint(hex))
-    .replace(/\\0(?![0-9])/g, '\0')
-    .replace(/\\n/g, '\n')
-    .replace(/\\r/g, '\r')
-    .replace(/\\t/g, '\t')
-    .replace(/\\b/g, '\b')
-    .replace(/\\f/g, '\f')
-    .replace(/\\v/g, '\v')
-    .replace(/\\(?:\r\n|\n|\r)/g, '')
-    .replace(/\\([^\r\n])/g, '$1');
+  for (let index = 0; index < raw.length;) {
+    const char = raw[index];
+    if (char !== '\\') {
+      decoded += char;
+      index += 1;
+      continue;
+    }
+
+    const next = raw[index + 1];
+    if (next === undefined) {
+      decoded += '\\';
+      break;
+    }
+
+    if (next === '\r' && raw[index + 2] === '\n') {
+      index += 3;
+      continue;
+    }
+    if (next === '\n' || next === '\r') {
+      index += 2;
+      continue;
+    }
+
+    if (next === 'u') {
+      if (raw[index + 2] === '{') {
+        const close = raw.indexOf('}', index + 3);
+        const hex = close >= 0 ? raw.slice(index + 3, close) : '';
+        if (/^[0-9a-fA-F]{1,6}$/.test(hex)) {
+          try {
+            const codePoint = Number.parseInt(hex, 16);
+            if (codePoint <= 0x10ffff) {
+              decoded += String.fromCodePoint(codePoint);
+              index = close + 1;
+              continue;
+            }
+          } catch {
+            // Fall through to normal JavaScript non-escape handling.
+          }
+        }
+      } else {
+        const hex = raw.slice(index + 2, index + 6);
+        if (/^[0-9a-fA-F]{4}$/.test(hex)) {
+          decoded += String.fromCharCode(Number.parseInt(hex, 16));
+          index += 6;
+          continue;
+        }
+      }
+    }
+
+    if (next === 'x') {
+      const hex = raw.slice(index + 2, index + 4);
+      if (/^[0-9a-fA-F]{2}$/.test(hex)) {
+        decoded += String.fromCharCode(Number.parseInt(hex, 16));
+        index += 4;
+        continue;
+      }
+    }
+
+    if (/[0-7]/.test(next)) {
+      const octal = raw.slice(index + 1).match(/^[0-7]{1,3}/)?.[0] ?? '';
+      if (octal) {
+        decoded += String.fromCharCode(Number.parseInt(octal, 8));
+        index += 1 + octal.length;
+        continue;
+      }
+    }
+
+    const simpleEscapes = {
+      '0': '\0',
+      n: '\n',
+      r: '\r',
+      t: '\t',
+      b: '\b',
+      f: '\f',
+      v: '\v',
+      '\\': '\\',
+      '"': '"',
+      "'": "'",
+      '`': '`',
+      '/': '/',
+    };
+    decoded += simpleEscapes[next] ?? next;
+    index += 2;
+  }
+
+  return decoded;
 };
 
 const decodeJwtPayload = (token) => {
@@ -62,6 +132,29 @@ const decodeJwtPayload = (token) => {
 const skipWhitespace = (text, start) => {
   let index = start;
   while (index < text.length && /\s/u.test(text[index])) index += 1;
+  return index;
+};
+
+const skipTrivia = (text, start) => {
+  let index = start;
+  while (index < text.length) {
+    const whitespaceEnd = skipWhitespace(text, index);
+    if (whitespaceEnd !== index) {
+      index = whitespaceEnd;
+      continue;
+    }
+    if (text.startsWith('//', index)) {
+      const newline = text.indexOf('\n', index + 2);
+      return newline < 0 ? text.length : skipTrivia(text, newline + 1);
+    }
+    if (text.startsWith('/*', index)) {
+      const close = text.indexOf('*/', index + 2);
+      if (close < 0) return text.length;
+      index = close + 2;
+      continue;
+    }
+    return index;
+  }
   return index;
 };
 
@@ -137,6 +230,19 @@ const findTypedInitializer = (text, start) => {
       continue;
     }
 
+    if (text.startsWith('//', index)) {
+      const newline = text.indexOf('\n', index + 2);
+      if (newline < 0) return -1;
+      index = newline - 1;
+      continue;
+    }
+    if (text.startsWith('/*', index)) {
+      const close = text.indexOf('*/', index + 2);
+      if (close < 0) return -1;
+      index = close + 1;
+      continue;
+    }
+
     if (char === '"' || char === "'" || char === '`') {
       quote = char;
       continue;
@@ -156,7 +262,15 @@ const findTypedInitializer = (text, start) => {
 
     if (!parentheses && !brackets && !braces && !angles) {
       if (isSingleAssignment(text, index)) return index;
-      if (char === '\n' || char === '\r' || char === ';' || char === ',') return -1;
+      if (char === ';' || char === ',') return -1;
+      if (char === '\n' || char === '\r') {
+        const next = skipTrivia(text, index + 1);
+        if (isSingleAssignment(text, next) || text.startsWith('=>', next) || /[|&?]/.test(text[next] ?? '')) {
+          index = next - 1;
+          continue;
+        }
+        return -1;
+      }
     }
   }
 
@@ -215,9 +329,11 @@ const scanText = (file, text) => {
 };
 
 for (const file of tracked) {
-  const base = path.basename(file);
+  const slash = file.lastIndexOf(0x2f);
+  const base = file.subarray(slash + 1).toString('utf8');
+  const displayFile = file.toString('utf8');
   if ((base === '.env' || base.startsWith('.env.')) && !allowedEnvExamples.has(base)) {
-    findings.push(`${file}: tracked environment file`);
+    findings.push(`${displayFile}: tracked environment file`);
   }
 
   let buffer;
@@ -228,15 +344,15 @@ for (const file of tracked) {
   }
 
   const utf8 = buffer.toString('utf8');
-  scanText(file, utf8);
+  scanText(displayFile, utf8);
 
   if (buffer.includes(0)) {
     const nulStripped = utf8.replace(/\0/g, '');
-    if (nulStripped !== utf8) scanText(file, nulStripped);
+    if (nulStripped !== utf8) scanText(displayFile, nulStripped);
 
     if (buffer.length % 2 === 0) {
       const utf16le = buffer.toString('utf16le');
-      if (utf16le !== utf8 && utf16le !== nulStripped) scanText(file, utf16le);
+      if (utf16le !== utf8 && utf16le !== nulStripped) scanText(displayFile, utf16le);
     }
   }
 }
