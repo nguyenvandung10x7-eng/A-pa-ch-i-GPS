@@ -54,7 +54,8 @@ This checklist defines when the public BOOK / FIELD product can be called releas
 
 - [ ] Resolve every `BLOCKED` item in `docs/asset-provenance.md` before public launch.
 - [ ] Move every public launch image from `UNVERIFIED` to `CLEARED`, or remove/replace it.
-- [ ] For enabled FIELD tasks, cover both `image` and every non-empty `images[]` entry; no gallery visual is outside the provenance gate.
+- [ ] Evaluate the **final runtime FIELD catalog after normal imports/migrations**; cover every enabled task `image` and every non-empty `images[]` entry, including imported additions.
+- [ ] Evaluate the **final published BOOK runtime**; cover chapter/page `coverImage`, page-level galleries, image/gallery content blocks, and renderer artwork maps such as `chapterArtwork`.
 - [ ] Reconcile conflicting candidate-source records to the exact shipped binary before marking any affected asset `CLEARED`.
 - [ ] Confirm required credits are actually visible wherever the corresponding licence/permission requires them.
 - [ ] Keep original watermarks intact during rights review; never remove a watermark as a substitute for clearance.
