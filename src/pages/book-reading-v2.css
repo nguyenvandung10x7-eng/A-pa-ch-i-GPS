@@ -1,0 +1,139 @@
+.book-reading-v2 {
+  --paper: #f1eee7;
+  --ink: #171717;
+  --muted: #77736c;
+  --line: #d8d3c9;
+  --signal: #9d382c;
+  color: var(--ink);
+}
+
+.book-reading-v2__utility {
+  position: sticky;
+  top: calc(3.65rem + env(safe-area-inset-top));
+  z-index: 45;
+  display: flex;
+  justify-content: flex-end;
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: .65rem 1rem 0;
+  pointer-events: none;
+}
+
+.book-reading-v2__utility button {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  gap: .4rem;
+  border: 1px solid rgba(23, 23, 23, .12);
+  border-radius: 999px;
+  background: rgba(241, 238, 231, .9);
+  color: var(--ink);
+  padding: .45rem .75rem;
+  font-size: .68rem;
+  font-weight: 650;
+  pointer-events: auto;
+  backdrop-filter: blur(14px);
+}
+
+.book-reading-v2__utility svg {
+  width: .95rem;
+  height: .95rem;
+  stroke-width: 1.5;
+}
+
+.book-reading-v2__places {
+  max-width: 46rem;
+  margin: 4.5rem auto 7rem;
+  padding: 0 1rem;
+}
+
+.book-reading-v2__places > header {
+  border-top: 2px solid var(--ink);
+  padding: 1.15rem 0 1.6rem;
+}
+
+.book-reading-v2__places > header p {
+  margin: 0;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.book-reading-v2__places > header div {
+  max-width: 35rem;
+  margin-top: .65rem;
+  color: #55514b;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.book-reading-v2__place-list {
+  border-top: 1px solid var(--line);
+}
+
+.book-reading-v2__place-list > a {
+  display: grid;
+  grid-template-columns: 1.2rem 1fr auto;
+  gap: .75rem;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.book-reading-v2__place-list > a > svg {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 1.5;
+}
+
+.book-reading-v2__place-list strong {
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.book-reading-v2__place-list small {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .45rem;
+  margin-top: .3rem;
+  color: var(--muted);
+  font-size: .63rem;
+}
+
+.book-reading-v2__place-list small em {
+  color: var(--signal);
+  font-style: normal;
+  font-weight: 650;
+}
+
+.book-reading-v2__place-list > a > span {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  color: var(--muted);
+  font-size: .66rem;
+  white-space: nowrap;
+}
+
+.book-reading-v2__place-list > a > span svg {
+  width: .9rem;
+  height: .9rem;
+  stroke-width: 1.4;
+}
+
+@media (max-width: 560px) {
+  .book-reading-v2__place-list > a {
+    grid-template-columns: 1.1rem 1fr 1rem;
+  }
+
+  .book-reading-v2__place-list > a > span {
+    font-size: 0;
+  }
+}
