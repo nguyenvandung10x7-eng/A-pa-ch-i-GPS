@@ -223,11 +223,12 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
 
   const handleAccountAction = () => {
     if (loading) return;
-    if (!user) {
-      void signIn(`${window.location.origin}${window.location.pathname}`);
-      return;
-    }
     setAccountOpen(true);
+  };
+
+  const handleSignIn = () => {
+    setAccountOpen(false);
+    void signIn(`${window.location.origin}${window.location.pathname}`);
   };
 
   return (
@@ -283,14 +284,14 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
         </nav>
       )}
 
-      {accountOpen && user && (
+      {accountOpen ? (
         <div className="editorial-account-layer" role="presentation" onMouseDown={() => setAccountOpen(false)}>
           <aside className="editorial-account-sheet" role="dialog" aria-modal="true" aria-label={copy.account} onMouseDown={(event) => event.stopPropagation()}>
             <div className="editorial-account-sheet__head">
               <div>
                 <p>{copy.account}</p>
-                <strong>{userLabel ?? user.email ?? copy.account}</strong>
-                {user.email && userLabel && <small>{user.email}</small>}
+                <strong>{user ? userLabel ?? user.email ?? copy.account : copy.signIn}</strong>
+                {user?.email && userLabel ? <small>{user.email}</small> : null}
               </div>
               <button type="button" onClick={() => setAccountOpen(false)} aria-label="Close"><X /></button>
             </div>
@@ -309,19 +310,25 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
               <Link to="/legal" onClick={() => setAccountOpen(false)}><span className="editorial-account-sheet__text-icon">i</span><span>{copy.legal}</span><ChevronRight /></Link>
             </div>
 
-            <button
-              type="button"
-              className="editorial-account-sheet__logout"
-              onClick={() => {
-                setAccountOpen(false);
-                void signOutUser();
-              }}
-            >
-              <LogOut /> {copy.signOut}
-            </button>
+            {user ? (
+              <button
+                type="button"
+                className="editorial-account-sheet__logout"
+                onClick={() => {
+                  setAccountOpen(false);
+                  void signOutUser();
+                }}
+              >
+                <LogOut /> {copy.signOut}
+              </button>
+            ) : (
+              <button type="button" className="editorial-account-sheet__login" onClick={handleSignIn}>
+                <LogIn /> {copy.signIn}
+              </button>
+            )}
           </aside>
         </div>
-      )}
+      ) : null}
 
       <audio ref={audioRef} preload="metadata" className="editorial-book-audio" />
     </div>
