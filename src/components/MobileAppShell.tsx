@@ -19,6 +19,7 @@ const labels = {
     language: 'Ngôn ngữ',
     privacy: 'Quyền riêng tư',
     legal: 'Pháp lý',
+    credits: 'Nguồn ảnh',
     signOut: 'Đăng xuất',
     account: 'Tài khoản',
     sound: 'Âm thanh',
@@ -36,6 +37,7 @@ const labels = {
     language: 'Language',
     privacy: 'Privacy',
     legal: 'Legal',
+    credits: 'Credits',
     signOut: 'Sign out',
     account: 'Account',
     sound: 'Sound',
@@ -60,6 +62,7 @@ const isBookSurface = (pathname: string) => (
   || pathname.startsWith('/book/')
   || pathname === '/saved'
   || pathname === '/nearby'
+  || pathname === '/credits'
 );
 
 const isFieldSurface = (pathname: string) => (
@@ -351,6 +354,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
               </button>
               <Link to="/privacy" onClick={() => setAccountOpen(false)}><span className="editorial-account-sheet__text-icon">§</span><span>{copy.privacy}</span><ChevronRight /></Link>
               <Link to="/legal" onClick={() => setAccountOpen(false)}><span className="editorial-account-sheet__text-icon">i</span><span>{copy.legal}</span><ChevronRight /></Link>
+              <Link to="/credits" onClick={() => setAccountOpen(false)}><span className="editorial-account-sheet__text-icon">©</span><span>{copy.credits}</span><ChevronRight /></Link>
             </div>
 
             {user ? (
