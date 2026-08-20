@@ -10,15 +10,23 @@ This ledger is the release source of truth for visual assets used by the public 
 - A watermark is not a licence. Never remove a publisher/creator watermark as a substitute for permission.
 - Reformatting, cropping, converting to WebP, colour grading, or adding an overlay does not change the underlying rights status.
 
-### FIELD catalog completeness rule
+### Runtime completeness rules
 
-Every non-empty visual path referenced by an **enabled** task in `src/data/tasks.json` is in scope for this ledger: both the singular `image` property and every non-empty entry of the `images` array. Each such asset has status **UNVERIFIED by default** unless an explicit row in this document moves that exact asset to `CLEARED` or `BLOCKED`. This rule is intentionally fail-closed: adding a new enabled FIELD cover or gallery image cannot silently bypass the release-rights gate.
+These rules are the completeness mechanism; the tables below are only human-readable indexes.
+
+**FIELD:** every non-empty visual path reachable from any **enabled task in the final runtime task catalog** is in scope, regardless of whether the task came from `src/data/tasks.json`, workbook/import additions, migrations, restored defaults, or another catalog overlay. This includes both the singular `image` property and every non-empty entry of `images[]`. Each such asset is **UNVERIFIED by default** unless an explicit record moves that exact asset to `CLEARED` or `BLOCKED`. The release reviewer must evaluate the catalog after all normal import/migration layers used by production have been applied; adding an enabled imported task or gallery visual cannot silently bypass the rights gate.
+
+**BOOK:** every non-empty visual path reachable from the final published Book experience is also in scope and **UNVERIFIED by default** unless explicitly `CLEARED` or `BLOCKED`. This includes chapter `coverImage`, page `coverImage`, page-level `gallery` media, `image` content-block `image.src`, every media item in `gallery` content blocks, and any separate chapter/page artwork map used by the public renderer such as `NewBookPage.tsx` `chapterArtwork`. The rule applies after the normal Book catalog/content overlays are applied, so a newly imported/published Book visual cannot become public merely because it was omitted from a hand-written table.
+
+For either surface, an asset being present in `public/`, referenced by source code, or visible in a preview does not establish clearance.
 
 `public/images/tasks/SOURCES.md` and `public/images/tasks/_selected_sources.json` are only candidate source-discovery evidence. They are **not** clearance records, and they currently contain conflicting source/original claims for some identifiers. A task asset must not move to `CLEARED` merely because one of these files names a source URL or author.
 
 Before using either source file as provenance evidence, reconcile the shipped binary to one exact original work. At minimum, compare the downloaded/shipped image to the claimed original (visual identity plus available file metadata/hash history), resolve any conflict between `SOURCES.md` and `_selected_sources.json`, then record the winning original, creator, licence/version or permission basis, and required attribution. If the exact original cannot be established, the asset remains `UNVERIFIED`.
 
 ## BOOK-native assets
+
+The following rows are current known BOOK-native assets. They do not limit the BOOK runtime completeness rule above.
 
 | Asset | Public use | Status | Release action |
 | --- | --- | --- | --- |
@@ -55,7 +63,7 @@ The enabled FIELD catalog renders task cover and gallery images in Challenge sur
 | `ruong-bac-thang-ta-leng-mthen` | Present | UNVERIFIED | Resolve the mismatched source-page/direct-image evidence and identify the exact original before clearance. |
 | `thac-ke-nenh-mthen` | Present | UNVERIFIED | Resolve the mismatched source-page/direct-image evidence and identify the exact original before clearance. |
 
-The table above is a convenience index, not the completeness mechanism. If `src/data/tasks.json` contains another enabled task `image` or any `images[]` entry now or in the future, the fail-closed FIELD catalog rule above still assigns every referenced visual `UNVERIFIED` until explicitly cleared.
+The table above is a convenience index, not the completeness mechanism. Any visual on an enabled task in the final runtime catalog—including imported additions and any `images[]` gallery item not named here—remains `UNVERIFIED` until explicitly cleared.
 
 ## Task images reused as BOOK chapter artwork
 
@@ -73,7 +81,7 @@ The table above is a convenience index, not the completeness mechanism. If `src/
 | `public/images/tasks/thac-ke-nenh-mthen.webp` | 10 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
 | `public/images/tasks/cot-co-a-pa-chai.webp` | 12 | UNVERIFIED | Add and reconcile the exact source/licence record for this path before editorial reuse. |
 
-Chapters without a mapped hero are not implicitly cleared; they simply do not add a chapter-artwork asset through the current `chapterArtwork` map.
+Chapters without a mapped hero are not implicitly cleared; they simply do not add a chapter-artwork asset through the current `chapterArtwork` map. Any future artwork entry is still caught by the BOOK runtime completeness rule even if this table is not yet updated.
 
 ## Challenge-specific asset requiring a record
 
