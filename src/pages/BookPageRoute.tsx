@@ -10,6 +10,7 @@ import type { LanguageCode } from '../types/task';
 import { BookPage } from './BookPage';
 import './book-reading-v2.css';
 import './chapter13-night.css';
+import './chapter13-night-legacy-tokens.css';
 
 type BookPageRouteProps = {
   language: LanguageCode;
