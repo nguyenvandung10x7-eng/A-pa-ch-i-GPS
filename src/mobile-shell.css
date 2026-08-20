@@ -287,20 +287,33 @@ body.public-shell-active::after {
   font-size: .9rem;
 }
 
-.editorial-account-sheet__logout {
+.editorial-account-sheet__logout,
+.editorial-account-sheet__login {
   display: inline-flex;
   align-items: center;
   gap: .5rem;
   margin-top: .8rem;
   border: 0;
   background: transparent;
-  color: var(--signal);
   font-size: .78rem;
   font-weight: 650;
   cursor: pointer;
 }
 
-.editorial-account-sheet__logout svg {
+.editorial-account-sheet__logout {
+  color: var(--signal);
+}
+
+.editorial-account-sheet__login {
+  width: 100%;
+  min-height: 2.85rem;
+  justify-content: center;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+}
+
+.editorial-account-sheet__logout svg,
+.editorial-account-sheet__login svg {
   width: 1rem;
   height: 1rem;
 }
