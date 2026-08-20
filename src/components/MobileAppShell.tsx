@@ -76,6 +76,9 @@ const coordinateAudioPlayback = (activeAudio: HTMLAudioElement) => {
   });
 };
 
+const getGlobalAppAudio = (): HTMLAudioElement | null =>
+  document.querySelector<HTMLAudioElement>('.app-shell > audio');
+
 const getChapterIdFromPath = (pathname: string): string | null => {
   const chapterMatch = pathname.match(/^\/book\/chapter\/([^/]+)/i);
   if (chapterMatch?.[1]) return decodeURIComponent(chapterMatch[1]);
@@ -103,6 +106,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   const [bookSoundPlaying, setBookSoundPlaying] = useState(false);
   const [bookSoundBlocked, setBookSoundBlocked] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const pausedAppAudioRef = useRef<HTMLAudioElement | null>(null);
   const copy = labels[language];
   const normalizedPathname = pathname.toLowerCase();
   const readingMode = normalizedPathname.startsWith('/book/page/');
@@ -132,6 +136,10 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     if (!audio) return;
 
     const handlePlay = () => {
+      const appAudio = getGlobalAppAudio();
+      if (appAudio && appAudio !== audio && !appAudio.paused) {
+        pausedAppAudioRef.current = appAudio;
+      }
       coordinateAudioPlayback(audio);
       setBookSoundPlaying(true);
     };
@@ -151,6 +159,17 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     if (!activeBookTrack || !isBookSurface(normalizedPathname)) {
       audio.pause();
       setBookSoundBlocked(false);
+
+      if (!isBookSurface(normalizedPathname) && pausedAppAudioRef.current) {
+        const appAudio = pausedAppAudioRef.current;
+        pausedAppAudioRef.current = null;
+        if (appAudio.isConnected && appAudio.paused) {
+          void appAudio.play().catch(() => {
+            // Challenge audio already has its own blocked/play UI. Do not mutate
+            // its preference here; simply yield restoration back to that engine.
+          });
+        }
+      }
       return;
     }
 
