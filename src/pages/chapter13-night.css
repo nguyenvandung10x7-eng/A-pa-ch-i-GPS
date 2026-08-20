@@ -1,0 +1,241 @@
+.book-v2-chapter--rebellion {
+  position: relative;
+  overflow: hidden;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 82% 8%, rgba(180, 50, 38, .16), transparent 28rem),
+    radial-gradient(circle at 18% 42%, rgba(255, 255, 255, .045), transparent 22rem),
+    #0e0e0d;
+}
+
+.book-v2-chapter--rebellion::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.018), transparent 22%, rgba(0,0,0,.18) 100%);
+  pointer-events: none;
+  content: '';
+}
+
+.book-v2-chapter--rebellion > * {
+  position: relative;
+  z-index: 1;
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__nav {
+  border-bottom-color: rgba(242, 238, 230, .12);
+  color: #8f8b84;
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__header {
+  max-width: 64rem;
+  padding-top: clamp(4rem, 12vw, 8rem);
+  padding-bottom: clamp(2.5rem, 7vw, 5rem);
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__header > p {
+  color: #a64033;
+  letter-spacing: .24em;
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__header h1 {
+  max-width: 56rem;
+  color: #f0ece4;
+  font-size: clamp(4rem, 14vw, 8.8rem);
+  line-height: .83;
+  letter-spacing: -.065em;
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__intro {
+  max-width: 37rem;
+  margin-top: clamp(2rem, 5vw, 3.6rem);
+  color: #b4afa7;
+  font-size: clamp(1.05rem, 3vw, 1.34rem);
+  line-height: 1.72;
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__hero {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  margin-inline: clamp(-2rem, -3vw, -1rem);
+  background: #060606;
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__hero::after {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(8,8,8,.08), rgba(8,8,8,.28) 62%, rgba(8,8,8,.72)),
+    linear-gradient(90deg, rgba(0,0,0,.2), transparent 45%);
+  pointer-events: none;
+  content: '';
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__hero img {
+  filter: grayscale(1) contrast(1.12) brightness(.72);
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__pages {
+  max-width: 54rem;
+  margin-top: clamp(3.5rem, 8vw, 6rem);
+  border-top-color: rgba(242, 238, 230, .18);
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__pages > a {
+  grid-template-columns: 2.6rem 1fr 1.1rem;
+  padding-block: 1.4rem;
+  border-bottom-color: rgba(242, 238, 230, .11);
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__pages > a > span {
+  color: #8e8981;
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__pages strong {
+  color: #ece8e0;
+  font-size: clamp(1.2rem, 4vw, 1.55rem);
+  font-weight: 400;
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__pages small {
+  max-width: 38rem;
+  color: #98938c;
+  font-size: .82rem;
+  line-height: 1.55;
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__pages svg,
+.book-v2-chapter--rebellion .book-v2-chapter__places svg {
+  color: #8f8a83;
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__places {
+  max-width: 54rem;
+  margin-top: 5rem;
+  border-top-color: #a64033;
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__places > p {
+  color: #aaa59d;
+}
+
+.book-v2-chapter--rebellion .book-v2-chapter__places > a {
+  border-top-color: rgba(242, 238, 230, .11);
+  color: #e9e5dd;
+}
+
+.book-reading-v2--rebellion {
+  --paper: #0e0e0d;
+  --ink: #eeeae2;
+  --muted: #8f8b84;
+  --line: rgba(238, 234, 226, .12);
+  --signal: #b94637;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 84% 4%, rgba(180, 50, 38, .12), transparent 24rem),
+    #0e0e0d;
+  color: var(--ink);
+}
+
+.book-reading-v2--rebellion .book-reading-v2__utility button {
+  border-color: rgba(238, 234, 226, .14);
+  background: rgba(14, 14, 13, .78);
+  color: #eeeae2;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content > div > a:first-child {
+  color: #8f8b84 !important;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content article > p:first-child {
+  color: #b94637 !important;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content article > h1 {
+  color: #f2eee6 !important;
+  font-size: clamp(3rem, 10vw, 6rem) !important;
+  line-height: .92 !important;
+  letter-spacing: -.052em !important;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content article > h1 + p {
+  color: #aaa59d !important;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content article > div > p,
+.book-reading-v2--rebellion .book-reading-v2__content article blockquote {
+  color: #dedad2 !important;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content article > div > p {
+  font-size: clamp(1.1rem, 3vw, 1.28rem) !important;
+  line-height: 1.9 !important;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content article figure {
+  position: relative;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content article figure img,
+.book-reading-v2--rebellion .book-reading-v2__content article div > img {
+  filter: grayscale(.88) contrast(1.08) brightness(.76);
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content article figcaption,
+.book-reading-v2--rebellion .book-reading-v2__content article aside {
+  color: #8f8b84 !important;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content article aside {
+  border-left-color: rgba(238, 234, 226, .15) !important;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content > div > nav {
+  border-top-color: rgba(238, 234, 226, .12);
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content > div > nav a {
+  color: #ddd9d1 !important;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content > div > section {
+  border-top-color: #b94637 !important;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__content > div > section article {
+  border-top-color: rgba(238, 234, 226, .12) !important;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__places > header {
+  border-top-color: #b94637;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__places > header p,
+.book-reading-v2--rebellion .book-reading-v2__place-list strong {
+  color: #eeeae2;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__places > header div,
+.book-reading-v2--rebellion .book-reading-v2__place-list small,
+.book-reading-v2--rebellion .book-reading-v2__place-list > a > span {
+  color: #8f8b84;
+}
+
+.book-reading-v2--rebellion .book-reading-v2__place-list,
+.book-reading-v2--rebellion .book-reading-v2__place-list > a {
+  border-color: rgba(238, 234, 226, .12);
+}
+
+.book-reading-v2--rebellion .book-reading-v2__place-list small em {
+  color: #c55242;
+}
+
+@media (max-width: 560px) {
+  .book-v2-chapter--rebellion .book-v2-chapter__header h1 {
+    font-size: clamp(3.7rem, 18vw, 6.2rem);
+  }
+
+  .book-v2-chapter--rebellion .book-v2-chapter__hero {
+    margin-inline: -1rem;
+    aspect-ratio: 4 / 5;
+  }
+}

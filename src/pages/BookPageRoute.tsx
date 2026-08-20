@@ -9,6 +9,8 @@ import type { BookLocalizedText } from '../types/book';
 import type { LanguageCode } from '../types/task';
 import { BookPage } from './BookPage';
 import './book-reading-v2.css';
+import './chapter13-night.css';
+import './chapter13-night-legacy-tokens.css';
 
 type BookPageRouteProps = {
   language: LanguageCode;
@@ -36,6 +38,8 @@ const copy = {
   },
 } as const;
 
+const REBELLION_CHAPTER_ID = 'chapter-13-su-noi-loan-va-thanh-pho-ban-dem';
+
 export const BookPageRoute = ({ language }: BookPageRouteProps) => {
   const { pageId } = useParams<{ pageId?: string }>();
   const page = pageId ? getPage(pageId) : undefined;
@@ -53,9 +57,10 @@ export const BookPageRoute = ({ language }: BookPageRouteProps) => {
   const chapterPages = getChapterPages(page.chapterId);
   const isLastPage = chapterPages[chapterPages.length - 1]?.id === page.id;
   const chapterPlaces = isLastPage ? chapterPages.filter((candidate) => candidate.location) : [];
+  const isRebellion = page.chapterId === REBELLION_CHAPTER_ID;
 
   return (
-    <div className="book-reading-v2">
+    <div className={`book-reading-v2 ${isRebellion ? 'book-reading-v2--rebellion' : ''}`}>
       <div className="book-reading-v2__utility">
         <button
           type="button"
