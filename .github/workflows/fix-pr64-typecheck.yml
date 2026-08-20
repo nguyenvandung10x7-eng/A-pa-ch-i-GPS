@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   patch:
+    # This workflow is temporary and deletes itself after a successful verified patch.
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
