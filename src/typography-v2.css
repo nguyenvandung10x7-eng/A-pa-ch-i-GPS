@@ -1,0 +1,74 @@
+:root {
+  --font-book: "Source Serif 4", "Iowan Old Style", "Noto Serif", "Palatino Linotype", "Book Antiqua", Georgia, "Times New Roman", serif;
+  --font-ui: "IBM Plex Sans", Aptos, "Segoe UI Variable", "Segoe UI", "Noto Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.editorial-shell {
+  font-family: var(--font-ui);
+}
+
+.editorial-shell__brand,
+.editorial-account-sheet__head strong,
+.editorial-account-sheet__text-icon,
+.editorial-soundtrack-pop strong {
+  font-family: var(--font-book);
+}
+
+.editorial-shell:not(.editorial-shell--field) h1,
+.editorial-shell:not(.editorial-shell--field) h2,
+.editorial-shell:not(.editorial-shell--field) h3,
+.editorial-shell:not(.editorial-shell--field) .book-display-title,
+.book-v2-cover__title > span,
+.book-v2-cover__title h1,
+.book-v2-cover__title em,
+.book-v2-cover__continue strong,
+.book-v2-cover__continue p,
+.book-v2-contents h2,
+.book-v2-contents > header > div,
+.book-v2-contents__list strong,
+.book-v2-contents__list p,
+.book-v2-chapter__header h1,
+.book-v2-chapter__intro,
+.book-v2-chapter__pages strong,
+.book-v2-chapter__pages small,
+.book-v2-chapter__places > a,
+.book-reading-v2__content article > h1,
+.book-reading-v2__content article > h1 + p,
+.book-reading-v2__content article > div > p,
+.book-reading-v2__content article blockquote,
+.book-reading-v2__places > header div,
+.book-reading-v2__place-list strong {
+  font-family: var(--font-book) !important;
+}
+
+.editorial-shell--field,
+.editorial-shell--field h1,
+.editorial-shell--field h2,
+.editorial-shell--field h3,
+.editorial-shell--field button,
+.editorial-shell--field input,
+.editorial-shell--field select,
+.editorial-shell--field textarea,
+.editorial-shell--field .field-utility-frame h1,
+.editorial-shell--field .field-utility-frame h2,
+.editorial-shell--field .field-utility-frame h3 {
+  font-family: var(--font-ui) !important;
+}
+
+.book-v2-home,
+.book-v2-chapter,
+.book-reading-v2 {
+  font-family: var(--font-ui);
+}
+
+.book-reading-v2__content article > div > p {
+  font-kerning: normal;
+  font-optical-sizing: auto;
+  text-wrap: pretty;
+}
+
+.book-v2-chapter__header h1,
+.book-v2-cover__title h1,
+.book-reading-v2__content article > h1 {
+  text-wrap: balance;
+}
