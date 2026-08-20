@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { Loader2, LogIn, ShieldCheck } from 'lucide-react';
 import { Layout } from './components/Layout';
@@ -44,7 +44,7 @@ const AdminOnlyRoute = ({
 }: {
   t: (key: string, values?: Record<string, string | number>) => string;
   redirectPath: string;
-  children: JSX.Element;
+  children: ReactElement;
 }) => {
   const { user, loading, signIn } = useAuth();
   const { isAdmin, checkingAdmin } = useAdminStatus();
