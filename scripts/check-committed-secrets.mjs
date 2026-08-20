@@ -18,12 +18,13 @@ const credentialNames = [
 ];
 
 const placeholder = /^(?:your[_-]|replace[_-]|example|placeholder|changeme|xxx+|<)/i;
+const credentialShape = /^[A-Za-z0-9_+\/=.-]{16,}$/;
 const jwtPattern = /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g;
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const credentialAssignmentRegex = (key) => new RegExp(
-  `(?:["']?${escapeRegex(key)}["']?)\\s*[:=]\\s*(?:"([^"]{16,})"|'([^']{16,})'|([A-Za-z0-9_+\\/=-]{16,}))`,
+  `(?<![A-Za-z0-9_])["']?${escapeRegex(key)}["']?\\s*[:=]\\s*(?:"([^"]{16,})"|'([^']{16,})'|([^\\s,;#]{16,}))`,
   'gi',
 );
 
@@ -35,6 +36,29 @@ const decodeJwtPayload = (token) => {
     return JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
   } catch {
     return null;
+  }
+};
+
+const scanText = (file, text) => {
+  if (/-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----/.test(text)) {
+    findings.push(`${file}: private key material`);
+  }
+
+  for (const [key, name] of credentialNames) {
+    const regex = credentialAssignmentRegex(key);
+    for (const match of text.matchAll(regex)) {
+      const value = match[1] ?? match[2] ?? match[3] ?? '';
+      if (credentialShape.test(value) && !placeholder.test(value)) {
+        findings.push(`${file}: ${name}`);
+      }
+    }
+  }
+
+  for (const token of text.match(jwtPattern) ?? []) {
+    const payload = decodeJwtPayload(token);
+    if (payload?.role === 'service_role') {
+      findings.push(`${file}: Supabase service_role JWT`);
+    }
   }
 };
 
@@ -51,25 +75,16 @@ for (const file of tracked) {
     continue;
   }
 
-  if (buffer.includes(0)) continue;
-  const text = buffer.toString('utf8');
+  const utf8 = buffer.toString('utf8');
+  scanText(file, utf8);
 
-  if (/-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----/.test(text)) {
-    findings.push(`${file}: private key material`);
-  }
+  if (buffer.includes(0)) {
+    const nulStripped = utf8.replace(/\0/g, '');
+    if (nulStripped !== utf8) scanText(file, nulStripped);
 
-  for (const [key, name] of credentialNames) {
-    const regex = credentialAssignmentRegex(key);
-    for (const match of text.matchAll(regex)) {
-      const value = match[1] ?? match[2] ?? match[3] ?? '';
-      if (!placeholder.test(value)) findings.push(`${file}: ${name}`);
-    }
-  }
-
-  for (const token of text.match(jwtPattern) ?? []) {
-    const payload = decodeJwtPayload(token);
-    if (payload?.role === 'service_role') {
-      findings.push(`${file}: Supabase service_role JWT`);
+    if (buffer.length % 2 === 0) {
+      const utf16le = buffer.toString('utf16le');
+      if (utf16le !== utf8 && utf16le !== nulStripped) scanText(file, utf16le);
     }
   }
 }
