@@ -52,6 +52,9 @@ type MobileAppShellProps = {
   children: ReactNode;
 };
 
+const normalizePublicPathname = (pathname: string): string =>
+  pathname.toLowerCase().replace(/\/+$/, '') || '/';
+
 const isBookSurface = (pathname: string) => (
   pathname === '/book'
   || pathname.startsWith('/book/')
@@ -81,13 +84,26 @@ const coordinateAudioPlayback = (activeAudio: HTMLAudioElement) => {
 const getGlobalAppAudio = (): HTMLAudioElement | null =>
   document.querySelector<HTMLAudioElement>('.app-shell > audio');
 
+const safeDecodeRouteSegment = (segment: string): string | null => {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return null;
+  }
+};
+
 const getChapterIdFromPath = (pathname: string): string | null => {
   const chapterMatch = pathname.match(/^\/book\/chapter\/([^/]+)/i);
-  if (chapterMatch?.[1]) return decodeURIComponent(chapterMatch[1]);
+  if (chapterMatch?.[1]) {
+    const chapterId = safeDecodeRouteSegment(chapterMatch[1]);
+    return chapterId && getChapter(chapterId) ? chapterId : null;
+  }
 
   const pageMatch = pathname.match(/^\/book\/page\/([^/]+)/i);
   if (!pageMatch?.[1]) return null;
-  const page = getPage(decodeURIComponent(pageMatch[1]));
+  const pageId = safeDecodeRouteSegment(pageMatch[1]);
+  if (!pageId) return null;
+  const page = getPage(pageId);
   return page?.chapterId ?? null;
 };
 
@@ -110,7 +126,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pausedAppAudioRef = useRef<HTMLAudioElement | null>(null);
   const copy = labels[language];
-  const normalizedPathname = pathname.toLowerCase().replace(/\/+$/, '') || '/';
+  const normalizedPathname = normalizePublicPathname(pathname);
   const onBookSurface = isBookSurface(normalizedPathname);
   const readingMode = normalizedPathname.startsWith('/book/page/');
   const userLabel = useMemo(() => getUserLabel(user), [user]);
@@ -137,10 +153,22 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   };
 
   useLayoutEffect(() => {
+    const rememberBeforeAnyBookAudio = (event: Event) => {
+      if (!(event.target instanceof HTMLAudioElement)) return;
+      if (!isBookSurface(normalizePublicPathname(window.location.pathname))) return;
+      const appAudio = getGlobalAppAudio();
+      if (!appAudio || event.target === appAudio || appAudio.paused) return;
+      pausedAppAudioRef.current = appAudio;
+    };
+
+    // Register before BookPage's passive capture listener so inline Book players
+    // cannot pause the Challenge/Layout audio before we remember it.
+    document.addEventListener('play', rememberBeforeAnyBookAudio, true);
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     document.body.classList.add('public-shell-active');
 
     return () => {
+      document.removeEventListener('play', rememberBeforeAnyBookAudio, true);
       const bookAudio = audioRef.current;
       if (bookAudio) bookAudio.pause();
       restorePausedAppAudio();
@@ -194,8 +222,6 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
       return;
     }
 
-    // Capture the currently playing Challenge/Layout audio before BookPage's
-    // capture-phase play listener has a chance to pause it.
     rememberPlayingAppAudio();
     void audio.play()
       .then(() => setBookSoundBlocked(false))
