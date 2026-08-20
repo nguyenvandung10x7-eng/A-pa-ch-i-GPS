@@ -61,13 +61,15 @@ export const BookPageRoute = ({ language }: BookPageRouteProps) => {
           onClick={() => toggleSavedBookPage(page.id)}
           aria-pressed={saved}
           aria-label={saved ? c.saved : c.save}
+          title={saved ? c.saved : c.save}
         >
           {saved ? <BookmarkCheck aria-hidden="true" /> : <Bookmark aria-hidden="true" />}
-          <span>{saved ? c.saved : c.save}</span>
         </button>
       </div>
 
-      <BookPage language={language} />
+      <div className="book-reading-v2__content">
+        <BookPage language={language} />
+      </div>
 
       {chapterPlaces.length > 0 ? (
         <section className="book-reading-v2__places">
