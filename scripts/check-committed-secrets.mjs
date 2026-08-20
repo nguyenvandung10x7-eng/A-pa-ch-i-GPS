@@ -18,15 +18,33 @@ const credentialNames = [
 ];
 
 const placeholder = /^(?:your[_-]|replace[_-]|example|placeholder|changeme|xxx+|<)/i;
-const credentialShape = /^[A-Za-z0-9_+\/=.-]{16,}$/;
+const quotedCredentialShape = /^[A-Za-z0-9_+\/=.-]{16,}$/;
+const unquotedCredentialShape = /^[A-Za-z0-9_+\/=-]{16,}$/;
 const jwtPattern = /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g;
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const credentialAssignmentRegex = (key) => new RegExp(
-  `(?<![A-Za-z0-9_])["']?${escapeRegex(key)}["']?\\s*[:=]\\s*(?:"([^"]{16,})"|'([^']{16,})'|([^\\s,;#]{16,}))`,
-  'gi',
+  `(?<![\\p{ID_Continue}$\\u200C\\u200D])(?:["']${escapeRegex(key)}["']|${escapeRegex(key)})\\s*[:=]\\s*(?:"((?:\\\\.|[^"\\\\]){16,})"|'((?:\\\\.|[^'\\\\]){16,})'|([^\\s,;#]{16,}))`,
+  'giu',
 );
+
+const decodeQuotedValue = (raw) => {
+  const decodeCodePoint = (hex) => {
+    try {
+      const codePoint = Number.parseInt(hex, 16);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : '';
+    } catch {
+      return '';
+    }
+  };
+
+  return raw
+    .replace(/\\u\{([0-9a-fA-F]{1,6})\}/g, (_, hex) => decodeCodePoint(hex))
+    .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => decodeCodePoint(hex))
+    .replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) => decodeCodePoint(hex))
+    .replace(/\\(["'\\/])/g, '$1');
+};
 
 const decodeJwtPayload = (token) => {
   try {
@@ -47,8 +65,10 @@ const scanText = (file, text) => {
   for (const [key, name] of credentialNames) {
     const regex = credentialAssignmentRegex(key);
     for (const match of text.matchAll(regex)) {
-      const value = match[1] ?? match[2] ?? match[3] ?? '';
-      if (credentialShape.test(value) && !placeholder.test(value)) {
+      const quoted = match[1] ?? match[2];
+      const value = quoted === undefined ? (match[3] ?? '') : decodeQuotedValue(quoted);
+      const shape = quoted === undefined ? unquotedCredentialShape : quotedCredentialShape;
+      if (shape.test(value) && !placeholder.test(value)) {
         findings.push(`${file}: ${name}`);
       }
     }
