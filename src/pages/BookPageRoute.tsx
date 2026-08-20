@@ -9,6 +9,7 @@ import type { BookLocalizedText } from '../types/book';
 import type { LanguageCode } from '../types/task';
 import { BookPage } from './BookPage';
 import './book-reading-v2.css';
+import './chapter13-night.css';
 
 type BookPageRouteProps = {
   language: LanguageCode;
