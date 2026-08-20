@@ -1,4 +1,5 @@
 import { BOOK_CHAPTERS, BOOK_EXPERIENCES, BOOK_PAGES } from '../data/bookContentChapter13';
+import { withLiteraryMemoryChapterForm, withLiteraryMemoryForm } from '../data/bookLiteraryMemoryForms';
 import { ALL_MUSIC_TRACK_IDS } from '../data/music';
 import type { BookChapter, BookExperience, BookPage } from '../types/book';
 
@@ -36,10 +37,12 @@ const isPublishedChapter = (chapterId: BookChapter['id']): boolean =>
   BOOK_CHAPTERS.some((chapter) => chapter.id === chapterId && chapter.status === 'published');
 
 export const getPublishedChapters = (): BookChapter[] =>
-  sortByOrder(BOOK_CHAPTERS.filter((chapter) => chapter.status === 'published'));
+  sortByOrder(BOOK_CHAPTERS.filter((chapter) => chapter.status === 'published').map(withLiteraryMemoryChapterForm));
 
-export const getChapter = (chapterId: BookChapter['id']): BookChapter | undefined =>
-  BOOK_CHAPTERS.find((chapter) => chapter.id === chapterId && chapter.status === 'published');
+export const getChapter = (chapterId: BookChapter['id']): BookChapter | undefined => {
+  const chapter = BOOK_CHAPTERS.find((candidate) => candidate.id === chapterId && candidate.status === 'published');
+  return chapter ? withLiteraryMemoryChapterForm(chapter) : undefined;
+};
 
 export const getChapterPages = (chapterId: BookChapter['id']): BookPage[] => {
   if (!isPublishedChapter(chapterId)) {
@@ -47,7 +50,9 @@ export const getChapterPages = (chapterId: BookChapter['id']): BookPage[] => {
   }
 
   return sortByOrder(
-    BOOK_PAGES.filter((page) => page.chapterId === chapterId && page.status === 'published')
+    BOOK_PAGES
+      .filter((page) => page.chapterId === chapterId && page.status === 'published')
+      .map(withLiteraryMemoryForm)
   );
 };
 
@@ -57,7 +62,7 @@ export const getPage = (pageId: BookPage['id']): BookPage | undefined => {
     return undefined;
   }
 
-  return page;
+  return withLiteraryMemoryForm(page);
 };
 
 export const getChapterExperiences = (chapterId: BookChapter['id']): BookExperience[] => {
