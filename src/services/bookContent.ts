@@ -1,5 +1,6 @@
 import { BOOK_CHAPTERS, BOOK_EXPERIENCES, BOOK_PAGES } from '../data/bookContentChapter13';
 import { withLiteraryMemoryChapterForm, withLiteraryMemoryForm } from '../data/bookLiteraryMemoryForms';
+import { withLiteraryMiddleChapterForm, withLiteraryMiddlePageForm } from '../data/bookLiteraryMiddleForms';
 import { ALL_MUSIC_TRACK_IDS } from '../data/music';
 import type { BookChapter, BookExperience, BookPage } from '../types/book';
 
@@ -33,15 +34,21 @@ const findDuplicateIds = <T extends { id: string }>(items: T[]): string[] => {
   return [...duplicates];
 };
 
+const applyChapterLiteraryForms = (chapter: BookChapter): BookChapter =>
+  withLiteraryMiddleChapterForm(withLiteraryMemoryChapterForm(chapter));
+
+const applyPageLiteraryForms = (page: BookPage): BookPage =>
+  withLiteraryMiddlePageForm(withLiteraryMemoryForm(page));
+
 const isPublishedChapter = (chapterId: BookChapter['id']): boolean =>
   BOOK_CHAPTERS.some((chapter) => chapter.id === chapterId && chapter.status === 'published');
 
 export const getPublishedChapters = (): BookChapter[] =>
-  sortByOrder(BOOK_CHAPTERS.filter((chapter) => chapter.status === 'published').map(withLiteraryMemoryChapterForm));
+  sortByOrder(BOOK_CHAPTERS.filter((chapter) => chapter.status === 'published').map(applyChapterLiteraryForms));
 
 export const getChapter = (chapterId: BookChapter['id']): BookChapter | undefined => {
   const chapter = BOOK_CHAPTERS.find((candidate) => candidate.id === chapterId && candidate.status === 'published');
-  return chapter ? withLiteraryMemoryChapterForm(chapter) : undefined;
+  return chapter ? applyChapterLiteraryForms(chapter) : undefined;
 };
 
 export const getChapterPages = (chapterId: BookChapter['id']): BookPage[] => {
@@ -52,7 +59,7 @@ export const getChapterPages = (chapterId: BookChapter['id']): BookPage[] => {
   return sortByOrder(
     BOOK_PAGES
       .filter((page) => page.chapterId === chapterId && page.status === 'published')
-      .map(withLiteraryMemoryForm)
+      .map(applyPageLiteraryForms)
   );
 };
 
@@ -62,7 +69,7 @@ export const getPage = (pageId: BookPage['id']): BookPage | undefined => {
     return undefined;
   }
 
-  return withLiteraryMemoryForm(page);
+  return applyPageLiteraryForms(page);
 };
 
 export const getChapterExperiences = (chapterId: BookChapter['id']): BookExperience[] => {
