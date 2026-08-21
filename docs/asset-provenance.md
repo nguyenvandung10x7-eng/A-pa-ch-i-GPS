@@ -20,9 +20,9 @@ These rules are the completeness mechanism; the tables below are only human-read
 
 For either surface, an asset being present in `public/`, referenced by source code, or visible in a preview does not establish clearance.
 
-`public/images/tasks/SOURCES.md` and `public/images/tasks/_selected_sources.json` are only candidate source-discovery evidence. They are **not** clearance records, and they currently contain conflicting source/original claims for some identifiers. A task asset must not move to `CLEARED` merely because one of these files names a source URL or author.
+`public/images/tasks/SOURCES.md` is candidate source-discovery evidence only. It is **not** a clearance record. The earlier machine-selected `_selected_sources.json` candidate file was removed because it contained stale and materially incorrect matches for several identifiers and was not used at runtime. A task asset must not move to `CLEARED` merely because `SOURCES.md` names a source URL or author.
 
-Before using either source file as provenance evidence, reconcile the shipped binary to one exact original work. At minimum, compare the downloaded/shipped image to the claimed original (visual identity plus available file metadata/hash history), resolve any conflict between `SOURCES.md` and `_selected_sources.json`, then record the winning original, creator, licence/version or permission basis, and required attribution. If the exact original cannot be established, the asset remains `UNVERIFIED`.
+Before using `SOURCES.md` as provenance evidence, reconcile the shipped binary to one exact original work. At minimum, compare the downloaded/shipped image to the claimed original (visual identity plus available file metadata/hash history), then record the original, creator, licence/version or permission basis, and required attribution. If the exact original cannot be established, the asset remains `UNVERIFIED`.
 
 ## BOOK-native assets
 
@@ -36,12 +36,12 @@ The following rows are current known BOOK-native assets. They do not limit the B
 
 ## FIELD task catalog
 
-The enabled FIELD catalog renders task cover and gallery images in Challenge surfaces. The following human-readable task identifiers have source-discovery records in `public/images/tasks/SOURCES.md`; all remain **UNVERIFIED** until the exact shipped binary is reconciled against all existing source evidence and its licence/permission plus attribution requirements are recorded for the intended use.
+The enabled FIELD catalog renders task cover and gallery images in Challenge surfaces. The following human-readable task identifiers have source-discovery records in `public/images/tasks/SOURCES.md`; all remain **UNVERIFIED** until the exact shipped binary is reconciled against the candidate source and its licence/permission plus attribution requirements are recorded for the intended use.
 
 | Task / asset identifier | Candidate source record | Status | Release action |
 | --- | --- | --- | --- |
-| `quang-truong-7-5-mthen` | Present, but conflicting repository evidence must be reconciled | UNVERIFIED | Identify the exact original for the shipped binary before checking its licence/version and attribution. |
-| `cong-vien-vu-a-dinh-trai-ban` | Present, but conflicting repository evidence must be reconciled | UNVERIFIED | Identify the exact original for the shipped binary before checking its licence/version and attribution. |
+| `quang-truong-7-5-mthen` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
+| `cong-vien-vu-a-dinh-trai-ban` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
 | `phadin-coffee-cat-banh` | No matching row found in `SOURCES.md` | UNVERIFIED | Add exact source, creator and licence/permission evidence before release. |
 | `cong-vien-noong-bua-mthen` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
 | `cho-noong-bua-trai-ban` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
@@ -60,8 +60,8 @@ The enabled FIELD catalog renders task cover and gallery images in Challenge sur
 | `doi-a1-khoanh-khac-tuong-niem` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
 | `ban-phieng-loi-mthen` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
 | `ca-phe-ke-nenh-cat-banh` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
-| `ruong-bac-thang-ta-leng-mthen` | Present | UNVERIFIED | Resolve the mismatched source-page/direct-image evidence and identify the exact original before clearance. |
-| `thac-ke-nenh-mthen` | Present | UNVERIFIED | Resolve the mismatched source-page/direct-image evidence and identify the exact original before clearance. |
+| `ruong-bac-thang-ta-leng-mthen` | Present, but source-page/direct-image evidence must be reconciled | UNVERIFIED | Identify the exact original before clearance. |
+| `thac-ke-nenh-mthen` | Present, but source-page/direct-image evidence must be reconciled | UNVERIFIED | Identify the exact original before clearance. |
 
 The table above is a convenience index, not the completeness mechanism. Any visual on an enabled task in the final runtime catalog—including imported additions and any `images[]` gallery item not named here—remains `UNVERIFIED` until explicitly cleared.
 
@@ -73,7 +73,7 @@ The table above is a convenience index, not the completeness mechanism. Any visu
 | --- | --- | --- | --- |
 | `public/images/tasks/cong-vien-hoa-ban-mthen.webp` | 02 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
 | `public/images/tasks/ban-phieng-loi-mthen.webp` | 03 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
-| `public/images/tasks/quang-truong-7-5-mthen.webp` | 04, 06 | UNVERIFIED | Reconcile the conflicting source evidence for the exact binary, then clear editorial reuse and attribution. |
+| `public/images/tasks/quang-truong-7-5-mthen.webp` | 04, 06 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and attribution. |
 | `public/images/tasks/cho-noong-bua-trai-ban.webp` | 05 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
 | `public/images/tasks/canh-dong-muong-thanh-cat-banh.webp` | 07 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
 | `public/images/tasks/doi-a1-khoanh-khac-tuong-niem.webp` | 08 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
@@ -101,6 +101,6 @@ For every asset moved to `CLEARED`, add or link a record containing:
 6. required attribution text;
 7. date checked and person who checked it;
 8. restrictions on derivatives, editorial use, commercial use, or redistribution;
-9. note explaining how conflicting candidate-source records, if any, were resolved.
+9. note explaining how stale or conflicting candidate-source records, if any, were resolved.
 
 Do not store private licence agreements in the public repository. A short clearance record may point to the controlled internal location of the evidence.
