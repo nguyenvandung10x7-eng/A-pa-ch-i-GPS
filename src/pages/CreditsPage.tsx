@@ -9,7 +9,8 @@ const copy = {
     back: 'Về Book',
     eyebrow: 'BOOK OF DIEN BIEN · NGUỒN ẢNH',
     title: 'Credits',
-    description: 'Nguồn, tác giả và licence candidate của các hình ảnh công khai đang được dùng trong Book và Field. Việc một nguồn/licence được ghi nhận không đồng nghĩa asset đã CLEARED; release ledger vẫn là nguồn quyết định phát hành.',
+    description: 'Nguồn, tác giả và licence của các hình ảnh công khai đang được dùng trong Book và Field. Chỉ trạng thái CLEARED trong release ledger mới xác nhận exact asset đủ căn cứ phát hành; các nguồn candidate khác vẫn đang được xác minh.',
+    cleared: 'CLEARED theo release ledger',
     sourceRecorded: 'Đã ghi nhận nguồn/licence',
     pending: 'Đang xác minh',
     source: 'Nguồn',
@@ -19,7 +20,8 @@ const copy = {
     back: 'Back to Book',
     eyebrow: 'BOOK OF DIEN BIEN · IMAGE SOURCES',
     title: 'Credits',
-    description: 'Candidate sources, authors and licences for public images used across Book and Field. A recorded source/licence does not mean an asset is CLEARED; the release ledger remains authoritative.',
+    description: 'Sources, authors and licences for public images used across Book and Field. Only CLEARED status in the release ledger confirms that the exact shipped asset has sufficient release evidence; other candidate sources remain under verification.',
+    cleared: 'CLEARED in release ledger',
     sourceRecorded: 'Source/licence recorded',
     pending: 'Pending verification',
     source: 'Source',
@@ -29,6 +31,12 @@ const copy = {
 
 export const CreditsPage = ({ language }: { language: LanguageCode }) => {
   const c = copy[language];
+
+  const statusLabel = (status: (typeof ASSET_CREDITS)[number]['status']) => {
+    if (status === 'cleared') return c.cleared;
+    if (status === 'source-recorded') return c.sourceRecorded;
+    return c.pending;
+  };
 
   return (
     <div className="book-utility-v2">
@@ -45,9 +53,7 @@ export const CreditsPage = ({ language }: { language: LanguageCode }) => {
           {ASSET_CREDITS.map((credit) => (
             <article key={credit.id} className="book-utility-v2__row">
               <div>
-                <p className="book-utility-v2__meta">
-                  {credit.status === 'source-recorded' ? c.sourceRecorded : c.pending}
-                </p>
+                <p className="book-utility-v2__meta">{statusLabel(credit.status)}</p>
                 <h3>{credit.usage[language]}</h3>
                 <p>{credit.author}</p>
 
