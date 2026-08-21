@@ -14,6 +14,7 @@ import { NewBookPage } from './pages/NewBookPage';
 import { BookPageRoute } from './pages/BookPageRoute';
 import { BookUtilityPage } from './pages/BookUtilityPage';
 import { ChallengePage } from './pages/ChallengePage';
+import { CreditsPage } from './pages/CreditsPage';
 import { DiscoverPage } from './pages/DiscoverPage';
 import { LegalSafetyPage } from './pages/LegalSafetyPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
@@ -159,6 +160,7 @@ export default function App() {
       <Route path="/recent" element={<Navigate to="/book" replace />} />
       <Route path="/saved" element={<SavedBookPage language={language} />} />
       <Route path="/nearby" element={<BookUtilityPage language={language} mode="near-me" />} />
+      <Route path="/credits" element={<CreditsPage language={language} />} />
       <Route path="/challenge" element={<ChallengePage tasks={activeTasks} clearVersion={clearVersion} language={language} t={t} />} />
       <Route path="/near-me" element={<Navigate to="/nearby" replace />} />
       <Route path="/history" element={<Navigate to="/book" replace />} />
