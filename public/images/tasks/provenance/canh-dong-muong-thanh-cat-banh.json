@@ -1,0 +1,25 @@
+{
+  "asset": "public/images/tasks/canh-dong-muong-thanh-cat-banh.webp",
+  "status_basis": "regenerated-from-recorded-source",
+  "source": {
+    "commons_page": "https://commons.wikimedia.org/wiki/File:Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_02_(48178461326).jpg",
+    "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_02_%2848178461326%29.jpg",
+    "author": "Adam Jones",
+    "license": "CC BY-SA 2.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/2.0/",
+    "dimensions": "4912x1080",
+    "sha256": "557b13cbe82e630b041802a70cb372c01b06f8f72992e41298c974ba6a54a575",
+    "commons_file_revision": "03:57, 19 July 2019",
+    "flickr_review": "FlickreviewR 2 confirmed CC BY-SA 2.0 on 19 July 2019"
+  },
+  "derivative": {
+    "dimensions": "2560x562",
+    "sha256": "eaa40cf565c0b36be96a17651f74370169aa6030bc059840ce4f12c080e74bcb",
+    "changes": "Resized proportionally to 2560 px width with Lanczos filtering and re-encoded as lossy WebP; no crop, overlay, watermark removal, or content edit.",
+    "command": "ffmpeg -i SOURCE -vf scale=2560:-2:flags=lanczos -c:v libwebp -lossless 0 -compression_level 6 -q:v 84 -an OUTPUT",
+    "tool": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+    "runner": "ubuntu-24.04",
+    "license": "CC BY-SA 2.0"
+  },
+  "attribution": "Panorama of Ricefields in Muong Thanh Valley - Dien Bien Phu - Vietnam - 02 — Adam Jones — CC BY-SA 2.0 — resized and re-encoded to WebP by Book of Dien Bien."
+}
