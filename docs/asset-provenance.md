@@ -9,6 +9,7 @@ This ledger is the release source of truth for visual assets used by the public 
 - `BLOCKED` — do not ship the asset publicly until it is replaced or rights/required attribution are cleared.
 - A watermark is not a licence. Never remove a publisher/creator watermark as a substitute for permission.
 - Reformatting, cropping, converting to WebP, colour grading, or adding an overlay does not change the underlying rights status.
+- `CLEARED` is a rights/provenance status, not a claim that a representative image depicts the named challenge location exactly. Where source discovery labels an image representative, that distinction must remain visible in the evidence and public credit.
 
 ### Runtime completeness rules
 
@@ -31,6 +32,7 @@ Before using `SOURCES.md` as provenance evidence, reconcile the shipped binary t
 | `public/images/tasks/canh-dong-muong-thanh-cat-banh.webp` | CLEARED | `public/images/tasks/provenance/canh-dong-muong-thanh-cat-banh.json`; exact derivative SHA-256 `eaa40cf565c0b36be96a17651f74370169aa6030bc059840ce4f12c080e74bcb` regenerated from exact Commons original SHA-256 `557b13cbe82e630b041802a70cb372c01b06f8f72992e41298c974ba6a54a575`. | Adam Jones; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Share-alike applies to this derivative. |
 | `public/images/tasks/cho-noong-bua-trai-ban.webp` | CLEARED | `public/images/tasks/provenance/cho-noong-bua-trai-ban.json`; exact derivative SHA-256 `896a08a76d799fbec62eadcf6499ad23e17f75fce21a448de16009664a363afa` regenerated from the Commons API-resolved canonical original SHA-256 `de13be5adf356660524c06f8b063d852bd1bf2d019a0d61dddd92d6319dee05c`. | Adam Jones from Kelowna, BC, Canada; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Attribution and share-alike requirements apply to this derivative. |
 | `public/images/tasks/doi-a1-khoanh-khac-tuong-niem.webp` | CLEARED | `public/images/tasks/provenance/doi-a1-khoanh-khac-tuong-niem.json`; exact derivative SHA-256 `7343a06c68b0f0b7b18b06e3c6fa76bebc1bd0c127d9ad265b5b7537e85f1efc` regenerated from the Commons API-resolved canonical original SHA-256 `02a10ea62b66087b1c7fb2884d975ff217b780485197b7e476dbc8328a80edfc`. | Adam Jones from Kelowna, BC, Canada; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Attribution and share-alike requirements apply to this derivative. |
+| `public/images/tasks/quang-truong-7-5-mthen.webp` | CLEARED | `public/images/tasks/provenance/quang-truong-7-5-mthen.json`; exact derivative SHA-256 `4741c2e12aead3b1dde462c1c7b6eb6fae81cf4e6fc1b87bc128211eb1ebb34a` regenerated from the Commons API-resolved canonical original SHA-256 `21da7ab103380468d0a5bbff542eacadd5493a9356b23a270f6fb6ed84c1a51a`. The source-discovery ledger identifies this as a representative Dien Bien Phu streetscape, not an exact verified photograph of Quảng trường 7-5. | Ioe2015; CC BY-SA 4.0; link the licence and indicate that the image was resized/re-encoded. Attribution and share-alike requirements apply to this derivative. Rights clearance does not assert exact-location identity. |
 
 ## BOOK-native assets
 
@@ -48,7 +50,7 @@ The enabled FIELD catalog renders task cover and gallery images in Challenge sur
 
 | Task / asset identifier | Candidate source record | Status | Release action |
 | --- | --- | --- | --- |
-| `quang-truong-7-5-mthen` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
+| `quang-truong-7-5-mthen` | Present; representative source resolved via MediaWiki API, regenerated and hashed in dedicated provenance record | CLEARED | Keep `public/images/tasks/provenance/quang-truong-7-5-mthen.json` with the shipped binary; preserve Ioe2015 / CC BY-SA 4.0 attribution, licence link, modification notice and share-alike terms. Public credit must continue to disclose that the source is representative rather than an exact verified photograph of the named square. |
 | `cong-vien-vu-a-dinh-trai-ban` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
 | `phadin-coffee-cat-banh` | No matching row found in `SOURCES.md` | UNVERIFIED | Add exact source, creator and licence/permission evidence before release. |
 | `cong-vien-noong-bua-mthen` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
@@ -81,7 +83,7 @@ The table above is a convenience index, not the completeness mechanism. Any visu
 | --- | --- | --- | --- |
 | `public/images/tasks/cong-vien-hoa-ban-mthen.webp` | 02 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
 | `public/images/tasks/ban-phieng-loi-mthen.webp` | 03 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
-| `public/images/tasks/quang-truong-7-5-mthen.webp` | 04, 06 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and attribution. |
+| `public/images/tasks/quang-truong-7-5-mthen.webp` | 04, 06 | CLEARED | Exact shipped derivative is covered by the dedicated provenance record and CC BY-SA 4.0 for FIELD plus BOOK/editorial reuse; retain attribution, licence link, modification notice and share-alike terms. This is a representative Dien Bien Phu streetscape, not an exact verified image of Quảng trường 7-5, and public credit must retain that distinction. |
 | `public/images/tasks/cho-noong-bua-trai-ban.webp` | 05 | CLEARED | Exact shipped derivative is covered by the dedicated provenance record and CC BY-SA 2.0 for FIELD plus BOOK/editorial reuse; retain attribution, licence link, modification notice and share-alike terms. |
 | `public/images/tasks/canh-dong-muong-thanh-cat-banh.webp` | 07 | CLEARED | Exact shipped derivative is covered by the dedicated provenance record and CC BY-SA 2.0 for FIELD plus BOOK/editorial reuse; retain attribution, licence link, modification notice and share-alike terms. |
 | `public/images/tasks/doi-a1-khoanh-khac-tuong-niem.webp` | 08 | CLEARED | Exact shipped derivative is covered by the dedicated provenance record and CC BY-SA 2.0 for FIELD plus BOOK/editorial reuse; retain attribution, licence link, modification notice and share-alike terms. |
@@ -109,6 +111,7 @@ For every asset moved to `CLEARED`, add or link a record containing:
 6. required attribution text;
 7. date checked and person or review actor who checked it;
 8. restrictions on derivatives, editorial use, commercial use, or redistribution;
-9. note explaining how stale or conflicting candidate-source records, if any, were resolved.
+9. note explaining how stale or conflicting candidate-source records, if any, were resolved;
+10. when the asset is representative rather than exact-location verified, a representation note that prevents rights clearance from being mistaken for location verification.
 
 Do not store private licence agreements in the public repository. A short clearance record may point to the controlled internal location of the evidence.

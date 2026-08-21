@@ -24,12 +24,15 @@ const sourceRecordedNote = {
 export const ASSET_CREDITS: AssetCredit[] = [
   {
     id: 'quang-truong-7-5-mthen',
-    usage: { vi: 'Ảnh Quảng trường 7-5 / artwork chương', en: '7 May Square / chapter artwork' },
+    usage: { vi: 'Ảnh đường phố Điện Biên Phủ đại diện dùng cho Quảng trường 7-5 / artwork chương', en: 'Representative Dien Bien Phu streetscape used for 7 May Square / chapter artwork' },
     author: 'Ioe2015',
     sourceUrl: 'https://commons.wikimedia.org/wiki/File:A_route_in_Dien_Bien_Phu.jpg',
     ...cc('4.0'),
-    status: 'source-recorded',
-    note: sourceRecordedNote,
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship được tái tạo trong PR #80 từ canonical Commons original do MediaWiki API trả về, có hash nguồn/derivative và recipe trong release ledger. Nguồn được ghi nhận là ảnh đại diện, không phải ảnh đã xác minh chính xác Quảng trường 7-5. CLEARED chỉ xác nhận quyền/provenance của binary. Ảnh đã được resize và re-encode sang WebP; CC BY-SA 4.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The exact shipped binary was regenerated in PR #80 from the canonical Commons original returned by the MediaWiki API, with source/derivative hashes and the transform recipe recorded in the release ledger. The source is recorded as representative, not an exact verified photograph of 7 May Square. CLEARED covers rights/provenance for the binary only. The image was resized and re-encoded to WebP; CC BY-SA 4.0 attribution/share-alike terms still apply.',
+    },
   },
   {
     id: 'cong-vien-vu-a-dinh-trai-ban',
