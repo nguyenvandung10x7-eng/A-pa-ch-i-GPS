@@ -29,6 +29,7 @@ Before using `SOURCES.md` as provenance evidence, reconcile the shipped binary t
 | Asset | Status | Evidence | Required attribution / restrictions |
 | --- | --- | --- | --- |
 | `public/images/tasks/canh-dong-muong-thanh-cat-banh.webp` | CLEARED | `public/images/tasks/provenance/canh-dong-muong-thanh-cat-banh.json`; exact derivative SHA-256 `eaa40cf565c0b36be96a17651f74370169aa6030bc059840ce4f12c080e74bcb` regenerated from exact Commons original SHA-256 `557b13cbe82e630b041802a70cb372c01b06f8f72992e41298c974ba6a54a575`. | Adam Jones; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Share-alike applies to this derivative. |
+| `public/images/tasks/cho-noong-bua-trai-ban.webp` | CLEARED | `public/images/tasks/provenance/cho-noong-bua-trai-ban.json`; exact derivative SHA-256 `896a08a76d799fbec62eadcf6499ad23e17f75fce21a448de16009664a363afa` regenerated from the Commons API-resolved canonical original SHA-256 `de13be5adf356660524c06f8b063d852bd1bf2d019a0d61dddd92d6319dee05c`. | Adam Jones from Kelowna, BC, Canada; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Attribution and share-alike requirements apply to this derivative. |
 
 ## BOOK-native assets
 
@@ -50,7 +51,7 @@ The enabled FIELD catalog renders task cover and gallery images in Challenge sur
 | `cong-vien-vu-a-dinh-trai-ban` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
 | `phadin-coffee-cat-banh` | No matching row found in `SOURCES.md` | UNVERIFIED | Add exact source, creator and licence/permission evidence before release. |
 | `cong-vien-noong-bua-mthen` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
-| `cho-noong-bua-trai-ban` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
+| `cho-noong-bua-trai-ban` | Present; canonical Commons source resolved via MediaWiki API, regenerated and hashed in dedicated provenance record | CLEARED | Keep `public/images/tasks/provenance/cho-noong-bua-trai-ban.json` with the shipped binary; preserve Adam Jones / CC BY-SA 2.0 attribution, licence link, modification notice and share-alike terms. |
 | `ho-huoi-pha-mthen` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
 | `khu-du-lich-him-lam-trai-ban` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
 | `canh-dong-muong-thanh-cat-banh` | Present; exact source regenerated and hashed in dedicated provenance record | CLEARED | Keep `public/images/tasks/provenance/canh-dong-muong-thanh-cat-banh.json` with the shipped binary; preserve Adam Jones / CC BY-SA 2.0 attribution, licence link, modification notice and share-alike terms. |
@@ -80,7 +81,7 @@ The table above is a convenience index, not the completeness mechanism. Any visu
 | `public/images/tasks/cong-vien-hoa-ban-mthen.webp` | 02 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
 | `public/images/tasks/ban-phieng-loi-mthen.webp` | 03 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
 | `public/images/tasks/quang-truong-7-5-mthen.webp` | 04, 06 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and attribution. |
-| `public/images/tasks/cho-noong-bua-trai-ban.webp` | 05 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
+| `public/images/tasks/cho-noong-bua-trai-ban.webp` | 05 | CLEARED | Exact shipped derivative is covered by the dedicated provenance record and CC BY-SA 2.0 for FIELD plus BOOK/editorial reuse; retain attribution, licence link, modification notice and share-alike terms. |
 | `public/images/tasks/canh-dong-muong-thanh-cat-banh.webp` | 07 | CLEARED | Exact shipped derivative is covered by the dedicated provenance record and CC BY-SA 2.0 for FIELD plus BOOK/editorial reuse; retain attribution, licence link, modification notice and share-alike terms. |
 | `public/images/tasks/doi-a1-khoanh-khac-tuong-niem.webp` | 08 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
 | `public/images/tasks/bao-tang-chien-thang-dien-bien-phu-trai-nghiem.webp` | 09 | UNVERIFIED | Reconcile the exact binary and obtain/record the reuse basis from the source rights holder. |
