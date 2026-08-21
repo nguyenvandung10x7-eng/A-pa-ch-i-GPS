@@ -24,6 +24,15 @@ jobs:
           ref: agent/clear-muong-thanh-artwork
           fetch-depth: 0
 
+      - name: Install media tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -n 1
+          ffprobe -version | head -n 1
+
       - name: Rebuild derivative from exact Commons original
         shell: bash
         run: |
@@ -96,6 +105,7 @@ jobs:
                   "changes": "Resized proportionally to 2560 px width with Lanczos filtering and re-encoded as lossy WebP; no crop, overlay, watermark removal, or content edit.",
                   "command": "ffmpeg -i SOURCE -vf scale=2560:-2:flags=lanczos -c:v libwebp -lossless 0 -compression_level 6 -q:v 84 -an OUTPUT",
                   "tool": ffmpeg_version,
+                  "runner": "ubuntu-24.04",
                   "license": "CC BY-SA 2.0"
               },
               "attribution": "Panorama of Ricefields in Muong Thanh Valley - Dien Bien Phu - Vietnam - 02 — Adam Jones — CC BY-SA 2.0 — resized and re-encoded to WebP by Book of Dien Bien."
