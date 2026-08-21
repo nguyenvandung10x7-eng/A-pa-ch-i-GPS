@@ -1,5 +1,6 @@
 name: Regenerate cleared Muong Thanh artwork
 
+# One-shot provenance rebuild. The successful job deletes this workflow before pushing its artifact commit.
 on:
   push:
     branches:
