@@ -30,6 +30,7 @@ Before using `SOURCES.md` as provenance evidence, reconcile the shipped binary t
 | --- | --- | --- | --- |
 | `public/images/tasks/canh-dong-muong-thanh-cat-banh.webp` | CLEARED | `public/images/tasks/provenance/canh-dong-muong-thanh-cat-banh.json`; exact derivative SHA-256 `eaa40cf565c0b36be96a17651f74370169aa6030bc059840ce4f12c080e74bcb` regenerated from exact Commons original SHA-256 `557b13cbe82e630b041802a70cb372c01b06f8f72992e41298c974ba6a54a575`. | Adam Jones; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Share-alike applies to this derivative. |
 | `public/images/tasks/cho-noong-bua-trai-ban.webp` | CLEARED | `public/images/tasks/provenance/cho-noong-bua-trai-ban.json`; exact derivative SHA-256 `896a08a76d799fbec62eadcf6499ad23e17f75fce21a448de16009664a363afa` regenerated from the Commons API-resolved canonical original SHA-256 `de13be5adf356660524c06f8b063d852bd1bf2d019a0d61dddd92d6319dee05c`. | Adam Jones from Kelowna, BC, Canada; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Attribution and share-alike requirements apply to this derivative. |
+| `public/images/tasks/doi-a1-khoanh-khac-tuong-niem.webp` | CLEARED | `public/images/tasks/provenance/doi-a1-khoanh-khac-tuong-niem.json`; exact derivative SHA-256 `7343a06c68b0f0b7b18b06e3c6fa76bebc1bd0c127d9ad265b5b7537e85f1efc` regenerated from the Commons API-resolved canonical original SHA-256 `02a10ea62b66087b1c7fb2884d975ff217b780485197b7e476dbc8328a80edfc`. | Adam Jones from Kelowna, BC, Canada; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Attribution and share-alike requirements apply to this derivative. |
 
 ## BOOK-native assets
 
@@ -64,7 +65,7 @@ The enabled FIELD catalog renders task cover and gallery images in Challenge sur
 | `cot-co-a-pa-chai-trai-ban-lanh-lung` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
 | `ban-a-pa-chai-tang-banh-trung-thu` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
 | `bao-tang-chien-thang-dien-bien-phu-trai-nghiem` | Present | UNVERIFIED | An official portal source is not itself a reuse licence; reconcile the binary and obtain/record the reuse basis. |
-| `doi-a1-khoanh-khac-tuong-niem` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
+| `doi-a1-khoanh-khac-tuong-niem` | Present; canonical Commons source resolved via MediaWiki API, regenerated and hashed in dedicated provenance record | CLEARED | Keep `public/images/tasks/provenance/doi-a1-khoanh-khac-tuong-niem.json` with the shipped binary; preserve Adam Jones / CC BY-SA 2.0 attribution, licence link, modification notice and share-alike terms. |
 | `ban-phieng-loi-mthen` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
 | `ca-phe-ke-nenh-cat-banh` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |
 | `ruong-bac-thang-ta-leng-mthen` | Present, but source-page/direct-image evidence must be reconciled | UNVERIFIED | Identify the exact original before clearance. |
@@ -83,7 +84,7 @@ The table above is a convenience index, not the completeness mechanism. Any visu
 | `public/images/tasks/quang-truong-7-5-mthen.webp` | 04, 06 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and attribution. |
 | `public/images/tasks/cho-noong-bua-trai-ban.webp` | 05 | CLEARED | Exact shipped derivative is covered by the dedicated provenance record and CC BY-SA 2.0 for FIELD plus BOOK/editorial reuse; retain attribution, licence link, modification notice and share-alike terms. |
 | `public/images/tasks/canh-dong-muong-thanh-cat-banh.webp` | 07 | CLEARED | Exact shipped derivative is covered by the dedicated provenance record and CC BY-SA 2.0 for FIELD plus BOOK/editorial reuse; retain attribution, licence link, modification notice and share-alike terms. |
-| `public/images/tasks/doi-a1-khoanh-khac-tuong-niem.webp` | 08 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
+| `public/images/tasks/doi-a1-khoanh-khac-tuong-niem.webp` | 08 | CLEARED | Exact shipped derivative is covered by the dedicated provenance record and CC BY-SA 2.0 for FIELD plus BOOK/editorial reuse; retain attribution, licence link, modification notice and share-alike terms. |
 | `public/images/tasks/bao-tang-chien-thang-dien-bien-phu-trai-nghiem.webp` | 09 | UNVERIFIED | Reconcile the exact binary and obtain/record the reuse basis from the source rights holder. |
 | `public/images/tasks/thac-ke-nenh-mthen.webp` | 10 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |
 | `public/images/tasks/cot-co-a-pa-chai.webp` | 12 | UNVERIFIED | Add and reconcile the exact source/licence record for this path before editorial reuse. |
