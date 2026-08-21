@@ -1,0 +1,29 @@
+{
+  "asset": "public/images/tasks/doi-a1-khoanh-khac-tuong-niem.webp",
+  "status_basis": "regenerated-from-commons-api-resolved-source",
+  "checked_on": "2026-08-21",
+  "reviewed_by": "nguyenvandung10x7-eng",
+  "review_method": "Reproducible GitHub Actions rebuild using Commons MediaWiki API metadata plus exact source/derivative SHA-256 hashes.",
+  "source": {
+    "commons_page": "https://commons.wikimedia.org/wiki/File:French_Barbed-Wire_Emplacement_at_Hill_A1_(Eliane_2)_-_Dien_Bien_Phu_-_Vietnam_(48168745081).jpg",
+    "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/2b/French_Barbed-Wire_Emplacement_at_Hill_A1_%28Eliane_2%29_-_Dien_Bien_Phu_-_Vietnam_%2848168745081%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "author": "Adam Jones from Kelowna, BC, Canada",
+    "license": "CC BY-SA 2.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+    "dimensions": "3648x2736",
+    "sha256": "02a10ea62b66087b1c7fb2884d975ff217b780485197b7e476dbc8328a80edfc",
+    "commons_revision_timestamp": "2019-07-19T03:56:23Z"
+  },
+  "derivative": {
+    "dimensions": "1920x1440",
+    "sha256": "7343a06c68b0f0b7b18b06e3c6fa76bebc1bd0c127d9ad265b5b7537e85f1efc",
+    "changes": "Resized proportionally to 1920 px width with Lanczos filtering and re-encoded as lossy WebP; no crop, overlay, watermark removal, or content edit.",
+    "command": "ffmpeg -i SOURCE -vf scale=1920:-2:flags=lanczos -c:v libwebp -lossless 0 -compression_level 6 -q:v 84 -an OUTPUT",
+    "tool": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+    "runner": "ubuntu-24.04",
+    "license": "CC BY-SA 2.0"
+  },
+  "attribution": "French Barbed-Wire Emplacement at Hill A1 (Eliane 2) - Dien Bien Phu - Vietnam — Adam Jones from Kelowna, BC, Canada — CC BY-SA 2.0 — resized and re-encoded to WebP by Book of Dien Bien.",
+  "restrictions": "Derivative, editorial, commercial and redistribution use must comply with CC BY-SA 2.0, including attribution and share-alike requirements where applicable.",
+  "candidate_source_resolution": "The previously recorded SOURCES/Credits candidate was resolved to the same Commons file title via the MediaWiki API; the shipped binary in this PR was regenerated directly from the API-returned canonical original URL."
+}
