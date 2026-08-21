@@ -1,0 +1,122 @@
+name: Regenerate cleared Muong Thanh artwork
+
+on:
+  push:
+    branches:
+      - agent/clear-muong-thanh-artwork
+    paths:
+      - .github/workflows/regenerate-muong-thanh-cleared.yml
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+
+      - name: Rebuild derivative from exact Commons original
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          source_url='https://upload.wikimedia.org/wikipedia/commons/a/a1/Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_02_%2848178461326%29.jpg'
+          commons_url='https://commons.wikimedia.org/wiki/File:Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_02_(48178461326).jpg'
+          output='public/images/tasks/canh-dong-muong-thanh-cat-banh.webp'
+          record='public/images/tasks/provenance/canh-dong-muong-thanh-cat-banh.json'
+          source='/tmp/muong-thanh-original.jpg'
+          rebuilt='/tmp/canh-dong-muong-thanh-cat-banh.webp'
+
+          curl --fail --location --retry 3 --retry-all-errors \
+            --user-agent 'BookOfDienBien-asset-provenance/1.0' \
+            "$source_url" -o "$source"
+
+          source_dimensions="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "$source")"
+          if [ "$source_dimensions" != '4912x1080' ]; then
+            echo "Unexpected Commons source dimensions: $source_dimensions" >&2
+            exit 1
+          fi
+
+          source_sha256="$(sha256sum "$source" | awk '{print $1}')"
+          ffmpeg_version="$(ffmpeg -version | head -n 1)"
+
+          ffmpeg -hide_banner -loglevel error -y \
+            -i "$source" \
+            -vf 'scale=2560:-2:flags=lanczos' \
+            -c:v libwebp -lossless 0 -compression_level 6 -q:v 84 \
+            -an "$rebuilt"
+
+          derivative_dimensions="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "$rebuilt")"
+          derivative_sha256="$(sha256sum "$rebuilt" | awk '{print $1}')"
+
+          mkdir -p "$(dirname "$output")" "$(dirname "$record")"
+          mv "$rebuilt" "$output"
+
+          python3 - "$record" "$commons_url" "$source_url" "$source_sha256" "$derivative_sha256" "$source_dimensions" "$derivative_dimensions" "$ffmpeg_version" <<'PY'
+          import json
+          import sys
+
+          (
+              record,
+              commons_url,
+              source_url,
+              source_sha256,
+              derivative_sha256,
+              source_dimensions,
+              derivative_dimensions,
+              ffmpeg_version,
+          ) = sys.argv[1:]
+
+          data = {
+              "asset": "public/images/tasks/canh-dong-muong-thanh-cat-banh.webp",
+              "status_basis": "regenerated-from-recorded-source",
+              "source": {
+                  "commons_page": commons_url,
+                  "original_url": source_url,
+                  "author": "Adam Jones",
+                  "license": "CC BY-SA 2.0",
+                  "license_url": "https://creativecommons.org/licenses/by-sa/2.0/",
+                  "dimensions": source_dimensions,
+                  "sha256": source_sha256,
+                  "commons_file_revision": "03:57, 19 July 2019",
+                  "flickr_review": "FlickreviewR 2 confirmed CC BY-SA 2.0 on 19 July 2019"
+              },
+              "derivative": {
+                  "dimensions": derivative_dimensions,
+                  "sha256": derivative_sha256,
+                  "changes": "Resized proportionally to 2560 px width with Lanczos filtering and re-encoded as lossy WebP; no crop, overlay, watermark removal, or content edit.",
+                  "command": "ffmpeg -i SOURCE -vf scale=2560:-2:flags=lanczos -c:v libwebp -lossless 0 -compression_level 6 -q:v 84 -an OUTPUT",
+                  "tool": ffmpeg_version,
+                  "license": "CC BY-SA 2.0"
+              },
+              "attribution": "Panorama of Ricefields in Muong Thanh Valley - Dien Bien Phu - Vietnam - 02 — Adam Jones — CC BY-SA 2.0 — resized and re-encoded to WebP by Book of Dien Bien."
+          }
+
+          with open(record, "w", encoding="utf-8") as handle:
+              json.dump(data, handle, ensure_ascii=False, indent=2)
+              handle.write("\n")
+          PY
+
+          echo "source_sha256=$source_sha256"
+          echo "derivative_sha256=$derivative_sha256"
+          echo "derivative_dimensions=$derivative_dimensions"
+
+      - name: Commit regenerated asset and provenance record
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/regenerate-muong-thanh-cleared.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            public/images/tasks/canh-dong-muong-thanh-cat-banh.webp \
+            public/images/tasks/provenance/canh-dong-muong-thanh-cat-banh.json \
+            .github/workflows/regenerate-muong-thanh-cleared.yml
+          git diff --cached --check
+          git commit -m 'Regenerate Muong Thanh artwork from Commons source'
+          git push origin HEAD:agent/clear-muong-thanh-artwork
