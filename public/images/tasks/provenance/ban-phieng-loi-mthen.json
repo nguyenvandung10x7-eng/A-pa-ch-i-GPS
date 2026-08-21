@@ -3,6 +3,7 @@
   "status_basis": "regenerated-from-commons-api-resolved-source",
   "checked_on": "2026-08-21",
   "reviewed_by": "nguyenvandung10x7-eng",
+  "finalized_by": "nguyenvandung10x7-eng",
   "review_method": "Reproducible GitHub Actions rebuild using Commons MediaWiki API metadata plus exact source/derivative SHA-256 hashes.",
   "source": {
     "commons_page": "https://commons.wikimedia.org/wiki/File:Traditional_Thai_Dam_House_-_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_02_(48178530927).jpg",
