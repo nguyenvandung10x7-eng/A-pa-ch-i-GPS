@@ -65,8 +65,11 @@ This checklist defines when the public BOOK / FIELD product can be called releas
 
 - [x] A permanent CI gate runs `npm audit --omit=dev --audit-level=high` against the exact lockfile.
 - [x] The runtime high-severity findings discovered during release audit were patched without weakening the audit threshold; the production audit passed before merge of the security PR.
+- [x] Pull requests and `main` run a tracked-secret gate that rejects committed `.env` files and runs pinned Gitleaks scans, including an explicit full-history scan.
+- [x] The full-history Gitleaks scan passed before merge of the tracked-secret gate and found no blocked secret in the checked-out repository history.
 - [ ] Confirm the exact final release commit on `main` still passes the Production Security Audit.
-- [ ] Confirm no secret, service-role key, private licence agreement or production credential is committed to the repository.
+- [ ] Confirm that same exact final release commit passes the Tracked Secret Scan.
+- [ ] Confirm no private licence agreement or other sensitive non-credential material is committed to the repository.
 
 ## 8. Accessibility and device smoke tests
 
