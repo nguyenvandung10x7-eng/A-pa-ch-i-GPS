@@ -93,12 +93,15 @@ export const ASSET_CREDITS: AssetCredit[] = [
   },
   {
     id: 'ban-phieng-loi-mthen',
-    usage: { vi: 'Ảnh Bản Phiêng Lơi / artwork chương', en: 'Phieng Loi village / chapter artwork' },
-    author: 'Adam Jones',
+    usage: { vi: 'Ảnh đại diện dùng cho Bản Phiêng Lơi / artwork chương', en: 'Representative image used for Phieng Loi village / chapter artwork' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
     sourceUrl: 'https://commons.wikimedia.org/wiki/File:Traditional_Thai_Dam_House_-_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_02_(48178530927).jpg',
     ...cc('2.0'),
-    status: 'source-recorded',
-    note: sourceRecordedNote,
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship được tái tạo trong PR #82 từ canonical Commons original do MediaWiki API trả về, có hash nguồn/derivative và recipe trong release ledger. Nguồn được ghi nhận là ảnh đại diện, không phải ảnh đã xác minh chính xác Bản Phiêng Lơi. CLEARED chỉ xác nhận quyền/provenance của binary. Ảnh đã được resize và re-encode sang WebP; CC BY-SA 2.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The exact shipped binary was regenerated in PR #82 from the canonical Commons original returned by the MediaWiki API, with source/derivative hashes and the transform recipe recorded in the release ledger. The source is recorded as representative, not an exact verified photograph of Phieng Loi village. CLEARED covers rights/provenance for the binary only. The image was resized and re-encoded to WebP; CC BY-SA 2.0 attribution/share-alike terms still apply.',
+    },
   },
   {
     id: 'ca-phe-ke-nenh-cat-banh',
