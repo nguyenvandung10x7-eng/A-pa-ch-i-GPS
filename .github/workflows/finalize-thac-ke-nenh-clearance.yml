@@ -1,12 +1,10 @@
-# trusted synchronize trigger
+# trusted reopen trigger
 name: Finalize Ke Nenh waterfall clearance
 
 on:
   pull_request:
     branches: [main]
-    types: [synchronize]
-    paths:
-      - .github/workflows/finalize-thac-ke-nenh-clearance.yml
+    types: [reopened]
 
 permissions:
   contents: write
@@ -21,7 +19,6 @@ jobs:
         with:
           ref: agent/clear-thac-ke-nenh-artwork
           fetch-depth: 0
-
       - name: Update ledger and Credits exactly once
         shell: bash
         run: |
@@ -63,7 +60,6 @@ jobs:
           text=text.replace(anchor,entry+anchor)
           credits.write_text(text)
           PY
-
       - name: Commit finalized clearance and self-delete
         shell: bash
         run: |
