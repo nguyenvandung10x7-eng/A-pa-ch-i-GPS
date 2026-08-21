@@ -2,9 +2,10 @@ name: Regenerate cleared Muong Thanh artwork
 
 # One-shot provenance rebuild. The successful job deletes this workflow before pushing its artifact commit.
 on:
-  push:
+  pull_request:
     branches:
-      - agent/clear-muong-thanh-artwork
+      - main
+    types: [opened, synchronize, reopened]
     paths:
       - .github/workflows/regenerate-muong-thanh-cleared.yml
 
@@ -13,12 +14,14 @@ permissions:
 
 jobs:
   regenerate:
+    if: github.event.pull_request.head.ref == 'agent/clear-muong-thanh-artwork'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - name: Checkout exact branch
+      - name: Checkout exact PR branch
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
+          ref: agent/clear-muong-thanh-artwork
           fetch-depth: 0
 
       - name: Rebuild derivative from exact Commons original
