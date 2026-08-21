@@ -1,0 +1,116 @@
+name: Regenerate cleared Ban Flower Park artwork
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths:
+      - .github/workflows/regenerate-cong-vien-hoa-ban-cleared.yml
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: github.event.pull_request.head.ref == 'agent/clear-cong-vien-hoa-ban-artwork'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact PR branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: agent/clear-cong-vien-hoa-ban-artwork
+          fetch-depth: 0
+
+      - name: Install media tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Resolve Commons metadata and rebuild derivative
+        shell: bash
+        run: |
+          set -euo pipefail
+          filename='Traditional Thai Dam House - Muong Thanh Valley - Dien Bien Phu - Vietnam - 01 (48178539312).jpg'
+          output='public/images/tasks/cong-vien-hoa-ban-mthen.webp'
+          record='public/images/tasks/provenance/cong-vien-hoa-ban-mthen.json'
+          source='/tmp/hoa-ban-original.jpg'
+          rebuilt='/tmp/cong-vien-hoa-ban-mthen.webp'
+          metadata='/tmp/commons-metadata.json'
+
+          curl --fail --location --retry 3 --retry-all-errors \
+            --user-agent 'BookOfDienBien-asset-provenance/1.0' \
+            --get 'https://commons.wikimedia.org/w/api.php' \
+            --data-urlencode 'action=query' \
+            --data-urlencode 'format=json' \
+            --data-urlencode 'prop=imageinfo' \
+            --data-urlencode 'iiprop=url|size|extmetadata|timestamp' \
+            --data-urlencode "titles=File:${filename}" \
+            -o "$metadata"
+
+          python3 - "$metadata" <<'PY'
+          import html, json, re, sys
+          from pathlib import Path
+          data=json.loads(Path(sys.argv[1]).read_text())
+          page=next(iter(data['query']['pages'].values()))
+          info=page['imageinfo'][0]
+          meta=info['extmetadata']
+          def text(k):
+              return html.unescape(re.sub(r'<[^>]+>','',meta.get(k,{}).get('value',''))).strip()
+          author=text('Artist'); lic=text('LicenseShortName'); licurl=meta.get('LicenseUrl',{}).get('value','').strip()
+          if info.get('width') != 3648 or info.get('height') != 2736: raise SystemExit(f"Unexpected dimensions: {info.get('width')}x{info.get('height')}")
+          if 'Adam Jones' not in author: raise SystemExit(f"Unexpected author: {author!r}")
+          if lic != 'CC BY-SA 2.0': raise SystemExit(f"Unexpected licence: {lic!r}")
+          if not licurl.startswith('https://creativecommons.org/licenses/by-sa/2.0'): raise SystemExit(f"Unexpected licence URL: {licurl!r}")
+          vals={'source_url':info['url'],'commons_page':info['descriptionurl'],'author':author,'license_name':lic,'license_url':licurl,'commons_timestamp':info.get('timestamp','')}
+          for k,v in vals.items(): Path(f'/tmp/{k}.txt').write_text(v)
+          PY
+
+          source_url="$(cat /tmp/source_url.txt)"
+          commons_page="$(cat /tmp/commons_page.txt)"
+          author="$(cat /tmp/author.txt)"
+          license_name="$(cat /tmp/license_name.txt)"
+          license_url="$(cat /tmp/license_url.txt)"
+          commons_timestamp="$(cat /tmp/commons_timestamp.txt)"
+
+          curl --fail --location --retry 3 --retry-all-errors --user-agent 'BookOfDienBien-asset-provenance/1.0' "$source_url" -o "$source"
+          source_dimensions="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "$source")"
+          [ "$source_dimensions" = '3648x2736' ]
+          source_sha256="$(sha256sum "$source" | awk '{print $1}')"
+          ffmpeg_version="$(ffmpeg -version | head -n 1)"
+          ffmpeg -hide_banner -loglevel error -y -i "$source" -vf 'scale=1920:-2:flags=lanczos' -c:v libwebp -lossless 0 -compression_level 6 -q:v 84 -an "$rebuilt"
+          derivative_dimensions="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "$rebuilt")"
+          derivative_sha256="$(sha256sum "$rebuilt" | awk '{print $1}')"
+          mkdir -p "$(dirname "$record")"
+          mv "$rebuilt" "$output"
+
+          python3 - "$record" "$commons_page" "$source_url" "$author" "$license_name" "$license_url" "$source_sha256" "$derivative_sha256" "$source_dimensions" "$derivative_dimensions" "$commons_timestamp" "$ffmpeg_version" <<'PY'
+          import json, sys
+          record,commons_page,source_url,author,license_name,license_url,source_sha256,derivative_sha256,source_dimensions,derivative_dimensions,commons_timestamp,ffmpeg_version=sys.argv[1:]
+          data={
+            'asset':'public/images/tasks/cong-vien-hoa-ban-mthen.webp',
+            'status_basis':'regenerated-from-commons-api-resolved-source',
+            'checked_on':'2026-08-21',
+            'reviewed_by':'nguyenvandung10x7-eng',
+            'review_method':'Reproducible GitHub Actions rebuild using Commons MediaWiki API metadata plus exact source/derivative SHA-256 hashes.',
+            'source':{'commons_page':commons_page,'original_url':source_url,'author':author,'license':license_name,'license_url':license_url,'dimensions':source_dimensions,'sha256':source_sha256,'commons_revision_timestamp':commons_timestamp},
+            'derivative':{'dimensions':derivative_dimensions,'sha256':derivative_sha256,'changes':'Resized proportionally to 1920 px width with Lanczos filtering and re-encoded as lossy WebP; no crop, overlay, watermark removal, or content edit.','command':'ffmpeg -i SOURCE -vf scale=1920:-2:flags=lanczos -c:v libwebp -lossless 0 -compression_level 6 -q:v 84 -an OUTPUT','tool':ffmpeg_version,'runner':'ubuntu-24.04','license':license_name},
+            'attribution':f'Traditional Thai Dam House - Muong Thanh Valley - Dien Bien Phu - Vietnam - 01 — {author} — {license_name} — resized and re-encoded to WebP by Book of Dien Bien.',
+            'restrictions':'Derivative, editorial, commercial and redistribution use must comply with CC BY-SA 2.0, including attribution and share-alike requirements where applicable.',
+            'representation_note':'The source-discovery ledger labels this image Representative, not an exact verified photograph of Cong vien Hoa Ban. CLEARED here refers to rights/provenance for the exact shipped binary only and does not assert exact-location identity.',
+            'candidate_source_resolution':'The previously recorded SOURCES/Credits candidate was resolved to the same Commons file title via the MediaWiki API; the shipped binary in this PR was regenerated directly from the API-returned canonical original URL.'}
+          open(record,'w').write(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
+          PY
+
+      - name: Commit regenerated asset and provenance record
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/regenerate-cong-vien-hoa-ban-cleared.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- public/images/tasks/cong-vien-hoa-ban-mthen.webp public/images/tasks/provenance/cong-vien-hoa-ban-mthen.json .github/workflows/regenerate-cong-vien-hoa-ban-cleared.yml
+          git commit -m 'Regenerate Ban Flower Park artwork with provenance'
+          git push origin HEAD:agent/clear-cong-vien-hoa-ban-artwork
