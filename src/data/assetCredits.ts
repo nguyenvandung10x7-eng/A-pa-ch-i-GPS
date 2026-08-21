@@ -1,4 +1,4 @@
-export type AssetCreditStatus = 'source-recorded' | 'pending';
+export type AssetCreditStatus = 'cleared' | 'source-recorded' | 'pending';
 
 export type AssetCredit = {
   id: string;
@@ -55,8 +55,11 @@ export const ASSET_CREDITS: AssetCredit[] = [
     author: 'Adam Jones',
     sourceUrl: 'https://commons.wikimedia.org/wiki/File:Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_02_(48178461326).jpg',
     ...cc('2.0'),
-    status: 'source-recorded',
-    note: sourceRecordedNote,
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship được tái tạo trong PR #77 từ Commons original đã xác minh, có hash nguồn/derivative và recipe trong release ledger. Ảnh đã được resize và re-encode sang WebP; CC BY-SA 2.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The exact shipped binary was regenerated in PR #77 from the verified Commons original, with source/derivative hashes and the transform recipe recorded in the release ledger. The image was resized and re-encoded to WebP; CC BY-SA 2.0 attribution/share-alike terms still apply.',
+    },
   },
   {
     id: 'cong-vien-hoa-ban-mthen',
