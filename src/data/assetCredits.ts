@@ -76,11 +76,14 @@ export const ASSET_CREDITS: AssetCredit[] = [
   {
     id: 'doi-a1-khoanh-khac-tuong-niem',
     usage: { vi: 'Ảnh Đồi A1 / artwork chương', en: 'Hill A1 / chapter artwork' },
-    author: 'Adam Jones',
+    author: 'Adam Jones from Kelowna, BC, Canada',
     sourceUrl: 'https://commons.wikimedia.org/wiki/File:French_Barbed-Wire_Emplacement_at_Hill_A1_(Eliane_2)_-_Dien_Bien_Phu_-_Vietnam_(48168745081).jpg',
     ...cc('2.0'),
-    status: 'source-recorded',
-    note: sourceRecordedNote,
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship được tái tạo trong PR #79 từ canonical Commons original do MediaWiki API trả về, có hash nguồn/derivative và recipe trong release ledger. Ảnh đã được resize và re-encode sang WebP; CC BY-SA 2.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The exact shipped binary was regenerated in PR #79 from the canonical Commons original returned by the MediaWiki API, with source/derivative hashes and the transform recipe recorded in the release ledger. The image was resized and re-encoded to WebP; CC BY-SA 2.0 attribution/share-alike terms still apply.',
+    },
   },
   {
     id: 'ban-phieng-loi-mthen',
