@@ -21,6 +21,7 @@ const labels = {
     legal: 'Pháp lý',
     signOut: 'Đăng xuất',
     account: 'Tài khoản',
+    close: 'Đóng',
     sound: 'Âm thanh',
     soundOn: 'Đang bật',
     soundOff: 'Bật âm thanh',
@@ -38,6 +39,7 @@ const labels = {
     legal: 'Legal',
     signOut: 'Sign out',
     account: 'Account',
+    close: 'Close',
     sound: 'Sound',
     soundOn: 'On',
     soundOff: 'Enable sound',
@@ -125,6 +127,9 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   const [bookSoundBlocked, setBookSoundBlocked] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pausedAppAudioRef = useRef<HTMLAudioElement | null>(null);
+  const accountButtonRef = useRef<HTMLButtonElement | null>(null);
+  const accountDialogRef = useRef<HTMLElement | null>(null);
+  const restoreAccountFocusRef = useRef(true);
   const copy = labels[language];
   const normalizedPathname = normalizePublicPathname(pathname);
   const onBookSurface = isBookSurface(normalizedPathname);
@@ -179,6 +184,67 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   useEffect(() => {
     window.localStorage.setItem(BOOK_SOUND_STORAGE_KEY, bookSoundEnabled ? '1' : '0');
   }, [bookSoundEnabled]);
+
+  useEffect(() => {
+    if (!accountOpen) return;
+    const dialog = accountDialogRef.current;
+    if (!dialog) return;
+
+    const previouslyFocused = document.activeElement;
+    const getFocusableElements = () => Array.from(dialog.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ));
+
+    const initialFocusable = getFocusableElements();
+    (initialFocusable[0] ?? dialog).focus();
+
+    const handleDialogKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setAccountOpen(false);
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+      const focusable = getFocusableElements();
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const activeElement = document.activeElement;
+
+      if (!(activeElement instanceof Node) || !dialog.contains(activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+        return;
+      }
+
+      if (event.shiftKey && activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleDialogKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleDialogKeyDown);
+      if (restoreAccountFocusRef.current) {
+        if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) {
+          previouslyFocused.focus();
+        } else {
+          accountButtonRef.current?.focus();
+        }
+      }
+      restoreAccountFocusRef.current = true;
+    };
+  }, [accountOpen]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -262,13 +328,19 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
       .catch(() => setBookSoundBlocked(true));
   };
 
+  const closeAccountDialog = (restoreFocus = true) => {
+    restoreAccountFocusRef.current = restoreFocus;
+    setAccountOpen(false);
+  };
+
   const handleAccountAction = () => {
     if (loading) return;
+    restoreAccountFocusRef.current = true;
     setAccountOpen(true);
   };
 
   const handleSignIn = () => {
-    setAccountOpen(false);
+    closeAccountDialog(false);
     const { origin, pathname: currentPathname, search, hash } = window.location;
     void signIn(`${origin}${currentPathname}${search}${hash}`);
   };
@@ -293,7 +365,15 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
                 <span>{bookSoundBlocked ? copy.soundBlocked : copy.sound}</span>
               </button>
             ) : null}
-            <button type="button" onClick={handleAccountAction} className="editorial-shell__account">
+            <button
+              ref={accountButtonRef}
+              type="button"
+              onClick={handleAccountAction}
+              className="editorial-shell__account"
+              aria-haspopup="dialog"
+              aria-expanded={accountOpen}
+              aria-controls={accountOpen ? 'editorial-account-dialog' : undefined}
+            >
               {user ? <UserRound aria-hidden="true" /> : <LogIn aria-hidden="true" />}
               <span>{loading ? '…' : userLabel ?? copy.signIn}</span>
             </button>
@@ -327,20 +407,29 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
       )}
 
       {accountOpen ? (
-        <div className="editorial-account-layer" role="presentation" onMouseDown={() => setAccountOpen(false)}>
-          <aside className="editorial-account-sheet" role="dialog" aria-modal="true" aria-label={copy.account} onMouseDown={(event) => event.stopPropagation()}>
+        <div className="editorial-account-layer" role="presentation" onMouseDown={() => closeAccountDialog()}>
+          <aside
+            ref={accountDialogRef}
+            id="editorial-account-dialog"
+            className="editorial-account-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label={copy.account}
+            tabIndex={-1}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
             <div className="editorial-account-sheet__head">
               <div>
                 <p>{copy.account}</p>
                 <strong>{user ? userLabel ?? user.email ?? copy.account : copy.signIn}</strong>
                 {user?.email && userLabel ? <small>{user.email}</small> : null}
               </div>
-              <button type="button" onClick={() => setAccountOpen(false)} aria-label="Close"><X /></button>
+              <button type="button" onClick={() => closeAccountDialog()} aria-label={copy.close}><X aria-hidden="true" /></button>
             </div>
 
             <div className="editorial-account-sheet__links">
-              <Link to="/saved" onClick={() => setAccountOpen(false)}><Bookmark /><span>{copy.saved}</span><ChevronRight /></Link>
-              <Link to="/nearby" onClick={() => setAccountOpen(false)}><MapPin /><span>{copy.nearby}</span><ChevronRight /></Link>
+              <Link to="/saved" onClick={() => closeAccountDialog(false)}><Bookmark /><span>{copy.saved}</span><ChevronRight /></Link>
+              <Link to="/nearby" onClick={() => closeAccountDialog(false)}><MapPin /><span>{copy.nearby}</span><ChevronRight /></Link>
               {onBookSurface ? (
                 <button type="button" onClick={toggleBookSound}>
                   <Music2 /><span>{copy.sound}</span><strong>{bookSoundEnabled ? copy.soundOn : copy.soundOff}</strong>
@@ -349,8 +438,8 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
               <button type="button" onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}>
                 <span className="editorial-account-sheet__text-icon">Aa</span><span>{copy.language}</span><strong>{language === 'vi' ? 'Tiếng Việt' : 'English'}</strong>
               </button>
-              <Link to="/privacy" onClick={() => setAccountOpen(false)}><span className="editorial-account-sheet__text-icon">§</span><span>{copy.privacy}</span><ChevronRight /></Link>
-              <Link to="/legal" onClick={() => setAccountOpen(false)}><span className="editorial-account-sheet__text-icon">i</span><span>{copy.legal}</span><ChevronRight /></Link>
+              <Link to="/privacy" onClick={() => closeAccountDialog(false)}><span className="editorial-account-sheet__text-icon">§</span><span>{copy.privacy}</span><ChevronRight /></Link>
+              <Link to="/legal" onClick={() => closeAccountDialog(false)}><span className="editorial-account-sheet__text-icon">i</span><span>{copy.legal}</span><ChevronRight /></Link>
             </div>
 
             {user ? (
