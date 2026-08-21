@@ -1,6 +1,8 @@
 {
   "asset": "public/images/tasks/canh-dong-muong-thanh-cat-banh.webp",
   "status_basis": "regenerated-from-recorded-source",
+  "checked_on": "2026-08-21",
+  "checked_by": "OpenAI assistant in PR #77",
   "source": {
     "commons_page": "https://commons.wikimedia.org/wiki/File:Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_02_(48178461326).jpg",
     "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_02_%2848178461326%29.jpg",
@@ -21,5 +23,7 @@
     "runner": "ubuntu-24.04",
     "license": "CC BY-SA 2.0"
   },
-  "attribution": "Panorama of Ricefields in Muong Thanh Valley - Dien Bien Phu - Vietnam - 02 — Adam Jones — CC BY-SA 2.0 — resized and re-encoded to WebP by Book of Dien Bien."
+  "attribution": "Panorama of Ricefields in Muong Thanh Valley - Dien Bien Phu - Vietnam - 02 — Adam Jones — CC BY-SA 2.0 — resized and re-encoded to WebP by Book of Dien Bien.",
+  "restrictions": "Attribution, licence link, indication of modifications, and CC BY-SA 2.0 share-alike terms apply to redistribution of this derivative. The licence permits editorial and commercial reuse subject to those terms.",
+  "stale_candidate_resolution": "The legacy WebP was not treated as cleared from SOURCES.md alone. PR #77 regenerated the shipped binary directly from the exact Commons original and recorded both source and derivative hashes."
 }
