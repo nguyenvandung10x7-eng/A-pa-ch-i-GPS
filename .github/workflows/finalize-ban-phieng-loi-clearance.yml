@@ -1,0 +1,71 @@
+name: Finalize Phieng Loi clearance
+
+on:
+  pull_request:
+    branches: [main]
+    types: [synchronize, reopened]
+    paths:
+      - .github/workflows/finalize-ban-phieng-loi-clearance.yml
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.event.pull_request.head.ref == 'agent/clear-ban-phieng-loi-artwork-4'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: agent/clear-ban-phieng-loi-artwork-4
+          fetch-depth: 0
+
+      - name: Update ledger and Credits exactly once
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          ledger = Path('docs/asset-provenance.md')
+          text = ledger.read_text()
+
+          anchor = "| `public/images/tasks/cong-vien-hoa-ban-mthen.webp` | CLEARED | `public/images/tasks/provenance/cong-vien-hoa-ban-mthen.json`; exact derivative SHA-256 `f7f1eebf009fd21212e8564fde5dfb75094a710cda700a577ddb71ae55209369` regenerated from the Commons API-resolved canonical original SHA-256 `8c63b74ef81b1b6c02192c7d365cccff4b501e9833c3e2dcf354a951a85232c3`. The source-discovery ledger identifies this as representative rather than an exact verified photograph of Công viên Hoa Ban. | Adam Jones from Kelowna, BC, Canada; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Attribution/share-alike requirements apply. Rights clearance does not assert exact-location identity. |"
+          newrow = "\n| `public/images/tasks/ban-phieng-loi-mthen.webp` | CLEARED | `public/images/tasks/provenance/ban-phieng-loi-mthen.json`; exact derivative SHA-256 `3e26ad89f336d3ef775c47340f1c2e3716331ea66df1889d6ca5353a1eabf440` regenerated from the Commons API-resolved canonical original SHA-256 `bd012e6907f077b4cb5f6126b34f7b963c6fbeb602377eb6b2b79de1b5767e40`. The source-discovery ledger identifies this as representative rather than an exact verified photograph of Bản Phiêng Lơi. | Adam Jones from Kelowna, BC, Canada; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Attribution/share-alike requirements apply. Rights clearance does not assert exact-location identity. |"
+          if text.count(anchor) != 1:
+              raise SystemExit('explicit-record anchor count mismatch')
+          text = text.replace(anchor, anchor + newrow)
+
+          old_field = "| `ban-phieng-loi-mthen` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |"
+          new_field = "| `ban-phieng-loi-mthen` | Present; representative source resolved via MediaWiki API, regenerated and hashed in dedicated provenance record | CLEARED | Keep `public/images/tasks/provenance/ban-phieng-loi-mthen.json` with the shipped binary; preserve Adam Jones / CC BY-SA 2.0 attribution, licence link, modification notice and share-alike terms. Public credit must disclose that the source is representative rather than an exact verified photograph of Bản Phiêng Lơi. |"
+          if text.count(old_field) != 1:
+              raise SystemExit('FIELD row count mismatch')
+          text = text.replace(old_field, new_field)
+
+          old_book = "| `public/images/tasks/ban-phieng-loi-mthen.webp` | 03 | UNVERIFIED | Reconcile the exact binary/source, then clear editorial reuse and required attribution. |"
+          new_book = "| `public/images/tasks/ban-phieng-loi-mthen.webp` | 03 | CLEARED | Exact shipped derivative is covered by the dedicated provenance record and CC BY-SA 2.0 for FIELD plus BOOK/editorial reuse; retain attribution, licence link, modification notice and share-alike terms. This is a representative source, not an exact verified photograph of Bản Phiêng Lơi, and public credit must retain that distinction. |"
+          if text.count(old_book) != 1:
+              raise SystemExit('BOOK row count mismatch')
+          text = text.replace(old_book, new_book)
+          ledger.write_text(text)
+
+          credits = Path('src/data/assetCredits.ts')
+          c = credits.read_text()
+          old = """  {\n    id: 'ban-phieng-loi-mthen',\n    usage: { vi: 'Ảnh Bản Phiêng Lơi / artwork chương', en: 'Phieng Loi village / chapter artwork' },\n    author: 'Adam Jones',\n    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Traditional_Thai_Dam_House_-_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_02_(48178530927).jpg',\n    ...cc('2.0'),\n    status: 'source-recorded',\n    note: sourceRecordedNote,\n  },"""
+          new = """  {\n    id: 'ban-phieng-loi-mthen',\n    usage: { vi: 'Ảnh đại diện dùng cho Bản Phiêng Lơi / artwork chương', en: 'Representative image used for Phieng Loi village / chapter artwork' },\n    author: 'Adam Jones from Kelowna, BC, Canada',\n    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Traditional_Thai_Dam_House_-_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_02_(48178530927).jpg',\n    ...cc('2.0'),\n    status: 'cleared',\n    note: {\n      vi: 'Exact binary đang ship được tái tạo trong PR #82 từ canonical Commons original do MediaWiki API trả về, có hash nguồn/derivative và recipe trong release ledger. Nguồn được ghi nhận là ảnh đại diện, không phải ảnh đã xác minh chính xác Bản Phiêng Lơi. CLEARED chỉ xác nhận quyền/provenance của binary. Ảnh đã được resize và re-encode sang WebP; CC BY-SA 2.0 và yêu cầu attribution/share-alike vẫn áp dụng.',\n      en: 'The exact shipped binary was regenerated in PR #82 from the canonical Commons original returned by the MediaWiki API, with source/derivative hashes and the transform recipe recorded in the release ledger. The source is recorded as representative, not an exact verified photograph of Phieng Loi village. CLEARED covers rights/provenance for the binary only. The image was resized and re-encoded to WebP; CC BY-SA 2.0 attribution/share-alike terms still apply.',\n    },\n  },"""
+          if c.count(old) != 1:
+              raise SystemExit('Credits block count mismatch')
+          credits.write_text(c.replace(old, new))
+          PY
+
+      - name: Commit finalized clearance and self-delete
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/finalize-ban-phieng-loi-clearance.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- docs/asset-provenance.md src/data/assetCredits.ts .github/workflows/finalize-ban-phieng-loi-clearance.yml
+          git commit -m 'Finalize Phieng Loi clearance records'
+          git push origin HEAD:agent/clear-ban-phieng-loi-artwork-4
