@@ -19,6 +19,7 @@ const labels = {
     language: 'Ngôn ngữ',
     privacy: 'Quyền riêng tư',
     legal: 'Pháp lý',
+    credits: 'Nguồn ảnh',
     signOut: 'Đăng xuất',
     account: 'Tài khoản',
     close: 'Đóng',
@@ -37,6 +38,7 @@ const labels = {
     language: 'Language',
     privacy: 'Privacy',
     legal: 'Legal',
+    credits: 'Credits',
     signOut: 'Sign out',
     account: 'Account',
     close: 'Close',
@@ -62,6 +64,7 @@ const isBookSurface = (pathname: string) => (
   || pathname.startsWith('/book/')
   || pathname === '/saved'
   || pathname === '/nearby'
+  || pathname === '/credits'
 );
 
 const isFieldSurface = (pathname: string) => (
@@ -166,8 +169,6 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
       pausedAppAudioRef.current = appAudio;
     };
 
-    // Register before BookPage's passive capture listener so inline Book players
-    // cannot pause the Challenge/Layout audio before we remember it.
     document.addEventListener('play', rememberBeforeAnyBookAudio, true);
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     document.body.classList.add('public-shell-active');
@@ -440,6 +441,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
               </button>
               <Link to="/privacy" onClick={() => closeAccountDialog(false)}><span className="editorial-account-sheet__text-icon">§</span><span>{copy.privacy}</span><ChevronRight /></Link>
               <Link to="/legal" onClick={() => closeAccountDialog(false)}><span className="editorial-account-sheet__text-icon">i</span><span>{copy.legal}</span><ChevronRight /></Link>
+              <Link to="/credits" onClick={() => closeAccountDialog(false)}><span className="editorial-account-sheet__text-icon">©</span><span>{copy.credits}</span><ChevronRight /></Link>
             </div>
 
             {user ? (
