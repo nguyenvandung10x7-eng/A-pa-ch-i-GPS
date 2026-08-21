@@ -129,6 +129,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   const pausedAppAudioRef = useRef<HTMLAudioElement | null>(null);
   const accountButtonRef = useRef<HTMLButtonElement | null>(null);
   const accountDialogRef = useRef<HTMLElement | null>(null);
+  const restoreAccountFocusRef = useRef(true);
   const copy = labels[language];
   const normalizedPathname = normalizePublicPathname(pathname);
   const onBookSurface = isBookSurface(normalizedPathname);
@@ -214,10 +215,18 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
 
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
+      const activeElement = document.activeElement;
+
+      if (!(activeElement instanceof Node) || !dialog.contains(activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+        return;
+      }
+
+      if (event.shiftKey && activeElement === first) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
+      } else if (!event.shiftKey && activeElement === last) {
         event.preventDefault();
         first.focus();
       }
@@ -226,11 +235,14 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     document.addEventListener('keydown', handleDialogKeyDown);
     return () => {
       document.removeEventListener('keydown', handleDialogKeyDown);
-      if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) {
-        previouslyFocused.focus();
-      } else {
-        accountButtonRef.current?.focus();
+      if (restoreAccountFocusRef.current) {
+        if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) {
+          previouslyFocused.focus();
+        } else {
+          accountButtonRef.current?.focus();
+        }
       }
+      restoreAccountFocusRef.current = true;
     };
   }, [accountOpen]);
 
@@ -316,13 +328,19 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
       .catch(() => setBookSoundBlocked(true));
   };
 
+  const closeAccountDialog = (restoreFocus = true) => {
+    restoreAccountFocusRef.current = restoreFocus;
+    setAccountOpen(false);
+  };
+
   const handleAccountAction = () => {
     if (loading) return;
+    restoreAccountFocusRef.current = true;
     setAccountOpen(true);
   };
 
   const handleSignIn = () => {
-    setAccountOpen(false);
+    closeAccountDialog(false);
     const { origin, pathname: currentPathname, search, hash } = window.location;
     void signIn(`${origin}${currentPathname}${search}${hash}`);
   };
@@ -354,7 +372,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
               className="editorial-shell__account"
               aria-haspopup="dialog"
               aria-expanded={accountOpen}
-              aria-controls="editorial-account-dialog"
+              aria-controls={accountOpen ? 'editorial-account-dialog' : undefined}
             >
               {user ? <UserRound aria-hidden="true" /> : <LogIn aria-hidden="true" />}
               <span>{loading ? '…' : userLabel ?? copy.signIn}</span>
@@ -389,7 +407,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
       )}
 
       {accountOpen ? (
-        <div className="editorial-account-layer" role="presentation" onMouseDown={() => setAccountOpen(false)}>
+        <div className="editorial-account-layer" role="presentation" onMouseDown={() => closeAccountDialog()}>
           <aside
             ref={accountDialogRef}
             id="editorial-account-dialog"
@@ -406,12 +424,12 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
                 <strong>{user ? userLabel ?? user.email ?? copy.account : copy.signIn}</strong>
                 {user?.email && userLabel ? <small>{user.email}</small> : null}
               </div>
-              <button type="button" onClick={() => setAccountOpen(false)} aria-label={copy.close}><X aria-hidden="true" /></button>
+              <button type="button" onClick={() => closeAccountDialog()} aria-label={copy.close}><X aria-hidden="true" /></button>
             </div>
 
             <div className="editorial-account-sheet__links">
-              <Link to="/saved" onClick={() => setAccountOpen(false)}><Bookmark /><span>{copy.saved}</span><ChevronRight /></Link>
-              <Link to="/nearby" onClick={() => setAccountOpen(false)}><MapPin /><span>{copy.nearby}</span><ChevronRight /></Link>
+              <Link to="/saved" onClick={() => closeAccountDialog(false)}><Bookmark /><span>{copy.saved}</span><ChevronRight /></Link>
+              <Link to="/nearby" onClick={() => closeAccountDialog(false)}><MapPin /><span>{copy.nearby}</span><ChevronRight /></Link>
               {onBookSurface ? (
                 <button type="button" onClick={toggleBookSound}>
                   <Music2 /><span>{copy.sound}</span><strong>{bookSoundEnabled ? copy.soundOn : copy.soundOff}</strong>
@@ -420,8 +438,8 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
               <button type="button" onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}>
                 <span className="editorial-account-sheet__text-icon">Aa</span><span>{copy.language}</span><strong>{language === 'vi' ? 'Tiếng Việt' : 'English'}</strong>
               </button>
-              <Link to="/privacy" onClick={() => setAccountOpen(false)}><span className="editorial-account-sheet__text-icon">§</span><span>{copy.privacy}</span><ChevronRight /></Link>
-              <Link to="/legal" onClick={() => setAccountOpen(false)}><span className="editorial-account-sheet__text-icon">i</span><span>{copy.legal}</span><ChevronRight /></Link>
+              <Link to="/privacy" onClick={() => closeAccountDialog(false)}><span className="editorial-account-sheet__text-icon">§</span><span>{copy.privacy}</span><ChevronRight /></Link>
+              <Link to="/legal" onClick={() => closeAccountDialog(false)}><span className="editorial-account-sheet__text-icon">i</span><span>{copy.legal}</span><ChevronRight /></Link>
             </div>
 
             {user ? (
