@@ -1,0 +1,31 @@
+{
+  "asset": "public/images/tasks/ruong-bac-thang-ta-leng-mthen.webp",
+  "status_basis": "reused-exact-cleared-derivative-from-shared-commons-source",
+  "checked_on": "2026-08-22",
+  "reviewed_by": "nguyenvandung10x7-eng",
+  "review_method": "Reused the exact already-cleared derivative binary from public/images/tasks/thac-ke-nenh-mthen.webp; source/derivative hashes and transform recipe are inherited from the reconciled Commons provenance record.",
+  "source": {
+    "commons_page": "https://commons.wikimedia.org/wiki/File:Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_01_(48178533987).jpg",
+    "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_01_%2848178533987%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "author": "Adam Jones from Kelowna, BC, Canada",
+    "license": "CC BY-SA 2.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+    "dimensions": "4598x1078",
+    "sha256": "4f75305fd3c43da3b5522b728b8420f141a27472331d155562a32975476dee6b",
+    "commons_revision_timestamp": "2019-07-19T03:57:06Z"
+  },
+  "derivative": {
+    "dimensions": "2560x600",
+    "sha256": "ed3bae64bd8875b84d9aaabd1f744f72b87d0e9dfaf3ac4d29ab2fd2a468b7e8",
+    "changes": "Exact binary reuse of the already-cleared derivative; the shared derivative was resized proportionally to 2560 px width with Lanczos filtering and re-encoded as lossy WebP; no additional crop, overlay, watermark removal, or content edit was made for this asset.",
+    "command": "ffmpeg -i SOURCE -vf scale=2560:-2:flags=lanczos -c:v libwebp -lossless 0 -compression_level 6 -q:v 84 -an OUTPUT",
+    "tool": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+    "runner": "ubuntu-24.04",
+    "license": "CC BY-SA 2.0",
+    "shared_binary_from": "public/images/tasks/thac-ke-nenh-mthen.webp"
+  },
+  "attribution": "Panorama of Ricefields in Muong Thanh Valley - Dien Bien Phu - Vietnam - 01 — Adam Jones from Kelowna, BC, Canada — CC BY-SA 2.0 — resized and re-encoded to WebP by Book of Dien Bien.",
+  "restrictions": "Derivative, editorial, commercial and redistribution use must comply with CC BY-SA 2.0, including attribution and share-alike requirements where applicable.",
+  "representation_note": "This Commons panorama is representative Muong Thanh Valley scenery, not an exact verified photograph of Ruộng bậc thang Tả Lèng. CLEARED refers to rights/provenance for the exact shipped binary only and does not assert exact-location identity.",
+  "candidate_source_resolution": "SOURCES.md contains a portal page URL that does not identify the direct Commons work. Clearance resolves provenance to the direct Commons original already reconciled for the shared binary; the portal page is not used as licence evidence."
+}

@@ -143,6 +143,18 @@ export const ASSET_CREDITS: AssetCredit[] = [
     },
   },
   {
+    id: 'ruong-bac-thang-ta-leng-mthen',
+    usage: { vi: 'Ảnh Mường Thanh đại diện dùng cho Ruộng bậc thang Tả Lèng', en: 'Representative Muong Thanh scenery used for Ta Leng terraced fields' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_01_(48178533987).jpg',
+    ...cc('2.0'),
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship dùng lại chính derivative đã CLEARED của thac-ke-nenh-mthen, giữ nguyên derivative SHA-256 ed3bae64bd8875b84d9aaabd1f744f72b87d0e9dfaf3ac4d29ab2fd2a468b7e8 và source SHA-256 4f75305fd3c43da3b5522b728b8420f141a27472331d155562a32975476dee6b. SOURCES.md có portal page URL không khớp với direct Commons work; portal đó không được dùng làm bằng chứng licence. Nguồn Commons là ảnh panorama Mường Thanh mang tính đại diện, không phải ảnh đã xác minh chính xác Ruộng bậc thang Tả Lèng. CLEARED chỉ xác nhận quyền/provenance của binary. CC BY-SA 2.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The shipped binary reuses the exact already-CLEARED derivative from thac-ke-nenh-mthen, preserving derivative SHA-256 ed3bae64bd8875b84d9aaabd1f744f72b87d0e9dfaf3ac4d29ab2fd2a468b7e8 and source SHA-256 4f75305fd3c43da3b5522b728b8420f141a27472331d155562a32975476dee6b. SOURCES.md has a portal page URL that does not identify the direct Commons work; that portal is not used as licence evidence. The Commons source is representative Muong Thanh panorama imagery, not an exact verified photograph of Ta Leng terraced fields. CLEARED covers rights/provenance for the binary only. CC BY-SA 2.0 attribution/share-alike terms still apply.',
+    },
+  },
+  {
     id: 'thac-ke-nenh-mthen',
     usage: { vi: 'Ảnh đại diện dùng cho Thác Kê Nênh / artwork chương', en: 'Representative image used for Ke Nenh waterfall / chapter artwork' },
     author: 'Adam Jones from Kelowna, BC, Canada',
