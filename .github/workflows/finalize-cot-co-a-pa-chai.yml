@@ -1,15 +1,16 @@
-# trusted push trigger
 name: Finalize A Pa Chai representative artwork clearance
 
 on:
-  push:
-    branches: [agent/clear-cot-co-a-pa-chai-artwork]
+  pull_request:
+    branches: [main]
+    types: [synchronize]
 
 permissions:
   contents: write
 
 jobs:
   finalize:
+    if: github.event.pull_request.head.ref == 'agent/clear-cot-co-a-pa-chai-artwork'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
