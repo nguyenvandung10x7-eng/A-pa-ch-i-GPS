@@ -3,7 +3,7 @@ name: Regenerate cleared A Pa Chai representative artwork
 on:
   pull_request:
     branches: [main]
-    types: [synchronize]
+    types: [ready_for_review]
 
 permissions:
   contents: write
