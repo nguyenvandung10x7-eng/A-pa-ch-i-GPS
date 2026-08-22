@@ -113,6 +113,18 @@ export const ASSET_CREDITS: AssetCredit[] = [
     note: sourceRecordedNote,
   },
   {
+    id: 'thac-ke-nenh-mthen',
+    usage: { vi: 'Ảnh đại diện dùng cho Thác Kê Nênh / artwork chương', en: 'Representative image used for Ke Nenh waterfall / chapter artwork' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_01_(48178533987).jpg',
+    ...cc('2.0'),
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship được tái tạo trong PR #83 từ canonical Commons original do MediaWiki API trả về, có hash nguồn/derivative và recipe trong release ledger. SOURCES.md có portal page URL không khớp; portal đó không được dùng làm bằng chứng licence. Nguồn Commons là ảnh đại diện Mường Thanh, không phải ảnh đã xác minh chính xác Thác Kê Nênh. CLEARED chỉ xác nhận quyền/provenance của binary. Ảnh đã được resize và re-encode sang WebP; CC BY-SA 2.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The exact shipped binary was regenerated in PR #83 from the canonical Commons original returned by the MediaWiki API, with source/derivative hashes and the transform recipe recorded in the release ledger. SOURCES.md contains a mismatched portal page URL; that portal is not used as licence evidence. The Commons source is a representative Muong Thanh image, not an exact verified photograph of Ke Nenh waterfall. CLEARED covers rights/provenance for the binary only. The image was resized and re-encoded to WebP; CC BY-SA 2.0 attribution/share-alike terms still apply.',
+    },
+  },
+  {
     id: 'bao-tang-chien-thang-dien-bien-phu-trai-nghiem',
     usage: { vi: 'Ảnh Bảo tàng Chiến thắng Điện Biên Phủ / artwork chương', en: 'Dien Bien Phu Victory Museum / chapter artwork' },
     author: 'Trung tâm Thông tin Xúc tiến Du lịch tỉnh Điện Biên (portal operator)',
