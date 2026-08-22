@@ -1,6 +1,7 @@
 name: Finalize Ho Huoi Pha clearance
 
 # registered one-shot finalizer
+# trigger exact branch finalization
 on:
   push:
     branches:
@@ -27,23 +28,18 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-
           ledger = Path('docs/asset-provenance.md')
           s = ledger.read_text()
           explicit = "| `public/images/tasks/ho-huoi-pha-mthen.webp` | CLEARED | `public/images/tasks/provenance/ho-huoi-pha-mthen.json`; exact derivative SHA-256 `77ca90a38d4b1632a777e1d605eab6f6a81c05dd309358ead55e357d6c579989` regenerated from the Commons API-resolved canonical original SHA-256 `a229af8197b17851420e8ff3b02119083e0619b28ae711f2b2a1c84a2d109f6f`. The source is representative Dien Bien Phu river scenery, not an exact verified photograph of Hồ Huổi Phạ. | Adam Jones from Kelowna, BC, Canada; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Attribution/share-alike requirements apply. Rights clearance does not assert exact-location identity. |\n"
           anchor = "| `public/images/tasks/cong-vien-noong-bua-mthen.webp` | CLEARED |"
           assert s.count(anchor) == 1, s.count(anchor)
           assert 'public/images/tasks/ho-huoi-pha-mthen.webp` | CLEARED' not in s
-          start = s.index(anchor)
-          end = s.index('\n', start) + 1
+          start = s.index(anchor); end = s.index('\n', start) + 1
           s = s[:end] + explicit + s[end:]
-
           old = "| `ho-huoi-pha-mthen` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |"
           new = "| `ho-huoi-pha-mthen` | Present; representative source resolved via MediaWiki API, regenerated and hashed in dedicated provenance record | CLEARED | Keep `public/images/tasks/provenance/ho-huoi-pha-mthen.json` with the shipped binary; preserve Adam Jones / CC BY-SA 2.0 attribution, licence link, modification notice and share-alike terms. Public credit must disclose that the source is representative rather than an exact verified photograph of Hồ Huổi Phạ. |"
           assert s.count(old) == 1, s.count(old)
-          s = s.replace(old, new)
-          ledger.write_text(s)
-
+          ledger.write_text(s.replace(old, new))
           credits = Path('src/data/assetCredits.ts')
           c = credits.read_text()
           marker = "  {\n    id: 'cho-noong-bua-trai-ban',"
