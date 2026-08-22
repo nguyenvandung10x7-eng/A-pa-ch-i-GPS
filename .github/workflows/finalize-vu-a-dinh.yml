@@ -1,0 +1,96 @@
+name: Finalize Vu A Dinh representative artwork clearance
+
+on:
+  push:
+    branches:
+      - agent/clear-vu-a-dinh-representative-artwork
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: agent/clear-vu-a-dinh-representative-artwork
+          fetch-depth: 0
+      - name: Verify exact binary and finalize ledger plus Credits
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          import json, hashlib
+
+          asset=Path('public/images/tasks/cong-vien-vu-a-dinh-trai-ban.webp')
+          provenance=Path('public/images/tasks/provenance/cong-vien-vu-a-dinh-trai-ban.json')
+          record=json.loads(provenance.read_text())
+          actual=hashlib.sha256(asset.read_bytes()).hexdigest()
+          expected=record['derivative']['sha256']
+          if actual != expected:
+            raise SystemExit(f'Binary hash mismatch: actual={actual} expected={expected}')
+          if record['source']['sha256'] != 'f5867f638f929b329ac04fef1a680d4861e1daa305a2f2aeabab74a263e4b35d':
+            raise SystemExit('Unexpected source hash in provenance')
+          if record['source']['license'] != 'CC BY-SA 2.0':
+            raise SystemExit('Unexpected licence in provenance')
+
+          ledger=Path('docs/asset-provenance.md')
+          text=ledger.read_text()
+          anchor='| `public/images/tasks/cot-co-a-pa-chai.webp` | CLEARED | `public/images/tasks/provenance/cot-co-a-pa-chai.json`; exact derivative SHA-256 `8278dcb416174fd8549f432a76a7188b05e85a4944290034f3f27804fcd72395` regenerated from the Commons API-resolved canonical original SHA-256 `db7510b26103e9735b0d4e0eb841a9e6e1ae41f98fdd942568ab121ef80b38f1`. The source-discovery ledger identifies this as representative traditional-house / Dien Bien Phu imagery rather than an exact verified photograph of A Pa Chai Flag Tower or A Pa Chai Village. | Adam Jones from Kelowna, BC, Canada; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Attribution/share-alike requirements apply. Rights clearance does not assert exact-location identity. |'
+          row='| `public/images/tasks/cong-vien-vu-a-dinh-trai-ban.webp` | CLEARED | `public/images/tasks/provenance/cong-vien-vu-a-dinh-trai-ban.json`; exact derivative SHA-256 `bd98e37bb6ce763233a5cac4c6a83d6e652d34fe23722e3665c6f23e5d890a5d` regenerated from the Commons API-resolved canonical original SHA-256 `f5867f638f929b329ac04fef1a680d4861e1daa305a2f2aeabab74a263e4b35d`. The source-discovery ledger identifies this as representative Dien Bien Phu landscape imagery rather than an exact verified photograph of Công viên Vừ A Dính. | Adam Jones from Kelowna, BC, Canada; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Attribution/share-alike requirements apply. Rights clearance does not assert exact-location identity. |'
+          if text.count(anchor) != 1:
+            raise SystemExit(f'Explicit anchor count={text.count(anchor)}')
+          if row in text:
+            raise SystemExit('Explicit row already present')
+          text=text.replace(anchor, anchor+'\n'+row)
+          old='| `cong-vien-vu-a-dinh-trai-ban` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |'
+          new='| `cong-vien-vu-a-dinh-trai-ban` | Present; representative source resolved via Commons MediaWiki API, regenerated and exact-binary hashed in dedicated provenance record | CLEARED | Keep `public/images/tasks/provenance/cong-vien-vu-a-dinh-trai-ban.json` with the shipped binary; preserve Adam Jones / CC BY-SA 2.0 attribution, licence link, modification notice and share-alike terms. Public credit must disclose that the source is representative rather than an exact verified photograph of Công viên Vừ A Dính. |'
+          if text.count(old) != 1:
+            raise SystemExit(f'FIELD row count={text.count(old)}')
+          text=text.replace(old,new)
+          ledger.write_text(text)
+
+          credits=Path('src/data/assetCredits.ts')
+          text=credits.read_text()
+          old="""  {
+    id: 'cong-vien-vu-a-dinh-trai-ban',
+    usage: { vi: 'Ảnh Công viên Vừ A Dính', en: 'Vu A Dinh Park image' },
+    author: 'Adam Jones',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Landscape_on_Edge_of_Dien_Bien_Phu_-_Vietnam_(48168741986).jpg',
+    ...cc('2.0'),
+    status: 'source-recorded',
+    note: sourceRecordedNote,
+  },
+"""
+          new="""  {
+    id: 'cong-vien-vu-a-dinh-trai-ban',
+    usage: { vi: 'Ảnh đại diện dùng cho Công viên Vừ A Dính', en: 'Representative image used for Vu A Dinh Park' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Landscape_on_Edge_of_Dien_Bien_Phu_-_Vietnam_(48168741986).jpg',
+    ...cc('2.0'),
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship được tái tạo từ canonical Commons original do MediaWiki API trả về, có hash nguồn/derivative và recipe trong release ledger. Đây là ảnh phong cảnh Điện Biên Phủ mang tính đại diện, không phải ảnh đã xác minh chính xác Công viên Vừ A Dính. CLEARED chỉ xác nhận quyền/provenance của binary. Ảnh đã được resize và re-encode sang WebP; CC BY-SA 2.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The exact shipped binary was regenerated from the canonical Commons original returned by the MediaWiki API, with source/derivative hashes and the transform recipe recorded in the release ledger. This is representative Dien Bien Phu landscape imagery, not an exact verified photograph of Vu A Dinh Park. CLEARED covers rights/provenance for the binary only. The image was resized and re-encoded to WebP; CC BY-SA 2.0 attribution/share-alike terms still apply.',
+    },
+  },
+"""
+          if text.count(old) != 1:
+            raise SystemExit(f'Credits block count={text.count(old)}')
+          text=text.replace(old,new)
+          credits.write_text(text)
+          PY
+      - name: Commit finalized records and self-delete
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/finalize-vu-a-dinh.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- docs/asset-provenance.md src/data/assetCredits.ts .github/workflows/finalize-vu-a-dinh.yml
+          git commit -m 'Finalize Vu A Dinh representative artwork clearance'
+          git push origin HEAD:agent/clear-vu-a-dinh-representative-artwork
