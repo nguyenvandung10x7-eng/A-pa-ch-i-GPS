@@ -36,12 +36,15 @@ export const ASSET_CREDITS: AssetCredit[] = [
   },
   {
     id: 'cong-vien-vu-a-dinh-trai-ban',
-    usage: { vi: 'Ảnh Công viên Vừ A Dính', en: 'Vu A Dinh Park image' },
-    author: 'Adam Jones',
+    usage: { vi: 'Ảnh phong cảnh Điện Biên Phủ đại diện dùng cho Công viên Vừ A Dính', en: 'Representative Dien Bien Phu landscape used for Vu A Dinh Park' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
     sourceUrl: 'https://commons.wikimedia.org/wiki/File:Landscape_on_Edge_of_Dien_Bien_Phu_-_Vietnam_(48168741986).jpg',
     ...cc('2.0'),
-    status: 'source-recorded',
-    note: sourceRecordedNote,
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship được tái tạo trong PR #86 từ canonical Commons original, có hash nguồn/derivative và recipe trong release ledger. Nguồn là ảnh phong cảnh Điện Biên Phủ mang tính đại diện, không phải ảnh đã xác minh chính xác Công viên Vừ A Dính. CLEARED chỉ xác nhận quyền/provenance của binary. Ảnh đã được resize và re-encode sang WebP; CC BY-SA 2.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The exact shipped binary was regenerated in PR #86 from the canonical Commons original, with source/derivative hashes and the transform recipe recorded in the release ledger. The source is representative Dien Bien Phu landscape imagery, not an exact verified photograph of Vu A Dinh Park. CLEARED covers rights/provenance for the binary only. The image was resized and re-encoded to WebP; CC BY-SA 2.0 attribution/share-alike terms still apply.',
+    },
   },
   {
     id: 'cho-noong-bua-trai-ban',
