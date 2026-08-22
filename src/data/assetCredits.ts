@@ -125,6 +125,18 @@ export const ASSET_CREDITS: AssetCredit[] = [
     },
   },
   {
+    id: 'cot-co-a-pa-chai',
+    usage: { vi: 'Ảnh đại diện dùng cho ba thử thách A Pa Chải / artwork chương 12', en: 'Representative image used for three A Pa Chai challenges / Chapter 12 artwork' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Facade_of_Traditional_Wooden_House_-_Dien_Bien_Phu_-_Vietnam_(48178462826).jpg',
+    ...cc('2.0'),
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship được tái tạo trong PR #85 từ canonical Commons original do MediaWiki API trả về, có hash nguồn/derivative và recipe trong release ledger. Đây là ảnh đại diện về nhà truyền thống / Điện Biên Phủ, không phải ảnh đã xác minh chính xác Cột cờ hoặc Bản A Pa Chải. CLEARED chỉ xác nhận quyền/provenance của binary. Ảnh đã được resize và re-encode sang WebP; CC BY-SA 2.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The exact shipped binary was regenerated in PR #85 from the canonical Commons original returned by the MediaWiki API, with source/derivative hashes and the transform recipe recorded in the release ledger. This is representative traditional-house / Dien Bien Phu imagery, not an exact verified photograph of A Pa Chai Flag Tower or Village. CLEARED covers rights/provenance for the binary only. The image was resized and re-encoded to WebP; CC BY-SA 2.0 attribution/share-alike terms still apply.',
+    },
+  },
+  {
     id: 'bao-tang-chien-thang-dien-bien-phu-trai-nghiem',
     usage: { vi: 'Ảnh Bảo tàng Chiến thắng Điện Biên Phủ / artwork chương', en: 'Dien Bien Phu Victory Museum / chapter artwork' },
     author: 'Trung tâm Thông tin Xúc tiến Du lịch tỉnh Điện Biên (portal operator)',
