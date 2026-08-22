@@ -4,6 +4,7 @@
   "checked_on": "2026-08-22",
   "reviewed_by": "nguyenvandung10x7-eng",
   "review_method": "Reproducible GitHub Actions rebuild using Commons MediaWiki API metadata plus exact source/derivative SHA-256 hashes.",
+  "finalization_trigger": "trusted-pre-pr-push",
   "source": {
     "commons_page": "https://commons.wikimedia.org/wiki/File:Landscape_on_Edge_of_Dien_Bien_Phu_-_Vietnam_(48168741986).jpg",
     "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/94/Landscape_on_Edge_of_Dien_Bien_Phu_-_Vietnam_%2848168741986%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
