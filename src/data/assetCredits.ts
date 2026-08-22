@@ -47,6 +47,18 @@ export const ASSET_CREDITS: AssetCredit[] = [
     },
   },
   {
+    id: 'cong-vien-noong-bua-mthen',
+    usage: { vi: 'Ảnh đồng quê Điện Biên Phủ đại diện dùng cho Công viên Noong Bua', en: 'Representative Dien Bien Phu countryside used for Noong Bua Park' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Countryside_on_Edge_of_Town_-_Dien_Bien_Phu_-_Vietnam_(48159158386).jpg',
+    ...cc('2.0'),
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship được tái tạo trong PR #87 từ canonical Commons original do MediaWiki API trả về, có hash nguồn/derivative và recipe trong release ledger. Nguồn là ảnh đồng quê Điện Biên Phủ mang tính đại diện, không phải ảnh đã xác minh chính xác Công viên Noong Bua. CLEARED chỉ xác nhận quyền/provenance của binary. Ảnh đã được resize và re-encode sang WebP; CC BY-SA 2.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The exact shipped binary was regenerated in PR #87 from the canonical Commons original returned by the MediaWiki API, with source/derivative hashes and the transform recipe recorded in the release ledger. The source is representative Dien Bien Phu countryside imagery, not an exact verified photograph of Noong Bua Park. CLEARED covers rights/provenance for the binary only. The image was resized and re-encoded to WebP; CC BY-SA 2.0 attribution/share-alike terms still apply.',
+    },
+  },
+  {
     id: 'cho-noong-bua-trai-ban',
     usage: { vi: 'Ảnh Chợ Noong Bua / artwork chương', en: 'Noong Bua Market / chapter artwork' },
     author: 'Adam Jones from Kelowna, BC, Canada',
