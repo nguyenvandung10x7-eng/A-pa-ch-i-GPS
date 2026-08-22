@@ -1,19 +1,21 @@
 name: Finalize Noong Bua clearance
 
-# registered one-shot finalizer
 on:
-  push:
+  pull_request:
     branches:
-      - agent/clear-noong-bua-representative-artwork
+      - main
+    types:
+      - synchronize
     paths:
       - .github/workflows/finalize-cong-vien-noong-bua.yml
+      - docs/.noong-bua-pr-ready
 
 permissions:
   contents: write
 
 jobs:
   finalize:
-    if: github.actor != 'github-actions[bot]'
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'agent/clear-noong-bua-representative-artwork' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -59,10 +61,10 @@ jobs:
 """
           credits.write_text(c.replace(marker, block + marker))
           PY
-          rm -f docs/.noong-bua-trigger
+          rm -f docs/.noong-bua-trigger docs/.noong-bua-pr-ready
           rm .github/workflows/finalize-cong-vien-noong-bua.yml
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add docs/asset-provenance.md src/data/assetCredits.ts docs/.noong-bua-trigger .github/workflows/finalize-cong-vien-noong-bua.yml
+          git add docs/asset-provenance.md src/data/assetCredits.ts docs/.noong-bua-trigger docs/.noong-bua-pr-ready .github/workflows/finalize-cong-vien-noong-bua.yml
           git commit -m 'Finalize Noong Bua clearance metadata'
           git push origin HEAD:agent/clear-noong-bua-representative-artwork
