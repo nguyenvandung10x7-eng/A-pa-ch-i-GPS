@@ -1,5 +1,6 @@
 name: Finalize Ho Huoi Pha metadata direct
 
+# trigger registered one-shot finalizer
 on:
   push:
     branches:
