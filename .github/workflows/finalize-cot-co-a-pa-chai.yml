@@ -1,3 +1,4 @@
+# trusted push trigger
 name: Finalize A Pa Chai representative artwork clearance
 
 on:
@@ -40,7 +41,6 @@ jobs:
           if text.count(old)!=1: raise SystemExit(f'book row count={text.count(old)}')
           text=text.replace(old,new)
           ledger.write_text(text)
-
           credits=Path('src/data/assetCredits.ts')
           text=credits.read_text()
           anchor="  {\n    id: 'bao-tang-chien-thang-dien-bien-phu-trai-nghiem',"
