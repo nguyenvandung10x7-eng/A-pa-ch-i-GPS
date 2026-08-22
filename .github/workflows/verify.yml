@@ -5,6 +5,10 @@ on:
   push:
     branches:
       - main
+      - agent/clear-noong-bua-representative-artwork
+
+permissions:
+  contents: write
 
 jobs:
   verify:
@@ -21,3 +25,68 @@ jobs:
         run: npm ci
       - name: Typecheck and build
         run: npm run verify
+
+  finalize-noong-bua:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/agent/clear-noong-bua-representative-artwork' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/clear-noong-bua-representative-artwork
+          fetch-depth: 0
+      - name: Verify provenance and finalize ledger + credits
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          provenance = json.loads(Path('public/images/tasks/provenance/cong-vien-noong-bua-mthen.json').read_text())
+          assert provenance['source']['sha256'] == '7d4da0163722a473ce7b104cae0dcfd4d055557c2164b746c8ca8ac961cdf4d2'
+          assert provenance['derivative']['sha256'] == 'f4de30aefc77c8bd931d23535bdf23d58edb687121bf723e37e314d687995ba9'
+          assert provenance['source']['license'] == 'CC BY-SA 2.0'
+          assert 'representative' in provenance['representation_note'].lower()
+
+          ledger = Path('docs/asset-provenance.md')
+          s = ledger.read_text()
+          explicit = "| `public/images/tasks/cong-vien-noong-bua-mthen.webp` | CLEARED | `public/images/tasks/provenance/cong-vien-noong-bua-mthen.json`; exact derivative SHA-256 `f4de30aefc77c8bd931d23535bdf23d58edb687121bf723e37e314d687995ba9` regenerated from the Commons API-resolved canonical original SHA-256 `7d4da0163722a473ce7b104cae0dcfd4d055557c2164b746c8ca8ac961cdf4d2`. The source is representative Dien Bien Phu countryside imagery, not an exact verified photograph of Công viên Noong Bua. | Adam Jones from Kelowna, BC, Canada; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Attribution/share-alike requirements apply. Rights clearance does not assert exact-location identity. |\n"
+          anchor = "| `public/images/tasks/cong-vien-vu-a-dinh-trai-ban.webp` | CLEARED |"
+          assert s.count(anchor) == 1, s.count(anchor)
+          assert 'public/images/tasks/cong-vien-noong-bua-mthen.webp` | CLEARED' not in s
+          start = s.index(anchor)
+          end = s.index('\n', start) + 1
+          s = s[:end] + explicit + s[end:]
+          old = "| `cong-vien-noong-bua-mthen` | Present | UNVERIFIED | Reconcile the shipped binary to the exact original, then verify licence/version and attribution. |"
+          new = "| `cong-vien-noong-bua-mthen` | Present; representative source resolved via MediaWiki API, regenerated and hashed in dedicated provenance record | CLEARED | Keep `public/images/tasks/provenance/cong-vien-noong-bua-mthen.json` with the shipped binary; preserve Adam Jones / CC BY-SA 2.0 attribution, licence link, modification notice and share-alike terms. Public credit must disclose that the source is representative rather than an exact verified photograph of Công viên Noong Bua. |"
+          assert s.count(old) == 1, s.count(old)
+          ledger.write_text(s.replace(old, new))
+
+          credits = Path('src/data/assetCredits.ts')
+          c = credits.read_text()
+          marker = "  {\n    id: 'cho-noong-bua-trai-ban',"
+          assert c.count(marker) == 1, c.count(marker)
+          assert "id: 'cong-vien-noong-bua-mthen'" not in c
+          block = """  {
+    id: 'cong-vien-noong-bua-mthen',
+    usage: { vi: 'Ảnh đồng quê Điện Biên Phủ đại diện dùng cho Công viên Noong Bua', en: 'Representative Dien Bien Phu countryside used for Noong Bua Park' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Countryside_on_Edge_of_Town_-_Dien_Bien_Phu_-_Vietnam_(48159158386).jpg',
+    ...cc('2.0'),
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship được tái tạo trong PR #87 từ canonical Commons original do MediaWiki API trả về, có hash nguồn/derivative và recipe trong release ledger. Nguồn là ảnh đồng quê Điện Biên Phủ mang tính đại diện, không phải ảnh đã xác minh chính xác Công viên Noong Bua. CLEARED chỉ xác nhận quyền/provenance của binary. Ảnh đã được resize và re-encode sang WebP; CC BY-SA 2.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The exact shipped binary was regenerated in PR #87 from the canonical Commons original returned by the MediaWiki API, with source/derivative hashes and the transform recipe recorded in the release ledger. The source is representative Dien Bien Phu countryside imagery, not an exact verified photograph of Noong Bua Park. CLEARED covers rights/provenance for the binary only. The image was resized and re-encoded to WebP; CC BY-SA 2.0 attribution/share-alike terms still apply.',
+    },
+  },
+"""
+          credits.write_text(c.replace(marker, block + marker))
+          PY
+          git show origin/main:.github/workflows/verify.yml > .github/workflows/verify.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add docs/asset-provenance.md src/data/assetCredits.ts .github/workflows/verify.yml
+          git commit -m 'Finalize Noong Bua clearance metadata'
+          git push origin HEAD:agent/clear-noong-bua-representative-artwork
