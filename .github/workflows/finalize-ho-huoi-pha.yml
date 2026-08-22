@@ -1,20 +1,18 @@
 name: Finalize Ho Huoi Pha clearance
 
-# registered one-shot finalizer
-# trigger exact branch finalization
 on:
-  push:
+  pull_request:
     branches:
-      - agent/clear-ho-huoi-pha-representative-artwork
-    paths:
-      - .github/workflows/finalize-ho-huoi-pha.yml
+      - main
+    types:
+      - synchronize
 
 permissions:
   contents: write
 
 jobs:
   finalize:
-    if: github.actor != 'github-actions[bot]'
+    if: github.head_ref == 'agent/clear-ho-huoi-pha-representative-artwork' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
