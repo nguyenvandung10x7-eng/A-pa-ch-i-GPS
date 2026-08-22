@@ -3,7 +3,7 @@ name: Regenerate cleared A Pa Chai representative artwork
 on:
   pull_request:
     branches: [main]
-    types: [opened]
+    types: [opened, synchronize]
 
 permissions:
   contents: write
@@ -28,14 +28,18 @@ jobs:
           import json, urllib.parse, urllib.request
           title='File:Facade of Traditional Wooden House - Dien Bien Phu - Vietnam (48178462826).jpg'
           q=urllib.parse.urlencode({'action':'query','format':'json','prop':'imageinfo','iiprop':'url|size|extmetadata','titles':title})
-          data=json.load(urllib.request.urlopen('https://commons.wikimedia.org/w/api.php?'+q))
+          headers={'User-Agent':'BookOfDienBienAssetProvenance/1.0 (GitHub Actions; https://github.com/nguyenvandung10x7-eng/A-pa-ch-i-GPS)'}
+          api_request=urllib.request.Request('https://commons.wikimedia.org/w/api.php?'+q,headers=headers)
+          data=json.load(urllib.request.urlopen(api_request))
           info=next(iter(data['query']['pages'].values()))['imageinfo'][0]
           meta=info['extmetadata']
           assert info['width']==3648 and info['height']==2736
           assert 'Adam Jones' in meta['Artist']['value']
           assert meta['LicenseShortName']['value']=='CC BY-SA 2.0'
           json.dump({'original_url':info['url'],'revision':info.get('timestamp')},open('/tmp/meta.json','w'))
-          urllib.request.urlretrieve(info['url'],'/tmp/source.jpg')
+          source_request=urllib.request.Request(info['url'],headers=headers)
+          with urllib.request.urlopen(source_request) as response, open('/tmp/source.jpg','wb') as output:
+              output.write(response.read())
           PY
           sha256sum /tmp/source.jpg > /tmp/source.sha
           ffmpeg -y -i /tmp/source.jpg -vf scale=1920:-2:flags=lanczos -c:v libwebp -lossless 0 -compression_level 6 -q:v 84 -an public/images/tasks/cot-co-a-pa-chai.webp
