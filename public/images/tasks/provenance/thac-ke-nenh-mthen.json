@@ -4,6 +4,8 @@
   "checked_on": "2026-08-21",
   "reviewed_by": "nguyenvandung10x7-eng",
   "review_method": "Reproducible GitHub Actions rebuild using Commons MediaWiki API metadata plus exact source/derivative SHA-256 hashes.",
+  "metadata_finalization_pr": 84,
+  "metadata_finalized_by": "nguyenvandung10x7-eng",
   "source": {
     "commons_page": "https://commons.wikimedia.org/wiki/File:Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_01_(48178533987).jpg",
     "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_01_%2848178533987%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
