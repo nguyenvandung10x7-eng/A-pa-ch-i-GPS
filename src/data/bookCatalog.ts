@@ -14,8 +14,8 @@ export const CHAPTER_13_CHALLENGE_ID = 'de-xe-may-ngoai-troi-qua-dem';
 const CHAPTER_01_ID = 'chapter-01-dong-song';
 const NAM_ROM_PAGE_ID = 'nam-rom-buoi-chieu';
 
-const CHAPTER_01_HERO_IMAGE = '/images/book/chapter-01-dong-song/chapter-01-dong-song-hero-01.webp';
-const NAM_ROM_INLINE_IMAGE = '/images/book/chapter-01-dong-song/nam-rom-buoi-chieu-inline-01.jpg';
+const CHAPTER_01_HERO_IMAGE = '/images/tasks/ho-huoi-pha-mthen.webp';
+const NAM_ROM_INLINE_IMAGE = '/images/tasks/cong-vien-noong-bua-mthen.webp';
 const CHAPTER_13_HERO_IMAGE = '/images/book/chapter-13-su-noi-loan-va-thanh-pho-ban-dem/chapter-13-thanh-pho-ban-dem-hero-01.webp';
 
 const CHAPTER_TRACK_IDS_BY_NUMBER: Record<string, string[]> = {
@@ -149,15 +149,15 @@ const withUploadedPageImages = (page: BookPage): BookPage => {
       blocks: [
         imageBlock(
           CHAPTER_01_HERO_IMAGE,
-          'Sông Nậm Rốm đi qua cánh đồng Điện Biên',
-          'The Nậm Rốm River crossing the Dien Bien plain'
+          'Phong cảnh sông ở Điện Biên Phủ dùng làm ảnh đại diện cho chương Nậm Rốm',
+          'Representative Dien Bien Phu river scenery used for the Nam Rom chapter'
         ),
         imageBlock(
           NAM_ROM_INLINE_IMAGE,
-          'Sông Nậm Rốm nhìn từ mặt đất',
-          'The Nậm Rốm River seen from ground level',
-          'Nậm Rốm ở gần hơn: nước, bờ sông và một buổi chiều bình thường.',
-          'Nậm Rốm up close: water, riverbank, and an ordinary afternoon.'
+          'Phong cảnh đồng quê Điện Biên Phủ dùng làm ảnh đại diện cho không gian ven sông',
+          'Representative Dien Bien Phu countryside used for the riverside setting',
+          'Ảnh đại diện cho không gian sông và đồng quê Điện Biên Phủ; không phải ảnh đã xác minh chính xác sông Nậm Rốm.',
+          'Representative Dien Bien Phu river-and-countryside imagery; not an exact verified photograph of the Nam Rom River.'
         ),
         ...page.blocks,
       ],
