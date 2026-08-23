@@ -251,11 +251,28 @@ export const ASSET_CREDITS: AssetCredit[] = [
     },
   },
   {
-    id: 'book-native-chapter-01',
-    usage: { vi: 'Ảnh Book-native Chapter 01', en: 'Chapter 01 Book-native images' },
-    author: 'Đang xác minh',
-    status: 'pending',
-    note: { vi: 'Chưa có record creator/source/permission cho exact shipped work.', en: 'Creator/source/permission is not yet recorded for the exact shipped work.' },
+    id: 'chapter-01-river-hero',
+    usage: { vi: 'Ảnh sông Điện Biên Phủ đại diện dùng cho Chapter 01 / Nậm Rốm', en: 'Representative Dien Bien Phu river imagery used for Chapter 01 / Nam Rom' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Ron_River_View_-_Dien_Bien_Phu_-_Vietnam_(48159135931).jpg',
+    ...cc('2.0'),
+    status: 'cleared',
+    note: {
+      vi: 'Chapter 01 dùng lại exact binary đã CLEARED của ho-huoi-pha-mthen, giữ nguyên derivative SHA-256 77ca90a38d4b1632a777e1d605eab6f6a81c05dd309358ead55e357d6c579989 và source SHA-256 a229af8197b17851420e8ff3b02119083e0619b28ae711f2b2a1c84a2d109f6f. Derivative đã được resize theo tỷ lệ xuống chiều rộng 1920 px bằng Lanczos và re-encode thành lossy WebP. Đây là ảnh sông Điện Biên Phủ mang tính đại diện, không phải ảnh đã xác minh chính xác sông Nậm Rốm. CLEARED chỉ xác nhận quyền/provenance của exact shipped binary. CC BY-SA 2.0 yêu cầu ghi công, liên kết giấy phép, nêu thay đổi và tuân thủ share-alike.',
+      en: 'Chapter 01 reuses the exact already-CLEARED ho-huoi-pha-mthen binary, preserving derivative SHA-256 77ca90a38d4b1632a777e1d605eab6f6a81c05dd309358ead55e357d6c579989 and source SHA-256 a229af8197b17851420e8ff3b02119083e0619b28ae711f2b2a1c84a2d109f6f. The derivative was proportionally resized to 1920 px width with Lanczos filtering and re-encoded as lossy WebP. It is representative Dien Bien Phu river scenery, not an exact verified photograph of the Nam Rom River. CLEARED covers rights/provenance for the exact shipped binary only. CC BY-SA 2.0 requires attribution, a licence link, change notice, and share-alike.',
+    },
+  },
+  {
+    id: 'chapter-01-riverside-inline',
+    usage: { vi: 'Ảnh đồng quê Điện Biên Phủ đại diện dùng cho ảnh inline Chapter 01', en: 'Representative Dien Bien Phu countryside used for the Chapter 01 inline image' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Countryside_on_Edge_of_Town_-_Dien_Bien_Phu_-_Vietnam_(48159158386).jpg',
+    ...cc('2.0'),
+    status: 'cleared',
+    note: {
+      vi: 'Chapter 01 dùng lại exact binary đã CLEARED của cong-vien-noong-bua-mthen, giữ nguyên derivative SHA-256 f4de30aefc77c8bd931d23535bdf23d58edb687121bf723e37e314d687995ba9 và source SHA-256 7d4da0163722a473ce7b104cae0dcfd4d055557c2164b746c8ca8ac961cdf4d2. Derivative đã được resize theo tỷ lệ xuống chiều rộng 1920 px bằng Lanczos và re-encode thành lossy WebP. Đây là ảnh đồng quê Điện Biên Phủ mang tính đại diện cho không gian ven sông, không phải ảnh đã xác minh chính xác sông Nậm Rốm. CLEARED chỉ xác nhận quyền/provenance của exact shipped binary. CC BY-SA 2.0 yêu cầu ghi công, liên kết giấy phép, nêu thay đổi và tuân thủ share-alike.',
+      en: 'Chapter 01 reuses the exact already-CLEARED cong-vien-noong-bua-mthen binary, preserving derivative SHA-256 f4de30aefc77c8bd931d23535bdf23d58edb687121bf723e37e314d687995ba9 and source SHA-256 7d4da0163722a473ce7b104cae0dcfd4d055557c2164b746c8ca8ac961cdf4d2. The derivative was proportionally resized to 1920 px width with Lanczos filtering and re-encoded as lossy WebP. It is representative Dien Bien Phu countryside imagery for the riverside setting, not an exact verified photograph of the Nam Rom River. CLEARED covers rights/provenance for the exact shipped binary only. CC BY-SA 2.0 requires attribution, a licence link, change notice, and share-alike.',
+    },
   },
   {
     id: 'chapter-13-night-hero',
