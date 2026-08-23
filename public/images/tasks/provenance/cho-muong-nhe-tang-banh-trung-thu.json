@@ -1,0 +1,14 @@
+{
+  "asset": "public/images/tasks/cho-muong-nhe-tang-banh-trung-thu.webp",
+  "status_basis": "pending-exact-binary-reconciliation",
+  "checked_on": "2026-08-23",
+  "reviewed_by": "nguyenvandung10x7-eng",
+  "candidate_source": {
+    "commons_page": "https://commons.wikimedia.org/wiki/File:2002.muong_nhe_1.jpg",
+    "author": "Dratharr",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "dimensions": "2048x1536"
+  },
+  "release_note": "Draft-only reconciliation record. Do not treat this asset as CLEARED until the exact Commons original and exact shipped derivative are hashed and the derivative transform is recorded."
+}
