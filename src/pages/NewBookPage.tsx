@@ -24,7 +24,7 @@ const chapterArtwork: Record<string, string | undefined> = {
   'chapter-06-1954': '/images/tasks/bao-tang-chien-thang-dien-bien-phu-trai-nghiem.webp',
   'chapter-09-nhung-thu-kho-quen': '/images/tasks/thac-ke-nenh-mthen.webp',
   'chapter-11-di-ve-phia-tay': '/images/tasks/cot-co-a-pa-chai.webp',
-  'chapter-13-su-noi-loan-va-thanh-pho-ban-dem': '/images/book/chapter-13-su-noi-loan-va-thanh-pho-ban-dem/chapter-13-thanh-pho-ban-dem-hero-01.webp',
+  'chapter-13-su-noi-loan-va-thanh-pho-ban-dem': '/images/tasks/quang-truong-7-5-mthen.webp',
 };
 
 const copy = {
