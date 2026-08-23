@@ -95,6 +95,18 @@ export const ASSET_CREDITS: AssetCredit[] = [
     },
   },
   {
+    id: 'cho-muong-nhe-tang-banh-trung-thu',
+    usage: { vi: 'Ảnh chợ Điện Biên Phủ đại diện dùng cho Chợ Mường Nhé', en: 'Representative Dien Bien Phu market imagery used for Muong Nhe Market' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Woman_Market_Vendor_-_Dien_Bien_Phu_-_Vietnam_-_01_(48178458016).jpg',
+    ...cc('2.0'),
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship dùng lại chính derivative đã CLEARED của cho-noong-bua-trai-ban, giữ nguyên derivative SHA-256 896a08a76d799fbec62eadcf6499ad23e17f75fce21a448de16009664a363afa và source SHA-256 de13be5adf356660524c06f8b063d852bd1bf2d019a0d61dddd92d6319dee05c. Derivative này đã được resize theo tỷ lệ xuống chiều rộng 1920 px bằng Lanczos và re-encode thành lossy WebP trong PR #78. Đây là ảnh chợ Điện Biên Phủ mang tính đại diện, không phải ảnh đã xác minh chính xác Chợ Mường Nhé. CLEARED chỉ xác nhận quyền/provenance của exact shipped binary. CC BY-SA 2.0 yêu cầu ghi công, liên kết giấy phép, nêu thay đổi và tuân thủ share-alike.',
+      en: 'The shipped binary reuses the exact already-CLEARED derivative from cho-noong-bua-trai-ban, preserving derivative SHA-256 896a08a76d799fbec62eadcf6499ad23e17f75fce21a448de16009664a363afa and source SHA-256 de13be5adf356660524c06f8b063d852bd1bf2d019a0d61dddd92d6319dee05c. This derivative was proportionally resized to 1920 px width with Lanczos filtering and re-encoded as lossy WebP in PR #78. It is representative Dien Bien Phu market imagery, not an exact verified photograph of Muong Nhe Market. CLEARED covers rights/provenance for the exact shipped binary only. CC BY-SA 2.0 requires attribution, a licence link, change notice, and share-alike.',
+    },
+  },
+  {
     id: 'canh-dong-muong-thanh-cat-banh',
     usage: { vi: 'Ảnh Cánh đồng Mường Thanh / artwork chương', en: 'Muong Thanh Field / chapter artwork' },
     author: 'Adam Jones',
