@@ -51,12 +51,12 @@ Before using `SOURCES.md` as provenance evidence, reconcile the shipped binary t
 
 ## BOOK-native assets
 
-The following rows are current known BOOK-native assets. They do not limit the BOOK runtime completeness rule above.
+The following rows are current known BOOK-native assets. They do not limit the BOOK runtime completeness rule above. Assets marked `RETIRED / NOT RUNTIME` may remain in the repository but are not reachable from the published Book runtime and therefore are not current release blockers.
 
 | Asset | Public use | Status | Release action |
 | --- | --- | --- | --- |
-| `public/images/book/chapter-01-dong-song/chapter-01-dong-song-hero-01.webp` | Book cover / Chapter 01 hero / page image | UNVERIFIED | Record creator/source, permission or licence, and attribution requirement for the exact shipped work. |
-| `public/images/book/chapter-01-dong-song/nam-rom-buoi-chieu-inline-01.jpg` | Chapter 01 inline image | UNVERIFIED | Record creator/source, permission or licence, and attribution requirement for the exact shipped work. |
+| `public/images/book/chapter-01-dong-song/chapter-01-dong-song-hero-01.webp` | Former Chapter 01 hero / page image | RETIRED / NOT RUNTIME | Published Chapter 01 now uses the already-CLEARED `public/images/tasks/ho-huoi-pha-mthen.webp`; do not restore this native file without a new provenance review. |
+| `public/images/book/chapter-01-dong-song/nam-rom-buoi-chieu-inline-01.jpg` | Former Chapter 01 inline image | RETIRED / NOT RUNTIME | Published Chapter 01 now uses the already-CLEARED `public/images/tasks/cong-vien-noong-bua-mthen.webp`; do not restore this native file without a new provenance review. |
 | `public/images/book/chapter-13-su-noi-loan-va-thanh-pho-ban-dem/chapter-13-thanh-pho-ban-dem-hero-01.webp` | Chapter 13 hero / page image | BLOCKED | Asset review flagged a visible publisher watermark. Keep the watermark intact while reviewing; before public release, either obtain permission with the required credit or replace the image with a cleared asset. |
 
 ## FIELD task catalog
@@ -92,10 +92,12 @@ The table above is a convenience index, not the completeness mechanism. Any visu
 
 ## Task images reused as BOOK chapter artwork
 
-`src/pages/NewBookPage.tsx` currently reuses these task assets as editorial chapter heroes. Their rights must therefore cover both the original Challenge use and the BOOK/editorial use.
+The Book runtime currently reuses these task assets as editorial chapter artwork, including Chapter 01 hero and inline imagery. Their rights must therefore cover both the original Challenge use and the BOOK/editorial use.
 
 | Asset | BOOK chapters | Status | Release action |
 | --- | --- | --- | --- |
+| `public/images/tasks/ho-huoi-pha-mthen.webp` | 01 hero / page cover | CLEARED | Chapter 01 reuses the exact already-CLEARED derivative SHA-256 `77ca90a38d4b1632a777e1d605eab6f6a81c05dd309358ead55e357d6c579989` from source SHA-256 `a229af8197b17851420e8ff3b02119083e0619b28ae711f2b2a1c84a2d109f6f`; retain Adam Jones / CC BY-SA 2.0 attribution, licence link, explicit proportional resize to 1920 px width with Lanczos filtering and lossy-WebP modification notice, and share-alike terms. This is representative Dien Bien Phu river scenery, not an exact verified photograph of the Nậm Rốm River; CLEARED is rights/provenance only. |
+| `public/images/tasks/cong-vien-noong-bua-mthen.webp` | 01 inline image | CLEARED | Chapter 01 reuses the exact already-CLEARED derivative SHA-256 `f4de30aefc77c8bd931d23535bdf23d58edb687121bf723e37e314d687995ba9` from source SHA-256 `7d4da0163722a473ce7b104cae0dcfd4d055557c2164b746c8ca8ac961cdf4d2`; retain Adam Jones / CC BY-SA 2.0 attribution, licence link, explicit proportional resize to 1920 px width with Lanczos filtering and lossy-WebP modification notice, and share-alike terms. This is representative Dien Bien Phu countryside imagery for the riverside setting, not an exact verified photograph of the Nậm Rốm River; CLEARED is rights/provenance only. |
 | `public/images/tasks/cong-vien-hoa-ban-mthen.webp` | 02 | CLEARED | Exact shipped derivative is covered by the dedicated provenance record and CC BY-SA 2.0 for FIELD plus BOOK/editorial reuse; retain attribution, licence link, modification notice and share-alike terms. This is a representative source, not an exact verified photograph of Công viên Hoa Ban, and public credit must retain that distinction. |
 | `public/images/tasks/ban-phieng-loi-mthen.webp` | 03 | CLEARED | Exact shipped derivative is covered by the dedicated provenance record and CC BY-SA 2.0 for FIELD plus BOOK/editorial reuse; retain attribution, licence link, modification notice and share-alike terms. This is a representative source, not an exact verified photograph of Bản Phiêng Lơi, and public credit must retain that distinction. |
 | `public/images/tasks/quang-truong-7-5-mthen.webp` | 04, 06 | CLEARED | Exact shipped derivative is covered by the dedicated provenance record and CC BY-SA 4.0 for FIELD plus BOOK/editorial reuse; retain attribution, licence link, modification notice and share-alike terms. This is a representative Dien Bien Phu streetscape, not an exact verified image of Quảng trường 7-5, and public credit must retain that distinction. |

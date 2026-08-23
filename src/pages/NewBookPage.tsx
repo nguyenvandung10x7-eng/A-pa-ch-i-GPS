@@ -13,7 +13,7 @@ const localized = (value: BookLocalizedText | undefined, language: LanguageCode)
   value?.[language] ?? value?.vi ?? value?.en ?? '';
 
 const chapterArtwork: Record<string, string | undefined> = {
-  'chapter-01-dong-song': '/images/book/chapter-01-dong-song/chapter-01-dong-song-hero-01.webp',
+  'chapter-01-dong-song': '/images/tasks/ho-huoi-pha-mthen.webp',
   'chapter-02-mua-he': '/images/tasks/cong-vien-hoa-ban-mthen.webp',
   'chapter-03-mot-dien-bien-rat-nho': '/images/tasks/ban-phieng-loi-mthen.webp',
   'chapter-04-pho-cu': '/images/tasks/quang-truong-7-5-mthen.webp',
