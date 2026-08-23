@@ -47,6 +47,18 @@ export const ASSET_CREDITS: AssetCredit[] = [
     },
   },
   {
+    id: 'khu-du-lich-him-lam-trai-ban',
+    usage: { vi: 'Ảnh phong cảnh Điện Biên Phủ đại diện dùng cho Khu du lịch Him Lam', en: 'Representative Dien Bien Phu landscape used for Him Lam tourism area' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Landscape_on_Edge_of_Dien_Bien_Phu_-_Vietnam_(48168741986).jpg',
+    ...cc('2.0'),
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship dùng lại chính derivative đã CLEARED của cong-vien-vu-a-dinh-trai-ban, giữ nguyên derivative SHA-256 bd98e37bb6ce763233a5cac4c6a83d6e652d34fe23722e3665c6f23e5d890a5d và source SHA-256 f5867f638f929b329ac04fef1a680d4861e1daa305a2f2aeabab74a263e4b35d. Nguồn Commons là ảnh phong cảnh Điện Biên Phủ mang tính đại diện, không phải ảnh đã xác minh chính xác Khu du lịch Him Lam. CLEARED chỉ xác nhận quyền/provenance của binary. CC BY-SA 2.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The shipped binary reuses the exact already-CLEARED derivative from cong-vien-vu-a-dinh-trai-ban, preserving derivative SHA-256 bd98e37bb6ce763233a5cac4c6a83d6e652d34fe23722e3665c6f23e5d890a5d and source SHA-256 f5867f638f929b329ac04fef1a680d4861e1daa305a2f2aeabab74a263e4b35d. The Commons source is representative Dien Bien Phu landscape imagery, not an exact verified photograph of Him Lam tourism area. CLEARED covers rights/provenance for the binary only. CC BY-SA 2.0 attribution/share-alike terms still apply.',
+    },
+  },
+  {
     id: 'cong-vien-noong-bua-mthen',
     usage: { vi: 'Ảnh đồng quê Điện Biên Phủ đại diện dùng cho Công viên Noong Bua', en: 'Representative Dien Bien Phu countryside used for Noong Bua Park' },
     author: 'Adam Jones from Kelowna, BC, Canada',
