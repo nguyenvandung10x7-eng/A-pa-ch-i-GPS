@@ -167,6 +167,18 @@ export const ASSET_CREDITS: AssetCredit[] = [
     },
   },
   {
+    id: 'ho-pa-khoang-trai-ban',
+    usage: { vi: 'Ảnh Mường Thanh đại diện dùng cho Hồ Pá Khoang', en: 'Representative Muong Thanh scenery used for Ho Pa Khoang' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Panorama_of_Ricefields_in_Muong_Thanh_Valley_-_Dien_Bien_Phu_-_Vietnam_-_01_(48178533987).jpg',
+    ...cc('2.0'),
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship dùng lại chính derivative đã CLEARED của thac-ke-nenh-mthen, giữ nguyên derivative SHA-256 ed3bae64bd8875b84d9aaabd1f744f72b87d0e9dfaf3ac4d29ab2fd2a468b7e8 và source SHA-256 4f75305fd3c43da3b5522b728b8420f141a27472331d155562a32975476dee6b. SOURCES.md ghi một candidate khác; release này cố ý thay candidate chưa được reconcile đó bằng exact cleared derivative. Nguồn Commons là ảnh panorama Mường Thanh mang tính đại diện, không phải ảnh đã xác minh chính xác Hồ Pá Khoang. CLEARED chỉ xác nhận quyền/provenance của exact shipped binary. CC BY-SA 2.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The shipped binary reuses the exact already-CLEARED derivative from thac-ke-nenh-mthen, preserving derivative SHA-256 ed3bae64bd8875b84d9aaabd1f744f72b87d0e9dfaf3ac4d29ab2fd2a468b7e8 and source SHA-256 4f75305fd3c43da3b5522b728b8420f141a27472331d155562a32975476dee6b. SOURCES.md records a different candidate; this release intentionally replaces that unreconciled candidate with the exact cleared derivative. The Commons source is representative Muong Thanh Valley panorama imagery, not an exact verified photograph of Ho Pa Khoang. CLEARED covers rights/provenance for the exact shipped binary only. CC BY-SA 2.0 attribution/share-alike terms still apply.',
+    },
+  },
+  {
     id: 'thac-ke-nenh-mthen',
     usage: { vi: 'Ảnh đại diện dùng cho Thác Kê Nênh / artwork chương', en: 'Representative image used for Ke Nenh waterfall / chapter artwork' },
     author: 'Adam Jones from Kelowna, BC, Canada',
