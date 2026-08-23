@@ -240,11 +240,15 @@ export const ASSET_CREDITS: AssetCredit[] = [
   },
   {
     id: 'bao-tang-chien-thang-dien-bien-phu-trai-nghiem',
-    usage: { vi: 'Ảnh Bảo tàng Chiến thắng Điện Biên Phủ / artwork chương', en: 'Dien Bien Phu Victory Museum / chapter artwork' },
-    author: 'Trung tâm Thông tin Xúc tiến Du lịch tỉnh Điện Biên (portal operator)',
-    sourceUrl: 'https://dulichdienbien.vietnaminfo.net/vi/place/details/bao-tang-chien-thang-dien-bien-phu-6',
-    status: 'pending',
-    note: { vi: 'Đã có nguồn candidate nhưng chưa có căn cứ reuse licence/permission đủ để clearance.', en: 'A candidate source is recorded, but sufficient reuse licence/permission is not yet documented for clearance.' },
+    usage: { vi: 'Ảnh di tích lịch sử Điện Biên Phủ đại diện dùng cho Bảo tàng Chiến thắng Điện Biên Phủ / artwork chương 09', en: 'Representative Dien Bien Phu historical-site imagery used for the Victory Museum / Chapter 09 artwork' },
+    author: 'Adam Jones from Kelowna, BC, Canada',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:French_Barbed-Wire_Emplacement_at_Hill_A1_(Eliane_2)_-_Dien_Bien_Phu_-_Vietnam_(48168745081).jpg',
+    ...cc('2.0'),
+    status: 'cleared',
+    note: {
+      vi: 'Exact binary đang ship dùng lại chính derivative đã CLEARED của doi-a1-khoanh-khac-tuong-niem, giữ nguyên derivative SHA-256 7343a06c68b0f0b7b18b06e3c6fa76bebc1bd0c127d9ad265b5b7537e85f1efc và source SHA-256 02a10ea62b66087b1c7fb2884d975ff217b780485197b7e476dbc8328a80edfc. Derivative đã được resize theo tỷ lệ xuống chiều rộng 1920 px bằng Lanczos và re-encode thành lossy WebP. Đây là ảnh di tích lịch sử Điện Biên Phủ mang tính đại diện, không phải ảnh đã xác minh chính xác Bảo tàng Chiến thắng Điện Biên Phủ. CLEARED chỉ xác nhận quyền/provenance của exact shipped binary. CC BY-SA 2.0 yêu cầu ghi công, liên kết giấy phép, nêu thay đổi và tuân thủ share-alike.',
+      en: 'The shipped binary reuses the exact already-CLEARED derivative from doi-a1-khoanh-khac-tuong-niem, preserving derivative SHA-256 7343a06c68b0f0b7b18b06e3c6fa76bebc1bd0c127d9ad265b5b7537e85f1efc and source SHA-256 02a10ea62b66087b1c7fb2884d975ff217b780485197b7e476dbc8328a80edfc. This derivative was proportionally resized to 1920 px width with Lanczos filtering and re-encoded as lossy WebP. It is representative Dien Bien Phu historical-site imagery, not an exact verified photograph of the Dien Bien Phu Victory Museum. CLEARED covers rights/provenance for the exact shipped binary only. CC BY-SA 2.0 requires attribution, a licence link, change notice, and share-alike.',
+    },
   },
   {
     id: 'book-native-chapter-01',
