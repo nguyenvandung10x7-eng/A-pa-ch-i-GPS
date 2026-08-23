@@ -7,7 +7,7 @@ import type { ChallengeTask } from '../types/task';
 const CATALOG_IMPORT_VERSION_KEY = 'book-of-dien-bien-challenge-catalog-import-version';
 const CATALOG_IMPORT_VERSION = '2026-08-19-book-image-assets';
 const OVERNIGHT_MOTORBIKE_TASK_ID = 'de-xe-may-ngoai-troi-qua-dem';
-const OVERNIGHT_MOTORBIKE_COVER_IMAGE = '/images/challenges/de-xe-may-ngoai-troi-qua-dem/cover-01.jpg';
+const OVERNIGHT_MOTORBIKE_COVER_IMAGE = '/images/tasks/quang-truong-7-5-mthen.webp';
 
 const withCanonicalImageFallbacks = (tasks: ChallengeTask[]): ChallengeTask[] =>
   tasks.map((task) => {
