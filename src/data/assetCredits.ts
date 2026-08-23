@@ -275,17 +275,18 @@ export const ASSET_CREDITS: AssetCredit[] = [
     },
   },
   {
-    id: 'chapter-13-night-hero',
-    usage: { vi: 'Ảnh hero Chapter 13', en: 'Chapter 13 hero image' },
-    author: 'Đang xác minh',
-    status: 'pending',
-    note: { vi: 'Asset có watermark baodienbienphu.com.vn và vẫn BLOCKED trong release ledger cho tới khi có permission phù hợp hoặc ảnh thay thế đã clearance.', en: 'The asset carries a baodienbienphu.com.vn watermark and remains BLOCKED in the release ledger until suitable permission is documented or a cleared replacement is used.' },
-  },
-  {
-    id: 'chapter-13-challenge-cover',
-    usage: { vi: 'Cover Challenge Chapter 13', en: 'Chapter 13 Challenge cover' },
-    author: 'Đang xác minh',
-    status: 'pending',
-    note: { vi: 'Chưa có record creator/source/licence cho exact shipped cover.', en: 'Creator/source/licence is not yet recorded for the exact shipped cover.' },
+    id: 'book-chapter-13-urban-artwork',
+    usage: {
+      vi: 'Ảnh đường phố Điện Biên Phủ đại diện dùng cho Chương 13 và fallback Challenge để xe ngoài trời',
+      en: 'Representative Dien Bien Phu streetscape used for Chapter 13 and the overnight-motorbike Challenge fallback',
+    },
+    author: 'Ioe2015',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:A_route_in_Dien_Bien_Phu.jpg',
+    ...cc('4.0'),
+    status: 'cleared',
+    note: {
+      vi: 'Chapter 13 và fallback Challenge dùng lại exact binary đã CLEARED của quang-truong-7-5-mthen, giữ nguyên derivative SHA-256 4741c2e12aead3b1dde462c1c7b6eb6fae81cf4e6fc1b87bc128211eb1ebb34a và source SHA-256 21da7ab103380468d0a5bbff542eacadd5493a9356b23a270f6fb6ed84c1a51a. Derivative đã được resize theo tỷ lệ xuống chiều rộng 1920 px bằng Lanczos và re-encode thành lossy WebP; không crop, thêm overlay, xóa watermark hay chỉnh sửa nội dung. Đây là ảnh đường phố Điện Biên Phủ mang tính đại diện, không phải ảnh đã xác minh chính xác thành phố về đêm hay điểm Challenge. CLEARED chỉ xác nhận quyền/provenance của exact reused binary. CC BY-SA 4.0 yêu cầu ghi công, liên kết giấy phép, nêu thay đổi và tuân thủ share-alike.',
+      en: 'Chapter 13 and the Challenge fallback reuse the exact already-CLEARED quang-truong-7-5-mthen binary, preserving derivative SHA-256 4741c2e12aead3b1dde462c1c7b6eb6fae81cf4e6fc1b87bc128211eb1ebb34a and source SHA-256 21da7ab103380468d0a5bbff542eacadd5493a9356b23a270f6fb6ed84c1a51a. The derivative was proportionally resized to 1920 px width with Lanczos filtering and re-encoded as lossy WebP; no crop, overlay, watermark removal, or content edit was applied. It is representative Dien Bien Phu urban streetscape imagery, not an exact verified night photograph or image of the Challenge point. CLEARED covers rights/provenance for the exact reused binary only. CC BY-SA 4.0 requires attribution, a licence link, change notice, and share-alike.',
+    },
   },
 ];

@@ -16,7 +16,7 @@ const NAM_ROM_PAGE_ID = 'nam-rom-buoi-chieu';
 
 const CHAPTER_01_HERO_IMAGE = '/images/tasks/ho-huoi-pha-mthen.webp';
 const NAM_ROM_INLINE_IMAGE = '/images/tasks/cong-vien-noong-bua-mthen.webp';
-const CHAPTER_13_HERO_IMAGE = '/images/book/chapter-13-su-noi-loan-va-thanh-pho-ban-dem/chapter-13-thanh-pho-ban-dem-hero-01.webp';
+const CHAPTER_13_HERO_IMAGE = '/images/tasks/quang-truong-7-5-mthen.webp';
 
 const CHAPTER_TRACK_IDS_BY_NUMBER: Record<string, string[]> = {
   '01': ['chapter-01-dong-song-track-01'],
@@ -171,8 +171,10 @@ const withUploadedPageImages = (page: BookPage): BookPage => {
       blocks: [
         imageBlock(
           CHAPTER_13_HERO_IMAGE,
-          'Thành phố Điện Biên Phủ về đêm nhìn từ trên cao',
-          'Dien Bien Phu at night seen from above'
+          'Phong cảnh đô thị Điện Biên Phủ dùng làm ảnh đại diện cho Chương 13',
+          'Representative Dien Bien Phu urban streetscape used for Chapter 13',
+          'Ảnh đường phố Điện Biên Phủ mang tính đại diện cho bối cảnh đô thị của Chương 13; không phải ảnh đã xác minh chính xác thành phố về đêm hay điểm Challenge.',
+          "Representative Dien Bien Phu streetscape used for Chapter 13's urban setting; not an exact verified night photograph or image of the Challenge point."
         ),
         ...page.blocks,
       ],
