@@ -1,6 +1,20 @@
+import { icon } from 'leaflet';
 import { Circle, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
+import markerIcon2xUrl from 'leaflet/dist/images/marker-icon-2x.png';
+import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
+
+const placeMarkerIcon = icon({
+  iconUrl: markerIconUrl,
+  iconRetinaUrl: markerIcon2xUrl,
+  shadowUrl: markerShadowUrl,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
 
 export const TaskMap = ({ tasks, language, t }: { tasks: ChallengeTask[]; language: LanguageCode; t: (key: string) => string }) => {
   const first = tasks[0]?.gps;
@@ -19,7 +33,7 @@ export const TaskMap = ({ tasks, language, t }: { tasks: ChallengeTask[]; langua
     <MapContainer center={[first?.lat ?? 10.7756, first?.lng ?? 106.7039]} zoom={13} scrollWheelZoom className="h-[420px] sm:h-[540px] lg:h-[680px]">
         <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         {tasks.map((task) => (
-          <Marker key={task.id} position={[task.gps.lat, task.gps.lng]}>
+          <Marker key={task.id} position={[task.gps.lat, task.gps.lng]} icon={placeMarkerIcon}>
             <Popup><strong>{localize(task.title, language)}</strong><br />{localize(task.description, language)}</Popup>
             <Circle center={[task.gps.lat, task.gps.lng]} radius={task.gps.radius} pathOptions={{ color: '#2f8f58' }} />
           </Marker>

@@ -107,7 +107,7 @@ const StorySection = ({
         {page.intro ? <p>{localized(page.intro, language)}</p> : null}
       </header>
 
-      {illustration ? (
+      {illustration && index > 0 ? (
         <figure className="book-longform-story__art">
           <img src={illustration} alt={localized(page.title, language)} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
         </figure>

@@ -551,12 +551,57 @@ body.public-shell-active::after {
   font-weight: 800;
 }
 
+.game-explore-page {
+  min-height: calc(100dvh - 4rem);
+  padding: 1rem .65rem 1.5rem;
+}
+
+.game-explore-page__hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .8rem;
+  align-items: center;
+  max-width: 68rem;
+  margin: 0 auto .9rem;
+  border: 1px solid rgba(74, 111, 58, .16);
+  border-radius: 1.35rem;
+  background: rgba(255, 249, 233, .82);
+  padding: .9rem;
+  box-shadow: 0 .75rem 1.6rem rgba(55, 72, 43, .11);
+  backdrop-filter: blur(12px);
+}
+
+.game-explore-page__icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 1rem;
+  background: #f7bd2f;
+  color: #61401f;
+}
+
+.game-explore-page__icon svg { width: 1.5rem; }
+.game-explore-page__hero p { display: flex; align-items: center; gap: .3rem; margin: 0; color: #438047; font-size: .62rem; font-weight: 900; letter-spacing: .11em; }
+.game-explore-page__hero p svg { width: .8rem; }
+.game-explore-page__hero h1 { margin: .2rem 0 0; font-family: "Be Vietnam Pro", sans-serif; font-size: clamp(1.2rem, 5vw, 2.2rem); font-weight: 950; line-height: 1; letter-spacing: -.04em; }
+.game-explore-page__hero div > div { display: none; }
+.game-explore-page__hero > span { grid-column: 1 / -1; display: inline-flex; width: max-content; border-radius: 99px; background: #e7f1d9; color: #376b3a; padding: .35rem .65rem; font-size: .68rem; font-weight: 850; }
+.challenge-game-layout { max-width: 68rem; margin: 0 auto; }
+.challenge-game-layout > .glass,
+.challenge-game-layout > .wood-panel { border: .3rem solid rgba(255, 255, 255, .72); border-radius: 1.7rem; background: #fff7e4; box-shadow: 0 1.2rem 3rem rgba(49, 67, 40, .16); }
+
 @media (min-width: 720px) {
-  .editorial-shell__surface-nav { left: 50%; right: auto; width: min(38rem, calc(100% - 2rem)); transform: translateX(-50%); }
+  .editorial-shell__surface-nav,
+  .editorial-shell--field .editorial-shell__surface-nav { left: 50%; right: auto; width: min(38rem, calc(100% - 2rem)); transform: translateX(-50%); }
   .editorial-shell__surface-nav a,
   .editorial-shell__surface-nav button { flex-direction: row; gap: .5rem; font-size: .78rem; }
   .game-map-page { padding: 1.4rem; }
   .game-map-page__hero { grid-template-columns: auto 1fr auto; padding: 1.1rem 1.25rem; }
   .game-map-page__hero div > div { display: block; max-width: 42rem; margin-top: .45rem; color: #6d604d; font-family: Georgia, serif; font-size: .88rem; line-height: 1.45; }
   .game-map-page__hero > span { grid-column: auto; }
+  .game-explore-page { padding: 1.4rem; }
+  .game-explore-page__hero { grid-template-columns: auto minmax(0, 1fr) auto; padding: 1.1rem 1.25rem; }
+  .game-explore-page__hero div > div { display: block; max-width: 42rem; margin-top: .45rem; color: #6d604d; font-family: Georgia, serif; font-size: .88rem; line-height: 1.45; }
+  .game-explore-page__hero > span { grid-column: auto; }
 }
