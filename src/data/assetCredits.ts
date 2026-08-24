@@ -18,6 +18,19 @@ const cc = (version: '2.0' | '3.0' | '4.0') => ({
 
 export const ASSET_CREDITS: AssetCredit[] = [
   {
+    id: 'dien-bien-city-atlas-v3',
+    usage: {
+      vi: 'Ảnh nền atlas thành phố trên màn hình Khám phá',
+      en: 'City atlas background on the Explore screen',
+    },
+    author: 'Generated for Book of Dien Bien',
+    status: 'cleared',
+    note: {
+      vi: 'Tạo mới từ hai ảnh concept nội bộ: giữ tỷ lệ thung lũng đô thị của bản v2 và bổ sung các mốc thị giác như Tượng đài Chiến thắng, Đồi A1, bảo tàng, cầu Mường Thanh và sân bay. Đây là bản đồ minh họa phong cách game, không thay thế bản đồ định vị GPS.',
+      en: 'Created from two internal concept images: it keeps the v2 urban-valley scale while adding visual landmarks including the Victory Monument, A1 Hill, museum, Mường Thanh Bridge, and airport. This is a game-style illustrated atlas, not a replacement for GPS mapping.',
+    },
+  },
+  {
     id: 'challenge-generated-illustrations',
     usage: {
       vi: 'Tranh minh họa cho thử thách để xe qua đêm, ngắm lòng chảo và tìm cây xoài cổ thụ',

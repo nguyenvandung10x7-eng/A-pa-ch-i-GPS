@@ -559,7 +559,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   })() : '';
   return (
   <ExploreAtlas
-    tasks={tasks}
+    tasks={eligibleTasks}
     progressTotal={eligibleTasks.length}
     activeTask={task}
     score={summary.score}

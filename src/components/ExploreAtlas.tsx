@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { ChevronRight, Footprints, MapPin, Medal, Navigation, Sparkles, X } from 'lucide-react';
+import { ChevronRight, Footprints, MapPin, Medal, Navigation, Route, Sparkles, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
@@ -20,13 +20,19 @@ type ExploreAtlasProps = {
   children: ReactNode;
 };
 
+type AtlasPlaceGroup = {
+  id: string;
+  tasks: ChallengeTask[];
+  anchorTask: ChallengeTask;
+};
+
 const copy = {
   vi: {
-    tagline: 'Chạm một dấu ghim để khám phá',
+    tagline: '10 khám phá, một hành trình',
     points: 'điểm',
-    places: 'địa danh',
+    discoveries: 'khám phá',
     active: 'Điểm đến hiện tại',
-    available: 'Địa danh đang mở',
+    available: 'Khám phá đang mở',
     newJourney: 'Chuyến đi mới',
     radius: 'Bán kính',
     view: 'Xem địa điểm',
@@ -34,14 +40,15 @@ const copy = {
     start: 'Bắt đầu khám phá',
     close: 'Đóng chi tiết địa điểm',
     details: 'Chi tiết địa điểm',
-    outsideAtlas: 'Ngoài khung thành phố',
+    westRoute: 'Hành trình phía Tây',
+    atThisStop: 'khám phá tại đây',
   },
   en: {
-    tagline: 'Tap a pin to explore',
+    tagline: '10 discoveries, one journey',
     points: 'points',
-    places: 'places',
+    discoveries: 'discoveries',
     active: 'Current destination',
-    available: 'Open place',
+    available: 'Open discovery',
     newJourney: 'New journey',
     radius: 'Radius',
     view: 'View place',
@@ -49,11 +56,12 @@ const copy = {
     start: 'Start exploring',
     close: 'Close place details',
     details: 'Place details',
-    outsideAtlas: 'Outside the city atlas',
+    westRoute: 'Journey west',
+    atThisStop: 'discoveries here',
   },
 } as const;
 
-const PIN_COLORS = ['#f25643', '#f3aa20', '#6b70e8', '#10a997', '#a653ef', '#ef3e32', '#2f8dd9', '#e56b22', '#45a049', '#d84f92'];
+const PIN_COLORS = ['#f25643', '#f3aa20', '#6b70e8', '#10a997', '#a653ef'];
 
 const CITY_ATLAS_BOUNDS = {
   north: 21.432,
@@ -62,43 +70,25 @@ const CITY_ATLAS_BOUNDS = {
   east: 103.071,
 } as const;
 
-const CITY_PIN_TASK_IDS = [
-  'ban-phieng-loi-mthen',
-  'ho-huoi-pha-mthen',
-  'cong-vien-noong-bua-mthen',
-  'ca-phe-ke-nenh-cat-banh',
-  'quang-truong-7-5-mthen',
-  'doi-a1-chuyen-tau-thoi-gian-1954',
-  'canh-dong-muong-thanh-cat-banh',
-  'quan-com-hung-ha-thuoc-lao-free',
-  'nhin-xuong-long-chao-cua-chung-ta',
-  'tim-cay-xoai-co-thu',
-] as const;
-
-const CITY_PLACE_NAMES: Partial<Record<string, Record<LanguageCode, string>>> = {
+const PLACE_NAMES: Partial<Record<string, Record<LanguageCode, string>>> = {
   'ban-phieng-loi-mthen': { vi: 'Bản Phiêng Lơi', en: 'Phiêng Lơi Village' },
-  'ho-huoi-pha-mthen': { vi: 'Hồ Huổi Phạ', en: 'Huổi Phạ Lake' },
-  'cong-vien-noong-bua-mthen': { vi: 'Công viên Noong Bua', en: 'Noong Bua Park' },
-  'ca-phe-ke-nenh-cat-banh': { vi: 'Cà phê Kê Nênh', en: 'Kê Nênh Café' },
-  'quang-truong-7-5-mthen': { vi: 'Quảng trường 7-5', en: '7 May Square' },
-  'doi-a1-chuyen-tau-thoi-gian-1954': { vi: 'Đồi A1', en: 'A1 Hill' },
-  'canh-dong-muong-thanh-cat-banh': { vi: 'Cánh đồng Mường Thanh', en: 'Mường Thanh Field' },
   'quan-com-hung-ha-thuoc-lao-free': { vi: 'Quán cơm Hưng Hà', en: 'Hưng Hà Eatery' },
-  'nhin-xuong-long-chao-cua-chung-ta': { vi: 'Điểm ngắm lòng chảo', en: 'Valley Viewpoint' },
-  'tim-cay-xoai-co-thu': { vi: 'Cây xoài cổ thụ', en: 'Old Mango Tree' },
+  'de-xe-may-ngoai-troi-qua-dem': { vi: 'Điểm hẹn ban đêm', en: 'Night rendezvous' },
+  'nhin-xuong-long-chao-cua-chung-ta': { vi: 'Điểm ngắm lòng chảo', en: 'Valley viewpoint' },
+  'tim-cay-xoai-co-thu': { vi: 'Cây xoài cổ thụ', en: 'Old mango tree' },
+  'cho-muong-nhe-tang-banh-trung-thu': { vi: 'Chợ Mường Nhé', en: 'Mường Nhé Market' },
+  'cau-ta-ko-khu-tang-banh-trung-thu': { vi: 'Cầu Tả Kó Khừ', en: 'Tả Kó Khừ Bridge' },
+  'ban-a-pa-chai-tang-banh-trung-thu': { vi: 'A Pa Chải', en: 'A Pa Chải' },
+  'cot-co-a-pa-chai-mthen': { vi: 'A Pa Chải', en: 'A Pa Chải' },
+  'cot-co-a-pa-chai-trai-ban-lanh-lung': { vi: 'A Pa Chải', en: 'A Pa Chải' },
 };
 
-type PinLabelPlacement = 'left' | 'left-low' | 'right' | 'top' | 'bottom';
+type PinLabelPlacement = 'left' | 'right' | 'top' | 'bottom';
 
 const CITY_PIN_LABEL_PLACEMENTS: Partial<Record<string, PinLabelPlacement>> = {
   'ban-phieng-loi-mthen': 'right',
-  'ho-huoi-pha-mthen': 'right',
-  'cong-vien-noong-bua-mthen': 'left',
-  'ca-phe-ke-nenh-cat-banh': 'top',
-  'quang-truong-7-5-mthen': 'left-low',
-  'doi-a1-chuyen-tau-thoi-gian-1954': 'right',
-  'canh-dong-muong-thanh-cat-banh': 'bottom',
-  'quan-com-hung-ha-thuoc-lao-free': 'top',
+  'quan-com-hung-ha-thuoc-lao-free': 'right',
+  'de-xe-may-ngoai-troi-qua-dem': 'top',
   'nhin-xuong-long-chao-cua-chung-ta': 'left',
   'tim-cay-xoai-co-thu': 'left',
 };
@@ -114,25 +104,39 @@ const projectTaskToAtlas = (task: ChallengeTask) => {
   const longitudeRatio = (task.gps.lng - CITY_ATLAS_BOUNDS.west) / (CITY_ATLAS_BOUNDS.east - CITY_ATLAS_BOUNDS.west);
   const latitudeRatio = (CITY_ATLAS_BOUNDS.north - task.gps.lat) / (CITY_ATLAS_BOUNDS.north - CITY_ATLAS_BOUNDS.south);
   return {
-    x: 10 + Math.max(0, Math.min(1, longitudeRatio)) * 80,
-    y: 23 + Math.max(0, Math.min(1, latitudeRatio)) * 43,
+    x: 11 + Math.max(0, Math.min(1, longitudeRatio)) * 78,
+    y: 35 + Math.max(0, Math.min(1, latitudeRatio)) * 32,
   };
 };
 
-const getDistinctTasks = (tasks: ChallengeTask[]) => {
-  const byLocation = new Map<string, ChallengeTask>();
+const getPlaceGroups = (tasks: ChallengeTask[]) => {
+  const groups = new Map<string, AtlasPlaceGroup>();
   tasks.forEach((task) => {
-    const key = `${task.gps.lat.toFixed(6)},${task.gps.lng.toFixed(6)}`;
-    if (!byLocation.has(key)) byLocation.set(key, task);
+    const id = `${task.gps.lat.toFixed(6)},${task.gps.lng.toFixed(6)}`;
+    const existing = groups.get(id);
+    if (existing) {
+      existing.tasks.push(task);
+      return;
+    }
+    groups.set(id, { id, tasks: [task], anchorTask: task });
   });
-  return [...byLocation.values()];
+  return [...groups.values()];
 };
 
+const groupContainsTask = (group: AtlasPlaceGroup, taskId?: string) => (
+  Boolean(taskId && group.tasks.some((task) => task.id === taskId))
+);
+
 const shortPlaceName = (task: ChallengeTask, language: LanguageCode) => {
-  const atlasPlaceName = CITY_PLACE_NAMES[task.id]?.[language];
+  const atlasPlaceName = PLACE_NAMES[task.id]?.[language];
   if (atlasPlaceName) return atlasPlaceName;
   const title = localize(task.title, language);
   return title.split(/\s+[–-]\s+/)[0]?.trim() || title;
+};
+
+const groupPlaceName = (group: AtlasPlaceGroup, language: LanguageCode) => {
+  const aPaChaiTask = group.tasks.find((task) => task.id.includes('a-pa-chai'));
+  return shortPlaceName(aPaChaiTask ?? group.anchorTask, language);
 };
 
 export const ExploreAtlas = ({
@@ -153,23 +157,13 @@ export const ExploreAtlas = ({
   const navigate = useNavigate();
   const sheetRef = useRef<HTMLElement | null>(null);
   const closeRef = useRef(onCloseDetails);
-  const distinctTasks = useMemo(() => getDistinctTasks(tasks), [tasks]);
-  const cityTasks = useMemo(() => {
-    const cityById = new Map(distinctTasks.filter(isWithinCityAtlas).map((task) => [task.id, task]));
-    const prioritized = CITY_PIN_TASK_IDS.flatMap((taskId) => {
-      const task = cityById.get(taskId);
-      return task ? [task] : [];
-    });
-    const remaining = [...cityById.values()].filter(
-      (task) => !CITY_PIN_TASK_IDS.includes(task.id as typeof CITY_PIN_TASK_IDS[number]),
-    );
-    return [...prioritized, ...remaining].slice(0, PIN_COLORS.length);
-  }, [distinctTasks]);
-  const displayTasks = useMemo(() => {
-    if (!activeTask || !isWithinCityAtlas(activeTask) || cityTasks.some((task) => task.id === activeTask.id)) return cityTasks;
-    return [activeTask, ...cityTasks].slice(0, PIN_COLORS.length);
-  }, [activeTask, cityTasks]);
-  const [manualSelection, setManualSelection] = useState<{ activeTaskId: string; taskId: string } | null>(null);
+  const placeGroups = useMemo(() => getPlaceGroups(tasks), [tasks]);
+  const cityGroups = useMemo(() => placeGroups.filter((group) => isWithinCityAtlas(group.anchorTask)), [placeGroups]);
+  const westGroups = useMemo(() => placeGroups.filter((group) => !isWithinCityAtlas(group.anchorTask)), [placeGroups]);
+  const westTaskCount = useMemo(() => westGroups.reduce((total, group) => total + group.tasks.length, 0), [westGroups]);
+  const activeTaskId = activeTask?.id ?? '';
+  const activeGroup = placeGroups.find((group) => groupContainsTask(group, activeTaskId));
+  const [manualSelection, setManualSelection] = useState<{ activeTaskId: string; groupId: string } | null>(null);
   const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set());
 
   const markImageFailed = (taskId: string) => {
@@ -210,11 +204,11 @@ export const ExploreAtlas = ({
       }
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-      if (event.shiftKey && (active === first || !sheet.contains(active))) {
+      const focused = document.activeElement;
+      if (event.shiftKey && (focused === first || !sheet.contains(focused))) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && (active === last || !sheet.contains(active))) {
+      } else if (!event.shiftKey && (focused === last || !sheet.contains(focused))) {
         event.preventDefault();
         first.focus();
       }
@@ -228,15 +222,20 @@ export const ExploreAtlas = ({
     };
   }, [detailsOpen]);
 
-  const activeTaskId = activeTask?.id ?? '';
-  const selectedTaskId = manualSelection?.activeTaskId === activeTaskId
-    && displayTasks.some((task) => task.id === manualSelection.taskId)
-    ? manualSelection.taskId
-    : activeTaskId || displayTasks[0]?.id || '';
-  const selectedTask = displayTasks.find((task) => task.id === selectedTaskId) ?? activeTask ?? displayTasks[0];
-  const selectedIsActive = Boolean(selectedTask && activeTask?.id === selectedTask.id);
-  const selectedOutsideAtlas = Boolean(selectedTask && !isWithinCityAtlas(selectedTask));
+  const selectedGroupId = manualSelection?.activeTaskId === activeTaskId
+    && placeGroups.some((group) => group.id === manualSelection.groupId)
+    ? manualSelection.groupId
+    : activeGroup?.id ?? placeGroups[0]?.id ?? '';
+  const selectedGroup = placeGroups.find((group) => group.id === selectedGroupId) ?? activeGroup ?? placeGroups[0];
+  const selectedIsActive = Boolean(selectedGroup && groupContainsTask(selectedGroup, activeTaskId));
+  const selectedTask = selectedIsActive ? activeTask : selectedGroup?.anchorTask;
+  const selectedIsWest = Boolean(selectedGroup && !isWithinCityAtlas(selectedGroup.anchorTask));
+  const selectedGroupCount = selectedGroup?.tasks.length ?? 0;
   const actionLabel = !activeTask ? c.start : selectedIsActive ? c.view : c.openMap;
+
+  const selectGroup = (groupId: string) => {
+    setManualSelection({ activeTaskId, groupId });
+  };
 
   const handlePrimaryAction = () => {
     if (!activeTask) {
@@ -266,36 +265,75 @@ export const ExploreAtlas = ({
             <small>{c.tagline}</small>
           </div>
 
-          <div className="explore-atlas__stats" aria-label={`${score} ${c.points}, ${displayTasks.length} ${c.places}`}>
+          <div className="explore-atlas__stats" aria-label={`${score} ${c.points}, ${tasks.length} ${c.discoveries}`}>
             <span><Medal aria-hidden="true" /><b>{score.toLocaleString('vi-VN')}</b> {c.points}</span>
-            <span><MapPin aria-hidden="true" /><b>{displayTasks.length}</b> {c.places}</span>
+            <span><MapPin aria-hidden="true" /><b>{tasks.length}</b> {c.discoveries}</span>
           </div>
         </header>
 
-        <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các địa danh đang mở' : 'Open places'}>
-          {displayTasks.map((task, index) => {
-            const selected = selectedTask?.id === task.id;
-            const isActive = activeTask?.id === task.id;
-            const atlasPoint = projectTaskToAtlas(task);
-            const labelPlacement = CITY_PIN_LABEL_PLACEMENTS[task.id] ?? (atlasPoint.x > 64 ? 'left' : 'right');
+        {westGroups.length ? (
+          <section className="explore-atlas__west-route" aria-label={c.westRoute}>
+            <header>
+              <span><Route aria-hidden="true" /></span>
+              <div><strong>{c.westRoute}</strong><small>{westTaskCount} {c.discoveries} · {westGroups.length} {language === 'vi' ? 'điểm dừng' : 'stops'}</small></div>
+            </header>
+            <div className="explore-atlas__west-stops">
+              {westGroups.map((group, index) => {
+                const selected = selectedGroup?.id === group.id;
+                const isActive = groupContainsTask(group, activeTaskId);
+                const imageTask = isActive ? activeTask ?? group.anchorTask : group.anchorTask;
+                return (
+                  <button
+                    key={group.id}
+                    type="button"
+                    className={`${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''}`}
+                    onClick={() => selectGroup(group.id)}
+                    aria-pressed={selected}
+                    style={{ '--route-color': PIN_COLORS[index % PIN_COLORS.length] } as CSSProperties}
+                  >
+                    <span className="explore-atlas__west-thumb">
+                      {imageTask.image && !failedImageIds.has(imageTask.id)
+                        ? <img src={imageTask.image} alt="" onError={() => markImageFailed(imageTask.id)} />
+                        : <MapPin aria-hidden="true" />}
+                    </span>
+                    <span className="explore-atlas__west-copy">
+                      <strong>{groupPlaceName(group, language)}</strong>
+                      <small>{group.tasks.length} {c.discoveries}</small>
+                    </span>
+                    {group.tasks.length > 1 ? <b aria-label={`${group.tasks.length} ${c.atThisStop}`}>{group.tasks.length}</b> : null}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
+
+        <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trong thành phố' : 'City discoveries'}>
+          {cityGroups.map((group, index) => {
+            const selected = selectedGroup?.id === group.id;
+            const isActive = groupContainsTask(group, activeTaskId);
+            const imageTask = isActive ? activeTask ?? group.anchorTask : group.anchorTask;
+            const atlasPoint = projectTaskToAtlas(group.anchorTask);
+            const labelPlacement = CITY_PIN_LABEL_PLACEMENTS[group.anchorTask.id] ?? (atlasPoint.x > 64 ? 'left' : 'right');
             return (
               <button
-                key={task.id}
+                key={group.id}
                 type="button"
                 className={`explore-atlas__pin is-label-${labelPlacement} ${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''}`}
-                style={{ left: `${atlasPoint.x}%`, top: `${atlasPoint.y}%`, '--pin-color': PIN_COLORS[index] } as CSSProperties}
-                onClick={() => setManualSelection({ activeTaskId, taskId: task.id })}
+                style={{ left: `${atlasPoint.x}%`, top: `${atlasPoint.y}%`, '--pin-color': PIN_COLORS[index % PIN_COLORS.length] } as CSSProperties}
+                onClick={() => selectGroup(group.id)}
                 aria-pressed={selected}
-                aria-label={shortPlaceName(task, language)}
+                aria-label={groupPlaceName(group, language)}
               >
                 <span className="explore-atlas__pin-drop">
                   <span className="explore-atlas__pin-photo">
-                    {task.image && !failedImageIds.has(task.id)
-                      ? <img src={task.image} alt="" onError={() => markImageFailed(task.id)} />
+                    {imageTask.image && !failedImageIds.has(imageTask.id)
+                      ? <img src={imageTask.image} alt="" onError={() => markImageFailed(imageTask.id)} />
                       : <MapPin aria-hidden="true" />}
                   </span>
                 </span>
-                <strong>{shortPlaceName(task, language)}</strong>
+                <strong>{groupPlaceName(group, language)}</strong>
+                {group.tasks.length > 1 ? <b className="explore-atlas__pin-count">{group.tasks.length}</b> : null}
                 {isActive ? <small><Sparkles aria-hidden="true" />{language === 'vi' ? 'Hiện tại' : 'Current'}</small> : null}
               </button>
             );
@@ -313,9 +351,14 @@ export const ExploreAtlas = ({
               : <Sparkles aria-hidden="true" />}
           </div>
           <div className="explore-atlas__nearby-copy">
-            <span><MapPin aria-hidden="true" />{selectedOutsideAtlas ? c.outsideAtlas : !activeTask ? c.newJourney : selectedIsActive ? c.active : c.available}</span>
-            <h1>{selectedTask ? shortPlaceName(selectedTask, language) : (language === 'vi' ? 'Điện Biên đang chờ bạn' : 'Dien Bien awaits')}</h1>
-            {selectedTask ? <p><Footprints aria-hidden="true" />{c.radius} {selectedTask.gps.radius} m</p> : <p>{language === 'vi' ? 'Nhận một địa điểm ngẫu nhiên để bắt đầu.' : 'Pick a random place to begin.'}</p>}
+            <span><MapPin aria-hidden="true" />{!activeTask ? c.newJourney : selectedIsActive ? c.active : selectedIsWest ? c.westRoute : c.available}</span>
+            <h1>{selectedGroup ? groupPlaceName(selectedGroup, language) : (language === 'vi' ? 'Điện Biên đang chờ bạn' : 'Dien Bien awaits')}</h1>
+            {selectedTask ? (
+              <p>
+                <Footprints aria-hidden="true" />
+                {selectedGroupCount > 1 ? `${selectedGroupCount} ${c.discoveries} · ` : ''}{c.radius} {selectedTask.gps.radius} m
+              </p>
+            ) : <p>{language === 'vi' ? 'Nhận một địa điểm ngẫu nhiên để bắt đầu.' : 'Pick a random place to begin.'}</p>}
           </div>
           <button type="button" onClick={handlePrimaryAction} disabled={isMutating}>
             <span>{actionLabel}</span><ChevronRight aria-hidden="true" />
