@@ -15,8 +15,14 @@ const collectMp3Files = (directory) => readdirSync(directory, { withFileTypes: t
     : [];
 });
 
-const fileNameFields = [...musicSource.matchAll(/\bfileName\s*:/g)];
-const literalFileNameMatches = [...musicSource.matchAll(/\bfileName\s*:\s*(['"`])([^'"`\r\n]+)\1/g)];
+const runtimeCatalogStart = musicSource.indexOf('export const MUSIC_TRACKS');
+const runtimeCatalogEnd = musicSource.indexOf('export const ALL_MUSIC_TRACK_IDS');
+const runtimeCatalogSource = runtimeCatalogStart >= 0 && runtimeCatalogEnd > runtimeCatalogStart
+  ? musicSource.slice(runtimeCatalogStart, runtimeCatalogEnd)
+  : '';
+
+const fileNameFields = [...runtimeCatalogSource.matchAll(/\bfileName\s*:/g)];
+const literalFileNameMatches = [...runtimeCatalogSource.matchAll(/\bfileName\s*:\s*(['"`])([^'"`\r\n]+)\1/g)];
 const runtimeFileNames = literalFileNameMatches.map((match) => match[2]);
 const runtimePaths = new Set(runtimeFileNames.map((fileName) => `public/audio/${fileName}`));
 const publicMp3Paths = new Set(collectMp3Files(publicAudioRoot));
@@ -25,9 +31,13 @@ const ledgerStatuses = new Map(ledgerRows.map((match) => [match[1], match[2]]));
 
 const failures = [];
 
+if (!runtimeCatalogSource) {
+  failures.push('Could not locate the MUSIC_TRACKS / BOOK_MUSIC_TRACKS runtime catalog region in src/data/music.ts.');
+}
+
 if (literalFileNameMatches.length !== fileNameFields.length) {
   failures.push(
-    'Every src/data/music.ts fileName field must be a directly auditable string literal; identifier-valued or other expressions are not allowed.',
+    'Every runtime catalog fileName field must be a directly auditable string literal; identifier-valued or other expressions are not allowed.',
   );
 }
 
