@@ -12,7 +12,7 @@ const BOOK_SOUND_STORAGE_KEY = 'book-of-dien-bien-sound-enabled-v1';
 const labels = {
   vi: {
     book: 'BOOK',
-    field: 'FIELD',
+    field: 'THỬ THÁCH THÚ VỊ',
     signIn: 'Đăng nhập',
     saved: 'Dấu trang',
     nearby: 'Gần tôi',
@@ -31,7 +31,7 @@ const labels = {
   },
   en: {
     book: 'BOOK',
-    field: 'FIELD',
+    field: 'FUN CHALLENGES',
     signIn: 'Sign in',
     saved: 'Bookmarks',
     nearby: 'Near me',
