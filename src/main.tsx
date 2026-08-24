@@ -8,7 +8,6 @@ import './index.css';
 import './book-soundtrack.css';
 import './field-v2.css';
 import './typography-v2.css';
-import './surface-label-redesign.css';
 import './atlas-obscura-inspired.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
