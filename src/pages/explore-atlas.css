@@ -151,7 +151,27 @@
 .explore-atlas__progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #13a75f, #ffc329); }
 
 .explore-task-layer { position: fixed; z-index: 110; inset: 0; display: flex; align-items: flex-end; justify-content: center; background: rgba(35,47,23,.48); padding: 3rem .45rem 0; backdrop-filter: blur(6px); }
-.explore-task-sheet { width: min(100%, 48rem); max-height: 94dvh; overflow: auto; border: .16rem solid rgba(121,78,34,.18); border-bottom: 0; border-radius: 1.7rem 1.7rem 0 0; background: #fff7e4; color: var(--atlas-ink); box-shadow: 0 -1.5rem 4rem rgba(30,40,22,.28); outline: none; animation: atlas-sheet-rise 220ms ease-out; }
+.explore-task-sheet {
+  --forest-950: #3f281b;
+  --forest-900: #523722;
+  --forest-800: #654831;
+  --forest-700: #7a5a40;
+  --forest-600: #896a4f;
+  --earth-900: #57301c;
+  --earth-800: #8e4d25;
+  --earth-700: #a7612e;
+  width: min(100%, 48rem);
+  max-height: 94dvh;
+  overflow: auto;
+  border: .16rem solid rgba(121,78,34,.18);
+  border-bottom: 0;
+  border-radius: 1.7rem 1.7rem 0 0;
+  background: #fff7e4;
+  color: var(--atlas-ink);
+  box-shadow: 0 -1.5rem 4rem rgba(30,40,22,.28);
+  outline: none;
+  animation: atlas-sheet-rise 220ms ease-out;
+}
 @keyframes atlas-sheet-rise { from { transform: translateY(3rem); opacity: 0; } }
 .explore-task-sheet__topbar { position: sticky; z-index: 20; top: 0; display: grid; grid-template-columns: 2.5rem 1fr 2.5rem; align-items: center; min-height: 3.4rem; border-bottom: 1px solid rgba(91,66,37,.13); background: rgba(255,247,228,.94); padding: .45rem .65rem; text-align: center; backdrop-filter: blur(14px); }
 .explore-task-sheet__topbar > span { width: 2.4rem; height: .28rem; border-radius: 99px; background: rgba(95,64,31,.18); }

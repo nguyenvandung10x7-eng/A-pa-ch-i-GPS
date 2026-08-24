@@ -508,6 +508,15 @@ body.public-shell-active::after {
   transform: translateY(-.03rem);
 }
 
+.editorial-shell__surface-nav .editorial-shell__nav-book {
+  width: 1.55rem;
+  height: 1.55rem;
+  color: #9b4f24;
+  fill: #e7a93b;
+  filter: drop-shadow(0 .16rem .12rem rgba(74, 46, 20, .22));
+  stroke-width: 1.8;
+}
+
 .editorial-shell--explore,
 .editorial-shell--explore .editorial-shell__frame {
   background: #dbeecb !important;

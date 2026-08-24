@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Bookmark, ChevronRight, ChevronUp, LogIn, LogOut, MapPin, Music2, Pause, Play, UserRound, X } from 'lucide-react';
+import { BookOpen, Bookmark, ChevronRight, ChevronUp, LogIn, LogOut, MapPin, Music2, Pause, Play, UserRound, X } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { BookChapterDrawer } from './BookChapterDrawer';
@@ -417,7 +417,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
             aria-haspopup="dialog"
             aria-expanded={bookMenuOpen}
           >
-            <span className="editorial-shell__nav-emoji" aria-hidden="true">📕</span><span>{language === 'vi' ? 'Cuốn sách' : 'Book'}</span><ChevronUp className="editorial-shell__nav-chevron" aria-hidden="true" />
+            <BookOpen className="editorial-shell__nav-book" aria-hidden="true" /><span>{language === 'vi' ? 'Cuốn sách' : 'Book'}</span><ChevronUp className="editorial-shell__nav-chevron" aria-hidden="true" />
           </button>
         </div>
       </nav>
