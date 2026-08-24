@@ -85,7 +85,7 @@ export const BookChapterMenu = ({ language, onNavigate, onClose, compact = false
               </div>
               <div className="game-book-menu__chapter-copy">
                 <strong><span>{String(chapter.number).padStart(2, '0')}</span>{localized(chapter.title, language)}</strong>
-                <div className="game-book-menu__progress" aria-label={`${readCount}/${pages.length} ${c.pages}`}>
+                <div className="game-book-menu__progress" aria-hidden="true">
                   <i style={{ width: `${progress}%` }} />
                 </div>
                 <small>{readCount > 0 && !complete ? `${c.reading} · ` : ''}{readCount}/{pages.length} {c.pages}</small>

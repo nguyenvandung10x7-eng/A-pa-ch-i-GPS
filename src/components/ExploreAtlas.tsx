@@ -33,6 +33,7 @@ const copy = {
     start: 'Bắt đầu khám phá',
     close: 'Đóng chi tiết địa điểm',
     details: 'Chi tiết địa điểm',
+    outsideAtlas: 'Ngoài khung thành phố',
   },
   en: {
     tagline: 'Tap a pin to explore',
@@ -47,19 +48,44 @@ const copy = {
     start: 'Start exploring',
     close: 'Close place details',
     details: 'Place details',
+    outsideAtlas: 'Outside the city atlas',
   },
 } as const;
 
-const PIN_POSITIONS: CSSProperties[] = [
-  { top: '22%', left: '7%' },
-  { top: '28%', right: '7%' },
-  { top: '39%', left: '13%' },
-  { top: '43%', right: '9%' },
-  { top: '54%', left: '19%' },
-  { top: '57%', right: '17%' },
-];
+const PIN_COLORS = ['#f25643', '#f3aa20', '#6b70e8', '#10a997', '#a653ef', '#ef3e32', '#2f8dd9'];
 
-const PIN_COLORS = ['#f25643', '#f3aa20', '#6b70e8', '#10a997', '#a653ef', '#ef3e32'];
+const CITY_ATLAS_BOUNDS = {
+  north: 21.432,
+  south: 21.374,
+  west: 103.005,
+  east: 103.066,
+} as const;
+
+const CITY_PIN_TASK_IDS = [
+  'ban-phieng-loi-mthen',
+  'ho-huoi-pha-mthen',
+  'cong-vien-noong-bua-mthen',
+  'ca-phe-ke-nenh-cat-banh',
+  'quang-truong-7-5-mthen',
+  'doi-a1-chuyen-tau-thoi-gian-1954',
+  'canh-dong-muong-thanh-cat-banh',
+] as const;
+
+const isWithinCityAtlas = (task: ChallengeTask) => (
+  task.gps.lat <= CITY_ATLAS_BOUNDS.north
+  && task.gps.lat >= CITY_ATLAS_BOUNDS.south
+  && task.gps.lng >= CITY_ATLAS_BOUNDS.west
+  && task.gps.lng <= CITY_ATLAS_BOUNDS.east
+);
+
+const projectTaskToAtlas = (task: ChallengeTask) => {
+  const longitudeRatio = (task.gps.lng - CITY_ATLAS_BOUNDS.west) / (CITY_ATLAS_BOUNDS.east - CITY_ATLAS_BOUNDS.west);
+  const latitudeRatio = (CITY_ATLAS_BOUNDS.north - task.gps.lat) / (CITY_ATLAS_BOUNDS.north - CITY_ATLAS_BOUNDS.south);
+  return {
+    x: 10 + Math.max(0, Math.min(1, longitudeRatio)) * 80,
+    y: 23 + Math.max(0, Math.min(1, latitudeRatio)) * 43,
+  };
+};
 
 const getDistinctTasks = (tasks: ChallengeTask[]) => {
   const byLocation = new Map<string, ChallengeTask>();
@@ -93,10 +119,21 @@ export const ExploreAtlas = ({
   const sheetRef = useRef<HTMLElement | null>(null);
   const closeRef = useRef(onCloseDetails);
   const distinctTasks = useMemo(() => getDistinctTasks(tasks), [tasks]);
+  const cityTasks = useMemo(() => {
+    const cityById = new Map(distinctTasks.filter(isWithinCityAtlas).map((task) => [task.id, task]));
+    const prioritized = CITY_PIN_TASK_IDS.flatMap((taskId) => {
+      const task = cityById.get(taskId);
+      return task ? [task] : [];
+    });
+    const remaining = [...cityById.values()].filter(
+      (task) => !CITY_PIN_TASK_IDS.includes(task.id as typeof CITY_PIN_TASK_IDS[number]),
+    );
+    return [...prioritized, ...remaining].slice(0, PIN_COLORS.length);
+  }, [distinctTasks]);
   const displayTasks = useMemo(() => {
-    if (!activeTask) return distinctTasks.slice(0, PIN_POSITIONS.length);
-    return [activeTask, ...distinctTasks.filter((task) => task.id !== activeTask.id)].slice(0, PIN_POSITIONS.length);
-  }, [activeTask, distinctTasks]);
+    if (!activeTask || !isWithinCityAtlas(activeTask) || cityTasks.some((task) => task.id === activeTask.id)) return cityTasks;
+    return [activeTask, ...cityTasks].slice(0, PIN_COLORS.length);
+  }, [activeTask, cityTasks]);
   const [selectedTaskId, setSelectedTaskId] = useState(() => activeTask?.id ?? displayTasks[0]?.id ?? '');
   const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set());
 
@@ -163,6 +200,7 @@ export const ExploreAtlas = ({
 
   const selectedTask = displayTasks.find((task) => task.id === selectedTaskId) ?? activeTask ?? displayTasks[0];
   const selectedIsActive = Boolean(selectedTask && activeTask?.id === selectedTask.id);
+  const selectedOutsideAtlas = Boolean(selectedTask && !isWithinCityAtlas(selectedTask));
   const actionLabel = !activeTask ? c.start : selectedIsActive ? c.view : c.openMap;
 
   const handlePrimaryAction = () => {
@@ -183,7 +221,7 @@ export const ExploreAtlas = ({
         <div className="explore-atlas__world" aria-hidden="true" />
 
         <header className="explore-atlas__hud">
-          <button type="button" className="explore-atlas__avatar" onClick={() => { void navigate('/leaderboard'); }} aria-label={language === 'vi' ? 'Mở hành trình của bạn' : 'Open your journey'}>
+          <button type="button" className="explore-atlas__avatar" onClick={() => { void navigate('/leaderboard'); }} aria-label={language === 'vi' ? 'Mở bảng xếp hạng' : 'Open leaderboard'}>
             <img src="/images/game-ui/explorer-avatar-v1.webp" alt="" />
           </button>
 
@@ -193,9 +231,9 @@ export const ExploreAtlas = ({
             <small>{c.tagline}</small>
           </div>
 
-          <div className="explore-atlas__stats" aria-label={`${score} ${c.points}, ${distinctTasks.length} ${c.places}`}>
+          <div className="explore-atlas__stats" aria-label={`${score} ${c.points}, ${displayTasks.length} ${c.places}`}>
             <span><Medal aria-hidden="true" /><b>{score.toLocaleString('vi-VN')}</b> {c.points}</span>
-            <span><MapPin aria-hidden="true" /><b>{distinctTasks.length}</b> {c.places}</span>
+            <span><MapPin aria-hidden="true" /><b>{displayTasks.length}</b> {c.places}</span>
           </div>
         </header>
 
@@ -203,12 +241,13 @@ export const ExploreAtlas = ({
           {displayTasks.map((task, index) => {
             const selected = selectedTask?.id === task.id;
             const isActive = activeTask?.id === task.id;
+            const atlasPoint = projectTaskToAtlas(task);
             return (
               <button
                 key={task.id}
                 type="button"
-                className={`explore-atlas__pin ${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''}`}
-                style={{ ...PIN_POSITIONS[index], '--pin-color': PIN_COLORS[index] } as CSSProperties}
+                className={`explore-atlas__pin ${atlasPoint.x > 64 ? 'is-label-left' : ''} ${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''}`}
+                style={{ left: `${atlasPoint.x}%`, top: `${atlasPoint.y}%`, '--pin-color': PIN_COLORS[index] } as CSSProperties}
                 onClick={() => setSelectedTaskId(task.id)}
                 aria-pressed={selected}
               >
@@ -237,7 +276,7 @@ export const ExploreAtlas = ({
               : <Sparkles aria-hidden="true" />}
           </div>
           <div className="explore-atlas__nearby-copy">
-            <span><MapPin aria-hidden="true" />{!activeTask ? c.newJourney : selectedIsActive ? c.active : c.available}</span>
+            <span><MapPin aria-hidden="true" />{selectedOutsideAtlas ? c.outsideAtlas : !activeTask ? c.newJourney : selectedIsActive ? c.active : c.available}</span>
             <h1>{selectedTask ? shortPlaceName(selectedTask, language) : (language === 'vi' ? 'Điện Biên đang chờ bạn' : 'Dien Bien awaits')}</h1>
             {selectedTask ? <p><Footprints aria-hidden="true" />{c.radius} {selectedTask.gps.radius} m</p> : <p>{language === 'vi' ? 'Nhận một địa điểm ngẫu nhiên để bắt đầu.' : 'Pick a random place to begin.'}</p>}
           </div>

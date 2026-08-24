@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { BookOpen, Bookmark, ChevronRight, ChevronUp, LogIn, LogOut, MapPin, Music2, Pause, Play, UserRound, X } from 'lucide-react';
+import { BookOpen, Bookmark, ChevronRight, ChevronUp, Languages, LogIn, LogOut, MapPin, Music2, Pause, Play, UserRound, X } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { BookChapterDrawer } from './BookChapterDrawer';
@@ -372,7 +372,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
               </button>
             ) : null}
             <button
-              ref={accountButtonRef}
+              ref={onExploreSurface ? undefined : accountButtonRef}
               type="button"
               onClick={handleAccountAction}
               className="editorial-shell__account"
@@ -398,6 +398,32 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
             </button>
           </div>
         )}
+
+        {onExploreSurface ? (
+          <div className="editorial-shell__explore-tools" aria-label={language === 'vi' ? 'Tài khoản và ngôn ngữ' : 'Account and language'}>
+            <button
+              ref={accountButtonRef}
+              type="button"
+              className="editorial-shell__explore-account"
+              onClick={handleAccountAction}
+              aria-haspopup="dialog"
+              aria-expanded={accountOpen}
+              aria-controls={accountOpen ? 'editorial-account-dialog' : undefined}
+            >
+              {user ? <UserRound aria-hidden="true" /> : <LogIn aria-hidden="true" />}
+              <span>{loading ? '…' : userLabel ?? copy.signIn}</span>
+            </button>
+            <button
+              type="button"
+              className="editorial-shell__explore-language"
+              onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
+              aria-label={language === 'vi' ? 'Switch to English' : 'Chuyển sang tiếng Việt'}
+            >
+              <Languages aria-hidden="true" />
+              <strong>{language.toUpperCase()}</strong>
+            </button>
+          </div>
+        ) : null}
 
         {children}
       </div>
