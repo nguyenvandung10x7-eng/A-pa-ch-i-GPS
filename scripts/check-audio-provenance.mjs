@@ -18,6 +18,13 @@ const collectMp3Files = (directory) => readdirSync(directory, { withFileTypes: t
     : [];
 });
 
+const isRuntimeAudioPathSafe = (fileName) => {
+  if (fileName.startsWith('/') || fileName.includes('\\')) return false;
+  const segments = fileName.split('/');
+  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) return false;
+  return segments.every((segment) => /^[A-Za-z0-9._-]+$/.test(segment));
+};
+
 const sourceFile = ts.createSourceFile(musicPath, musicSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 const failures = [];
 const runtimeFileNames = [];
@@ -107,6 +114,11 @@ for (const statement of sourceFile.statements) {
       const fileName = initializer.text;
       if (!fileName.toLowerCase().endsWith('.mp3')) {
         failures.push(`${catalogName}[${index}].fileName must end in .mp3: ${fileName}`);
+        continue;
+      }
+
+      if (!isRuntimeAudioPathSafe(fileName)) {
+        failures.push(`${catalogName}[${index}].fileName must be a URL-safe relative audio path using only letters, numbers, '.', '_', '-', and '/' without empty, '.' or '..' segments: ${fileName}`);
         continue;
       }
 
