@@ -1,5 +1,5 @@
 [build]
-  command = "npm run verify"
+  command = "node scripts/check-production-env.mjs && npm run verify"
   publish = "dist"
 
 [[redirects]]
