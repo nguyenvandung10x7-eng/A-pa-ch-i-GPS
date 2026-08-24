@@ -56,19 +56,43 @@ const mutationOperators = new Set([
   ts.SyntaxKind.QuestionQuestionEqualsToken,
 ]);
 
+const readOnlyArrayMethods = new Set([
+  'at', 'concat', 'entries', 'every', 'filter', 'find', 'findIndex', 'findLast', 'findLastIndex',
+  'flat', 'flatMap', 'forEach', 'includes', 'indexOf', 'join', 'keys', 'lastIndexOf', 'map', 'reduce',
+  'reduceRight', 'slice', 'some', 'toLocaleString', 'toReversed', 'toSorted', 'toSpliced', 'toString',
+  'values', 'with',
+]);
+
+const mutationHelperNames = new Set([
+  'Object.assign',
+  'Object.defineProperty',
+  'Object.defineProperties',
+  'Reflect.set',
+  'Reflect.defineProperty',
+]);
+
 const callTouchesRuntimeCatalog = (node) => {
   if (!ts.isCallExpression(node)) return null;
 
   if (ts.isPropertyAccessExpression(node.expression) || ts.isElementAccessExpression(node.expression)) {
     const receiver = node.expression.expression;
     const receiverRoot = rootIdentifier(receiver);
-    if (receiverRoot && runtimeCatalogNames.has(receiverRoot)) return receiverRoot;
+    if (receiverRoot && runtimeCatalogNames.has(receiverRoot)) {
+      const receiverIsCatalogIdentifier = ts.isIdentifier(receiver) && receiver.text === receiverRoot;
+      const methodName = ts.isPropertyAccessExpression(node.expression)
+        ? node.expression.name.text
+        : node.expression.argumentExpression && (ts.isStringLiteral(node.expression.argumentExpression) || ts.isNoSubstitutionTemplateLiteral(node.expression.argumentExpression))
+          ? node.expression.argumentExpression.text
+          : null;
+
+      if (!receiverIsCatalogIdentifier || !methodName || !readOnlyArrayMethods.has(methodName)) return receiverRoot;
+    }
   }
 
   const helperName = ts.isPropertyAccessExpression(node.expression)
     ? `${rootIdentifier(node.expression.expression) ?? ''}.${node.expression.name.text}`
     : null;
-  if (helperName === 'Object.assign' || helperName === 'Object.defineProperty' || helperName === 'Object.defineProperties' || helperName === 'Reflect.set' || helperName === 'Reflect.defineProperty') {
+  if (helperName && mutationHelperNames.has(helperName)) {
     for (const argument of node.arguments) {
       const target = rootIdentifier(argument);
       if (target && runtimeCatalogNames.has(target)) return target;
