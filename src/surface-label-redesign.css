@@ -1,0 +1,11 @@
+/* Public product language: keep internal field/challenge route names unchanged. */
+.editorial-shell__surface-nav a:last-child {
+  font-size: 0;
+}
+
+.editorial-shell__surface-nav a:last-child::after {
+  content: 'THỬ THÁCH THÚ VỊ';
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
