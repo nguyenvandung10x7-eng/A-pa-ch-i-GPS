@@ -1,5 +1,5 @@
 import { Compass, MapPinned, Sparkles } from 'lucide-react';
-import { TaskMap } from '../components/TaskMap';
+import { getDistinctTaskPlaces, TaskMap } from '../components/TaskMap';
 import type { ChallengeTask, LanguageCode } from '../types/task';
 
 type GameMapPageProps = {
@@ -25,6 +25,7 @@ const copy = {
 
 export const GameMapPage = ({ tasks, language, t }: GameMapPageProps) => {
   const c = copy[language];
+  const placeCount = getDistinctTaskPlaces(tasks).length;
 
   return (
     <main className="game-map-page">
@@ -35,10 +36,10 @@ export const GameMapPage = ({ tasks, language, t }: GameMapPageProps) => {
           <h1>{c.title}</h1>
           <div>{c.body}</div>
         </div>
-        <span><MapPinned aria-hidden="true" />{tasks.length} {c.places}</span>
+        <span><MapPinned aria-hidden="true" />{placeCount} {c.places}</span>
       </header>
       {tasks.length > 0 ? (
-        <TaskMap tasks={tasks} language={language} t={t} />
+        <TaskMap tasks={tasks} language={language} t={t} groupByLocation />
       ) : (
         <p className="game-map-page__empty">
           {language === 'vi' ? 'Chưa có địa danh nào đang mở.' : 'No places are open yet.'}

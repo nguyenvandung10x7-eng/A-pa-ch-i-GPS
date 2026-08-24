@@ -1,13 +1,15 @@
-import { ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, MapPin } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, ExternalLink, MapPin, Music2, Sparkles } from 'lucide-react';
+import { useEffect, useRef, type KeyboardEvent, type MouseEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { BookChapterMenu } from '../components/BookChapterMenu';
 import { getBookPageIllustration } from '../data/bookIllustrations';
 import { useBookState } from '../hooks/useBookState';
-import { getChapter, getChapterPages, getPublishedChapters } from '../services/bookContent';
+import { getChapter, getChapterExperiences, getChapterPages, getPublishedChapters } from '../services/bookContent';
 import { bookLocationMapUrl } from '../services/bookNearMe';
 import { markBookPageRead, toggleSavedBookPage } from '../services/bookState';
-import type { BookLocalizedText, BookPage, ContentBlock } from '../types/book';
+import { createExactTaskExperienceMode } from '../services/experienceFilters';
+import { GAMEPLAY_MUSIC_ACTION_EVENT } from '../services/gameplayMusicEvents';
+import type { BookExperience, BookLocalizedText, BookPage, ContentBlock } from '../types/book';
 import type { LanguageCode } from '../types/task';
 import './book-rebuild.css';
 
@@ -27,6 +29,14 @@ const copy = {
     saved: 'Đã lưu',
     next: 'Chương tiếp theo',
     progress: 'đoạn',
+    listen: 'Nghe cùng chương này',
+    openAudio: 'Mở bản âm thanh',
+    stepOutside: 'Sau câu chuyện',
+    experiences: 'Tiếp tục trải nghiệm',
+    experienceIntro: 'Nếu câu chuyện khiến bạn muốn đi thêm một bước, những hoạt động này sẽ nối phần đọc với một nơi có thật.',
+    openExperience: 'Mở trải nghiệm',
+    openActivity: 'Mở hoạt động',
+    directions: 'Chỉ đường',
   },
   en: {
     chapter: 'Chapter',
@@ -38,8 +48,22 @@ const copy = {
     saved: 'Saved',
     next: 'Next chapter',
     progress: 'stories',
+    listen: 'Listen with this chapter',
+    openAudio: 'Open audio track',
+    stepOutside: 'After the story',
+    experiences: 'Continue the experience',
+    experienceIntro: 'If the story makes you want to go one step farther, these activities connect the reading with a real place.',
+    openExperience: 'Open experience',
+    openActivity: 'Open activity',
+    directions: 'Directions',
   },
 } as const;
+
+const coordinateAudioPlayback = (activeAudio: HTMLAudioElement) => {
+  document.querySelectorAll<HTMLAudioElement>('audio').forEach((audio) => {
+    if (audio !== activeAudio && !audio.paused) audio.pause();
+  });
+};
 
 const renderNarrativeBlock = (block: ContentBlock, language: LanguageCode, key: string) => {
   if (block.type === 'text') return <p key={key}>{localized(block.body, language)}</p>;
@@ -53,7 +77,86 @@ const renderNarrativeBlock = (block: ContentBlock, language: LanguageCode, key: 
   }
   if (block.type === 'note') return <aside key={key}>{localized(block.body, language)}</aside>;
   if (block.type === 'divider') return <hr key={key} />;
+  if (block.type === 'audio') {
+    const c = copy[language];
+    return (
+      <section key={key} className="book-longform-audio">
+        <span><Music2 aria-hidden="true" /></span>
+        <div>
+          <small>{c.listen}</small>
+          <strong>{localized(block.audio.title, language) || c.listen}</strong>
+          {block.audio.src ? (
+            <audio
+              controls
+              preload="none"
+              src={block.audio.src}
+              onPlay={(event) => coordinateAudioPlayback(event.currentTarget)}
+            />
+          ) : null}
+          {block.audio.externalUrl ? (
+            <a href={block.audio.externalUrl} target="_blank" rel="noreferrer">
+              {c.openAudio}<ExternalLink aria-hidden="true" />
+            </a>
+          ) : null}
+        </div>
+      </section>
+    );
+  }
   return null;
+};
+
+const dispatchStartGameplayMusic = () => {
+  window.dispatchEvent(new CustomEvent<'start'>(GAMEPLAY_MUSIC_ACTION_EVENT, { detail: 'start' }));
+};
+
+const handleActivityClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented || event.detail === 0 || event.button !== 0) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  dispatchStartGameplayMusic();
+};
+
+const handleActivityKeyDown = (event: KeyboardEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented || event.key !== 'Enter' || event.repeat) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  dispatchStartGameplayMusic();
+};
+
+const ExperienceCard = ({ experience, language }: { experience: BookExperience; language: LanguageCode }) => {
+  const c = copy[language];
+  const activityPath = experience.legacyTaskId
+    ? `/challenge?experience=${encodeURIComponent(createExactTaskExperienceMode(experience.legacyTaskId))}`
+    : null;
+
+  return (
+    <article className="book-longform-experience">
+      <div className="book-longform-experience__head">
+        <span>{experience.location ? <MapPin aria-hidden="true" /> : <Sparkles aria-hidden="true" />}</span>
+        <div>
+          <h3>{localized(experience.title, language)}</h3>
+          {experience.location?.label ? <small>{localized(experience.location.label, language)}</small> : null}
+        </div>
+      </div>
+      {experience.description ? <p>{localized(experience.description, language)}</p> : null}
+      {experience.instruction ? <aside>{localized(experience.instruction, language)}</aside> : null}
+      <div className="book-longform-experience__actions">
+        {experience.externalUrl ? (
+          <a href={experience.externalUrl} target="_blank" rel="noreferrer">
+            {c.openExperience}<ExternalLink aria-hidden="true" />
+          </a>
+        ) : null}
+        {activityPath ? (
+          <Link to={activityPath} onClick={handleActivityClick} onKeyDown={handleActivityKeyDown}>
+            {c.openActivity}<ArrowRight aria-hidden="true" />
+          </Link>
+        ) : null}
+        {experience.location ? (
+          <a href={bookLocationMapUrl(experience.location)} target="_blank" rel="noreferrer" className="is-secondary">
+            {c.directions}<MapPin aria-hidden="true" />
+          </a>
+        ) : null}
+      </div>
+    </article>
+  );
 };
 
 const StorySection = ({
@@ -153,6 +256,7 @@ export const NewBookPage = ({ language }: BookPageProps) => {
   const chapterIndex = chapters.findIndex((candidate) => candidate.id === chapter.id);
   const nextChapter = chapterIndex >= 0 ? chapters[chapterIndex + 1] : undefined;
   const firstIllustration = pages[0] ? getBookPageIllustration(pages[0].id) : undefined;
+  const experiences = getChapterExperiences(chapter.id);
 
   return (
     <main className="book-longform">
@@ -184,6 +288,21 @@ export const NewBookPage = ({ language }: BookPageProps) => {
           />
         )) : <p className="book-v2-muted">{c.noPages}</p>}
       </section>
+
+      {experiences.length ? (
+        <section className="book-longform__experiences">
+          <header>
+            <p><Sparkles aria-hidden="true" />{c.stepOutside}</p>
+            <h2>{c.experiences}</h2>
+            <div>{c.experienceIntro}</div>
+          </header>
+          <div className="book-longform__experience-grid">
+            {experiences.map((experience) => (
+              <ExperienceCard key={experience.id} experience={experience} language={language} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {nextChapter ? (
         <Link className="book-longform__next" to={`/book/chapter/${nextChapter.id}`}>
