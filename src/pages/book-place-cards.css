@@ -1,0 +1,90 @@
+.book-reading-v2__place-list--visual {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: .9rem;
+  border-top: 0;
+}
+
+.book-reading-v2__place-list--visual > a.book-reading-v2__visual-place {
+  display: block;
+  overflow: hidden;
+  border: 0;
+  padding: 0;
+  background: #171813;
+  color: #f3eee4;
+}
+
+.book-reading-v2__visual-place-media {
+  display: grid;
+  min-height: 13rem;
+  place-items: center;
+  overflow: hidden;
+  background: linear-gradient(135deg, #49483f, #25261f);
+}
+
+.book-reading-v2__visual-place-media img {
+  width: 100%;
+  height: 100%;
+  min-height: 13rem;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  filter: saturate(.84) contrast(1.02);
+  transition: transform .45s ease, filter .45s ease;
+}
+
+.book-reading-v2__visual-place:hover .book-reading-v2__visual-place-media img {
+  transform: scale(1.025);
+  filter: saturate(1);
+}
+
+.book-reading-v2__visual-place-media > svg {
+  width: 2rem;
+  height: 2rem;
+  color: #b8b1a5;
+  stroke-width: 1.2;
+}
+
+.book-reading-v2__visual-place-copy {
+  padding: 1.05rem 1.1rem 1.2rem;
+}
+
+.book-reading-v2__visual-place-copy strong {
+  display: block;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  line-height: 1.12;
+}
+
+.book-reading-v2__visual-place-copy small {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-top: .55rem;
+  color: #9e988f;
+  font-size: .62rem;
+}
+
+.book-reading-v2__visual-place-copy small em {
+  color: #d76a59;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.book-reading-v2__visual-place-copy > span {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  margin-top: .9rem;
+  color: #d76a59;
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.book-reading-v2__visual-place-copy > span svg {
+  width: .85rem;
+  height: .85rem;
+  stroke-width: 1.4;
+}
