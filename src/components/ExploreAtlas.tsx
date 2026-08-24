@@ -76,7 +76,9 @@ const CITY_ATLAS_BOUNDS = {
 } as const;
 
 const PLACE_NAMES: Partial<Record<string, Record<LanguageCode, string>>> = {
+  'doi-a1-chuyen-tau-thoi-gian-1954': { vi: 'Đồi A1', en: 'A1 Hill' },
   'ban-phieng-loi-mthen': { vi: 'Bản Phiêng Lơi', en: 'Phiêng Lơi Village' },
+  'thac-ke-nenh-mthen': { vi: 'Thác Kê Nênh', en: 'Kê Nênh Waterfall' },
   'quan-com-hung-ha-thuoc-lao-free': { vi: 'Quán cơm Hưng Hà', en: 'Hưng Hà Eatery' },
   'de-xe-may-ngoai-troi-qua-dem': { vi: 'Điểm hẹn ban đêm', en: 'Night rendezvous' },
   'nhin-xuong-long-chao-cua-chung-ta': { vi: 'Điểm ngắm lòng chảo', en: 'Valley viewpoint' },
@@ -91,7 +93,9 @@ const PLACE_NAMES: Partial<Record<string, Record<LanguageCode, string>>> = {
 type PinLabelPlacement = 'left' | 'right' | 'top' | 'bottom';
 
 const CITY_PIN_LABEL_PLACEMENTS: Partial<Record<string, PinLabelPlacement>> = {
+  'doi-a1-chuyen-tau-thoi-gian-1954': 'bottom',
   'ban-phieng-loi-mthen': 'right',
+  'thac-ke-nenh-mthen': 'top',
   'quan-com-hung-ha-thuoc-lao-free': 'left',
   'de-xe-may-ngoai-troi-qua-dem': 'top',
   'nhin-xuong-long-chao-cua-chung-ta': 'left',
@@ -232,7 +236,11 @@ export const ExploreAtlas = ({
   const selectedGroupId = manualSelection?.activeTaskId === activeTaskId
     && placeGroups.some((group) => group.id === manualSelection.groupId)
     ? manualSelection.groupId
-    : activeGroup?.id ?? cityGroups[0]?.id ?? westGroups[0]?.id ?? '';
+    : activeGroup?.id
+      ?? cityGroups.find((group) => groupContainsTask(group, 'ban-phieng-loi-mthen'))?.id
+      ?? cityGroups[0]?.id
+      ?? westGroups[0]?.id
+      ?? '';
   const selectedGroup = placeGroups.find((group) => group.id === selectedGroupId) ?? activeGroup ?? placeGroups[0];
   const selectedIsActive = Boolean(selectedGroup && groupContainsTask(selectedGroup, activeTaskId));
   const selectedTask = selectedIsActive ? activeTask : selectedGroup?.anchorTask;

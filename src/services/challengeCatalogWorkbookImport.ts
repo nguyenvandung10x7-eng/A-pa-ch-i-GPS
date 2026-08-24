@@ -10,8 +10,6 @@ import type { ChallengeTask } from '../types/task';
 
 const DISABLED_TASK_IDS = new Set<string>([
   'ruong-bac-thang-ta-leng-mthen',
-  'thac-ke-nenh-mthen',
-  'doi-a1-chuyen-tau-thoi-gian-1954',
   'canh-dong-muong-thanh-cat-banh',
   'quang-truong-7-5-mthen',
   'bao-tang-chien-thang-dien-bien-phu-trai-nghiem',
