@@ -87,7 +87,7 @@ type PinLabelPlacement = 'left' | 'right' | 'top' | 'bottom';
 
 const CITY_PIN_LABEL_PLACEMENTS: Partial<Record<string, PinLabelPlacement>> = {
   'ban-phieng-loi-mthen': 'right',
-  'quan-com-hung-ha-thuoc-lao-free': 'right',
+  'quan-com-hung-ha-thuoc-lao-free': 'left',
   'de-xe-may-ngoai-troi-qua-dem': 'top',
   'nhin-xuong-long-chao-cua-chung-ta': 'left',
   'tim-cay-xoai-co-thu': 'left',
