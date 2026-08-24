@@ -51,6 +51,11 @@ for (const statement of sourceFile.statements) {
         continue;
       }
 
+      if (element.properties.some((property) => ts.isSpreadAssignment(property))) {
+        failures.push(`${catalogName}[${index}] must not contain spread assignments because they can override audited properties such as fileName.`);
+        continue;
+      }
+
       const fileNameProperties = element.properties.filter((property) => {
         if (!ts.isPropertyAssignment(property)) return false;
         return propertyNameText(property.name) === 'fileName';
