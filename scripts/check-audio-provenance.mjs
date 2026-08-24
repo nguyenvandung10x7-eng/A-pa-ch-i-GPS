@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { join, sep } from 'node:path';
 
 const musicSource = readFileSync('src/data/music.ts', 'utf8');
 const ledger = readFileSync('docs/audio-provenance.md', 'utf8');
