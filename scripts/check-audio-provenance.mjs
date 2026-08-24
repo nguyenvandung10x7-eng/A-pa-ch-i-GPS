@@ -1,9 +1,12 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, sep } from 'node:path';
+import ts from 'typescript';
 
-const musicSource = readFileSync('src/data/music.ts', 'utf8');
+const musicPath = 'src/data/music.ts';
+const musicSource = readFileSync(musicPath, 'utf8');
 const ledger = readFileSync('docs/audio-provenance.md', 'utf8');
 const publicAudioRoot = 'public/audio';
+const runtimeCatalogNames = new Set(['MUSIC_TRACKS', 'BOOK_MUSIC_TRACKS']);
 
 const normalizePath = (path) => path.split(sep).join('/');
 
@@ -15,44 +18,74 @@ const collectMp3Files = (directory) => readdirSync(directory, { withFileTypes: t
     : [];
 });
 
-const runtimeCatalogStart = musicSource.indexOf('export const MUSIC_TRACKS');
-const runtimeCatalogEnd = musicSource.indexOf('export const ALL_MUSIC_TRACK_IDS');
-const runtimeCatalogSource = runtimeCatalogStart >= 0 && runtimeCatalogEnd > runtimeCatalogStart
-  ? musicSource.slice(runtimeCatalogStart, runtimeCatalogEnd)
-  : '';
+const sourceFile = ts.createSourceFile(musicPath, musicSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+const failures = [];
+const runtimeFileNames = [];
+const foundCatalogs = new Set();
 
-const fileNameFields = [...runtimeCatalogSource.matchAll(/\bfileName\s*:/g)];
-const literalFileNameMatches = [...runtimeCatalogSource.matchAll(
-  /\bfileName\s*:\s*(['"`])([^'"`\r\n]+)\1\s*(?=[,}])/g,
-)];
-const runtimeFileNames = literalFileNameMatches.map((match) => match[2]);
+const propertyNameText = (name) => {
+  if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) return name.text;
+  if (ts.isComputedPropertyName(name) && (ts.isStringLiteral(name.expression) || ts.isNoSubstitutionTemplateLiteral(name.expression))) {
+    return name.expression.text;
+  }
+  return null;
+};
+
+for (const statement of sourceFile.statements) {
+  if (!ts.isVariableStatement(statement)) continue;
+
+  for (const declaration of statement.declarationList.declarations) {
+    if (!ts.isIdentifier(declaration.name) || !runtimeCatalogNames.has(declaration.name.text)) continue;
+
+    const catalogName = declaration.name.text;
+    foundCatalogs.add(catalogName);
+
+    if (!declaration.initializer || !ts.isArrayLiteralExpression(declaration.initializer)) {
+      failures.push(`${catalogName} must remain an array literal so audio provenance can be audited.`);
+      continue;
+    }
+
+    for (const [index, element] of declaration.initializer.elements.entries()) {
+      if (!ts.isObjectLiteralExpression(element)) {
+        failures.push(`${catalogName}[${index}] must remain an object literal so audio provenance can be audited.`);
+        continue;
+      }
+
+      const fileNameProperties = element.properties.filter((property) => {
+        if (!ts.isPropertyAssignment(property)) return false;
+        return propertyNameText(property.name) === 'fileName';
+      });
+
+      if (fileNameProperties.length !== 1) {
+        failures.push(`${catalogName}[${index}] must contain exactly one directly auditable fileName property.`);
+        continue;
+      }
+
+      const initializer = fileNameProperties[0].initializer;
+      if (!ts.isStringLiteral(initializer) && !ts.isNoSubstitutionTemplateLiteral(initializer)) {
+        failures.push(`${catalogName}[${index}].fileName must be a direct string literal; expressions are not allowed.`);
+        continue;
+      }
+
+      const fileName = initializer.text;
+      if (!fileName.toLowerCase().endsWith('.mp3')) {
+        failures.push(`${catalogName}[${index}].fileName must end in .mp3: ${fileName}`);
+        continue;
+      }
+
+      runtimeFileNames.push(fileName);
+    }
+  }
+}
+
+for (const catalogName of runtimeCatalogNames) {
+  if (!foundCatalogs.has(catalogName)) failures.push(`Could not locate runtime audio catalog ${catalogName} in ${musicPath}.`);
+}
+
 const runtimePaths = new Set(runtimeFileNames.map((fileName) => `public/audio/${fileName}`));
 const publicMp3Paths = new Set(collectMp3Files(publicAudioRoot));
 const ledgerRows = [...ledger.matchAll(/^\| `([^`]+\.mp3)` \|[^\n]*\| (CLEARED|UNVERIFIED|BLOCKED) \|/gim)];
 const ledgerStatuses = new Map(ledgerRows.map((match) => [match[1], match[2]]));
-
-const failures = [];
-
-if (!runtimeCatalogSource) {
-  failures.push('Could not locate the MUSIC_TRACKS / BOOK_MUSIC_TRACKS runtime catalog region in src/data/music.ts.');
-}
-
-if (literalFileNameMatches.length !== fileNameFields.length) {
-  failures.push(
-    'Every runtime catalog fileName field must be a directly auditable string literal that fully terminates the property expression; identifier-valued, concatenated, or other expressions are not allowed.',
-  );
-}
-
-for (const match of literalFileNameMatches) {
-  const quote = match[1];
-  const fileName = match[2];
-  if (quote === '`' && fileName.includes('${')) {
-    failures.push(`Dynamic template-literal audio fileName is not allowed: ${fileName}`);
-  }
-  if (!fileName.toLowerCase().endsWith('.mp3')) {
-    failures.push(`Runtime audio fileName must end in .mp3: ${fileName}`);
-  }
-}
 
 for (const path of runtimePaths) {
   if (!existsSync(path)) failures.push(`Runtime audio is missing from public/: ${path}`);
@@ -68,7 +101,7 @@ for (const path of ledgerStatuses.keys()) {
 }
 
 if (runtimePaths.size !== runtimeFileNames.length) {
-  failures.push('src/data/music.ts contains duplicate runtime audio fileName entries.');
+  failures.push(`${musicPath} contains duplicate runtime audio fileName entries.`);
 }
 
 if (failures.length > 0) {
