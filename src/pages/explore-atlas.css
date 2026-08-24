@@ -113,17 +113,25 @@
 .explore-atlas__stats b { font-size: .9rem; }
 
 .explore-atlas__pins { position: absolute; inset: 0; z-index: 3; }
-.explore-atlas__pin { position: absolute; display: flex; width: clamp(7.2rem, 27vw, 10.5rem); align-items: center; gap: .28rem; border: 0; background: transparent; color: var(--atlas-ink); padding: 0; text-align: left; filter: drop-shadow(0 .35rem .32rem rgba(59,40,20,.3)); cursor: pointer; transform: translate(-50%, -50%); transition: transform 160ms ease, filter 160ms ease; }
+.explore-atlas__pin { position: absolute; display: grid; width: clamp(2.8rem, 10vw, 4rem); aspect-ratio: 1; place-items: center; border: 0; background: transparent; color: var(--atlas-ink); padding: 0; text-align: left; filter: drop-shadow(0 .35rem .32rem rgba(59,40,20,.3)); cursor: pointer; transform: translate(-50%, -50%); transition: transform 160ms ease, filter 160ms ease; }
 .explore-atlas__pin:hover,
 .explore-atlas__pin.is-selected { z-index: 4; transform: translate(-50%, calc(-50% - .2rem)) scale(1.06); filter: drop-shadow(0 .55rem .55rem rgba(59,40,20,.38)); }
-.explore-atlas__pin.is-label-left { flex-direction: row-reverse; text-align: right; }
-.explore-atlas__pin-drop { display: grid; width: clamp(2.8rem, 10vw, 4rem); height: clamp(2.8rem, 10vw, 4rem); flex: none; transform: rotate(-45deg); place-items: center; border: .18rem solid white; border-radius: 50% 50% 50% 0; background: var(--pin-color); padding: .26rem; box-shadow: inset 0 0 0 .12rem var(--pin-color), 0 .25rem .45rem rgba(55,35,16,.2); }
+.explore-atlas__pin.is-label-left { text-align: right; }
+.explore-atlas__pin-drop { display: grid; width: 100%; height: 100%; transform: rotate(-45deg); place-items: center; border: .18rem solid white; border-radius: 50% 50% 50% 0; background: var(--pin-color); padding: .26rem; box-shadow: inset 0 0 0 .12rem var(--pin-color), 0 .25rem .45rem rgba(55,35,16,.2); }
 .explore-atlas__pin-photo { display: grid; width: 100%; overflow: hidden; aspect-ratio: 1; transform: rotate(45deg); place-items: center; border-radius: 50%; background: #f4e5c8; color: var(--pin-color); }
 .explore-atlas__pin-photo img { width: 100%; height: 100%; object-fit: cover; }
 .explore-atlas__pin-photo svg { width: 55%; height: 55%; fill: color-mix(in srgb, var(--pin-color) 22%, transparent); stroke-width: 2.5; }
-.explore-atlas__pin > strong { display: -webkit-box; overflow: hidden; max-width: 7rem; border: .1rem solid rgba(112, 67, 27, .14); border-radius: 0 .85rem .85rem 0; background: rgba(255, 248, 228, .94); padding: .36rem .45rem .36rem .35rem; font-size: clamp(.54rem, 2.1vw, .72rem); font-weight: 950; line-height: 1.15; -webkit-box-orient: vertical; -webkit-line-clamp: 2; box-shadow: .25rem .25rem .45rem rgba(65,42,20,.18); }
-.explore-atlas__pin.is-label-left > strong { border-radius: .85rem 0 0 .85rem; padding-right: .35rem; padding-left: .45rem; }
-.explore-atlas__pin > small { position: absolute; top: 100%; left: 2rem; display: inline-flex; align-items: center; gap: .15rem; border-radius: 99px; background: #f33f31; color: white; padding: .16rem .42rem; font-size: .48rem; font-weight: 900; }
+.explore-atlas__pin > strong { position: absolute; top: 50%; left: calc(100% + .28rem); display: -webkit-box; visibility: hidden; overflow: hidden; width: max-content; max-width: 7rem; transform: translate(-.2rem, -50%); border: .1rem solid rgba(112, 67, 27, .14); border-radius: .85rem; background: rgba(255, 248, 228, .96); padding: .36rem .45rem; opacity: 0; font-size: clamp(.54rem, 2.1vw, .72rem); font-weight: 950; line-height: 1.15; -webkit-box-orient: vertical; -webkit-line-clamp: 2; box-shadow: .25rem .25rem .45rem rgba(65,42,20,.18); transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease; }
+.explore-atlas__pin:hover > strong,
+.explore-atlas__pin:focus-visible > strong,
+.explore-atlas__pin.is-selected > strong,
+.explore-atlas__pin.is-active > strong { visibility: visible; transform: translate(0, -50%); opacity: 1; }
+.explore-atlas__pin.is-label-left > strong { right: calc(100% + .28rem); left: auto; transform: translate(.2rem, -50%); }
+.explore-atlas__pin.is-label-left:hover > strong,
+.explore-atlas__pin.is-label-left:focus-visible > strong,
+.explore-atlas__pin.is-label-left.is-selected > strong,
+.explore-atlas__pin.is-label-left.is-active > strong { transform: translate(0, -50%); }
+.explore-atlas__pin > small { position: absolute; top: calc(100% + .14rem); left: 50%; display: inline-flex; transform: translateX(-50%); align-items: center; gap: .15rem; border-radius: 99px; background: #f33f31; color: white; padding: .16rem .42rem; font-size: .48rem; font-weight: 900; white-space: nowrap; }
 .explore-atlas__pin > small svg { width: .62rem; height: .62rem; }
 .explore-atlas__pin.is-active .explore-atlas__pin-drop { animation: atlas-pin-pulse 2s ease-in-out infinite; }
 @keyframes atlas-pin-pulse { 50% { box-shadow: inset 0 0 0 .12rem var(--pin-color), 0 0 0 .5rem rgba(255,222,64,.38), 0 .35rem .55rem rgba(55,35,16,.28); } }

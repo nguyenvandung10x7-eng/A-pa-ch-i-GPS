@@ -7,6 +7,7 @@ import '../pages/explore-atlas.css';
 
 type ExploreAtlasProps = {
   tasks: ChallengeTask[];
+  progressTotal: number;
   activeTask?: ChallengeTask;
   score: number;
   completedCount: number;
@@ -103,6 +104,7 @@ const shortPlaceName = (task: ChallengeTask, language: LanguageCode) => {
 
 export const ExploreAtlas = ({
   tasks,
+  progressTotal,
   activeTask,
   score,
   completedCount,
@@ -283,8 +285,8 @@ export const ExploreAtlas = ({
           <button type="button" onClick={handlePrimaryAction} disabled={isMutating}>
             <span>{actionLabel}</span><ChevronRight aria-hidden="true" />
           </button>
-          <div className="explore-atlas__progress" aria-label={`${completedCount} / ${tasks.length}`}>
-            <i style={{ width: `${tasks.length ? Math.min(100, Math.round((completedCount / tasks.length) * 100)) : 0}%` }} />
+          <div className="explore-atlas__progress" aria-label={`${completedCount} / ${progressTotal}`}>
+            <i style={{ width: `${progressTotal ? Math.min(100, Math.round((completedCount / progressTotal) * 100)) : 0}%` }} />
           </div>
         </section>
       </main>
