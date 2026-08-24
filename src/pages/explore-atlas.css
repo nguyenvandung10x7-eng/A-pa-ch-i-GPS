@@ -127,6 +127,7 @@
 .explore-atlas__pin.is-selected > strong,
 .explore-atlas__pin.is-active > strong { z-index: 2; background: #fff7dc; opacity: 1; }
 .explore-atlas__pin.is-label-left > strong { right: calc(100% + .28rem); left: auto; transform: translate(0, -50%); }
+.explore-atlas__pin.is-label-left-low > strong { top: calc(50% + 1.45rem); right: calc(100% + .28rem); left: auto; transform: translate(0, -50%); text-align: right; }
 .explore-atlas__pin.is-label-left:hover > strong,
 .explore-atlas__pin.is-label-left:focus-visible > strong,
 .explore-atlas__pin.is-label-left.is-selected > strong,

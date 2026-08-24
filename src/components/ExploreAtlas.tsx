@@ -88,14 +88,14 @@ const CITY_PLACE_NAMES: Partial<Record<string, Record<LanguageCode, string>>> = 
   'tim-cay-xoai-co-thu': { vi: 'Cây xoài cổ thụ', en: 'Old Mango Tree' },
 };
 
-type PinLabelPlacement = 'left' | 'right' | 'top' | 'bottom';
+type PinLabelPlacement = 'left' | 'left-low' | 'right' | 'top' | 'bottom';
 
 const CITY_PIN_LABEL_PLACEMENTS: Partial<Record<string, PinLabelPlacement>> = {
   'ban-phieng-loi-mthen': 'right',
   'ho-huoi-pha-mthen': 'right',
   'cong-vien-noong-bua-mthen': 'left',
   'ca-phe-ke-nenh-cat-banh': 'top',
-  'quang-truong-7-5-mthen': 'left',
+  'quang-truong-7-5-mthen': 'left-low',
   'doi-a1-chuyen-tau-thoi-gian-1954': 'right',
   'canh-dong-muong-thanh-cat-banh': 'bottom',
   'quan-com-hung-ha-thuoc-lao-free': 'top',
