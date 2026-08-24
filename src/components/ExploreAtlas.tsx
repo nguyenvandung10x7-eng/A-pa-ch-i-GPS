@@ -98,6 +98,16 @@ export const ExploreAtlas = ({
     return [activeTask, ...distinctTasks.filter((task) => task.id !== activeTask.id)].slice(0, PIN_POSITIONS.length);
   }, [activeTask, distinctTasks]);
   const [selectedTaskId, setSelectedTaskId] = useState(() => activeTask?.id ?? displayTasks[0]?.id ?? '');
+  const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set());
+
+  const markImageFailed = (taskId: string) => {
+    setFailedImageIds((current) => {
+      if (current.has(taskId)) return current;
+      const next = new Set(current);
+      next.add(taskId);
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (activeTask) setSelectedTaskId(activeTask.id);
@@ -203,7 +213,11 @@ export const ExploreAtlas = ({
                 aria-pressed={selected}
               >
                 <span className="explore-atlas__pin-drop">
-                  <span className="explore-atlas__pin-photo"><img src={task.image} alt="" /></span>
+                  <span className="explore-atlas__pin-photo">
+                    {task.image && !failedImageIds.has(task.id)
+                      ? <img src={task.image} alt="" onError={() => markImageFailed(task.id)} />
+                      : <MapPin aria-hidden="true" />}
+                  </span>
                 </span>
                 <strong>{shortPlaceName(task, language)}</strong>
                 {isActive ? <small><Sparkles aria-hidden="true" />{language === 'vi' ? 'Hiện tại' : 'Current'}</small> : null}
@@ -218,7 +232,9 @@ export const ExploreAtlas = ({
 
         <section className="explore-atlas__nearby" aria-live="polite">
           <div className="explore-atlas__nearby-image">
-            {selectedTask?.image ? <img src={selectedTask.image} alt="" /> : <Sparkles aria-hidden="true" />}
+            {selectedTask?.image && !failedImageIds.has(selectedTask.id)
+              ? <img src={selectedTask.image} alt="" onError={() => markImageFailed(selectedTask.id)} />
+              : <Sparkles aria-hidden="true" />}
           </div>
           <div className="explore-atlas__nearby-copy">
             <span><MapPin aria-hidden="true" />{!activeTask ? c.newJourney : selectedIsActive ? c.active : c.available}</span>
