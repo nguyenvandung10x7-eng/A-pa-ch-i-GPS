@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import ts from 'typescript';
 
@@ -10,13 +10,24 @@ const runtimeCatalogNames = new Set(['MUSIC_TRACKS', 'BOOK_MUSIC_TRACKS']);
 
 const normalizePath = (path) => path.split(sep).join('/');
 
-const collectMp3Files = (directory) => readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-  const absolute = join(directory, entry.name);
-  if (entry.isDirectory()) return collectMp3Files(absolute);
-  return entry.isFile() && entry.name.toLowerCase().endsWith('.mp3')
-    ? [normalizePath(absolute)]
-    : [];
-});
+const collectMp3Files = (directory, realAncestors = new Set()) => {
+  const realDirectory = realpathSync(directory);
+  if (realAncestors.has(realDirectory)) {
+    throw new Error(`Symlink cycle detected while scanning deployable audio: ${normalizePath(directory)}`);
+  }
+
+  const nextAncestors = new Set(realAncestors);
+  nextAncestors.add(realDirectory);
+
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const absolute = join(directory, entry.name);
+    const followedStats = statSync(absolute);
+    if (followedStats.isDirectory()) return collectMp3Files(absolute, nextAncestors);
+    return followedStats.isFile() && entry.name.toLowerCase().endsWith('.mp3')
+      ? [normalizePath(absolute)]
+      : [];
+  });
+};
 
 const isRuntimeAudioPathSafe = (fileName) => {
   if (fileName.startsWith('/') || fileName.includes('\\')) return false;
