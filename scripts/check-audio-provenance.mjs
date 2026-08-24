@@ -15,10 +15,11 @@ const collectMp3Files = (directory) => readdirSync(directory, { withFileTypes: t
     : [];
 });
 
-const runtimeFileNames = [...musicSource.matchAll(/fileName:\s*'([^']+\.mp3)'/g)].map((match) => match[1]);
+const runtimeFileNames = [...musicSource.matchAll(/fileName:\s*(['"`])([^'"`]+\.mp3)\1/gi)]
+  .map((match) => match[2]);
 const runtimePaths = new Set(runtimeFileNames.map((fileName) => `public/audio/${fileName}`));
 const publicMp3Paths = new Set(collectMp3Files(publicAudioRoot));
-const ledgerRows = [...ledger.matchAll(/^\| `([^`]+\.mp3)` \|[^\n]*\| (CLEARED|UNVERIFIED|BLOCKED) \|/gm)];
+const ledgerRows = [...ledger.matchAll(/^\| `([^`]+\.mp3)` \|[^\n]*\| (CLEARED|UNVERIFIED|BLOCKED) \|/gim)];
 const ledgerStatuses = new Map(ledgerRows.map((match) => [match[1], match[2]]));
 
 const failures = [];
