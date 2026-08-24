@@ -119,7 +119,7 @@ export const TaskMap = ({
               : localize(firstTask.title, language);
 
             return (
-              <Fragment key={place.key}>
+              <Fragment key={`${place.key}-${language}`}>
                 <Marker position={[place.lat, place.lng]} icon={placeMarkerIcon} alt={placeLabel} title={placeLabel}>
                   <Popup>
                     <div className="task-map-place-popup">
