@@ -31,12 +31,24 @@ const propertyNameText = (name) => {
   return null;
 };
 
+const unwrapTransparentExpression = (node) => {
+  let current = node;
+  while (ts.isAsExpression(current)
+      || ts.isTypeAssertionExpression(current)
+      || ts.isParenthesizedExpression(current)
+      || ts.isSatisfiesExpression(current)) {
+    current = current.expression;
+  }
+  return current;
+};
+
 const unwrapObjectFreeze = (node) => {
-  if (!ts.isCallExpression(node) || node.arguments.length !== 1) return null;
-  if (!ts.isPropertyAccessExpression(node.expression)) return null;
-  if (!ts.isIdentifier(node.expression.expression) || node.expression.expression.text !== 'Object') return null;
-  if (node.expression.name.text !== 'freeze') return null;
-  return node.arguments[0];
+  const candidate = unwrapTransparentExpression(node);
+  if (!ts.isCallExpression(candidate) || candidate.arguments.length !== 1) return null;
+  if (!ts.isPropertyAccessExpression(candidate.expression)) return null;
+  if (!ts.isIdentifier(candidate.expression.expression) || candidate.expression.expression.text !== 'Object') return null;
+  if (candidate.expression.name.text !== 'freeze') return null;
+  return unwrapTransparentExpression(candidate.arguments[0]);
 };
 
 for (const statement of sourceFile.statements) {
@@ -86,7 +98,7 @@ for (const statement of sourceFile.statements) {
         continue;
       }
 
-      const initializer = fileNameProperties[0].initializer;
+      const initializer = unwrapTransparentExpression(fileNameProperties[0].initializer);
       if (!ts.isStringLiteral(initializer) && !ts.isNoSubstitutionTemplateLiteral(initializer)) {
         failures.push(`${catalogName}[${index}].fileName must be a direct string literal; expressions are not allowed.`);
         continue;
