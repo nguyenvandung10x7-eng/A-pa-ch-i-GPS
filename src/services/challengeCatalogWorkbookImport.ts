@@ -48,6 +48,12 @@ const overnightMotorbikeExistingPatch: TaskPatch = {
 };
 
 const TASK_PATCHES: Record<string, TaskPatch> = {
+  'thac-ke-nenh-mthen': {
+    enabled: true,
+  },
+  'doi-a1-chuyen-tau-thoi-gian-1954': {
+    enabled: true,
+  },
   'cho-muong-nhe-tang-banh-trung-thu': {
     title: {
       vi: 'Chợ Mường Nhé – Một chiếc bánh, một lời chào',
