@@ -16,7 +16,7 @@ export type BookMusicTrack = Readonly<{
  * The array and every entry are frozen at runtime; the mutable array annotation is
  * retained only for compatibility with existing read-only consumers.
  */
-export const MUSIC_TRACKS: MusicTrack[] = Object.freeze([
+export const MUSIC_TRACKS: MusicTrack[] = (Object.freeze([
   Object.freeze({ id: 'hmong-ballad-1', fileName: 'hmong-ballad-1.mp3', labelKey: 'music.track.hmongBallad1' }),
   Object.freeze({ id: 'hmong-ballad-2', fileName: 'hmong-ballad-2.mp3', labelKey: 'music.track.hmongBallad2' }),
   Object.freeze({ id: 'thai-epic-1', fileName: 'thai-epic-1.mp3', labelKey: 'music.track.thaiEpic1' }),
@@ -28,10 +28,10 @@ export const MUSIC_TRACKS: MusicTrack[] = Object.freeze([
   Object.freeze({ id: 'hatthai', fileName: 'HATTHAI.mp3', labelKey: 'music.track.hatthai' }),
   Object.freeze({ id: 'hmong', fileName: 'HMONG.mp3', labelKey: 'music.track.hmong' }),
   Object.freeze({ id: 'hmongrock2', fileName: 'HMONGrock2.mp3', labelKey: 'music.track.hmongrock2' }),
-]) as unknown as MusicTrack[];
+]) satisfies readonly MusicTrack[]) as unknown as MusicTrack[];
 
 /** Audio selected specifically for Book of Dien Bien chapters. */
-export const BOOK_MUSIC_TRACKS: BookMusicTrack[] = Object.freeze([
+export const BOOK_MUSIC_TRACKS: BookMusicTrack[] = (Object.freeze([
   Object.freeze({ id: 'chapter-01-dong-song-track-01', fileName: 'chapter-01-dong-song-track-01.mp3', label: Object.freeze({ vi: 'Chương 01 · Dòng sông', en: 'Chapter 01 · The River' }) }),
   Object.freeze({ id: 'chapter-02-mua-he-track-01', fileName: 'chapter-02-mua-he-track-01.mp3', label: Object.freeze({ vi: 'Chương 02 · Mùa hè', en: 'Chapter 02 · Summer' }) }),
   Object.freeze({ id: 'chapter-03-nha-ba-noi-track-01', fileName: 'chapter-03-nha-ba-noi-track-01.mp3', label: Object.freeze({ vi: 'Chương 03 · Một Điện Biên rất nhỏ', en: 'Chapter 03 · A Very Small Dien Bien' }) }),
@@ -55,7 +55,7 @@ export const BOOK_MUSIC_TRACKS: BookMusicTrack[] = Object.freeze([
     fileName: 'book/chapter-13-su-noi-loan-va-thanh-pho-ban-dem/chapter-13-su-noi-loan-va-thanh-pho-ban-dem-track-02.mp3',
     label: Object.freeze({ vi: 'Chương 13 · Sự nổi loạn và thành phố ban đêm · Track 2', en: 'Chapter 13 · Rebellion and the City at Night · Track 2' }),
   }),
-]) as unknown as BookMusicTrack[];
+]) satisfies readonly BookMusicTrack[]) as unknown as BookMusicTrack[];
 
 export const ALL_MUSIC_TRACK_IDS = new Set([
   ...MUSIC_TRACKS.map((track) => track.id),
