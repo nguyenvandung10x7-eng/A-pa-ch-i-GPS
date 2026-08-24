@@ -31,6 +31,52 @@ const propertyNameText = (name) => {
   return null;
 };
 
+const rootIdentifier = (expression) => {
+  let current = expression;
+  while (ts.isPropertyAccessExpression(current) || ts.isElementAccessExpression(current)) current = current.expression;
+  return ts.isIdentifier(current) ? current.text : null;
+};
+
+const mutationOperators = new Set([
+  ts.SyntaxKind.EqualsToken,
+  ts.SyntaxKind.PlusEqualsToken,
+  ts.SyntaxKind.MinusEqualsToken,
+  ts.SyntaxKind.AsteriskEqualsToken,
+  ts.SyntaxKind.AsteriskAsteriskEqualsToken,
+  ts.SyntaxKind.SlashEqualsToken,
+  ts.SyntaxKind.PercentEqualsToken,
+  ts.SyntaxKind.LessThanLessThanEqualsToken,
+  ts.SyntaxKind.GreaterThanGreaterThanEqualsToken,
+  ts.SyntaxKind.GreaterThanGreaterThanGreaterThanEqualsToken,
+  ts.SyntaxKind.AmpersandEqualsToken,
+  ts.SyntaxKind.BarEqualsToken,
+  ts.SyntaxKind.CaretEqualsToken,
+  ts.SyntaxKind.BarBarEqualsToken,
+  ts.SyntaxKind.AmpersandAmpersandEqualsToken,
+  ts.SyntaxKind.QuestionQuestionEqualsToken,
+]);
+
+const visitForCatalogMutations = (node) => {
+  if (ts.isBinaryExpression(node) && mutationOperators.has(node.operatorToken.kind)) {
+    const target = rootIdentifier(node.left);
+    if (target && runtimeCatalogNames.has(target)) {
+      failures.push(`Runtime audio catalog ${target} must not be mutated after declaration.`);
+    }
+  }
+
+  if ((ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node))
+      && (node.operator === ts.SyntaxKind.PlusPlusToken || node.operator === ts.SyntaxKind.MinusMinusToken)) {
+    const target = rootIdentifier(node.operand);
+    if (target && runtimeCatalogNames.has(target)) {
+      failures.push(`Runtime audio catalog ${target} must not be mutated after declaration.`);
+    }
+  }
+
+  ts.forEachChild(node, visitForCatalogMutations);
+};
+
+visitForCatalogMutations(sourceFile);
+
 for (const statement of sourceFile.statements) {
   if (!ts.isVariableStatement(statement)) continue;
 
