@@ -10,6 +10,7 @@ import type { BookLocalizedText } from '../types/book';
 import type { LanguageCode } from '../types/task';
 import { BookPage } from './BookPage';
 import './book-reading-v2.css';
+import './book-place-cards.css';
 import './chapter13-night.css';
 import './chapter13-night-legacy-tokens.css';
 
