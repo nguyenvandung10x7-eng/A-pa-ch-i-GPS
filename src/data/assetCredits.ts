@@ -18,6 +18,32 @@ const cc = (version: '2.0' | '3.0' | '4.0') => ({
 
 export const ASSET_CREDITS: AssetCredit[] = [
   {
+    id: 'challenge-generated-illustrations',
+    usage: {
+      vi: 'Tranh minh họa cho thử thách để xe qua đêm, ngắm lòng chảo và tìm cây xoài cổ thụ',
+      en: 'Illustrations for the overnight motorbike, valley viewpoint, and old mango tree challenges',
+    },
+    author: 'Generated for Book of Dien Bien',
+    status: 'cleared',
+    note: {
+      vi: 'Hai tranh được tái sử dụng từ bộ Book v3 và một tranh cây xoài được tạo mới theo cùng phong cách 3D phiêu lưu. Đây là minh họa cảm xúc, không phải ảnh tư liệu hay xác nhận chính xác địa điểm.',
+      en: 'Two artworks are reused from the Book v3 set and one mango-tree artwork was newly generated in the same 3D adventure style. These are mood illustrations, not documentary or exact-location evidence.',
+    },
+  },
+  {
+    id: 'quan-com-hung-ha-thuoc-lao-free',
+    usage: {
+      vi: 'Ảnh thử thách tại Quán cơm Hưng Hà',
+      en: 'Challenge image for Hưng Hà Eatery',
+    },
+    author: 'Ảnh do chủ dự án cung cấp',
+    status: 'source-recorded',
+    note: {
+      vi: 'Ảnh được chủ dự án tải lên và chỉ định trực tiếp cho nhiệm vụ này. Ảnh đã được dàn lại trên khung 4:3 bằng nền mờ lấy từ chính ảnh gốc; tác giả và điều khoản phân phối công khai chưa được xác minh độc lập.',
+      en: 'The project owner uploaded and directly assigned this photograph to the challenge. It was fitted to a 4:3 frame using a blurred background derived from the same source; authorship and public redistribution terms were not independently verified.',
+    },
+  },
+  {
     id: 'book-v3-generated-illustrations',
     usage: {
       vi: 'Bộ 16 tranh minh họa mới cho 13 chương của Book',

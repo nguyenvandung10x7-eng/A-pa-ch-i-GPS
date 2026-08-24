@@ -53,13 +53,13 @@ const copy = {
   },
 } as const;
 
-const PIN_COLORS = ['#f25643', '#f3aa20', '#6b70e8', '#10a997', '#a653ef', '#ef3e32', '#2f8dd9'];
+const PIN_COLORS = ['#f25643', '#f3aa20', '#6b70e8', '#10a997', '#a653ef', '#ef3e32', '#2f8dd9', '#e56b22', '#45a049', '#d84f92'];
 
 const CITY_ATLAS_BOUNDS = {
   north: 21.432,
   south: 21.374,
   west: 103.005,
-  east: 103.066,
+  east: 103.071,
 } as const;
 
 const CITY_PIN_TASK_IDS = [
@@ -70,6 +70,9 @@ const CITY_PIN_TASK_IDS = [
   'quang-truong-7-5-mthen',
   'doi-a1-chuyen-tau-thoi-gian-1954',
   'canh-dong-muong-thanh-cat-banh',
+  'quan-com-hung-ha-thuoc-lao-free',
+  'nhin-xuong-long-chao-cua-chung-ta',
+  'tim-cay-xoai-co-thu',
 ] as const;
 
 const CITY_PLACE_NAMES: Partial<Record<string, Record<LanguageCode, string>>> = {
@@ -80,6 +83,24 @@ const CITY_PLACE_NAMES: Partial<Record<string, Record<LanguageCode, string>>> = 
   'quang-truong-7-5-mthen': { vi: 'Quảng trường 7-5', en: '7 May Square' },
   'doi-a1-chuyen-tau-thoi-gian-1954': { vi: 'Đồi A1', en: 'A1 Hill' },
   'canh-dong-muong-thanh-cat-banh': { vi: 'Cánh đồng Mường Thanh', en: 'Mường Thanh Field' },
+  'quan-com-hung-ha-thuoc-lao-free': { vi: 'Quán cơm Hưng Hà', en: 'Hưng Hà Eatery' },
+  'nhin-xuong-long-chao-cua-chung-ta': { vi: 'Điểm ngắm lòng chảo', en: 'Valley Viewpoint' },
+  'tim-cay-xoai-co-thu': { vi: 'Cây xoài cổ thụ', en: 'Old Mango Tree' },
+};
+
+type PinLabelPlacement = 'left' | 'right' | 'top' | 'bottom';
+
+const CITY_PIN_LABEL_PLACEMENTS: Partial<Record<string, PinLabelPlacement>> = {
+  'ban-phieng-loi-mthen': 'right',
+  'ho-huoi-pha-mthen': 'right',
+  'cong-vien-noong-bua-mthen': 'left',
+  'ca-phe-ke-nenh-cat-banh': 'left',
+  'quang-truong-7-5-mthen': 'bottom',
+  'doi-a1-chuyen-tau-thoi-gian-1954': 'right',
+  'canh-dong-muong-thanh-cat-banh': 'bottom',
+  'quan-com-hung-ha-thuoc-lao-free': 'top',
+  'nhin-xuong-long-chao-cua-chung-ta': 'left',
+  'tim-cay-xoai-co-thu': 'left',
 };
 
 const isWithinCityAtlas = (task: ChallengeTask) => (
@@ -148,7 +169,7 @@ export const ExploreAtlas = ({
     if (!activeTask || !isWithinCityAtlas(activeTask) || cityTasks.some((task) => task.id === activeTask.id)) return cityTasks;
     return [activeTask, ...cityTasks].slice(0, PIN_COLORS.length);
   }, [activeTask, cityTasks]);
-  const [selectedTaskId, setSelectedTaskId] = useState(() => activeTask?.id ?? displayTasks[0]?.id ?? '');
+  const [manualSelection, setManualSelection] = useState<{ activeTaskId: string; taskId: string } | null>(null);
   const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set());
 
   const markImageFailed = (taskId: string) => {
@@ -159,14 +180,6 @@ export const ExploreAtlas = ({
       return next;
     });
   };
-
-  useEffect(() => {
-    setSelectedTaskId((currentTaskId) => {
-      if (activeTask) return activeTask.id;
-      if (!displayTasks.some((task) => task.id === currentTaskId)) return displayTasks[0]?.id ?? '';
-      return currentTaskId;
-    });
-  }, [activeTask, displayTasks]);
 
   useEffect(() => {
     closeRef.current = onCloseDetails;
@@ -215,6 +228,11 @@ export const ExploreAtlas = ({
     };
   }, [detailsOpen]);
 
+  const activeTaskId = activeTask?.id ?? '';
+  const selectedTaskId = manualSelection?.activeTaskId === activeTaskId
+    && displayTasks.some((task) => task.id === manualSelection.taskId)
+    ? manualSelection.taskId
+    : activeTaskId || displayTasks[0]?.id || '';
   const selectedTask = displayTasks.find((task) => task.id === selectedTaskId) ?? activeTask ?? displayTasks[0];
   const selectedIsActive = Boolean(selectedTask && activeTask?.id === selectedTask.id);
   const selectedOutsideAtlas = Boolean(selectedTask && !isWithinCityAtlas(selectedTask));
@@ -259,13 +277,14 @@ export const ExploreAtlas = ({
             const selected = selectedTask?.id === task.id;
             const isActive = activeTask?.id === task.id;
             const atlasPoint = projectTaskToAtlas(task);
+            const labelPlacement = CITY_PIN_LABEL_PLACEMENTS[task.id] ?? (atlasPoint.x > 64 ? 'left' : 'right');
             return (
               <button
                 key={task.id}
                 type="button"
-                className={`explore-atlas__pin ${atlasPoint.x > 64 ? 'is-label-left' : ''} ${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''}`}
+                className={`explore-atlas__pin is-label-${labelPlacement} ${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''}`}
                 style={{ left: `${atlasPoint.x}%`, top: `${atlasPoint.y}%`, '--pin-color': PIN_COLORS[index] } as CSSProperties}
-                onClick={() => setSelectedTaskId(task.id)}
+                onClick={() => setManualSelection({ activeTaskId, taskId: task.id })}
                 aria-pressed={selected}
                 aria-label={shortPlaceName(task, language)}
               >

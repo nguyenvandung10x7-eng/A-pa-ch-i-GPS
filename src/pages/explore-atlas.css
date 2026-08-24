@@ -121,16 +121,18 @@
 .explore-atlas__pin-photo { display: grid; width: 100%; overflow: hidden; aspect-ratio: 1; transform: rotate(45deg); place-items: center; border-radius: 50%; background: #f4e5c8; color: var(--pin-color); }
 .explore-atlas__pin-photo img { width: 100%; height: 100%; object-fit: cover; }
 .explore-atlas__pin-photo svg { width: 55%; height: 55%; fill: color-mix(in srgb, var(--pin-color) 22%, transparent); stroke-width: 2.5; }
-.explore-atlas__pin > strong { position: absolute; top: 50%; left: calc(100% + .28rem); display: -webkit-box; visibility: hidden; overflow: hidden; width: max-content; max-width: 7rem; transform: translate(-.2rem, -50%); border: .1rem solid rgba(112, 67, 27, .14); border-radius: .85rem; background: rgba(255, 248, 228, .96); padding: .36rem .45rem; opacity: 0; font-size: clamp(.54rem, 2.1vw, .72rem); font-weight: 950; line-height: 1.15; -webkit-box-orient: vertical; -webkit-line-clamp: 2; box-shadow: .25rem .25rem .45rem rgba(65,42,20,.18); transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease; }
+.explore-atlas__pin > strong { position: absolute; top: 50%; left: calc(100% + .28rem); display: -webkit-box; overflow: hidden; width: max-content; max-width: 6.3rem; transform: translate(0, -50%); border: .1rem solid rgba(112, 67, 27, .14); border-radius: .72rem; background: rgba(255, 248, 228, .94); padding: .29rem .38rem; opacity: .96; font-size: clamp(.5rem, 1.9vw, .66rem); font-weight: 950; line-height: 1.12; -webkit-box-orient: vertical; -webkit-line-clamp: 2; box-shadow: .2rem .2rem .38rem rgba(65,42,20,.16); transition: opacity 140ms ease, transform 140ms ease, background 140ms ease; }
 .explore-atlas__pin:hover > strong,
 .explore-atlas__pin:focus-visible > strong,
 .explore-atlas__pin.is-selected > strong,
-.explore-atlas__pin.is-active > strong { visibility: visible; transform: translate(0, -50%); opacity: 1; }
-.explore-atlas__pin.is-label-left > strong { right: calc(100% + .28rem); left: auto; transform: translate(.2rem, -50%); }
+.explore-atlas__pin.is-active > strong { z-index: 2; background: #fff7dc; opacity: 1; }
+.explore-atlas__pin.is-label-left > strong { right: calc(100% + .28rem); left: auto; transform: translate(0, -50%); }
 .explore-atlas__pin.is-label-left:hover > strong,
 .explore-atlas__pin.is-label-left:focus-visible > strong,
 .explore-atlas__pin.is-label-left.is-selected > strong,
 .explore-atlas__pin.is-label-left.is-active > strong { transform: translate(0, -50%); }
+.explore-atlas__pin.is-label-top > strong { top: auto; bottom: calc(100% + .25rem); left: 50%; transform: translate(-50%, 0); text-align: center; }
+.explore-atlas__pin.is-label-bottom > strong { top: calc(100% + .25rem); left: 50%; transform: translate(-50%, 0); text-align: center; }
 .explore-atlas__pin > small { position: absolute; top: calc(100% + .14rem); left: 50%; display: inline-flex; transform: translateX(-50%); align-items: center; gap: .15rem; border-radius: 99px; background: #f33f31; color: white; padding: .16rem .42rem; font-size: .48rem; font-weight: 900; white-space: nowrap; }
 .explore-atlas__pin > small svg { width: .62rem; height: .62rem; }
 .explore-atlas__pin.is-active .explore-atlas__pin-drop { animation: atlas-pin-pulse 2s ease-in-out infinite; }
@@ -198,6 +200,8 @@
   .explore-atlas__stats b { font-size: .76rem; }
   .explore-atlas__nearby { grid-template-columns: 4.8rem minmax(0, 1fr) 7.2rem; }
   .explore-atlas__nearby > button { padding-inline: .5rem; }
+  .explore-atlas__pin { width: clamp(2.35rem, 9vw, 2.8rem); }
+  .explore-atlas__pin > strong { max-width: 5.2rem; padding: .24rem .3rem; font-size: clamp(.46rem, 1.8vw, .58rem); }
 }
 
 @media (min-width: 720px) {

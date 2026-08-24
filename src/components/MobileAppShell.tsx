@@ -166,6 +166,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   };
 
   useLayoutEffect(() => {
+    const bookAudio = audioRef.current;
     const rememberBeforeAnyBookAudio = (event: Event) => {
       if (!(event.target instanceof HTMLAudioElement)) return;
       if (!isBookSurface(normalizePublicPathname(window.location.pathname))) return;
@@ -180,7 +181,6 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
 
     return () => {
       document.removeEventListener('play', rememberBeforeAnyBookAudio, true);
-      const bookAudio = audioRef.current;
       if (bookAudio) bookAudio.pause();
       restorePausedAppAudio();
       document.body.classList.remove('public-shell-active');
@@ -197,6 +197,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     if (!dialog) return;
 
     const previouslyFocused = document.activeElement;
+    const accountButton = accountButtonRef.current;
     const getFocusableElements = () => Array.from(dialog.querySelectorAll<HTMLElement>(
       'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
     ));
@@ -245,7 +246,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
         if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) {
           previouslyFocused.focus();
         } else {
-          accountButtonRef.current?.focus();
+          accountButton?.focus();
         }
       }
       restoreAccountFocusRef.current = true;
@@ -272,12 +273,18 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+    let cancelled = false;
+    const clearBlockedState = () => {
+      queueMicrotask(() => {
+        if (!cancelled) setBookSoundBlocked(false);
+      });
+    };
 
     if (!activeBookTrack || !onBookSurface) {
       audio.pause();
-      setBookSoundBlocked(false);
+      clearBlockedState();
       if (!onBookSurface) restorePausedAppAudio();
-      return;
+      return () => { cancelled = true; };
     }
 
     const source = `/audio/${activeBookTrack.fileName}`;
@@ -290,17 +297,21 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
 
     if (!bookSoundEnabled) {
       audio.pause();
-      setBookSoundBlocked(false);
-      return;
+      clearBlockedState();
+      return () => { cancelled = true; };
     }
 
     rememberPlayingAppAudio();
     void audio.play()
-      .then(() => setBookSoundBlocked(false))
+      .then(() => {
+        if (!cancelled) setBookSoundBlocked(false);
+      })
       .catch(() => {
+        if (cancelled) return;
         setBookSoundPlaying(false);
         setBookSoundBlocked(true);
       });
+    return () => { cancelled = true; };
   }, [activeBookTrack, bookSoundEnabled, onBookSurface]);
 
   const toggleBookSound = () => {

@@ -1,0 +1,16 @@
+{
+  "asset": "public/images/tasks/nhin-xuong-long-chao-cua-chung-ta.webp",
+  "status_basis": "project-generated-illustration-reuse",
+  "checked_on": "2026-08-24",
+  "source": {
+    "asset": "public/images/book-v3/su-hung-vi.webp",
+    "generator": "OpenAI image generation",
+    "sha256": "3b2dbea4334b936585bac1a87a3bdb331fd907d6e5c0e66c12d4be56f2e0c53f"
+  },
+  "derivative": {
+    "dimensions": "1536x1024",
+    "sha256": "3b2dbea4334b936585bac1a87a3bdb331fd907d6e5c0e66c12d4be56f2e0c53f",
+    "changes": "Exact binary copy; no visual changes."
+  },
+  "representation_note": "Purpose-built literary illustration reused for the valley-view challenge; not documentary photography or an exact surveyed panorama."
+}

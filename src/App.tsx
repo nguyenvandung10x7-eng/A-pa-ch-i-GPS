@@ -108,7 +108,7 @@ const AdminOnlyRoute = ({
 
 export default function App() {
   const { language, setLanguage, t } = useTranslation();
-  const { tasks, setTasks, activeTasks } = useTasks();
+  const { tasks, setTasks } = useTasks();
   const [clearVersion, setClearVersion] = useState(() => getChallengeClearVersion());
   const location = useLocation();
   const navigationType = useNavigationType();

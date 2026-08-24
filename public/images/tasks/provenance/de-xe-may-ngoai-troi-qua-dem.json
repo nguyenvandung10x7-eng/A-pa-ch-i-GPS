@@ -1,0 +1,16 @@
+{
+  "asset": "public/images/tasks/de-xe-may-ngoai-troi-qua-dem.webp",
+  "status_basis": "project-generated-illustration-reuse",
+  "checked_on": "2026-08-24",
+  "source": {
+    "asset": "public/images/book-v3/thanh-pho-ban-dem.webp",
+    "generator": "OpenAI image generation",
+    "sha256": "714de1af43c26c4c9230f4cdbc05a477b552db03fef5ee9a9b882b34d6b0e9f9"
+  },
+  "derivative": {
+    "dimensions": "1536x1024",
+    "sha256": "714de1af43c26c4c9230f4cdbc05a477b552db03fef5ee9a9b882b34d6b0e9f9",
+    "changes": "Exact binary copy; no visual changes."
+  },
+  "representation_note": "Purpose-built literary illustration reused for the overnight-motorbike challenge; not documentary photography."
+}
