@@ -16,36 +16,36 @@ const localized = (value: BookLocalizedText | undefined, language: LanguageCode)
 
 const copy = {
   vi: {
-    subtitle: 'những điều tôi còn nhớ.',
-    proposition: 'Mười ba chương, những câu chuyện ngắn và những nơi vẫn còn ngoài đời. Đọc trước. Khi một nơi khiến bạn tò mò, bước ra ngoài sau.',
-    contents: 'Mục lục',
+    subtitle: 'những điều còn ở lại.',
+    proposition: 'Điện Biên ở đây không bắt đầu bằng danh thắng. Nó bắt đầu bằng một dòng sông, một khu vườn, vài góc phố, những người đã đi qua — rồi mới mở ra thành những nơi bạn có thể tự mình tìm đến.',
+    contents: '13 chương',
     chapter: 'Chương',
-    back: 'Mục lục',
-    noStories: 'Chương này đang được biên tập thêm.',
-    continue: 'Đọc tiếp',
-    begin: 'Bắt đầu',
-    stories: 'Câu chuyện',
-    places: 'Địa điểm trong chương',
-    placeNote: 'Địa điểm là phần để nhìn và đi tới — không phải một cấp nội dung mới của cuốn sách.',
+    back: 'Tất cả chương',
+    noStories: 'Câu chuyện này vẫn đang được viết tiếp.',
+    continue: 'Trở lại câu chuyện',
+    begin: 'Mở cuốn sách',
+    stories: 'Những câu chuyện',
+    places: 'Những nơi vẫn còn ở đó',
+    placeNote: 'Nếu một câu chuyện khiến bạn muốn nhìn tận mắt, bắt đầu từ những địa điểm này.',
     storyCount: 'câu chuyện',
-    openPlace: 'Mở bản đồ',
-    chapters: '13 chương',
+    openPlace: 'Xem địa điểm',
+    chapters: '13 CHƯƠNG · KÝ ỨC · ĐỊA ĐIỂM',
   },
   en: {
-    subtitle: 'the things I still remember.',
-    proposition: 'Thirteen chapters, short stories, and places that still exist outside the book. Read first. Step outside when a place makes you curious.',
-    contents: 'Contents',
+    subtitle: 'the things that stayed.',
+    proposition: 'Dien Bien here does not begin with landmarks. It begins with a river, a garden, a few street corners, and people who passed through — then opens outward into places you can still go and find for yourself.',
+    contents: '13 chapters',
     chapter: 'Chapter',
-    back: 'Contents',
-    noStories: 'This chapter is still being edited.',
-    continue: 'Continue',
-    begin: 'Begin',
+    back: 'All chapters',
+    noStories: 'This story is still being written.',
+    continue: 'Return to the story',
+    begin: 'Open the book',
     stories: 'Stories',
-    places: 'Places in this chapter',
-    placeNote: 'Places are for seeing and visiting — not another content level inside the book.',
+    places: 'Places that are still there',
+    placeNote: 'If a story makes you want to see it for yourself, start with these places.',
     storyCount: 'stories',
-    openPlace: 'Open map',
-    chapters: '13 chapters',
+    openPlace: 'View place',
+    chapters: '13 CHAPTERS · MEMORY · PLACES',
   },
 } as const;
 
@@ -113,6 +113,7 @@ export const NewBookPage = ({ language }: BookPageProps) => {
                 const location = placePage.location;
                 if (!location) return null;
                 const artwork = getBookPageArtwork(placePage);
+                const placeName = localized(location.label, language) || localized(placePage.title, language);
                 return (
                   <a
                     key={placePage.id}
@@ -122,11 +123,11 @@ export const NewBookPage = ({ language }: BookPageProps) => {
                     className="book-v3-place-card"
                   >
                     <div className="book-v3-place-card__media">
-                      {artwork ? <img src={artwork} alt="" loading="lazy" decoding="async" /> : <span aria-hidden="true"><MapPin /></span>}
+                      {artwork ? <img src={artwork} alt={placeName} loading="lazy" decoding="async" /> : <span aria-hidden="true"><MapPin /></span>}
                     </div>
                     <div className="book-v3-place-card__body">
                       <small><MapPin aria-hidden="true" />{c.openPlace}</small>
-                      <strong>{localized(location.label, language) || localized(placePage.title, language)}</strong>
+                      <strong>{placeName}</strong>
                       <p>{localized(placePage.title, language)}</p>
                     </div>
                   </a>
