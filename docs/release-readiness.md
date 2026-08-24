@@ -47,7 +47,7 @@ This checklist defines when the public BOOK / FIELD product can be called releas
 - [x] Public reading does not require authentication.
 - [x] OAuth return paths preserve pathname, query and hash where the public shell initiates sign-in.
 - [ ] Confirm production OAuth redirect URLs are registered with the identity provider.
-- [ ] Confirm production Supabase/Netlify environment variables are set and do not contain development-only values.
+- [ ] Confirm production Supabase/Netlify environment variables are set and do not contain development-only values. Production Netlify builds now fail early when the required Supabase URL/key are missing or still use repository placeholders; provider/OAuth configuration still requires production verification.
 - [ ] Confirm sign-in, sign-out and a fresh anonymous session on the production origin.
 
 ## 6. Content and asset rights

@@ -17,6 +17,17 @@ This gate does not inspect Netlify, Supabase, or other provider-side secret stor
 
 If the gate finds a real credential, remove it from the tracked tree/history as appropriate and rotate or revoke it. Do not merely add the file to `.gitignore` after it has already been committed.
 
+## Production environment validation
+
+Netlify runs `scripts/check-production-env.mjs` before the production build. The script is intentionally a no-op outside Netlify's `CONTEXT=production`, so deploy previews and local verification do not require production credentials.
+
+For a production deploy, the gate fails before the Vite build when:
+
+- `VITE_SUPABASE_URL` is missing, malformed, non-HTTPS, or still uses the `.env.example` placeholder host;
+- `VITE_SUPABASE_ANON_KEY` is missing or still uses the `.env.example` placeholder value.
+
+The script reports only the failed variable/rule and never prints the configured URL or key value. A successful production deploy therefore proves these two required Supabase variables are present and not the repository placeholders; it does not by itself validate OAuth provider redirect registration, Supabase project policy, or every provider-side setting.
+
 ## Non-credential sensitive-material review
 
 A repository-tree and content review was completed on 2026-08-24 against `main` commit `8767d601b86e9c49ea5fa284edf6aed07b541006`.
