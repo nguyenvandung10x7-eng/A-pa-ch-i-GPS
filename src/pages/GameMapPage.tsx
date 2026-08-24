@@ -11,21 +11,24 @@ type GameMapPageProps = {
 const copy = {
   vi: {
     kicker: 'BẢN ĐỒ ĐIỆN BIÊN',
-    title: 'Mỗi dấu ghim là một nơi có thật.',
-    body: 'Chọn một địa danh để xem câu chuyện và hoạt động gần đó. Các điểm trên bản đồ là địa điểm — không phải nhiệm vụ.',
+    title: 'Bản đồ các khám phá đang mở.',
+    body: 'Mỗi dấu ghim là một địa điểm. Những khám phá trùng tọa độ được gom chung để bản đồ không tạo ra các điểm giả hoặc chồng ghim.',
     places: 'địa danh',
+    discoveries: 'khám phá',
   },
   en: {
     kicker: 'THE DIEN BIEN MAP',
-    title: 'Every pin is a real place.',
-    body: 'Choose a place to see its story and nearby activities. Map pins are places, not quests.',
+    title: 'The map of open discoveries.',
+    body: 'Each pin is a place. Discoveries sharing the same coordinates are grouped so the map never invents or stacks locations.',
     places: 'places',
+    discoveries: 'discoveries',
   },
 } as const;
 
 export const GameMapPage = ({ tasks, language, t }: GameMapPageProps) => {
   const c = copy[language];
-  const placeCount = getDistinctTaskPlaces(tasks).length;
+  const activeTasks = tasks.filter((task) => task.enabled);
+  const placeCount = getDistinctTaskPlaces(activeTasks).length;
 
   return (
     <main className="game-map-page">
@@ -36,10 +39,10 @@ export const GameMapPage = ({ tasks, language, t }: GameMapPageProps) => {
           <h1>{c.title}</h1>
           <div>{c.body}</div>
         </div>
-        <span><MapPinned aria-hidden="true" />{placeCount} {c.places}</span>
+        <span><MapPinned aria-hidden="true" />{placeCount} {c.places} · {activeTasks.length} {c.discoveries}</span>
       </header>
-      {tasks.length > 0 ? (
-        <TaskMap tasks={tasks} language={language} t={t} groupByLocation />
+      {activeTasks.length > 0 ? (
+        <TaskMap tasks={activeTasks} language={language} t={t} groupByLocation />
       ) : (
         <p className="game-map-page__empty">
           {language === 'vi' ? 'Chưa có địa danh nào đang mở.' : 'No places are open yet.'}

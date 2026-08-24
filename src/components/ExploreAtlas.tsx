@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { ChevronRight, Footprints, MapPin, Medal, Navigation, Route, Sparkles, X } from 'lucide-react';
+import { Check, ChevronRight, Footprints, MapPin, Medal, Navigation, Route, Sparkles, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
@@ -11,12 +11,13 @@ type ExploreAtlasProps = {
   activeTask?: ChallengeTask;
   score: number;
   completedCount: number;
+  completedTaskIds: string[];
   language: LanguageCode;
   detailsOpen: boolean;
   isMutating: boolean;
   onOpenDetails: () => void;
   onCloseDetails: () => void;
-  onStart: () => void;
+  onStart: (taskIds?: string[]) => void;
   children: ReactNode;
 };
 
@@ -28,7 +29,7 @@ type AtlasPlaceGroup = {
 
 const copy = {
   vi: {
-    tagline: '10 khám phá, một hành trình',
+    oneJourney: 'một hành trình',
     points: 'điểm',
     discoveries: 'khám phá',
     active: 'Điểm đến hiện tại',
@@ -37,14 +38,16 @@ const copy = {
     radius: 'Bán kính',
     view: 'Xem địa điểm',
     openMap: 'Xem trên bản đồ',
-    start: 'Bắt đầu khám phá',
     close: 'Đóng chi tiết địa điểm',
     details: 'Chi tiết địa điểm',
     westRoute: 'Hành trình phía Tây',
     atThisStop: 'khám phá tại đây',
+    completed: 'Đã hoàn thành',
+    startHere: 'Bắt đầu tại đây',
+    replay: 'Chơi lại tại đây',
   },
   en: {
-    tagline: '10 discoveries, one journey',
+    oneJourney: 'one journey',
     points: 'points',
     discoveries: 'discoveries',
     active: 'Current destination',
@@ -53,11 +56,13 @@ const copy = {
     radius: 'Radius',
     view: 'View place',
     openMap: 'View on map',
-    start: 'Start exploring',
     close: 'Close place details',
     details: 'Place details',
     westRoute: 'Journey west',
     atThisStop: 'discoveries here',
+    completed: 'Completed',
+    startHere: 'Start here',
+    replay: 'Play here again',
   },
 } as const;
 
@@ -145,6 +150,7 @@ export const ExploreAtlas = ({
   activeTask,
   score,
   completedCount,
+  completedTaskIds,
   language,
   detailsOpen,
   isMutating,
@@ -163,6 +169,7 @@ export const ExploreAtlas = ({
   const westTaskCount = useMemo(() => westGroups.reduce((total, group) => total + group.tasks.length, 0), [westGroups]);
   const activeTaskId = activeTask?.id ?? '';
   const activeGroup = placeGroups.find((group) => groupContainsTask(group, activeTaskId));
+  const completedTaskIdSet = useMemo(() => new Set(completedTaskIds), [completedTaskIds]);
   const [manualSelection, setManualSelection] = useState<{ activeTaskId: string; groupId: string } | null>(null);
   const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set());
 
@@ -225,13 +232,17 @@ export const ExploreAtlas = ({
   const selectedGroupId = manualSelection?.activeTaskId === activeTaskId
     && placeGroups.some((group) => group.id === manualSelection.groupId)
     ? manualSelection.groupId
-    : activeGroup?.id ?? placeGroups[0]?.id ?? '';
+    : activeGroup?.id ?? cityGroups[0]?.id ?? westGroups[0]?.id ?? '';
   const selectedGroup = placeGroups.find((group) => group.id === selectedGroupId) ?? activeGroup ?? placeGroups[0];
   const selectedIsActive = Boolean(selectedGroup && groupContainsTask(selectedGroup, activeTaskId));
   const selectedTask = selectedIsActive ? activeTask : selectedGroup?.anchorTask;
   const selectedIsWest = Boolean(selectedGroup && !isWithinCityAtlas(selectedGroup.anchorTask));
   const selectedGroupCount = selectedGroup?.tasks.length ?? 0;
-  const actionLabel = !activeTask ? c.start : selectedIsActive ? c.view : c.openMap;
+  const selectedGroupCompletedCount = selectedGroup?.tasks.filter((task) => completedTaskIdSet.has(task.id)).length ?? 0;
+  const selectedGroupIsComplete = selectedGroupCount > 0 && selectedGroupCompletedCount === selectedGroupCount;
+  let actionLabel: string = c.openMap;
+  if (!activeTask) actionLabel = selectedGroupIsComplete ? c.replay : c.startHere;
+  else if (selectedIsActive) actionLabel = c.view;
 
   const selectGroup = (groupId: string) => {
     setManualSelection({ activeTaskId, groupId });
@@ -239,7 +250,7 @@ export const ExploreAtlas = ({
 
   const handlePrimaryAction = () => {
     if (!activeTask) {
-      onStart();
+      onStart(selectedGroup?.tasks.map((task) => task.id));
       return;
     }
     if (selectedIsActive) {
@@ -262,7 +273,7 @@ export const ExploreAtlas = ({
           <div className="explore-atlas__banner">
             <span aria-hidden="true">🇻🇳</span>
             <strong>BOOK OF DIEN BIEN</strong>
-            <small>{c.tagline}</small>
+            <small>{tasks.length} {c.discoveries}, {c.oneJourney}</small>
           </div>
 
           <div className="explore-atlas__stats" aria-label={`${score} ${c.points}, ${tasks.length} ${c.discoveries}`}>
@@ -282,11 +293,13 @@ export const ExploreAtlas = ({
                 const selected = selectedGroup?.id === group.id;
                 const isActive = groupContainsTask(group, activeTaskId);
                 const imageTask = isActive ? activeTask ?? group.anchorTask : group.anchorTask;
+                const groupCompletedCount = group.tasks.filter((task) => completedTaskIdSet.has(task.id)).length;
+                const groupIsComplete = groupCompletedCount === group.tasks.length;
                 return (
                   <button
                     key={group.id}
                     type="button"
-                    className={`${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''}`}
+                    className={`${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''} ${groupIsComplete ? 'is-complete' : ''}`}
                     onClick={() => selectGroup(group.id)}
                     aria-pressed={selected}
                     style={{ '--route-color': PIN_COLORS[index % PIN_COLORS.length] } as CSSProperties}
@@ -298,9 +311,11 @@ export const ExploreAtlas = ({
                     </span>
                     <span className="explore-atlas__west-copy">
                       <strong>{groupPlaceName(group, language)}</strong>
-                      <small>{group.tasks.length} {c.discoveries}</small>
+                      <small>{groupIsComplete ? c.completed : groupCompletedCount > 0 ? `${groupCompletedCount}/${group.tasks.length} ${c.completed.toLowerCase()}` : `${group.tasks.length} ${c.discoveries}`}</small>
                     </span>
-                    {group.tasks.length > 1 ? <b aria-label={`${group.tasks.length} ${c.atThisStop}`}>{group.tasks.length}</b> : null}
+                    {groupIsComplete
+                      ? <b className="is-complete" aria-label={c.completed}><Check aria-hidden="true" /></b>
+                      : group.tasks.length > 1 ? <b aria-label={`${group.tasks.length} ${c.atThisStop}`}>{groupCompletedCount > 0 ? `${groupCompletedCount}/${group.tasks.length}` : group.tasks.length}</b> : null}
                   </button>
                 );
               })}
@@ -313,13 +328,15 @@ export const ExploreAtlas = ({
             const selected = selectedGroup?.id === group.id;
             const isActive = groupContainsTask(group, activeTaskId);
             const imageTask = isActive ? activeTask ?? group.anchorTask : group.anchorTask;
+            const groupCompletedCount = group.tasks.filter((task) => completedTaskIdSet.has(task.id)).length;
+            const groupIsComplete = groupCompletedCount === group.tasks.length;
             const atlasPoint = projectTaskToAtlas(group.anchorTask);
             const labelPlacement = CITY_PIN_LABEL_PLACEMENTS[group.anchorTask.id] ?? (atlasPoint.x > 64 ? 'left' : 'right');
             return (
               <button
                 key={group.id}
                 type="button"
-                className={`explore-atlas__pin is-label-${labelPlacement} ${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''}`}
+                className={`explore-atlas__pin is-label-${labelPlacement} ${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''} ${groupIsComplete ? 'is-complete' : ''}`}
                 style={{ left: `${atlasPoint.x}%`, top: `${atlasPoint.y}%`, '--pin-color': PIN_COLORS[index % PIN_COLORS.length] } as CSSProperties}
                 onClick={() => selectGroup(group.id)}
                 aria-pressed={selected}
@@ -333,7 +350,9 @@ export const ExploreAtlas = ({
                   </span>
                 </span>
                 <strong>{groupPlaceName(group, language)}</strong>
-                {group.tasks.length > 1 ? <b className="explore-atlas__pin-count">{group.tasks.length}</b> : null}
+                {groupIsComplete
+                  ? <b className="explore-atlas__pin-status" aria-label={c.completed}><Check aria-hidden="true" /></b>
+                  : group.tasks.length > 1 ? <b className="explore-atlas__pin-count">{groupCompletedCount > 0 ? `${groupCompletedCount}/${group.tasks.length}` : group.tasks.length}</b> : null}
                 {isActive ? <small><Sparkles aria-hidden="true" />{language === 'vi' ? 'Hiện tại' : 'Current'}</small> : null}
               </button>
             );
@@ -351,7 +370,7 @@ export const ExploreAtlas = ({
               : <Sparkles aria-hidden="true" />}
           </div>
           <div className="explore-atlas__nearby-copy">
-            <span><MapPin aria-hidden="true" />{!activeTask ? c.newJourney : selectedIsActive ? c.active : selectedIsWest ? c.westRoute : c.available}</span>
+            <span><MapPin aria-hidden="true" />{selectedIsActive ? c.active : selectedGroupIsComplete ? c.completed : !activeTask ? c.newJourney : selectedIsWest ? c.westRoute : c.available}</span>
             <h1>{selectedGroup ? groupPlaceName(selectedGroup, language) : (language === 'vi' ? 'Điện Biên đang chờ bạn' : 'Dien Bien awaits')}</h1>
             {selectedTask ? (
               <p>

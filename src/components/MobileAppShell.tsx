@@ -394,6 +394,15 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
               {user ? <UserRound aria-hidden="true" /> : <LogIn aria-hidden="true" />}
               <span>{loading ? '…' : userLabel ?? copy.signIn}</span>
             </button>
+            <button
+              type="button"
+              className="editorial-shell__language"
+              onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
+              aria-label={language === 'vi' ? 'Switch to English' : 'Chuyển sang tiếng Việt'}
+            >
+              <Languages aria-hidden="true" />
+              <strong>{language.toUpperCase()}</strong>
+            </button>
           </div>
         </header>
 
@@ -491,7 +500,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
                 </button>
               ) : null}
               <button type="button" onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}>
-                <span className="editorial-account-sheet__text-icon">Aa</span><span>{copy.language}</span><strong>{language === 'vi' ? 'Tiếng Việt' : 'English'}</strong>
+                <span className="editorial-account-sheet__text-icon">Aa</span><span>{copy.language}</span><strong>{language === 'vi' ? 'English' : 'Tiếng Việt'}</strong>
               </button>
               <Link to="/privacy" onClick={() => closeAccountDialog(false)}><span className="editorial-account-sheet__text-icon">§</span><span>{copy.privacy}</span><ChevronRight /></Link>
               <Link to="/legal" onClick={() => closeAccountDialog(false)}><span className="editorial-account-sheet__text-icon">i</span><span>{copy.legal}</span><ChevronRight /></Link>

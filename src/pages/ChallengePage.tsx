@@ -258,7 +258,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     }
   };
 
-  const startGame = async () => {
+  const startGame = async (preferredTaskIds?: string[]) => {
     if (isMutating) return;
 
     if (isScopedCompleted) {
@@ -266,7 +266,12 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       return;
     }
 
-    if (eligibleTasks.length === 0) {
+    const preferredTaskIdSet = preferredTaskIds?.length ? new Set(preferredTaskIds) : null;
+    const startCandidates = preferredTaskIdSet
+      ? eligibleTasks.filter((candidate) => preferredTaskIdSet.has(candidate.id))
+      : eligibleTasks;
+
+    if (startCandidates.length === 0) {
       setMessage(t('challenge.allDone'));
       return;
     }
@@ -275,7 +280,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
     await runMutation(async () => {
       try {
-        const result = await createNewGameWithChallenge(activeTasks, progress, eligibleTasks);
+        const result = await createNewGameWithChallenge(activeTasks, progress, startCandidates);
         setProgress(result.progress);
         setGpsStatus('idle');
         if (result.stale) {
@@ -564,12 +569,13 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     activeTask={task}
     score={summary.score}
     completedCount={summary.completedCount}
+    completedTaskIds={progress.completedTaskIds}
     language={language}
     detailsOpen={detailsOpen}
     isMutating={isMutating}
     onOpenDetails={() => setDetailsOpen(true)}
     onCloseDetails={() => setDetailsOpen(false)}
-    onStart={() => { void startGame(); }}
+    onStart={(taskIds) => { void startGame(taskIds); }}
   >
     <Card className="overflow-visible p-0">
     <div className="overflow-hidden rounded-[1.9rem]">
