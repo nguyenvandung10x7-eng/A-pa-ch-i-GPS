@@ -22,7 +22,9 @@ const runtimeCatalogSource = runtimeCatalogStart >= 0 && runtimeCatalogEnd > run
   : '';
 
 const fileNameFields = [...runtimeCatalogSource.matchAll(/\bfileName\s*:/g)];
-const literalFileNameMatches = [...runtimeCatalogSource.matchAll(/\bfileName\s*:\s*(['"`])([^'"`\r\n]+)\1/g)];
+const literalFileNameMatches = [...runtimeCatalogSource.matchAll(
+  /\bfileName\s*:\s*(['"`])([^'"`\r\n]+)\1\s*(?=[,}])/g,
+)];
 const runtimeFileNames = literalFileNameMatches.map((match) => match[2]);
 const runtimePaths = new Set(runtimeFileNames.map((fileName) => `public/audio/${fileName}`));
 const publicMp3Paths = new Set(collectMp3Files(publicAudioRoot));
@@ -37,7 +39,7 @@ if (!runtimeCatalogSource) {
 
 if (literalFileNameMatches.length !== fileNameFields.length) {
   failures.push(
-    'Every runtime catalog fileName field must be a directly auditable string literal; identifier-valued or other expressions are not allowed.',
+    'Every runtime catalog fileName field must be a directly auditable string literal that fully terminates the property expression; identifier-valued, concatenated, or other expressions are not allowed.',
   );
 }
 
