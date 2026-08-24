@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Bookmark, BookOpen, ChevronRight, ChevronUp, Compass, LogIn, LogOut, MapPin, MapPinned, Music2, Pause, Play, UserRound, X } from 'lucide-react';
+import { Bookmark, ChevronRight, ChevronUp, LogIn, LogOut, MapPin, Music2, Pause, Play, UserRound, X } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { BookChapterDrawer } from './BookChapterDrawer';
@@ -139,6 +139,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   const copy = labels[language];
   const normalizedPathname = normalizePublicPathname(pathname);
   const onBookSurface = isBookSurface(normalizedPathname);
+  const onExploreSurface = normalizedPathname === '/challenge';
   const readingMode = normalizedPathname.startsWith('/book/chapter/')
     || normalizedPathname.startsWith('/book/page/');
   const userLabel = useMemo(() => getUserLabel(user), [user]);
@@ -351,7 +352,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   };
 
   return (
-    <div className={`editorial-shell min-h-dvh ${isFieldSurface(normalizedPathname) ? 'editorial-shell--field' : 'editorial-shell--book'}`}>
+    <div className={`editorial-shell min-h-dvh ${isFieldSurface(normalizedPathname) ? 'editorial-shell--field' : 'editorial-shell--book'} ${onExploreSurface ? 'editorial-shell--explore' : ''}`}>
       <div className="editorial-shell__frame mx-auto min-h-dvh w-full max-w-[72rem] pb-[calc(5.6rem+env(safe-area-inset-bottom))]">
         <header className="editorial-shell__header">
           <Link to="/book" className="editorial-shell__brand" aria-label="Book of Dien Bien">
@@ -404,10 +405,10 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
       <nav aria-label={language === 'vi' ? 'Điều hướng chính' : 'Primary navigation'} className="editorial-shell__surface-nav">
         <div className="editorial-shell__surface-nav-inner">
           <NavLink to="/challenge" className={({ isActive }) => isActive ? 'is-active' : ''}>
-            <Compass aria-hidden="true" /><span>{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
+            <span className="editorial-shell__nav-emoji" aria-hidden="true">🔭</span><span>{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
           </NavLink>
           <NavLink to="/map" className={({ isActive }) => isActive ? 'is-active' : ''}>
-            <MapPinned aria-hidden="true" /><span>{language === 'vi' ? 'Bản đồ' : 'Map'}</span>
+            <span className="editorial-shell__nav-emoji" aria-hidden="true">🗺️</span><span>{language === 'vi' ? 'Bản đồ' : 'Map'}</span>
           </NavLink>
           <button
             type="button"
@@ -416,7 +417,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
             aria-haspopup="dialog"
             aria-expanded={bookMenuOpen}
           >
-            <BookOpen aria-hidden="true" /><span>{language === 'vi' ? 'Cuốn sách' : 'Book'}</span><ChevronUp className="editorial-shell__nav-chevron" aria-hidden="true" />
+            <span className="editorial-shell__nav-emoji" aria-hidden="true">📕</span><span>{language === 'vi' ? 'Cuốn sách' : 'Book'}</span><ChevronUp className="editorial-shell__nav-chevron" aria-hidden="true" />
           </button>
         </div>
       </nav>

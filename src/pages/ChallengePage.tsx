@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, Compass, Flag, Headphones, RotateCcw, ShieldCheck, Sparkles, Trophy, XCircle } from 'lucide-react';
+import { CheckCircle2, Flag, Headphones, RotateCcw, ShieldCheck, Trophy, XCircle } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { TaskMap } from '../components/TaskMap';
+import { ExploreAtlas } from '../components/ExploreAtlas';
 import {
   assignRandomChallenge,
   completeActiveChallenge,
@@ -68,21 +68,6 @@ const getScopedProgressSummary = (tasks: ChallengeTask[], progress: ReturnType<t
 type GpsStatus = 'idle' | 'requestingPermission' | 'locating' | 'permissionDenied' | 'unavailable' | 'inaccurateLocation' | 'outsideTargetRadius' | 'verified';
 const SAMPLE_TIKTOK_URL = 'https://www.tiktok.com/@1954.theater';
 
-const exploreCopy = {
-  vi: {
-    kicker: 'KHÁM PHÁ ĐIỆN BIÊN',
-    title: 'Bắt đầu một chuyến đi nhỏ.',
-    body: 'Nhận một trải nghiệm ngẫu nhiên, đến nơi và để GPS ghi lại dấu chân của bạn.',
-    completed: 'đã hoàn thành',
-  },
-  en: {
-    kicker: 'EXPLORE DIEN BIEN',
-    title: 'Begin a small journey.',
-    body: 'Pick a surprise experience, reach the place, and let GPS mark your visit.',
-    completed: 'completed',
-  },
-} as const;
-
 const isValidExternalChallengeUrl = (value?: string): value is string => {
   if (!value) return false;
 
@@ -108,6 +93,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const [failedGalleryImageKeys, setFailedGalleryImageKeys] = useState<string[]>([]);
   const [completionPanelRunId, setCompletionPanelRunId] = useState<string | null>(null);
   const [expandedInstructionsTaskId, setExpandedInstructionsTaskId] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const scopeTransitionRef = useRef<string | null>(null);
   const scopeTransitionOwnerTokenRef = useRef<number | null>(null);
   const scopeReassignTokenRef = useRef(0);
@@ -571,20 +557,19 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     const translated = t(`challenge.difficulty.${task.difficulty}`);
     return translated === `challenge.difficulty.${task.difficulty}` ? formatTokenLabel(task.difficulty) : translated;
   })() : '';
-  const explore = exploreCopy[language];
-
   return (
-  <main className="game-explore-page">
-  <header className="game-explore-page__hero">
-    <div className="game-explore-page__icon"><Compass aria-hidden="true" /></div>
-    <div>
-      <p><Sparkles aria-hidden="true" />{explore.kicker}</p>
-      <h1>{explore.title}</h1>
-      <div>{explore.body}</div>
-    </div>
-    <span>{summary.completedCount}/{summary.enabledCount} {explore.completed}</span>
-  </header>
-  <div className="challenge-game-layout grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,1.02fr)]">
+  <ExploreAtlas
+    tasks={eligibleTasks}
+    activeTask={task}
+    score={summary.score}
+    completedCount={summary.completedCount}
+    language={language}
+    detailsOpen={detailsOpen}
+    isMutating={isMutating}
+    onOpenDetails={() => setDetailsOpen(true)}
+    onCloseDetails={() => setDetailsOpen(false)}
+    onStart={() => { void startGame(); }}
+  >
     <Card className="overflow-visible p-0">
     <div className="overflow-hidden rounded-[1.9rem]">
       {task && hasAdditionalTaskImages ? (
@@ -782,8 +767,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       </div>
     </div>
     </Card>
-    <TaskMap tasks={task ? [task] : eligibleTasks} language={language} t={t} />
-  </div>
-  </main>
+  </ExploreAtlas>
   );
 };

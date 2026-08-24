@@ -491,6 +491,35 @@ body.public-shell-active::after {
 
 .editorial-shell__nav-chevron { width: .72rem !important; height: .72rem !important; }
 
+.editorial-shell__nav-emoji {
+  display: block;
+  font-size: 1.45rem;
+  line-height: 1;
+  filter: drop-shadow(0 .16rem .12rem rgba(74, 46, 20, .25));
+  transform: translateY(-.03rem);
+}
+
+.editorial-shell--explore,
+.editorial-shell--explore .editorial-shell__frame {
+  background: #dbeecb !important;
+}
+
+.editorial-shell--explore .editorial-shell__frame {
+  max-width: none !important;
+  padding-bottom: 0 !important;
+}
+
+.editorial-shell--explore .editorial-shell__header {
+  display: none;
+}
+
+.editorial-shell--explore .editorial-shell__surface-nav {
+  right: auto;
+  left: 50%;
+  width: min(48rem, calc(100% - 1.1rem));
+  transform: translateX(-50%);
+}
+
 .game-map-page {
   min-height: calc(100dvh - 4rem);
   padding: 1rem .65rem 1.5rem;
