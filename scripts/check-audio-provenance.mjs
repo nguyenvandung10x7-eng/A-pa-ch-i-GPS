@@ -56,6 +56,16 @@ for (const statement of sourceFile.statements) {
         continue;
       }
 
+      const unresolvedComputedProperty = element.properties.find((property) => {
+        if (!('name' in property) || !property.name || !ts.isComputedPropertyName(property.name)) return false;
+        return propertyNameText(property.name) === null;
+      });
+
+      if (unresolvedComputedProperty) {
+        failures.push(`${catalogName}[${index}] must not contain computed property names that cannot be resolved statically because they can override audited properties such as fileName.`);
+        continue;
+      }
+
       const fileNameProperties = element.properties.filter((property) => {
         if (!ts.isPropertyAssignment(property)) return false;
         return propertyNameText(property.name) === 'fileName';
