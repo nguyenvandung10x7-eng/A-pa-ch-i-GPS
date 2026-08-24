@@ -15,14 +15,32 @@ const collectMp3Files = (directory) => readdirSync(directory, { withFileTypes: t
     : [];
 });
 
-const runtimeFileNames = [...musicSource.matchAll(/fileName:\s*(['"`])([^'"`]+\.mp3)\1/gi)]
-  .map((match) => match[2]);
+const fileNameFields = [...musicSource.matchAll(/\bfileName\s*:/g)];
+const literalFileNameMatches = [...musicSource.matchAll(/\bfileName\s*:\s*(['"`])([^'"`\r\n]+)\1/g)];
+const runtimeFileNames = literalFileNameMatches.map((match) => match[2]);
 const runtimePaths = new Set(runtimeFileNames.map((fileName) => `public/audio/${fileName}`));
 const publicMp3Paths = new Set(collectMp3Files(publicAudioRoot));
 const ledgerRows = [...ledger.matchAll(/^\| `([^`]+\.mp3)` \|[^\n]*\| (CLEARED|UNVERIFIED|BLOCKED) \|/gim)];
 const ledgerStatuses = new Map(ledgerRows.map((match) => [match[1], match[2]]));
 
 const failures = [];
+
+if (literalFileNameMatches.length !== fileNameFields.length) {
+  failures.push(
+    'Every src/data/music.ts fileName field must be a directly auditable string literal; identifier-valued or other expressions are not allowed.',
+  );
+}
+
+for (const match of literalFileNameMatches) {
+  const quote = match[1];
+  const fileName = match[2];
+  if (quote === '`' && fileName.includes('${')) {
+    failures.push(`Dynamic template-literal audio fileName is not allowed: ${fileName}`);
+  }
+  if (!fileName.toLowerCase().endsWith('.mp3')) {
+    failures.push(`Runtime audio fileName must end in .mp3: ${fileName}`);
+  }
+}
 
 for (const path of runtimePaths) {
   if (!existsSync(path)) failures.push(`Runtime audio is missing from public/: ${path}`);
