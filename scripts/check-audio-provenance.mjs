@@ -63,6 +63,22 @@ const readOnlyArrayMethods = new Set([
   'values', 'with',
 ]);
 
+const callbackEntryParameterIndexes = new Map([
+  ['every', [0]],
+  ['filter', [0]],
+  ['find', [0]],
+  ['findIndex', [0]],
+  ['findLast', [0]],
+  ['findLastIndex', [0]],
+  ['flatMap', [0]],
+  ['forEach', [0]],
+  ['map', [0]],
+  ['reduce', [1]],
+  ['reduceRight', [1]],
+  ['some', [0]],
+  ['toSorted', [0, 1]],
+]);
+
 const mutationHelperNames = new Set([
   'Object.assign',
   'Object.defineProperty',
@@ -70,6 +86,59 @@ const mutationHelperNames = new Set([
   'Reflect.set',
   'Reflect.defineProperty',
 ]);
+
+const expressionIsRootedAt = (expression, identifierName) => rootIdentifier(expression) === identifierName;
+
+const callbackMutatesParameter = (callback, parameterIndex) => {
+  if (!ts.isArrowFunction(callback) && !ts.isFunctionExpression(callback)) return true;
+
+  const parameter = callback.parameters[parameterIndex];
+  if (!parameter) return false;
+  if (!ts.isIdentifier(parameter.name)) return true;
+  const parameterName = parameter.name.text;
+  let mutated = false;
+
+  const visit = (node) => {
+    if (mutated) return;
+
+    if (ts.isBinaryExpression(node) && mutationOperators.has(node.operatorToken.kind)
+        && expressionIsRootedAt(node.left, parameterName)) {
+      mutated = true;
+      return;
+    }
+
+    if ((ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node))
+        && (node.operator === ts.SyntaxKind.PlusPlusToken || node.operator === ts.SyntaxKind.MinusMinusToken)
+        && expressionIsRootedAt(node.operand, parameterName)) {
+      mutated = true;
+      return;
+    }
+
+    if (ts.isCallExpression(node)) {
+      if (ts.isPropertyAccessExpression(node.expression) || ts.isElementAccessExpression(node.expression)) {
+        const receiver = node.expression.expression;
+        if (expressionIsRootedAt(receiver, parameterName)) {
+          mutated = true;
+          return;
+        }
+      }
+
+      const helperName = ts.isPropertyAccessExpression(node.expression)
+        ? `${rootIdentifier(node.expression.expression) ?? ''}.${node.expression.name.text}`
+        : null;
+      if (helperName && mutationHelperNames.has(helperName)
+          && node.arguments.some((argument) => expressionIsRootedAt(argument, parameterName))) {
+        mutated = true;
+        return;
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  };
+
+  visit(callback.body);
+  return mutated;
+};
 
 const callTouchesRuntimeCatalog = (node) => {
   if (!ts.isCallExpression(node)) return null;
@@ -86,6 +155,14 @@ const callTouchesRuntimeCatalog = (node) => {
           : null;
 
       if (!receiverIsCatalogIdentifier || !methodName || !readOnlyArrayMethods.has(methodName)) return receiverRoot;
+
+      const entryParameterIndexes = callbackEntryParameterIndexes.get(methodName);
+      if (entryParameterIndexes) {
+        const callback = node.arguments[0];
+        if (!callback || entryParameterIndexes.some((parameterIndex) => callbackMutatesParameter(callback, parameterIndex))) {
+          return receiverRoot;
+        }
+      }
     }
   }
 
