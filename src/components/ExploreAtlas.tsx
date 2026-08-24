@@ -252,6 +252,7 @@ export const ExploreAtlas = ({
                 style={{ left: `${atlasPoint.x}%`, top: `${atlasPoint.y}%`, '--pin-color': PIN_COLORS[index] } as CSSProperties}
                 onClick={() => setSelectedTaskId(task.id)}
                 aria-pressed={selected}
+                aria-label={shortPlaceName(task, language)}
               >
                 <span className="explore-atlas__pin-drop">
                   <span className="explore-atlas__pin-photo">
