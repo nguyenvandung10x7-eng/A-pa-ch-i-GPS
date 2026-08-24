@@ -5,11 +5,13 @@ import type { LanguageCode } from '../types/task';
 const bookNavigationResources: Record<LanguageCode, Record<string, string>> = {
   en: {
     'nav.book': 'BOOK',
+    'nav.challenge': 'FUN CHALLENGES',
     'nav.nearMe': 'NEAR ME',
     'nav.saved': 'SAVED',
   },
   vi: {
     'nav.book': 'SÁCH',
+    'nav.challenge': 'THỬ THÁCH THÚ VỊ',
     'nav.nearMe': 'GẦN TÔI',
     'nav.saved': 'ĐÃ LƯU',
   },
