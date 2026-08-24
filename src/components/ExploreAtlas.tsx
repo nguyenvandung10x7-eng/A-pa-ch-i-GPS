@@ -161,9 +161,12 @@ export const ExploreAtlas = ({
   };
 
   useEffect(() => {
-    if (activeTask) setSelectedTaskId(activeTask.id);
-    else if (!displayTasks.some((task) => task.id === selectedTaskId)) setSelectedTaskId(displayTasks[0]?.id ?? '');
-  }, [activeTask, displayTasks, selectedTaskId]);
+    setSelectedTaskId((currentTaskId) => {
+      if (activeTask) return activeTask.id;
+      if (!displayTasks.some((task) => task.id === currentTaskId)) return displayTasks[0]?.id ?? '';
+      return currentTaskId;
+    });
+  }, [activeTask, displayTasks]);
 
   useEffect(() => {
     closeRef.current = onCloseDetails;
