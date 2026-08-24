@@ -8,6 +8,7 @@ import './index.css';
 import './book-soundtrack.css';
 import './field-v2.css';
 import './typography-v2.css';
+import './surface-label-redesign.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
