@@ -9,6 +9,7 @@ import './book-soundtrack.css';
 import './field-v2.css';
 import './typography-v2.css';
 import './atlas-obscura-inspired.css';
+import './atlas-polish.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
