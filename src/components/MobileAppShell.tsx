@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Bookmark, ChevronRight, LogIn, LogOut, MapPin, Music2, Pause, Play, UserRound, X } from 'lucide-react';
+import { Bookmark, BookOpen, ChevronRight, ChevronUp, Compass, LogIn, LogOut, MapPin, MapPinned, Music2, Pause, Play, UserRound, X } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { BookChapterDrawer } from './BookChapterDrawer';
 import { BOOK_MUSIC_TRACKS } from '../data/music';
 import { getChapter, getPage } from '../services/bookContent';
 import type { LanguageCode } from '../types/task';
@@ -70,6 +71,7 @@ const isBookSurface = (pathname: string) => (
 const isFieldSurface = (pathname: string) => (
   pathname === '/challenge'
   || pathname.startsWith('/challenge/')
+  || pathname === '/map'
   || pathname === '/discover'
   || pathname === '/leaderboard'
   || pathname === '/submit-tiktok'
@@ -125,6 +127,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   const { pathname } = useLocation();
   const { user, loading, signIn, signOutUser } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
+  const [bookMenuOpen, setBookMenuOpen] = useState(false);
   const [bookSoundEnabled, setBookSoundEnabled] = useState(readBookSoundEnabled);
   const [bookSoundPlaying, setBookSoundPlaying] = useState(false);
   const [bookSoundBlocked, setBookSoundBlocked] = useState(false);
@@ -136,7 +139,8 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   const copy = labels[language];
   const normalizedPathname = normalizePublicPathname(pathname);
   const onBookSurface = isBookSurface(normalizedPathname);
-  const readingMode = normalizedPathname.startsWith('/book/page/');
+  const readingMode = normalizedPathname.startsWith('/book/chapter/')
+    || normalizedPathname.startsWith('/book/page/');
   const userLabel = useMemo(() => getUserLabel(user), [user]);
   const activeChapterId = useMemo(() => getChapterIdFromPath(pathname), [pathname]);
   const activeChapter = useMemo(() => activeChapterId ? getChapter(activeChapterId) : undefined, [activeChapterId]);
@@ -348,7 +352,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
 
   return (
     <div className={`editorial-shell min-h-dvh ${isFieldSurface(normalizedPathname) ? 'editorial-shell--field' : 'editorial-shell--book'}`}>
-      <div className={`editorial-shell__frame mx-auto min-h-dvh w-full max-w-[60rem] ${readingMode ? 'pb-0' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom))]'}`}>
+      <div className="editorial-shell__frame mx-auto min-h-dvh w-full max-w-[72rem] pb-[calc(5.6rem+env(safe-area-inset-bottom))]">
         <header className="editorial-shell__header">
           <Link to="/book" className="editorial-shell__brand" aria-label="Book of Dien Bien">
             BOOK OF DIEN BIEN
@@ -397,15 +401,27 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
         {children}
       </div>
 
-      {!readingMode && (
-        <nav aria-label={language === 'vi' ? 'Hai không gian chính' : 'Primary surfaces'} className="editorial-shell__surface-nav">
-          <div className="editorial-shell__surface-nav-inner">
-            <NavLink to="/book" className={() => onBookSurface ? 'is-active' : ''}>{copy.book}</NavLink>
-            <span aria-hidden="true" />
-            <NavLink to="/challenge" className={() => isFieldSurface(normalizedPathname) ? 'is-active' : ''}>{copy.field}</NavLink>
-          </div>
-        </nav>
-      )}
+      <nav aria-label={language === 'vi' ? 'Điều hướng chính' : 'Primary navigation'} className="editorial-shell__surface-nav">
+        <div className="editorial-shell__surface-nav-inner">
+          <NavLink to="/challenge" className={({ isActive }) => isActive ? 'is-active' : ''}>
+            <Compass aria-hidden="true" /><span>{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
+          </NavLink>
+          <NavLink to="/map" className={({ isActive }) => isActive ? 'is-active' : ''}>
+            <MapPinned aria-hidden="true" /><span>{language === 'vi' ? 'Bản đồ' : 'Map'}</span>
+          </NavLink>
+          <button
+            type="button"
+            className={onBookSurface || bookMenuOpen ? 'is-active' : ''}
+            onClick={() => setBookMenuOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={bookMenuOpen}
+          >
+            <BookOpen aria-hidden="true" /><span>{language === 'vi' ? 'Cuốn sách' : 'Book'}</span><ChevronUp className="editorial-shell__nav-chevron" aria-hidden="true" />
+          </button>
+        </div>
+      </nav>
+
+      {bookMenuOpen ? <BookChapterDrawer language={language} onClose={() => setBookMenuOpen(false)} /> : null}
 
       {accountOpen ? (
         <div className="editorial-account-layer" role="presentation" onMouseDown={() => closeAccountDialog()}>

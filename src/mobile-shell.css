@@ -362,3 +362,201 @@ body.public-shell-active::after {
     border-radius: .8rem;
   }
 }
+
+/* Game-atlas shell: shared by Explore, Map and the Book drawer. */
+body.public-shell-active,
+body.public-shell-active::before,
+body.public-shell-active::after {
+  background: #d9edce !important;
+}
+
+.editorial-shell,
+.editorial-shell--field,
+.editorial-shell--field .editorial-shell__frame,
+.editorial-shell__frame {
+  background:
+    radial-gradient(circle at 12% 4%, rgba(255,255,255,.78), transparent 24rem),
+    linear-gradient(180deg, #dff2d6, #f8f0d9 35rem, #f8f0d9) !important;
+  color: #362518 !important;
+}
+
+.editorial-shell__header,
+.editorial-shell--field .editorial-shell__header {
+  position: sticky;
+  top: 0;
+  min-height: 4rem;
+  border: 0;
+  background: rgba(255, 249, 233, .88);
+  padding: calc(.55rem + env(safe-area-inset-top)) .8rem .55rem;
+  box-shadow: 0 .45rem 1.2rem rgba(61, 45, 26, .1);
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+
+.editorial-shell__brand {
+  position: relative;
+  font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
+  font-size: clamp(.72rem, 3.2vw, .92rem);
+  font-weight: 950;
+  letter-spacing: -.015em;
+}
+
+.editorial-shell__brand::before {
+  content: '✦';
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
+  margin-right: .5rem;
+  place-items: center;
+  border-radius: .7rem;
+  background: #f7bd2f;
+  color: #673e1f;
+  box-shadow: 0 .25rem .6rem rgba(103, 62, 31, .17);
+}
+
+.editorial-shell__header-actions { display: flex; align-items: center; gap: .35rem; }
+
+.editorial-shell__sound,
+.editorial-shell__account {
+  min-height: 2.35rem;
+  border: 1px solid rgba(90, 64, 35, .12);
+  border-radius: 999px;
+  background: rgba(255,255,255,.6);
+  padding: .35rem .65rem;
+  color: #3d6439 !important;
+  box-shadow: 0 .2rem .5rem rgba(68, 48, 27, .07);
+}
+
+.editorial-shell__surface-nav,
+.editorial-shell--field .editorial-shell__surface-nav {
+  inset: auto .55rem max(.45rem, env(safe-area-inset-bottom));
+  width: auto;
+  overflow: hidden;
+  border: 1px solid rgba(91, 65, 36, .14);
+  border-radius: 1.45rem;
+  background: rgba(255, 249, 233, .94);
+  padding: .35rem;
+  box-shadow: 0 .8rem 2.2rem rgba(54, 43, 28, .22);
+  backdrop-filter: blur(18px) saturate(1.3);
+}
+
+.editorial-shell__surface-nav-inner {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-height: 4.2rem;
+  gap: .3rem;
+}
+
+.editorial-shell__surface-nav-inner > span { display: none; }
+
+.editorial-shell__surface-nav a,
+.editorial-shell__surface-nav button,
+.editorial-shell--field .editorial-shell__surface-nav a,
+.editorial-shell--field .editorial-shell__surface-nav button {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  border: 0;
+  border-radius: 1rem;
+  background: transparent;
+  color: #71634e;
+  padding: .35rem .2rem;
+  font: inherit;
+  font-size: .68rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.editorial-shell__surface-nav a > svg,
+.editorial-shell__surface-nav button > svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: none;
+}
+
+.editorial-shell__surface-nav a::after { display: none; }
+
+.editorial-shell__surface-nav a.is-active,
+.editorial-shell__surface-nav button.is-active,
+.editorial-shell--field .editorial-shell__surface-nav a.is-active,
+.editorial-shell--field .editorial-shell__surface-nav button.is-active {
+  background: linear-gradient(180deg, #ffd85c, #f5b82b);
+  color: #563318;
+  box-shadow: inset 0 1px rgba(255,255,255,.72), 0 .35rem .8rem rgba(123, 79, 25, .17);
+}
+
+.editorial-shell__nav-chevron { width: .72rem !important; height: .72rem !important; }
+
+.game-map-page {
+  min-height: calc(100dvh - 4rem);
+  padding: 1rem .65rem 1.5rem;
+}
+
+.game-map-page__hero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .8rem;
+  align-items: center;
+  max-width: 68rem;
+  margin: 0 auto .8rem;
+  border: 1px solid rgba(74, 111, 58, .16);
+  border-radius: 1.35rem;
+  background: rgba(255, 249, 233, .78);
+  padding: .9rem;
+  box-shadow: 0 .75rem 1.6rem rgba(55, 72, 43, .11);
+  backdrop-filter: blur(12px);
+}
+
+.game-map-page__compass {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 1rem;
+  background: #f7bd2f;
+  color: #61401f;
+}
+
+.game-map-page__compass svg { width: 1.5rem; }
+.game-map-page__hero p { display: flex; align-items: center; gap: .3rem; margin: 0; color: #438047; font-size: .62rem; font-weight: 900; letter-spacing: .11em; }
+.game-map-page__hero p svg { width: .8rem; }
+.game-map-page__hero h1 { margin: .2rem 0 0; font-family: "Be Vietnam Pro", sans-serif; font-size: clamp(1.2rem, 5vw, 2.2rem); font-weight: 950; line-height: 1; letter-spacing: -.04em; }
+.game-map-page__hero div > div { display: none; }
+.game-map-page__hero > span { grid-column: 1 / -1; display: inline-flex; width: max-content; align-items: center; gap: .35rem; border-radius: 99px; background: #e7f1d9; color: #376b3a; padding: .35rem .65rem; font-size: .68rem; font-weight: 850; }
+.game-map-page__hero > span svg { width: .9rem; }
+
+.game-map-page > .wood-panel {
+  max-width: 68rem;
+  margin: 0 auto;
+  border: .3rem solid rgba(255,255,255,.72);
+  background: #fff7e4;
+  box-shadow: 0 1.2rem 3rem rgba(49, 67, 40, .2);
+}
+
+.game-map-page .leaflet-container { border-radius: 1.35rem !important; }
+
+.game-map-page__empty {
+  max-width: 68rem;
+  margin: 0 auto;
+  border: 2px dashed rgba(61, 100, 57, .38);
+  border-radius: 1.2rem;
+  background: rgba(255, 249, 233, .72);
+  color: #4f6f48;
+  padding: 2rem;
+  text-align: center;
+  font-weight: 800;
+}
+
+@media (min-width: 720px) {
+  .editorial-shell__surface-nav { left: 50%; right: auto; width: min(38rem, calc(100% - 2rem)); transform: translateX(-50%); }
+  .editorial-shell__surface-nav a,
+  .editorial-shell__surface-nav button { flex-direction: row; gap: .5rem; font-size: .78rem; }
+  .game-map-page { padding: 1.4rem; }
+  .game-map-page__hero { grid-template-columns: auto 1fr auto; padding: 1.1rem 1.25rem; }
+  .game-map-page__hero div > div { display: block; max-width: 42rem; margin-top: .45rem; color: #6d604d; font-family: Georgia, serif; font-size: .88rem; line-height: 1.45; }
+  .game-map-page__hero > span { grid-column: auto; }
+}

@@ -1,5 +1,6 @@
 import { ArrowRight, BookmarkX } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getBookPageIllustration } from '../data/bookIllustrations';
 import { useBookState } from '../hooks/useBookState';
 import { getChapter, getPage } from '../services/bookContent';
 import { toggleSavedBookPage } from '../services/bookState';
@@ -63,13 +64,23 @@ export const SavedBookPage = ({ language }: { language: LanguageCode }) => {
           <div className="book-utility-v2__list">
             {pages.map((page) => {
               const chapter = getChapter(page.chapterId);
+              const illustration = getBookPageIllustration(page.id);
               return (
-                <article key={page.id} className="book-utility-v2__row">
+                <article key={page.id} className="book-utility-v2__row book-utility-v2__row--illustrated">
+                  {illustration ? (
+                    <img
+                      className="book-utility-v2__thumb"
+                      src={illustration}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : null}
                   <div>
                     <p className="book-utility-v2__meta">{chapter?.number} · {chapter ? localized(chapter.title, language) : ''}</p>
                     <h3>{localized(page.title, language)}</h3>
                     <div className="book-utility-v2__row-actions">
-                      <Link to={`/book/page/${page.id}`}>{c.open}<ArrowRight /></Link>
+                      <Link to={`/book/chapter/${page.chapterId}#story-${page.id}`}>{c.open}<ArrowRight /></Link>
                       <button type="button" onClick={() => toggleSavedBookPage(page.id)}><BookmarkX />{c.remove}</button>
                     </div>
                   </div>

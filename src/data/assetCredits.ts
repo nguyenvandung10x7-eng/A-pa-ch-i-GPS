@@ -16,12 +16,20 @@ const cc = (version: '2.0' | '3.0' | '4.0') => ({
   licenseUrl: `https://creativecommons.org/licenses/by-sa/${version}/`,
 });
 
-const sourceRecordedNote = {
-  vi: 'Nguồn/licence candidate đã được ghi nhận; trạng thái này không đồng nghĩa asset đã CLEARED. Binary đang ship vẫn phải được đối chiếu với original theo release ledger.',
-  en: 'A candidate source/licence is recorded; this does not mean the asset is CLEARED. The shipped binary still has to be reconciled to the original under the release ledger.',
-};
-
 export const ASSET_CREDITS: AssetCredit[] = [
+  {
+    id: 'book-v3-generated-illustrations',
+    usage: {
+      vi: 'Bộ 16 tranh minh họa mới cho 13 chương của Book',
+      en: 'Set of 16 new illustrations for the Book’s 13 chapters',
+    },
+    author: 'Generated for Book of Dien Bien',
+    status: 'cleared',
+    note: {
+      vi: 'Tranh được tạo riêng theo phong cách bản đồ phiêu lưu 3D mềm. Đây là hình minh họa văn chương, không phải ảnh tư liệu hay ảnh chụp chính xác địa điểm.',
+      en: 'Created specifically in a soft 3D adventure-atlas style. These are literary illustrations, not documentary or exact location photographs.',
+    },
+  },
   {
     id: 'quang-truong-7-5-mthen',
     usage: { vi: 'Ảnh đường phố Điện Biên Phủ đại diện dùng cho Quảng trường 7-5 / artwork chương', en: 'Representative Dien Bien Phu streetscape used for 7 May Square / chapter artwork' },

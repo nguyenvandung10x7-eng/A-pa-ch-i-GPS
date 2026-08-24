@@ -98,7 +98,9 @@ const NearMeResultRow = ({ item, language }: { item: NearMeBookItem; language: L
   const locationLabel = item.location.label?.[language] ?? item.location.label?.vi;
   const isPage = item.kind === 'page';
   const actionLabel = isPage ? c.read : item.externalUrl ? c.openExperience : c.openMap;
-  const href = isPage ? `/book/page/${item.pageId}` : item.externalUrl ?? bookLocationMapUrl(item.location);
+  const href = isPage
+    ? `/book/chapter/${item.chapterId}#story-${item.pageId}`
+    : item.externalUrl ?? bookLocationMapUrl(item.location);
   const external = !isPage;
 
   return (
