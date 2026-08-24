@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useBookState } from '../hooks/useBookState';
 import { getChapterPages, getPage } from '../services/bookContent';
 import { bookLocationMapUrl } from '../services/bookNearMe';
+import { getBookPageArtwork, getChapterPlaces } from '../services/bookPresentation';
 import { markBookPageRead, toggleSavedBookPage } from '../services/bookState';
 import type { BookLocalizedText } from '../types/book';
 import type { LanguageCode } from '../types/task';
@@ -21,20 +22,20 @@ const localized = (value: BookLocalizedText | undefined, language: LanguageCode)
 
 const copy = {
   vi: {
-    save: 'Lưu trang',
+    save: 'Lưu câu chuyện',
     saved: 'Đã lưu',
-    places: 'Những nơi trong chương này',
-    placeIntro: 'Câu chuyện kết thúc ở đây. Những nơi dưới đây thì vẫn còn ngoài đời.',
-    challenge: 'Có thử thách',
-    open: 'Đi tới đó',
+    places: 'Địa điểm trong chương này',
+    placeIntro: 'Phần đọc dừng ở đây. Nếu muốn bước ra ngoài, những địa điểm dưới đây là nơi để bắt đầu.',
+    challenge: 'Có thử thách thú vị',
+    open: 'Mở bản đồ',
   },
   en: {
-    save: 'Save page',
+    save: 'Save story',
     saved: 'Saved',
     places: 'Places in this chapter',
-    placeIntro: 'The story ends here. These places still exist outside the book.',
-    challenge: 'Challenge available',
-    open: 'Go there',
+    placeIntro: 'The reading stops here. If you want to step outside, these places are where to begin.',
+    challenge: 'Fun challenge available',
+    open: 'Open map',
   },
 } as const;
 
@@ -56,7 +57,7 @@ export const BookPageRoute = ({ language }: BookPageRouteProps) => {
   const saved = savedState.pageIds.includes(page.id);
   const chapterPages = getChapterPages(page.chapterId);
   const isLastPage = chapterPages[chapterPages.length - 1]?.id === page.id;
-  const chapterPlaces = isLastPage ? chapterPages.filter((candidate) => candidate.location) : [];
+  const chapterPlaces = isLastPage ? getChapterPlaces(chapterPages) : [];
   const isRebellion = page.chapterId === REBELLION_CHAPTER_ID;
 
   return (
@@ -84,10 +85,11 @@ export const BookPageRoute = ({ language }: BookPageRouteProps) => {
             <div>{c.placeIntro}</div>
           </header>
 
-          <div className="book-reading-v2__place-list">
+          <div className="book-reading-v2__place-list book-reading-v2__place-list--visual">
             {chapterPlaces.map((placePage) => {
               const location = placePage.location;
               if (!location) return null;
+              const artwork = getBookPageArtwork(placePage);
 
               return (
                 <a
@@ -95,16 +97,19 @@ export const BookPageRoute = ({ language }: BookPageRouteProps) => {
                   href={bookLocationMapUrl(location)}
                   target="_blank"
                   rel="noreferrer"
+                  className="book-reading-v2__visual-place"
                 >
-                  <MapPin aria-hidden="true" />
-                  <div>
+                  <div className="book-reading-v2__visual-place-media">
+                    {artwork ? <img src={artwork} alt="" loading="lazy" decoding="async" /> : <MapPin aria-hidden="true" />}
+                  </div>
+                  <div className="book-reading-v2__visual-place-copy">
                     <strong>{localized(location.label, language) || localized(placePage.title, language)}</strong>
                     <small>
                       {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
                       {placePage.legacyTaskIds?.length ? <em>{c.challenge}</em> : null}
                     </small>
+                    <span>{c.open}<ArrowRight aria-hidden="true" /></span>
                   </div>
-                  <span>{c.open}<ArrowRight aria-hidden="true" /></span>
                 </a>
               );
             })}
