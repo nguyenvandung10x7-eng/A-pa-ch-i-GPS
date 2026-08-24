@@ -72,7 +72,7 @@ Visual rights/provenance were re-audited against the final runtime catalog on 20
 - [x] The full-history Gitleaks scan passed before merge of the tracked-secret gate and found no blocked secret in the checked-out repository history.
 - [ ] Confirm the exact final release commit on `main` still passes the Production Security Audit.
 - [ ] Confirm that same exact final release commit passes the Tracked Secret Scan.
-- [ ] Confirm no private licence agreement or other sensitive non-credential material is committed to the repository.
+- [x] Confirm no private licence agreement or other sensitive non-credential material is committed to the repository. Point-in-time audit evidence is recorded in `docs/security-release-gates.md`.
 
 ## 8. Accessibility and device smoke tests
 
