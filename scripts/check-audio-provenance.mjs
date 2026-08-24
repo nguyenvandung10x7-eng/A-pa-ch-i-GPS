@@ -63,19 +63,17 @@ const readOnlyArrayMethods = new Set([
   'values', 'with',
 ]);
 
-const callbackEntryParameterIndexes = new Map([
-  ['every', [0]],
-  ['filter', [0]],
-  ['find', [0]],
-  ['findIndex', [0]],
-  ['findLast', [0]],
-  ['findLastIndex', [0]],
-  ['flatMap', [0]],
-  ['forEach', [0]],
-  ['map', [0]],
-  ['reduce', [1]],
-  ['reduceRight', [1]],
-  ['some', [0]],
+const callbackAliasParameterIndexes = new Map([
+  ['every', [0, 2]],
+  ['filter', [0, 2]],
+  ['find', [0, 2]],
+  ['findIndex', [0, 2]],
+  ['findLast', [0, 2]],
+  ['findLastIndex', [0, 2]],
+  ['flatMap', [0, 2]],
+  ['forEach', [0, 2]],
+  ['map', [0, 2]],
+  ['some', [0, 2]],
   ['toSorted', [0, 1]],
 ]);
 
@@ -140,6 +138,15 @@ const callbackMutatesParameter = (callback, parameterIndex) => {
   return mutated;
 };
 
+const callbackAliasIndexesForCall = (methodName, node) => {
+  if (methodName === 'reduce' || methodName === 'reduceRight') {
+    const indexes = [1, 3];
+    if (node.arguments.length === 1) indexes.push(0);
+    return indexes;
+  }
+  return callbackAliasParameterIndexes.get(methodName) ?? null;
+};
+
 const callTouchesRuntimeCatalog = (node) => {
   if (!ts.isCallExpression(node)) return null;
 
@@ -156,10 +163,10 @@ const callTouchesRuntimeCatalog = (node) => {
 
       if (!receiverIsCatalogIdentifier || !methodName || !readOnlyArrayMethods.has(methodName)) return receiverRoot;
 
-      const entryParameterIndexes = callbackEntryParameterIndexes.get(methodName);
-      if (entryParameterIndexes) {
+      const aliasParameterIndexes = callbackAliasIndexesForCall(methodName, node);
+      if (aliasParameterIndexes) {
         const callback = node.arguments[0];
-        if (!callback || entryParameterIndexes.some((parameterIndex) => callbackMutatesParameter(callback, parameterIndex))) {
+        if (!callback || aliasParameterIndexes.some((parameterIndex) => callbackMutatesParameter(callback, parameterIndex))) {
           return receiverRoot;
         }
       }
