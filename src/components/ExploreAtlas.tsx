@@ -72,6 +72,16 @@ const CITY_PIN_TASK_IDS = [
   'canh-dong-muong-thanh-cat-banh',
 ] as const;
 
+const CITY_PLACE_NAMES: Partial<Record<string, Record<LanguageCode, string>>> = {
+  'ban-phieng-loi-mthen': { vi: 'Bản Phiêng Lơi', en: 'Phiêng Lơi Village' },
+  'ho-huoi-pha-mthen': { vi: 'Hồ Huổi Phạ', en: 'Huổi Phạ Lake' },
+  'cong-vien-noong-bua-mthen': { vi: 'Công viên Noong Bua', en: 'Noong Bua Park' },
+  'ca-phe-ke-nenh-cat-banh': { vi: 'Cà phê Kê Nênh', en: 'Kê Nênh Café' },
+  'quang-truong-7-5-mthen': { vi: 'Quảng trường 7-5', en: '7 May Square' },
+  'doi-a1-chuyen-tau-thoi-gian-1954': { vi: 'Đồi A1', en: 'A1 Hill' },
+  'canh-dong-muong-thanh-cat-banh': { vi: 'Cánh đồng Mường Thanh', en: 'Mường Thanh Field' },
+};
+
 const isWithinCityAtlas = (task: ChallengeTask) => (
   task.gps.lat <= CITY_ATLAS_BOUNDS.north
   && task.gps.lat >= CITY_ATLAS_BOUNDS.south
@@ -98,6 +108,8 @@ const getDistinctTasks = (tasks: ChallengeTask[]) => {
 };
 
 const shortPlaceName = (task: ChallengeTask, language: LanguageCode) => {
+  const atlasPlaceName = CITY_PLACE_NAMES[task.id]?.[language];
+  if (atlasPlaceName) return atlasPlaceName;
   const title = localize(task.title, language);
   return title.split(/\s+[–-]\s+/)[0]?.trim() || title;
 };
