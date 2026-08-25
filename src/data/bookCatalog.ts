@@ -153,6 +153,20 @@ const withUploadedChapterAudioBlocks = (page: BookPage): BookPage => {
   };
 };
 
+const withDeduplicatedNarrativeBlocks = (page: BookPage): BookPage => {
+  const seenText = new Set<string>();
+  const blocks = page.blocks.filter((block) => {
+    if (block.type !== 'text') return true;
+
+    const key = `${block.body.vi}\u0000${block.body.en}`;
+    if (seenText.has(key)) return false;
+    seenText.add(key);
+    return true;
+  });
+
+  return blocks.length === page.blocks.length ? page : { ...page, blocks };
+};
+
 const withUploadedPageAssets = (page: BookPage): BookPage =>
   withUploadedChapterAudioBlocks(page);
 
@@ -168,7 +182,8 @@ export const BOOK_PAGES: BookPage[] = [
     .map(withLiteraryPageCopy)
     .map(withLongformEditorialPageCopy)
     .map(withNatureEditorialPageCopy)
+    .map(withDeduplicatedNarrativeBlocks)
     .map(withUploadedPageAssets),
-  withUploadedPageAssets(withNatureEditorialPageCopy(withLongformEditorialPageCopy(withLiteraryPageCopy(chapter13Page)))),
+  withUploadedPageAssets(withDeduplicatedNarrativeBlocks(withNatureEditorialPageCopy(withLongformEditorialPageCopy(withLiteraryPageCopy(chapter13Page))))),
 ];
 export const BOOK_EXPERIENCES: BookExperience[] = [...BASE_BOOK_EXPERIENCES, chapter13Experience];
