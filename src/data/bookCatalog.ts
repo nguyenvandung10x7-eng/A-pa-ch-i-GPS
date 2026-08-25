@@ -171,6 +171,15 @@ const withDeduplicatedNarrativeBlocks = (page: BookPage): BookPage => {
 const withUploadedPageAssets = (page: BookPage): BookPage =>
   withUploadedChapterAudioBlocks(page);
 
+const withAllEditorialPageCopy = (page: BookPage): BookPage =>
+  withFirstLoveEditorialPageCopy(
+    withNatureEditorialPageCopy(
+      withLongformEditorialPageCopy(
+        withLiteraryPageCopy(page),
+      ),
+    ),
+  );
+
 export const BOOK_CHAPTERS: BookChapter[] = [
   ...BASE_BOOK_CHAPTERS
     .map(withUploadedChapterAssets)
@@ -179,14 +188,17 @@ export const BOOK_CHAPTERS: BookChapter[] = [
     .map(withFirstLoveEditorialChapterCopy),
   withFirstLoveEditorialChapterCopy(withNatureEditorialChapterCopy(withLiteraryChapterCopy(chapter13))),
 ];
+
 export const BOOK_PAGES: BookPage[] = [
   ...BASE_BOOK_PAGES
-    .map(withLiteraryPageCopy)
-    .map(withLongformEditorialPageCopy)
-    .map(withNatureEditorialPageCopy)
-    .map(withFirstLoveEditorialPageCopy)
+    .map(withAllEditorialPageCopy)
     .map(withDeduplicatedNarrativeBlocks)
     .map(withUploadedPageAssets),
-  withUploadedPageAssets(withDeduplicatedNarrativeBlocks(withFirstLoveEditorialPageCopy(withNatureEditorialPageCopy(withLongformEditorialPageCopy(withLiteraryPageCopy(chapter13Page))))))),
+  withUploadedPageAssets(
+    withDeduplicatedNarrativeBlocks(
+      withAllEditorialPageCopy(chapter13Page),
+    ),
+  ),
 ];
+
 export const BOOK_EXPERIENCES: BookExperience[] = [...BASE_BOOK_EXPERIENCES, chapter13Experience];
