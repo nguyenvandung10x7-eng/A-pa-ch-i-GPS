@@ -91,9 +91,24 @@ export const TaskMap = ({
     [groupByLocation, tasks],
   );
   const first = places[0];
+  const firstTask = tasks[0];
   const mapTitle = groupByLocation
     ? (language === 'vi' ? 'Các địa điểm' : 'Places')
-    : tasks.length > 1 ? t('challenge.title') : localize(tasks[0].title, language);
+    : tasks.length > 1
+      ? t('challenge.title')
+      : firstTask
+        ? localize(firstTask.title, language)
+        : (language === 'vi' ? 'Chưa có địa điểm' : 'No places yet');
+
+  if (!first) {
+    return (
+      <section className="wood-panel textile-border relative z-10 rounded-[2rem] p-3 shadow-[0_22px_48px_rgba(39,52,31,0.14)] sm:p-4">
+        <p className="rounded-[1.35rem] bg-[rgba(230,222,204,0.66)] px-4 py-6 text-center text-sm font-semibold text-[var(--forest-800)] ring-1 ring-[rgba(92,67,40,0.12)]">
+          {language === 'vi' ? 'Chưa có địa điểm nào để hiển thị trên bản đồ.' : 'There are no places to show on the map yet.'}
+        </p>
+      </section>
+    );
+  }
 
   return (
     <section className="wood-panel textile-border relative z-10 rounded-[2rem] p-3 shadow-[0_22px_48px_rgba(39,52,31,0.14)] sm:p-4">
@@ -109,14 +124,14 @@ export const TaskMap = ({
         </div>
       ) : null}
       <div className="relative z-0 min-h-[360px] rounded-[1.7rem]">
-        <MapContainer center={[first?.lat ?? 10.7756, first?.lng ?? 106.7039]} zoom={13} scrollWheelZoom={false} className="h-[420px] sm:h-[540px] lg:h-[680px]">
+        <MapContainer center={[first.lat, first.lng]} zoom={13} scrollWheelZoom={false} className="h-[420px] sm:h-[540px] lg:h-[680px]">
           <MapViewport places={places} />
           <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           {places.map((place) => {
-            const firstTask = place.tasks[0];
+            const placeFirstTask = place.tasks[0];
             const placeLabel = place.tasks.length > 1
-              ? `${localize(firstTask.title, language)} · ${place.tasks.length}`
-              : localize(firstTask.title, language);
+              ? `${localize(placeFirstTask.title, language)} · ${place.tasks.length}`
+              : localize(placeFirstTask.title, language);
 
             return (
               <Fragment key={`${place.key}-${language}`}>
