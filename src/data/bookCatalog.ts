@@ -8,6 +8,7 @@ import { withLiteraryChapterCopy } from './bookLiteraryCopy';
 import { withLiteraryPageCopy } from './bookLiteraryPageCopy';
 import { withLongformEditorialPageCopy } from './bookLongformEditorial';
 import { withNatureEditorialChapterCopy, withNatureEditorialPageCopy } from './bookNatureEditorial';
+import { withFirstLoveEditorialChapterCopy, withFirstLoveEditorialPageCopy } from './bookFirstLoveEditorial';
 import type { BookChapter, BookExperience, BookPage } from '../types/book';
 
 export const CHAPTER_13_ID = 'chapter-13-su-noi-loan-va-thanh-pho-ban-dem';
@@ -174,16 +175,18 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   ...BASE_BOOK_CHAPTERS
     .map(withUploadedChapterAssets)
     .map(withLiteraryChapterCopy)
-    .map(withNatureEditorialChapterCopy),
-  withNatureEditorialChapterCopy(withLiteraryChapterCopy(chapter13)),
+    .map(withNatureEditorialChapterCopy)
+    .map(withFirstLoveEditorialChapterCopy),
+  withFirstLoveEditorialChapterCopy(withNatureEditorialChapterCopy(withLiteraryChapterCopy(chapter13))),
 ];
 export const BOOK_PAGES: BookPage[] = [
   ...BASE_BOOK_PAGES
     .map(withLiteraryPageCopy)
     .map(withLongformEditorialPageCopy)
     .map(withNatureEditorialPageCopy)
+    .map(withFirstLoveEditorialPageCopy)
     .map(withDeduplicatedNarrativeBlocks)
     .map(withUploadedPageAssets),
-  withUploadedPageAssets(withDeduplicatedNarrativeBlocks(withNatureEditorialPageCopy(withLongformEditorialPageCopy(withLiteraryPageCopy(chapter13Page))))),
+  withUploadedPageAssets(withDeduplicatedNarrativeBlocks(withFirstLoveEditorialPageCopy(withNatureEditorialPageCopy(withLongformEditorialPageCopy(withLiteraryPageCopy(chapter13Page))))))),
 ];
 export const BOOK_EXPERIENCES: BookExperience[] = [...BASE_BOOK_EXPERIENCES, chapter13Experience];
