@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Check, ChevronRight, Footprints, MapPin, Medal, Navigation, Route, Sparkles, X } from 'lucide-react';
+import { Check, ChevronRight, Footprints, MapPin, Medal, Navigation, Sparkles, Trophy, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { LeaderboardDrawer } from './LeaderboardDrawer';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
 import '../pages/explore-atlas.css';
+import '../pages/leaderboard-drawer.css';
 
 type ExploreAtlasProps = {
   tasks: ChallengeTask[];
@@ -41,6 +43,8 @@ const copy = {
     close: 'Đóng chi tiết địa điểm',
     details: 'Chi tiết địa điểm',
     westRoute: 'Hành trình phía Tây',
+    leaderboard: 'Bảng xếp hạng',
+    leaderboardHint: 'Xem thứ hạng và lượt bình chọn',
     atThisStop: 'khám phá tại đây',
     completed: 'Đã hoàn thành',
     startHere: 'Bắt đầu tại đây',
@@ -59,6 +63,8 @@ const copy = {
     close: 'Close place details',
     details: 'Place details',
     westRoute: 'Journey west',
+    leaderboard: 'Leaderboard',
+    leaderboardHint: 'View rankings and community votes',
     atThisStop: 'discoveries here',
     completed: 'Completed',
     startHere: 'Start here',
@@ -170,12 +176,12 @@ export const ExploreAtlas = ({
   const placeGroups = useMemo(() => getPlaceGroups(tasks), [tasks]);
   const cityGroups = useMemo(() => placeGroups.filter((group) => isWithinCityAtlas(group.anchorTask)), [placeGroups]);
   const westGroups = useMemo(() => placeGroups.filter((group) => !isWithinCityAtlas(group.anchorTask)), [placeGroups]);
-  const westTaskCount = useMemo(() => westGroups.reduce((total, group) => total + group.tasks.length, 0), [westGroups]);
   const activeTaskId = activeTask?.id ?? '';
   const activeGroup = placeGroups.find((group) => groupContainsTask(group, activeTaskId));
   const completedTaskIdSet = useMemo(() => new Set(completedTaskIds), [completedTaskIds]);
   const [manualSelection, setManualSelection] = useState<{ activeTaskId: string; groupId: string } | null>(null);
   const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set());
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
 
   const markImageFailed = (taskId: string) => {
     setFailedImageIds((current) => {
@@ -274,7 +280,7 @@ export const ExploreAtlas = ({
         <div className="explore-atlas__world" aria-hidden="true" />
 
         <header className="explore-atlas__hud">
-          <button type="button" className="explore-atlas__avatar" onClick={() => { void navigate('/leaderboard'); }} aria-label={language === 'vi' ? 'Mở bảng xếp hạng' : 'Open leaderboard'}>
+          <button type="button" className="explore-atlas__avatar" onClick={() => setLeaderboardOpen(true)} aria-label={language === 'vi' ? 'Mở bảng xếp hạng' : 'Open leaderboard'}>
             <img src="/images/game-ui/explorer-avatar-v1.webp" alt="" />
           </button>
 
@@ -290,46 +296,13 @@ export const ExploreAtlas = ({
           </div>
         </header>
 
-        {westGroups.length ? (
-          <section className="explore-atlas__west-route" aria-label={c.westRoute}>
-            <header>
-              <span><Route aria-hidden="true" /></span>
-              <div><strong>{c.westRoute}</strong><small>{westTaskCount} {c.discoveries} · {westGroups.length} {language === 'vi' ? 'điểm dừng' : 'stops'}</small></div>
-            </header>
-            <div className="explore-atlas__west-stops">
-              {westGroups.map((group, index) => {
-                const selected = selectedGroup?.id === group.id;
-                const isActive = groupContainsTask(group, activeTaskId);
-                const imageTask = isActive ? activeTask ?? group.anchorTask : group.anchorTask;
-                const groupCompletedCount = group.tasks.filter((task) => completedTaskIdSet.has(task.id)).length;
-                const groupIsComplete = groupCompletedCount === group.tasks.length;
-                return (
-                  <button
-                    key={group.id}
-                    type="button"
-                    className={`${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''} ${groupIsComplete ? 'is-complete' : ''}`}
-                    onClick={() => selectGroup(group.id)}
-                    aria-pressed={selected}
-                    style={{ '--route-color': PIN_COLORS[index % PIN_COLORS.length] } as CSSProperties}
-                  >
-                    <span className="explore-atlas__west-thumb">
-                      {imageTask.image && !failedImageIds.has(imageTask.id)
-                        ? <img src={imageTask.image} alt="" onError={() => markImageFailed(imageTask.id)} />
-                        : <MapPin aria-hidden="true" />}
-                    </span>
-                    <span className="explore-atlas__west-copy">
-                      <strong>{groupPlaceName(group, language)}</strong>
-                      <small>{groupIsComplete ? c.completed : groupCompletedCount > 0 ? `${groupCompletedCount}/${group.tasks.length} ${c.completed.toLowerCase()}` : `${group.tasks.length} ${c.discoveries}`}</small>
-                    </span>
-                    {groupIsComplete
-                      ? <b className="is-complete" aria-label={c.completed}><Check aria-hidden="true" /></b>
-                      : group.tasks.length > 1 ? <b aria-label={`${group.tasks.length} ${c.atThisStop}`}>{groupCompletedCount > 0 ? `${groupCompletedCount}/${group.tasks.length}` : group.tasks.length}</b> : null}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        ) : null}
+        <section className="explore-atlas__leaderboard-launch" aria-label={c.leaderboard}>
+          <button type="button" onClick={() => setLeaderboardOpen(true)} aria-haspopup="dialog" aria-expanded={leaderboardOpen}>
+            <span className="explore-atlas__leaderboard-icon"><Trophy aria-hidden="true" /></span>
+            <span className="explore-atlas__leaderboard-copy"><strong>{c.leaderboard}</strong><small>{c.leaderboardHint}</small></span>
+            <ChevronRight aria-hidden="true" />
+          </button>
+        </section>
 
         <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trong thành phố' : 'City discoveries'}>
           {cityGroups.map((group, index) => {
@@ -416,6 +389,8 @@ export const ExploreAtlas = ({
           </aside>
         </div>
       ) : null}
+
+      {leaderboardOpen ? <LeaderboardDrawer language={language} onClose={() => setLeaderboardOpen(false)} /> : null}
     </>
   );
 };
