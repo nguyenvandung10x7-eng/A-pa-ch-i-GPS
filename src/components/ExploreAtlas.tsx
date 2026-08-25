@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Backpack, BookOpen, Check, ChevronRight, Compass, Images, Map, MapPin, Medal, Navigation, Sparkles, Trophy, X } from 'lucide-react';
+import { Backpack, BookOpen, Check, ChevronRight, Compass, Images, Map as MapIcon, MapPin, Medal, Navigation, Sparkles, Trophy, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
@@ -392,7 +392,7 @@ export const ExploreAtlas = ({
           </button>
 
           <button type="button" className="explore-game-card explore-game-card--map" onClick={() => { void navigate('/map'); }}>
-            <span className="explore-game-card__icon"><Map aria-hidden="true" /></span>
+            <span className="explore-game-card__icon"><MapIcon aria-hidden="true" /></span>
             <span className="explore-game-card__copy">
               <strong>{c.mapTitle}</strong>
               <small>{c.mapBody}</small>
