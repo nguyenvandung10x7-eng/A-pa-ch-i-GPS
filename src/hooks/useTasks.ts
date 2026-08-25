@@ -6,10 +6,10 @@ import { applyChallengeCharacterCopy } from '../services/challengeCharacterCopy'
 import type { ChallengeTask } from '../types/task';
 
 const CATALOG_IMPORT_VERSION_KEY = 'book-of-dien-bien-challenge-catalog-import-version';
-const CATALOG_IMPORT_VERSION = '2026-08-25-character-archetypes-v1';
+const CATALOG_IMPORT_VERSION = '2026-08-25-gender-neutral-copy-v2';
 const OVERNIGHT_MOTORBIKE_TASK_ID = 'de-xe-may-ngoai-troi-qua-dem';
 const OLD_OVERNIGHT_MOTORBIKE_COVER_IMAGE = '/images/challenges/de-xe-may-ngoai-troi-qua-dem/cover-01.jpg';
-const OVERNIGHT_MOTORBIKE_COVER_IMAGE = '/images/tasks/de-xe-may-ngoai-troi-qua-dem.webp';
+const OVERNIGHT_MOTORBIKE_COVER_IMAGE = '/images/tasks/de-xe-may-di-ngoai-troi-qua-dem.webp';
 
 const withCanonicalImageFallbacks = (tasks: ChallengeTask[]): ChallengeTask[] =>
   tasks.map((task) => {
