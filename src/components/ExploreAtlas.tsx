@@ -80,7 +80,7 @@ const PLACE_NAMES: Partial<Record<string, Record<LanguageCode, string>>> = {
   'ban-phieng-loi-mthen': { vi: 'Bản Phiêng Lơi', en: 'Phiêng Lơi Village' },
   'thac-ke-nenh-mthen': { vi: 'Thác Kê Nênh', en: 'Kê Nênh Waterfall' },
   'quan-com-hung-ha-thuoc-lao-free': { vi: 'Quán cơm Hưng Hà', en: 'Hưng Hà Eatery' },
-  'de-xe-may-ngoai-troi-qua-dem': { vi: 'Điểm hẹn ban đêm', en: 'Night rendezvous' },
+  'de-xe-may-ngoai-troi-qua-dem': { vi: 'Cứ Để Nó Ở Đó', en: 'Just Leave It There' },
   'nhin-xuong-long-chao-cua-chung-ta': { vi: 'Điểm ngắm lòng chảo', en: 'Valley viewpoint' },
   'tim-cay-xoai-co-thu': { vi: 'Cây xoài cổ thụ', en: 'Old mango tree' },
   'cho-muong-nhe-tang-banh-trung-thu': { vi: 'Chợ Mường Nhé', en: 'Mường Nhé Market' },
