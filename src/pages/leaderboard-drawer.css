@@ -1,0 +1,138 @@
+.explore-atlas__leaderboard-launch {
+  position: absolute;
+  z-index: 5;
+  top: calc(7.7rem + env(safe-area-inset-top));
+  right: .65rem;
+  left: .65rem;
+}
+
+.explore-atlas__leaderboard-launch > button {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 2.35rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .65rem;
+  border: .12rem solid rgba(119, 73, 30, .16);
+  border-radius: 1.15rem;
+  background: rgba(255, 247, 221, .95);
+  color: var(--atlas-ink);
+  padding: .6rem .7rem;
+  text-align: left;
+  box-shadow: 0 .5rem 1.2rem rgba(68, 43, 18, .19), inset 0 .08rem rgba(255,255,255,.9);
+  cursor: pointer;
+  backdrop-filter: blur(12px) saturate(1.08);
+}
+
+.explore-atlas__leaderboard-launch > button:hover,
+.explore-atlas__leaderboard-launch > button:focus-visible {
+  background: #fff4cf;
+}
+
+.explore-atlas__leaderboard-launch > button:focus-visible {
+  outline: .18rem solid #ffd34d;
+  outline-offset: .12rem;
+}
+
+.explore-atlas__leaderboard-icon {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border-radius: .78rem;
+  background: linear-gradient(145deg, #f7c938, #eaa519);
+  color: #6b431a;
+  box-shadow: inset 0 .1rem rgba(255,255,255,.46), 0 .2rem .45rem rgba(93, 57, 22, .16);
+}
+
+.explore-atlas__leaderboard-icon svg { width: 1.25rem; height: 1.25rem; }
+.explore-atlas__leaderboard-copy { min-width: 0; }
+.explore-atlas__leaderboard-copy strong,
+.explore-atlas__leaderboard-copy small { display: block; }
+.explore-atlas__leaderboard-copy strong { font-size: .78rem; font-weight: 950; }
+.explore-atlas__leaderboard-copy small { margin-top: .13rem; color: #876242; font-size: .55rem; font-weight: 800; }
+.explore-atlas__leaderboard-launch > button > svg { width: 1rem; height: 1rem; color: #876242; }
+
+.explore-leaderboard-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(24, 43, 31, .4);
+  padding: 4rem .45rem max(.45rem, env(safe-area-inset-bottom));
+  backdrop-filter: blur(5px);
+}
+
+.explore-leaderboard-sheet {
+  position: relative;
+  width: min(100%, 53rem);
+  max-height: min(84dvh, 48rem);
+  overflow: hidden;
+  border: 1px solid rgba(113, 77, 35, .2);
+  border-radius: 1.7rem 1.7rem 1rem 1rem;
+  background: linear-gradient(145deg, #fffaf0, #fff8e8);
+  color: #3a2415;
+  box-shadow: 0 -1.3rem 3.4rem rgba(28, 35, 23, .28);
+  animation: explore-leaderboard-rise 260ms cubic-bezier(.2, .8, .2, 1);
+  outline: none;
+}
+
+.explore-leaderboard-sheet__handle {
+  position: absolute;
+  z-index: 3;
+  top: .55rem;
+  left: 50%;
+  width: 3.2rem;
+  height: .28rem;
+  transform: translateX(-50%);
+  border-radius: 99px;
+  background: rgba(92, 60, 29, .2);
+}
+
+.explore-leaderboard-sheet__head {
+  display: grid;
+  grid-template-columns: 2.65rem minmax(0, 1fr) 2.4rem;
+  align-items: center;
+  gap: .7rem;
+  padding: 1.35rem 1rem .8rem;
+  border-bottom: 1px solid rgba(91, 66, 37, .14);
+}
+
+.explore-leaderboard-sheet__head > span,
+.explore-leaderboard-sheet__head > button {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  place-items: center;
+  border: 0;
+  border-radius: .8rem;
+}
+
+.explore-leaderboard-sheet__head > span { background: #f7bd2f; color: #68421e; }
+.explore-leaderboard-sheet__head > button { background: rgba(255,255,255,.74); color: #5d4935; cursor: pointer; }
+.explore-leaderboard-sheet__head svg { width: 1.15rem; height: 1.15rem; }
+.explore-leaderboard-sheet__head strong { display: block; font-size: 1rem; font-weight: 950; }
+.explore-leaderboard-sheet__head small { display: block; margin-top: .15rem; color: #7c684f; font-size: .62rem; font-weight: 750; }
+
+.explore-leaderboard-sheet__content {
+  max-height: calc(min(84dvh, 48rem) - 4.8rem);
+  overflow: auto;
+  padding: .75rem;
+  overscroll-behavior: contain;
+}
+
+.explore-leaderboard-sheet__content > .wood-panel,
+.explore-leaderboard-sheet__content > .glass,
+.explore-leaderboard-sheet__content > div {
+  margin: 0;
+}
+
+@keyframes explore-leaderboard-rise {
+  from { transform: translateY(4rem); opacity: 0; }
+}
+
+@media (max-width: 390px) {
+  .explore-atlas__leaderboard-launch { top: calc(7.45rem + env(safe-area-inset-top)); }
+  .explore-atlas__leaderboard-copy small { font-size: .5rem; }
+}
