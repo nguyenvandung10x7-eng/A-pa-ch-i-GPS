@@ -9,6 +9,7 @@ import { withLiteraryPageCopy } from './bookLiteraryPageCopy';
 import { withLongformEditorialPageCopy } from './bookLongformEditorial';
 import { withNatureEditorialChapterCopy, withNatureEditorialPageCopy } from './bookNatureEditorial';
 import { withFirstLoveEditorialChapterCopy, withFirstLoveEditorialPageCopy } from './bookFirstLoveEditorial';
+import { withLivingDeadEditorialChapterCopy, withLivingDeadEditorialPageCopy } from './bookLivingDeadEditorial';
 import type { BookChapter, BookExperience, BookPage } from '../types/book';
 
 export const CHAPTER_13_ID = 'chapter-13-su-noi-loan-va-thanh-pho-ban-dem';
@@ -172,10 +173,21 @@ const withUploadedPageAssets = (page: BookPage): BookPage =>
   withUploadedChapterAudioBlocks(page);
 
 const withAllEditorialPageCopy = (page: BookPage): BookPage =>
-  withFirstLoveEditorialPageCopy(
-    withNatureEditorialPageCopy(
-      withLongformEditorialPageCopy(
-        withLiteraryPageCopy(page),
+  withLivingDeadEditorialPageCopy(
+    withFirstLoveEditorialPageCopy(
+      withNatureEditorialPageCopy(
+        withLongformEditorialPageCopy(
+          withLiteraryPageCopy(page),
+        ),
+      ),
+    ),
+  );
+
+const withAllEditorialChapterCopy = (chapter: BookChapter): BookChapter =>
+  withLivingDeadEditorialChapterCopy(
+    withFirstLoveEditorialChapterCopy(
+      withNatureEditorialChapterCopy(
+        withLiteraryChapterCopy(chapter),
       ),
     ),
   );
@@ -183,10 +195,8 @@ const withAllEditorialPageCopy = (page: BookPage): BookPage =>
 export const BOOK_CHAPTERS: BookChapter[] = [
   ...BASE_BOOK_CHAPTERS
     .map(withUploadedChapterAssets)
-    .map(withLiteraryChapterCopy)
-    .map(withNatureEditorialChapterCopy)
-    .map(withFirstLoveEditorialChapterCopy),
-  withFirstLoveEditorialChapterCopy(withNatureEditorialChapterCopy(withLiteraryChapterCopy(chapter13))),
+    .map(withAllEditorialChapterCopy),
+  withAllEditorialChapterCopy(chapter13),
 ];
 
 export const BOOK_PAGES: BookPage[] = [
