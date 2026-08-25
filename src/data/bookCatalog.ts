@@ -10,6 +10,7 @@ import { withLongformEditorialPageCopy } from './bookLongformEditorial';
 import { withNatureEditorialChapterCopy, withNatureEditorialPageCopy } from './bookNatureEditorial';
 import { withFirstLoveEditorialChapterCopy, withFirstLoveEditorialPageCopy } from './bookFirstLoveEditorial';
 import { withLivingDeadEditorialChapterCopy, withLivingDeadEditorialPageCopy } from './bookLivingDeadEditorial';
+import { withGoWestEditorialChapterCopy, withGoWestEditorialPageCopy } from './bookGoWestEditorial';
 import type { BookChapter, BookExperience, BookPage } from '../types/book';
 
 export const CHAPTER_13_ID = 'chapter-13-su-noi-loan-va-thanh-pho-ban-dem';
@@ -173,21 +174,25 @@ const withUploadedPageAssets = (page: BookPage): BookPage =>
   withUploadedChapterAudioBlocks(page);
 
 const withAllEditorialPageCopy = (page: BookPage): BookPage =>
-  withLivingDeadEditorialPageCopy(
-    withFirstLoveEditorialPageCopy(
-      withNatureEditorialPageCopy(
-        withLongformEditorialPageCopy(
-          withLiteraryPageCopy(page),
+  withGoWestEditorialPageCopy(
+    withLivingDeadEditorialPageCopy(
+      withFirstLoveEditorialPageCopy(
+        withNatureEditorialPageCopy(
+          withLongformEditorialPageCopy(
+            withLiteraryPageCopy(page),
+          ),
         ),
       ),
     ),
   );
 
 const withAllEditorialChapterCopy = (chapter: BookChapter): BookChapter =>
-  withLivingDeadEditorialChapterCopy(
-    withFirstLoveEditorialChapterCopy(
-      withNatureEditorialChapterCopy(
-        withLiteraryChapterCopy(chapter),
+  withGoWestEditorialChapterCopy(
+    withLivingDeadEditorialChapterCopy(
+      withFirstLoveEditorialChapterCopy(
+        withNatureEditorialChapterCopy(
+          withLiteraryChapterCopy(chapter),
+        ),
       ),
     ),
   );
