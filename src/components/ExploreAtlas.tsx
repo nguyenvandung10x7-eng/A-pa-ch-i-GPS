@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Check, ChevronRight, Footprints, MapPin, Medal, Navigation, Route, Sparkles, X } from 'lucide-react';
+import { Backpack, BookOpen, Check, ChevronRight, Compass, Images, Map, MapPin, Medal, Navigation, Sparkles, Trophy, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
 import '../pages/explore-atlas.css';
+import '../pages/explore-atlas-game-menu.css';
 
 type ExploreAtlasProps = {
   tasks: ChallengeTask[];
@@ -29,40 +30,68 @@ type AtlasPlaceGroup = {
 
 const copy = {
   vi: {
-    oneJourney: 'một hành trình',
     points: 'điểm',
     discoveries: 'khám phá',
     active: 'Điểm đến hiện tại',
-    available: 'Khám phá đang mở',
     newJourney: 'Chuyến đi mới',
     radius: 'Bán kính',
     view: 'Xem địa điểm',
-    openMap: 'Xem trên bản đồ',
+    openMap: 'Mở bản đồ',
     close: 'Đóng chi tiết địa điểm',
     details: 'Chi tiết địa điểm',
     westRoute: 'Hành trình phía Tây',
     atThisStop: 'khám phá tại đây',
     completed: 'Đã hoàn thành',
-    startHere: 'Bắt đầu tại đây',
-    replay: 'Chơi lại tại đây',
+    startHere: 'Bắt đầu',
+    replay: 'Chơi lại',
+    tagline: 'HÀNH TRÌNH · KÝ ỨC · TỰ HÀO',
+    exploreTitle: 'KHÁM PHÁ',
+    exploreBody: 'Câu chuyện, địa danh và trải nghiệm Điện Biên',
+    mapTitle: 'BẢN ĐỒ',
+    mapBody: 'Khám phá Điện Biên trên bản đồ tương tác',
+    bookTitle: 'CUỐN SÁCH',
+    bookBody: 'Đọc, lưu giữ và tiếp tục những câu chuyện',
+    collection: 'BỘ SƯU TẬP CỦA BẠN',
+    chapters: 'ĐÃ ĐI',
+    places: 'ĐỊA DANH',
+    discoveryPoints: 'ĐIỂM KHÁM PHÁ',
+    missions: 'NHIỆM VỤ',
+    achievements: 'THÀNH TÍCH',
+    treasure: 'KHO BÁU',
+    stories: 'CUỐN SÁCH',
+    begin: 'BẮT ĐẦU HÀNH TRÌNH',
   },
   en: {
-    oneJourney: 'one journey',
     points: 'points',
     discoveries: 'discoveries',
     active: 'Current destination',
-    available: 'Open discovery',
     newJourney: 'New journey',
     radius: 'Radius',
     view: 'View place',
-    openMap: 'View on map',
+    openMap: 'Open map',
     close: 'Close place details',
     details: 'Place details',
     westRoute: 'Journey west',
     atThisStop: 'discoveries here',
     completed: 'Completed',
-    startHere: 'Start here',
-    replay: 'Play here again',
+    startHere: 'Start',
+    replay: 'Replay',
+    tagline: 'JOURNEY · MEMORY · PRIDE',
+    exploreTitle: 'EXPLORE',
+    exploreBody: 'Stories, places and experiences across Dien Bien',
+    mapTitle: 'MAP',
+    mapBody: 'Explore Dien Bien on the interactive map',
+    bookTitle: 'THE BOOK',
+    bookBody: 'Read, keep and continue the stories',
+    collection: 'YOUR COLLECTION',
+    chapters: 'DONE',
+    places: 'PLACES',
+    discoveryPoints: 'DISCOVERY POINTS',
+    missions: 'MISSIONS',
+    achievements: 'ACHIEVEMENTS',
+    treasure: 'TREASURE',
+    stories: 'THE BOOK',
+    begin: 'START THE JOURNEY',
   },
 } as const;
 
@@ -114,7 +143,7 @@ const projectTaskToAtlas = (task: ChallengeTask) => {
   const latitudeRatio = (CITY_ATLAS_BOUNDS.north - task.gps.lat) / (CITY_ATLAS_BOUNDS.north - CITY_ATLAS_BOUNDS.south);
   return {
     x: 11 + Math.max(0, Math.min(1, longitudeRatio)) * 78,
-    y: 35 + Math.max(0, Math.min(1, latitudeRatio)) * 32,
+    y: 27 + Math.max(0, Math.min(1, latitudeRatio)) * 27,
   };
 };
 
@@ -170,7 +199,6 @@ export const ExploreAtlas = ({
   const placeGroups = useMemo(() => getPlaceGroups(tasks), [tasks]);
   const cityGroups = useMemo(() => placeGroups.filter((group) => isWithinCityAtlas(group.anchorTask)), [placeGroups]);
   const westGroups = useMemo(() => placeGroups.filter((group) => !isWithinCityAtlas(group.anchorTask)), [placeGroups]);
-  const westTaskCount = useMemo(() => westGroups.reduce((total, group) => total + group.tasks.length, 0), [westGroups]);
   const activeTaskId = activeTask?.id ?? '';
   const activeGroup = placeGroups.find((group) => groupContainsTask(group, activeTaskId));
   const completedTaskIdSet = useMemo(() => new Set(completedTaskIds), [completedTaskIds]);
@@ -206,7 +234,7 @@ export const ExploreAtlas = ({
       }
       if (event.key !== 'Tab' || !sheet) return;
       const focusable = [...sheet.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
       )].filter((element) => element.offsetParent !== null && element.getAttribute('aria-hidden') !== 'true');
       if (!focusable.length) {
         event.preventDefault();
@@ -244,7 +272,6 @@ export const ExploreAtlas = ({
   const selectedGroup = placeGroups.find((group) => group.id === selectedGroupId) ?? activeGroup ?? placeGroups[0];
   const selectedIsActive = Boolean(selectedGroup && groupContainsTask(selectedGroup, activeTaskId));
   const selectedTask = selectedIsActive ? activeTask : selectedGroup?.anchorTask;
-  const selectedIsWest = Boolean(selectedGroup && !isWithinCityAtlas(selectedGroup.anchorTask));
   const selectedGroupCount = selectedGroup?.tasks.length ?? 0;
   const selectedGroupCompletedCount = selectedGroup?.tasks.filter((task) => completedTaskIdSet.has(task.id)).length ?? 0;
   const selectedGroupIsComplete = selectedGroupCount > 0 && selectedGroupCompletedCount === selectedGroupCount;
@@ -268,70 +295,34 @@ export const ExploreAtlas = ({
     void navigate('/map');
   };
 
+  const locale = language === 'vi' ? 'vi-VN' : 'en-US';
+  const selectedPlaceName = selectedGroup ? groupPlaceName(selectedGroup, language) : c.newJourney;
+  const selectedMeta = selectedTask
+    ? `${selectedPlaceName} · ${c.radius} ${selectedTask.gps.radius} m`
+    : c.exploreBody;
+
   return (
     <>
-      <main className="explore-atlas">
+      <main className="explore-atlas explore-atlas--game-menu">
         <div className="explore-atlas__world" aria-hidden="true" />
 
-        <header className="explore-atlas__hud">
-          <button type="button" className="explore-atlas__avatar" onClick={() => { void navigate('/leaderboard'); }} aria-label={language === 'vi' ? 'Mở bảng xếp hạng' : 'Open leaderboard'}>
-            <img src="/images/game-ui/explorer-avatar-v1.webp" alt="" />
+        <header className="explore-game-hero">
+          <button
+            type="button"
+            className="explore-game-hero__compass"
+            onClick={() => { void navigate('/leaderboard'); }}
+            aria-label={language === 'vi' ? 'Mở thành tích' : 'Open achievements'}
+          >
+            <Compass aria-hidden="true" />
           </button>
-
-          <div className="explore-atlas__banner">
-            <span aria-hidden="true">🇻🇳</span>
-            <strong>BOOK OF DIEN BIEN</strong>
-            <small>{tasks.length} {c.discoveries}, {c.oneJourney}</small>
-          </div>
-
-          <div className="explore-atlas__stats" aria-label={`${score} ${c.points}, ${tasks.length} ${c.discoveries}`}>
-            <span><Medal aria-hidden="true" /><b>{score.toLocaleString('vi-VN')}</b> {c.points}</span>
-            <span><MapPin aria-hidden="true" /><b>{tasks.length}</b> {c.discoveries}</span>
+          <div className="explore-game-title" aria-label="Book of Dien Bien">
+            <span>BOOK OF</span>
+            <h1>DIEN BIEN</h1>
+            <small>{c.tagline}</small>
           </div>
         </header>
 
-        {westGroups.length ? (
-          <section className="explore-atlas__west-route" aria-label={c.westRoute}>
-            <header>
-              <span><Route aria-hidden="true" /></span>
-              <div><strong>{c.westRoute}</strong><small>{westTaskCount} {c.discoveries} · {westGroups.length} {language === 'vi' ? 'điểm dừng' : 'stops'}</small></div>
-            </header>
-            <div className="explore-atlas__west-stops">
-              {westGroups.map((group, index) => {
-                const selected = selectedGroup?.id === group.id;
-                const isActive = groupContainsTask(group, activeTaskId);
-                const imageTask = isActive ? activeTask ?? group.anchorTask : group.anchorTask;
-                const groupCompletedCount = group.tasks.filter((task) => completedTaskIdSet.has(task.id)).length;
-                const groupIsComplete = groupCompletedCount === group.tasks.length;
-                return (
-                  <button
-                    key={group.id}
-                    type="button"
-                    className={`${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''} ${groupIsComplete ? 'is-complete' : ''}`}
-                    onClick={() => selectGroup(group.id)}
-                    aria-pressed={selected}
-                    style={{ '--route-color': PIN_COLORS[index % PIN_COLORS.length] } as CSSProperties}
-                  >
-                    <span className="explore-atlas__west-thumb">
-                      {imageTask.image && !failedImageIds.has(imageTask.id)
-                        ? <img src={imageTask.image} alt="" onError={() => markImageFailed(imageTask.id)} />
-                        : <MapPin aria-hidden="true" />}
-                    </span>
-                    <span className="explore-atlas__west-copy">
-                      <strong>{groupPlaceName(group, language)}</strong>
-                      <small>{groupIsComplete ? c.completed : groupCompletedCount > 0 ? `${groupCompletedCount}/${group.tasks.length} ${c.completed.toLowerCase()}` : `${group.tasks.length} ${c.discoveries}`}</small>
-                    </span>
-                    {groupIsComplete
-                      ? <b className="is-complete" aria-label={c.completed}><Check aria-hidden="true" /></b>
-                      : group.tasks.length > 1 ? <b aria-label={`${group.tasks.length} ${c.atThisStop}`}>{groupCompletedCount > 0 ? `${groupCompletedCount}/${group.tasks.length}` : group.tasks.length}</b> : null}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        ) : null}
-
-        <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trong thành phố' : 'City discoveries'}>
+        <section className="explore-atlas__pins explore-game-map" aria-label={language === 'vi' ? 'Các địa điểm trên atlas' : 'Places on the atlas'}>
           {cityGroups.map((group, index) => {
             const selected = selectedGroup?.id === group.id;
             const isActive = groupContainsTask(group, activeTaskId);
@@ -367,33 +358,85 @@ export const ExploreAtlas = ({
           })}
         </section>
 
-        <div className="explore-atlas__compass" aria-hidden="true">
-          <i>N</i><i>E</i><i>S</i><i>W</i><Navigation />
-        </div>
+        {westGroups.length ? (
+          <div className="explore-game-west" aria-label={c.westRoute}>
+            {westGroups.map((group) => {
+              const selected = selectedGroup?.id === group.id;
+              const complete = group.tasks.every((task) => completedTaskIdSet.has(task.id));
+              return (
+                <button
+                  key={group.id}
+                  type="button"
+                  className={`${selected ? 'is-selected' : ''} ${complete ? 'is-complete' : ''}`}
+                  onClick={() => selectGroup(group.id)}
+                  aria-pressed={selected}
+                >
+                  <MapPin aria-hidden="true" />
+                  <span>{groupPlaceName(group, language)}</span>
+                  {group.tasks.length > 1 ? <b>{group.tasks.length}</b> : null}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
 
-        <section className="explore-atlas__nearby" aria-live="polite">
-          <div className="explore-atlas__nearby-image">
-            {selectedTask?.image && !failedImageIds.has(selectedTask.id)
-              ? <img src={selectedTask.image} alt="" onError={() => markImageFailed(selectedTask.id)} />
-              : <Sparkles aria-hidden="true" />}
-          </div>
-          <div className="explore-atlas__nearby-copy">
-            <span><MapPin aria-hidden="true" />{selectedIsActive ? c.active : selectedGroupIsComplete ? c.completed : !activeTask ? c.newJourney : selectedIsWest ? c.westRoute : c.available}</span>
-            <h1>{selectedGroup ? groupPlaceName(selectedGroup, language) : (language === 'vi' ? 'Điện Biên đang chờ bạn' : 'Dien Bien awaits')}</h1>
-            {selectedTask ? (
-              <p>
-                <Footprints aria-hidden="true" />
-                {selectedGroupCount > 1 ? `${selectedGroupCount} ${c.discoveries} · ` : ''}{c.radius} {selectedTask.gps.radius} m
-              </p>
-            ) : <p>{language === 'vi' ? 'Nhận một địa điểm ngẫu nhiên để bắt đầu.' : 'Pick a random place to begin.'}</p>}
-          </div>
-          <button type="button" onClick={handlePrimaryAction} disabled={isMutating}>
-            <span>{actionLabel}</span><ChevronRight aria-hidden="true" />
+        <section className="explore-game-menu" aria-label={language === 'vi' ? 'Menu chính' : 'Main menu'}>
+          <button type="button" className="explore-game-card explore-game-card--explore" onClick={handlePrimaryAction} disabled={isMutating}>
+            <span className="explore-game-card__badge">{tasks.length}</span>
+            <span className="explore-game-card__icon"><Compass aria-hidden="true" /></span>
+            <span className="explore-game-card__copy">
+              <strong>{c.exploreTitle}</strong>
+              <small>{selectedMeta}</small>
+            </span>
+            <span className="explore-game-card__cta">{actionLabel}<ChevronRight aria-hidden="true" /></span>
           </button>
-          <div className="explore-atlas__progress" aria-label={`${completedCount} / ${progressTotal}`}>
-            <i style={{ width: `${progressTotal ? Math.min(100, Math.round((completedCount / progressTotal) * 100)) : 0}%` }} />
+
+          <button type="button" className="explore-game-card explore-game-card--map" onClick={() => { void navigate('/map'); }}>
+            <span className="explore-game-card__icon"><Map aria-hidden="true" /></span>
+            <span className="explore-game-card__copy">
+              <strong>{c.mapTitle}</strong>
+              <small>{c.mapBody}</small>
+            </span>
+            <span className="explore-game-card__cta">{c.openMap}<ChevronRight aria-hidden="true" /></span>
+          </button>
+
+          <button type="button" className="explore-game-card explore-game-card--book" onClick={() => { void navigate('/book'); }}>
+            <span className="explore-game-card__badge">13</span>
+            <span className="explore-game-card__icon"><BookOpen aria-hidden="true" /></span>
+            <span className="explore-game-card__copy">
+              <strong>{c.bookTitle}</strong>
+              <small>{c.bookBody}</small>
+            </span>
+            <span className="explore-game-card__cta">{language === 'vi' ? 'Mở sách' : 'Open book'}<ChevronRight aria-hidden="true" /></span>
+          </button>
+        </section>
+
+        <section className="explore-game-collection" aria-label={c.collection}>
+          <strong>{c.collection}</strong>
+          <div>
+            <span><Trophy aria-hidden="true" /><small>{c.chapters}</small><b>{completedCount}/{progressTotal}</b></span>
+            <span><Images aria-hidden="true" /><small>{c.places}</small><b>{placeGroups.length}</b></span>
+            <span><Medal aria-hidden="true" /><small>{c.discoveryPoints}</small><b>{score.toLocaleString(locale)}</b></span>
           </div>
         </section>
+
+        <nav className="explore-game-dock" aria-label={language === 'vi' ? 'Điều hướng hành trình' : 'Journey navigation'}>
+          <button type="button" className="is-active" onClick={() => { void navigate('/challenge'); }}>
+            <Backpack aria-hidden="true" /><span>{c.missions}</span>
+          </button>
+          <button type="button" onClick={() => { void navigate('/leaderboard'); }}>
+            <Trophy aria-hidden="true" /><span>{c.achievements}</span>
+          </button>
+          <button type="button" className="explore-game-dock__primary" onClick={handlePrimaryAction} disabled={isMutating}>
+            <Navigation aria-hidden="true" /><span>{c.begin}</span>
+          </button>
+          <button type="button" onClick={() => { void navigate('/saved'); }}>
+            <Images aria-hidden="true" /><span>{c.treasure}</span>
+          </button>
+          <button type="button" onClick={() => { void navigate('/book'); }}>
+            <BookOpen aria-hidden="true" /><span>{c.stories}</span>
+          </button>
+        </nav>
       </main>
 
       {detailsOpen ? (
