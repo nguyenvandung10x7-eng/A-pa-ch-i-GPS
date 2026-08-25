@@ -1,7 +1,7 @@
 import characterCopyJson from '../data/challengeCharacterCopy.json';
 import type { ChallengeTask } from '../types/task';
 
-type CharacterCopyPatch = Pick<ChallengeTask, 'title' | 'description'>;
+type CharacterCopyPatch = Partial<Pick<ChallengeTask, 'title' | 'description' | 'experienceNote'>>;
 type CharacterCopyCatalog = Record<string, CharacterCopyPatch>;
 
 const characterCopyCatalog = characterCopyJson as CharacterCopyCatalog;
@@ -13,7 +13,8 @@ export const applyChallengeCharacterCopy = (tasks: ChallengeTask[]): ChallengeTa
 
     return {
       ...task,
-      title: { ...patch.title },
-      description: { ...patch.description },
+      ...(patch.title ? { title: { ...patch.title } } : {}),
+      ...(patch.description ? { description: { ...patch.description } } : {}),
+      ...(patch.experienceNote ? { experienceNote: { ...patch.experienceNote } } : {}),
     };
   });
