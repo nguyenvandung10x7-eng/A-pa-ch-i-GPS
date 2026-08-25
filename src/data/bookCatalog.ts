@@ -7,6 +7,7 @@ import { BOOK_MUSIC_TRACKS } from './music';
 import { withLiteraryChapterCopy } from './bookLiteraryCopy';
 import { withLiteraryPageCopy } from './bookLiteraryPageCopy';
 import { withLongformEditorialPageCopy } from './bookLongformEditorial';
+import { withNatureEditorialChapterCopy, withNatureEditorialPageCopy } from './bookNatureEditorial';
 import type { BookChapter, BookExperience, BookPage } from '../types/book';
 
 export const CHAPTER_13_ID = 'chapter-13-su-noi-loan-va-thanh-pho-ban-dem';
@@ -156,11 +157,18 @@ const withUploadedPageAssets = (page: BookPage): BookPage =>
   withUploadedChapterAudioBlocks(page);
 
 export const BOOK_CHAPTERS: BookChapter[] = [
-  ...BASE_BOOK_CHAPTERS.map(withUploadedChapterAssets).map(withLiteraryChapterCopy),
-  withLiteraryChapterCopy(chapter13),
+  ...BASE_BOOK_CHAPTERS
+    .map(withUploadedChapterAssets)
+    .map(withLiteraryChapterCopy)
+    .map(withNatureEditorialChapterCopy),
+  withNatureEditorialChapterCopy(withLiteraryChapterCopy(chapter13)),
 ];
 export const BOOK_PAGES: BookPage[] = [
-  ...BASE_BOOK_PAGES.map(withLiteraryPageCopy).map(withLongformEditorialPageCopy).map(withUploadedPageAssets),
-  withUploadedPageAssets(withLongformEditorialPageCopy(withLiteraryPageCopy(chapter13Page))),
+  ...BASE_BOOK_PAGES
+    .map(withLiteraryPageCopy)
+    .map(withLongformEditorialPageCopy)
+    .map(withNatureEditorialPageCopy)
+    .map(withUploadedPageAssets),
+  withUploadedPageAssets(withNatureEditorialPageCopy(withLongformEditorialPageCopy(withLiteraryPageCopy(chapter13Page)))),
 ];
 export const BOOK_EXPERIENCES: BookExperience[] = [...BASE_BOOK_EXPERIENCES, chapter13Experience];
