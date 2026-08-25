@@ -11,6 +11,7 @@ import { withNatureEditorialChapterCopy, withNatureEditorialPageCopy } from './b
 import { withFirstLoveEditorialChapterCopy, withFirstLoveEditorialPageCopy } from './bookFirstLoveEditorial';
 import { withLivingDeadEditorialChapterCopy, withLivingDeadEditorialPageCopy } from './bookLivingDeadEditorial';
 import { withGoWestEditorialChapterCopy, withGoWestEditorialPageCopy } from './bookGoWestEditorial';
+import { withRebellionEditorialChapterCopy, withRebellionEditorialPageCopy } from './bookRebellionEditorial';
 import type { BookChapter, BookExperience, BookPage } from '../types/book';
 
 export const CHAPTER_13_ID = 'chapter-13-su-noi-loan-va-thanh-pho-ban-dem';
@@ -98,14 +99,14 @@ const chapter13Experience: BookExperience = {
   id: 'experience-chapter-13-overnight-motorbike',
   chapterId: CHAPTER_13_ID,
   type: 'location',
-  title: { vi: 'Để xe máy ngoài trời qua đêm', en: 'Leave a Motorbike Outside Overnight' },
+  title: { vi: 'Cứ để nó ở đó', en: 'Just Leave It There' },
   description: {
-    vi: 'Challenge BOTH của chương. Chỉ cần đến điểm đã chốt; GPS xác nhận bạn đã bước vào nơi trải nghiệm bắt đầu.',
-    en: 'The chapter’s BOTH challenge. Simply reach the fixed location; GPS confirms that you have arrived where the experience begins.',
+    vi: 'Nhiệm vụ hôm nay: khóa xe như bình thường, để nó ngoài trời qua đêm rồi quay lưng bước đi.',
+    en: 'Tonight’s task: lock the motorbike as usual, leave it outside overnight, then turn your back and walk away.',
   },
   instruction: {
-    vi: 'Đến trong bán kính 100 m để hoàn thành Challenge. Việc có để xe qua đêm hay không thuộc về trải nghiệm của bạn, không phải thứ app cố xác minh.',
-    en: 'Reach the 100 m radius to complete the Challenge. Whether you actually leave the motorbike overnight belongs to your experience rather than something the app tries to verify.',
+    vi: 'Đến trong bán kính 100 m để hoàn thành phần GPS. Nếu thực hiện phần còn lại, hãy chọn chỗ đỗ hợp pháp và phù hợp, không để tài sản có giá trị trên xe. Sau đó: cứ để nó ở đó.',
+    en: 'Reach the 100 m radius to complete the GPS portion. If you do the rest, choose a legal and suitable parking place and leave no valuables on the motorbike. Then: just leave it there.',
   },
   location: {
     lat: 21.394221,
@@ -174,12 +175,14 @@ const withUploadedPageAssets = (page: BookPage): BookPage =>
   withUploadedChapterAudioBlocks(page);
 
 const withAllEditorialPageCopy = (page: BookPage): BookPage =>
-  withGoWestEditorialPageCopy(
-    withLivingDeadEditorialPageCopy(
-      withFirstLoveEditorialPageCopy(
-        withNatureEditorialPageCopy(
-          withLongformEditorialPageCopy(
-            withLiteraryPageCopy(page),
+  withRebellionEditorialPageCopy(
+    withGoWestEditorialPageCopy(
+      withLivingDeadEditorialPageCopy(
+        withFirstLoveEditorialPageCopy(
+          withNatureEditorialPageCopy(
+            withLongformEditorialPageCopy(
+              withLiteraryPageCopy(page),
+            ),
           ),
         ),
       ),
@@ -187,11 +190,13 @@ const withAllEditorialPageCopy = (page: BookPage): BookPage =>
   );
 
 const withAllEditorialChapterCopy = (chapter: BookChapter): BookChapter =>
-  withGoWestEditorialChapterCopy(
-    withLivingDeadEditorialChapterCopy(
-      withFirstLoveEditorialChapterCopy(
-        withNatureEditorialChapterCopy(
-          withLiteraryChapterCopy(chapter),
+  withRebellionEditorialChapterCopy(
+    withGoWestEditorialChapterCopy(
+      withLivingDeadEditorialChapterCopy(
+        withFirstLoveEditorialChapterCopy(
+          withNatureEditorialChapterCopy(
+            withLiteraryChapterCopy(chapter),
+          ),
         ),
       ),
     ),
