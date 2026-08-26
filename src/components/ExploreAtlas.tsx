@@ -43,8 +43,6 @@ const copy = {
     close: 'Đóng chi tiết địa điểm',
     details: 'Chi tiết địa điểm',
     westRoute: 'Hành trình phía Tây',
-    leaderboard: 'Bảng xếp hạng',
-    leaderboardHint: 'Xem thứ hạng và lượt bình chọn',
     atThisStop: 'khám phá tại đây',
     completed: 'Đã hoàn thành',
     startHere: 'Bắt đầu tại đây',
@@ -63,8 +61,6 @@ const copy = {
     close: 'Close place details',
     details: 'Place details',
     westRoute: 'Journey west',
-    leaderboard: 'Leaderboard',
-    leaderboardHint: 'View rankings and community votes',
     atThisStop: 'discoveries here',
     completed: 'Completed',
     startHere: 'Start here',
@@ -282,6 +278,7 @@ export const ExploreAtlas = ({
         <header className="explore-atlas__hud">
           <button type="button" className="explore-atlas__avatar" onClick={() => setLeaderboardOpen(true)} aria-label={language === 'vi' ? 'Mở bảng xếp hạng' : 'Open leaderboard'}>
             <img src="/images/game-ui/explorer-avatar-v1.webp" alt="" />
+            <span className="explore-atlas__avatar-rank" aria-hidden="true"><Trophy /></span>
           </button>
 
           <div className="explore-atlas__banner">
@@ -295,14 +292,6 @@ export const ExploreAtlas = ({
             <span><MapPin aria-hidden="true" /><b>{tasks.length}</b> {c.discoveries}</span>
           </div>
         </header>
-
-        <section className="explore-atlas__leaderboard-launch" aria-label={c.leaderboard}>
-          <button type="button" onClick={() => setLeaderboardOpen(true)} aria-haspopup="dialog" aria-expanded={leaderboardOpen}>
-            <span className="explore-atlas__leaderboard-icon"><Trophy aria-hidden="true" /></span>
-            <span className="explore-atlas__leaderboard-copy"><strong>{c.leaderboard}</strong><small>{c.leaderboardHint}</small></span>
-            <ChevronRight aria-hidden="true" />
-          </button>
-        </section>
 
         <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trong thành phố' : 'City discoveries'}>
           {cityGroups.map((group, index) => {

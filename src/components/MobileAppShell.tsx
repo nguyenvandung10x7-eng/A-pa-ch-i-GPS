@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { BookOpen, Bookmark, ChevronRight, ChevronUp, Languages, LogIn, LogOut, MapPin, Music2, Pause, Play, UserRound, X } from 'lucide-react';
+import { BookOpen, Bookmark, ChevronRight, ChevronUp, Compass, Languages, LogIn, LogOut, Map, MapPin, Music2, Pause, Play, UserRound, X } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { BookChapterDrawer } from './BookChapterDrawer';
@@ -451,10 +451,10 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
       <nav aria-label={language === 'vi' ? 'Điều hướng chính' : 'Primary navigation'} className="editorial-shell__surface-nav">
         <div className="editorial-shell__surface-nav-inner">
           <NavLink to="/challenge" className={({ isActive }) => isActive ? 'is-active' : ''}>
-            <span className="editorial-shell__nav-emoji" aria-hidden="true">🔭</span><span>{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
+            <Compass className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
           </NavLink>
           <NavLink to="/map" className={({ isActive }) => isActive ? 'is-active' : ''}>
-            <span className="editorial-shell__nav-emoji" aria-hidden="true">🗺️</span><span>{language === 'vi' ? 'Bản đồ' : 'Map'}</span>
+            <Map className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Bản đồ' : 'Map'}</span>
           </NavLink>
           <button
             type="button"
