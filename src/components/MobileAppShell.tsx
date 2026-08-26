@@ -462,6 +462,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
             onClick={() => setBookMenuOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={bookMenuOpen}
+            aria-controls={bookMenuOpen ? 'game-book-chapter-drawer' : undefined}
           >
             <BookOpen className="editorial-shell__nav-book" aria-hidden="true" /><span>{language === 'vi' ? 'Cuốn sách' : 'Book'}</span><ChevronUp className="editorial-shell__nav-chevron" aria-hidden="true" />
           </button>

@@ -348,16 +348,32 @@ export const ExploreAtlas = ({
         </section>
 
         {westGroups.length ? (
-          <button
-            type="button"
-            className={`explore-atlas__west-route ${selectedIsWest ? 'is-selected' : ''}`}
-            onClick={() => selectGroup(westGroups[0].id)}
-            aria-pressed={selectedIsWest}
+          <div
+            className="explore-atlas__west-route"
+            role="group"
+            aria-label={`${c.westRoute} · ${westGroups.length} ${c.westPlaces}`}
           >
-            <Navigation aria-hidden="true" />
-            <span>{westGroups.length} {c.westPlaces}</span>
-            <ChevronRight aria-hidden="true" />
-          </button>
+            {westGroups.map((group) => {
+              const selected = selectedGroup?.id === group.id;
+              const groupIsComplete = group.tasks.every((task) => completedTaskIdSet.has(task.id));
+
+              return (
+                <button
+                  key={group.id}
+                  type="button"
+                  className={selected ? 'is-selected' : ''}
+                  onClick={() => selectGroup(group.id)}
+                  aria-pressed={selected}
+                >
+                  <Navigation aria-hidden="true" />
+                  <span>{groupPlaceName(group, language)}</span>
+                  {groupIsComplete
+                    ? <Check aria-hidden="true" />
+                    : <ChevronRight aria-hidden="true" />}
+                </button>
+              );
+            })}
+          </div>
         ) : null}
 
         <div className="explore-atlas__compass" aria-hidden="true">

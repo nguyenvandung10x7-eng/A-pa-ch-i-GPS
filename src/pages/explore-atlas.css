@@ -347,33 +347,54 @@
   position: absolute;
   z-index: 5;
   top: calc(7.9rem + env(safe-area-inset-top));
+  right: .65rem;
   left: .65rem;
-  display: inline-flex;
-  min-height: 2.15rem;
-  align-items: center;
-  gap: .32rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .3rem;
+  padding: .28rem;
   border: 1px solid rgba(91, 67, 39, .16);
-  border-radius: 999px;
-  background: rgba(255, 250, 240, .92);
-  color: #4f633e;
-  padding: .3rem .48rem;
-  font: inherit;
-  font-size: clamp(.5rem, 1.85vw, .64rem);
-  font-weight: 900;
+  border-radius: 1rem;
+  background: rgba(255, 250, 240, .86);
   box-shadow: 0 .35rem .8rem rgba(54, 45, 29, .16), inset 0 1px rgba(255,255,255,.86);
-  cursor: pointer;
   backdrop-filter: blur(8px);
 }
 
-.explore-atlas__west-route.is-selected {
+.explore-atlas__west-route button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 2.2rem;
+  align-items: center;
+  gap: .25rem;
+  border: 0;
+  border-radius: .72rem;
+  background: rgba(255, 255, 255, .42);
+  color: #4f633e;
+  padding: .3rem .38rem;
+  font: inherit;
+  font-size: clamp(.46rem, 1.7vw, .6rem);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.explore-atlas__west-route button > span {
+  overflow: hidden;
+  line-height: 1.1;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.explore-atlas__west-route button.is-selected {
   background: #fff0be;
   color: #5b3c1d;
   box-shadow: 0 0 0 .12rem rgba(255,255,255,.74), 0 .45rem .9rem rgba(95, 62, 26, .2);
 }
 
-.explore-atlas__west-route svg { width: .82rem; height: .82rem; flex: none; stroke-width: 2.6; }
-.explore-atlas__west-route svg:last-child { width: .7rem; }
-.explore-atlas__west-route:focus-visible { outline: .2rem solid white; outline-offset: .14rem; }
+.explore-atlas__west-route svg { width: .76rem; height: .76rem; flex: none; stroke-width: 2.6; }
+.explore-atlas__west-route button > svg:last-child { width: .66rem; }
+.explore-atlas__west-route button:focus-visible { outline: .18rem solid white; outline-offset: .08rem; }
 
 .explore-atlas__compass {
   position: absolute;
