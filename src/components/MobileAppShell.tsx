@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Bookmark, ChevronRight, LogIn, LogOut, MapPin, Music2, Pause, Play, UserRound, X } from 'lucide-react';
+import { BookOpen, Bookmark, ChevronRight, ChevronUp, Compass, Languages, LogIn, LogOut, Map, MapPin, Music2, Pause, Play, UserRound, X } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { BookChapterDrawer } from './BookChapterDrawer';
 import { BOOK_MUSIC_TRACKS } from '../data/music';
 import { getChapter, getPage } from '../services/bookContent';
 import type { LanguageCode } from '../types/task';
@@ -70,6 +71,7 @@ const isBookSurface = (pathname: string) => (
 const isFieldSurface = (pathname: string) => (
   pathname === '/challenge'
   || pathname.startsWith('/challenge/')
+  || pathname === '/map'
   || pathname === '/discover'
   || pathname === '/leaderboard'
   || pathname === '/submit-tiktok'
@@ -125,6 +127,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   const { pathname } = useLocation();
   const { user, loading, signIn, signOutUser } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
+  const [bookMenuOpen, setBookMenuOpen] = useState(false);
   const [bookSoundEnabled, setBookSoundEnabled] = useState(readBookSoundEnabled);
   const [bookSoundPlaying, setBookSoundPlaying] = useState(false);
   const [bookSoundBlocked, setBookSoundBlocked] = useState(false);
@@ -136,7 +139,9 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   const copy = labels[language];
   const normalizedPathname = normalizePublicPathname(pathname);
   const onBookSurface = isBookSurface(normalizedPathname);
-  const readingMode = normalizedPathname.startsWith('/book/page/');
+  const onExploreSurface = normalizedPathname === '/challenge';
+  const readingMode = normalizedPathname.startsWith('/book/chapter/')
+    || normalizedPathname.startsWith('/book/page/');
   const userLabel = useMemo(() => getUserLabel(user), [user]);
   const activeChapterId = useMemo(() => getChapterIdFromPath(pathname), [pathname]);
   const activeChapter = useMemo(() => activeChapterId ? getChapter(activeChapterId) : undefined, [activeChapterId]);
@@ -161,6 +166,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   };
 
   useLayoutEffect(() => {
+    const bookAudio = audioRef.current;
     const rememberBeforeAnyBookAudio = (event: Event) => {
       if (!(event.target instanceof HTMLAudioElement)) return;
       if (!isBookSurface(normalizePublicPathname(window.location.pathname))) return;
@@ -175,7 +181,6 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
 
     return () => {
       document.removeEventListener('play', rememberBeforeAnyBookAudio, true);
-      const bookAudio = audioRef.current;
       if (bookAudio) bookAudio.pause();
       restorePausedAppAudio();
       document.body.classList.remove('public-shell-active');
@@ -192,6 +197,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
     if (!dialog) return;
 
     const previouslyFocused = document.activeElement;
+    const accountButton = accountButtonRef.current;
     const getFocusableElements = () => Array.from(dialog.querySelectorAll<HTMLElement>(
       'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
     ));
@@ -240,7 +246,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
         if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) {
           previouslyFocused.focus();
         } else {
-          accountButtonRef.current?.focus();
+          accountButton?.focus();
         }
       }
       restoreAccountFocusRef.current = true;
@@ -267,12 +273,18 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+    let cancelled = false;
+    const clearBlockedState = () => {
+      queueMicrotask(() => {
+        if (!cancelled) setBookSoundBlocked(false);
+      });
+    };
 
     if (!activeBookTrack || !onBookSurface) {
       audio.pause();
-      setBookSoundBlocked(false);
+      clearBlockedState();
       if (!onBookSurface) restorePausedAppAudio();
-      return;
+      return () => { cancelled = true; };
     }
 
     const source = `/audio/${activeBookTrack.fileName}`;
@@ -285,17 +297,21 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
 
     if (!bookSoundEnabled) {
       audio.pause();
-      setBookSoundBlocked(false);
-      return;
+      clearBlockedState();
+      return () => { cancelled = true; };
     }
 
     rememberPlayingAppAudio();
     void audio.play()
-      .then(() => setBookSoundBlocked(false))
+      .then(() => {
+        if (!cancelled) setBookSoundBlocked(false);
+      })
       .catch(() => {
+        if (cancelled) return;
         setBookSoundPlaying(false);
         setBookSoundBlocked(true);
       });
+    return () => { cancelled = true; };
   }, [activeBookTrack, bookSoundEnabled, onBookSurface]);
 
   const toggleBookSound = () => {
@@ -347,8 +363,8 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   };
 
   return (
-    <div className={`editorial-shell min-h-dvh ${isFieldSurface(normalizedPathname) ? 'editorial-shell--field' : 'editorial-shell--book'}`}>
-      <div className={`editorial-shell__frame mx-auto min-h-dvh w-full max-w-[60rem] ${readingMode ? 'pb-0' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom))]'}`}>
+    <div className={`editorial-shell min-h-dvh ${isFieldSurface(normalizedPathname) ? 'editorial-shell--field' : 'editorial-shell--book'} ${onExploreSurface ? 'editorial-shell--explore' : ''}`}>
+      <div className="editorial-shell__frame mx-auto min-h-dvh w-full max-w-[72rem] pb-[calc(5.6rem+env(safe-area-inset-bottom))]">
         <header className="editorial-shell__header">
           <Link to="/book" className="editorial-shell__brand" aria-label="Book of Dien Bien">
             BOOK OF DIEN BIEN
@@ -367,7 +383,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
               </button>
             ) : null}
             <button
-              ref={accountButtonRef}
+              ref={onExploreSurface ? undefined : accountButtonRef}
               type="button"
               onClick={handleAccountAction}
               className="editorial-shell__account"
@@ -377,6 +393,15 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
             >
               {user ? <UserRound aria-hidden="true" /> : <LogIn aria-hidden="true" />}
               <span>{loading ? '…' : userLabel ?? copy.signIn}</span>
+            </button>
+            <button
+              type="button"
+              className="editorial-shell__language"
+              onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
+              aria-label={language === 'vi' ? 'Switch to English' : 'Chuyển sang tiếng Việt'}
+            >
+              <Languages aria-hidden="true" />
+              <strong>{language.toUpperCase()}</strong>
             </button>
           </div>
         </header>
@@ -394,18 +419,56 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
           </div>
         )}
 
+        {onExploreSurface ? (
+          <div className="editorial-shell__explore-tools" aria-label={language === 'vi' ? 'Tài khoản và ngôn ngữ' : 'Account and language'}>
+            <button
+              ref={accountButtonRef}
+              type="button"
+              className="editorial-shell__explore-account"
+              onClick={handleAccountAction}
+              aria-haspopup="dialog"
+              aria-expanded={accountOpen}
+              aria-controls={accountOpen ? 'editorial-account-dialog' : undefined}
+            >
+              {user ? <UserRound aria-hidden="true" /> : <LogIn aria-hidden="true" />}
+              <span>{loading ? '…' : userLabel ?? copy.signIn}</span>
+            </button>
+            <button
+              type="button"
+              className="editorial-shell__explore-language"
+              onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
+              aria-label={language === 'vi' ? 'Switch to English' : 'Chuyển sang tiếng Việt'}
+            >
+              <Languages aria-hidden="true" />
+              <strong>{language.toUpperCase()}</strong>
+            </button>
+          </div>
+        ) : null}
+
         {children}
       </div>
 
-      {!readingMode && (
-        <nav aria-label={language === 'vi' ? 'Hai không gian chính' : 'Primary surfaces'} className="editorial-shell__surface-nav">
-          <div className="editorial-shell__surface-nav-inner">
-            <NavLink to="/book" className={() => onBookSurface ? 'is-active' : ''}>{copy.book}</NavLink>
-            <span aria-hidden="true" />
-            <NavLink to="/challenge" className={() => isFieldSurface(normalizedPathname) ? 'is-active' : ''}>{copy.field}</NavLink>
-          </div>
-        </nav>
-      )}
+      <nav aria-label={language === 'vi' ? 'Điều hướng chính' : 'Primary navigation'} className="editorial-shell__surface-nav">
+        <div className="editorial-shell__surface-nav-inner">
+          <NavLink to="/challenge" className={({ isActive }) => isActive ? 'is-active' : ''}>
+            <Compass className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
+          </NavLink>
+          <NavLink to="/map" className={({ isActive }) => isActive ? 'is-active' : ''}>
+            <Map className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Bản đồ' : 'Map'}</span>
+          </NavLink>
+          <button
+            type="button"
+            className={onBookSurface || bookMenuOpen ? 'is-active' : ''}
+            onClick={() => setBookMenuOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={bookMenuOpen}
+          >
+            <BookOpen className="editorial-shell__nav-book" aria-hidden="true" /><span>{language === 'vi' ? 'Cuốn sách' : 'Book'}</span><ChevronUp className="editorial-shell__nav-chevron" aria-hidden="true" />
+          </button>
+        </div>
+      </nav>
+
+      {bookMenuOpen ? <BookChapterDrawer language={language} onClose={() => setBookMenuOpen(false)} /> : null}
 
       {accountOpen ? (
         <div className="editorial-account-layer" role="presentation" onMouseDown={() => closeAccountDialog()}>
@@ -437,7 +500,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
                 </button>
               ) : null}
               <button type="button" onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}>
-                <span className="editorial-account-sheet__text-icon">Aa</span><span>{copy.language}</span><strong>{language === 'vi' ? 'Tiếng Việt' : 'English'}</strong>
+                <span className="editorial-account-sheet__text-icon">Aa</span><span>{copy.language}</span><strong>{language === 'vi' ? 'English' : 'Tiếng Việt'}</strong>
               </button>
               <Link to="/privacy" onClick={() => closeAccountDialog(false)}><span className="editorial-account-sheet__text-icon">§</span><span>{copy.privacy}</span><ChevronRight /></Link>
               <Link to="/legal" onClick={() => closeAccountDialog(false)}><span className="editorial-account-sheet__text-icon">i</span><span>{copy.legal}</span><ChevronRight /></Link>

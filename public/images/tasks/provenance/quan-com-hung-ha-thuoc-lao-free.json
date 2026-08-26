@@ -1,0 +1,19 @@
+{
+  "asset": "public/images/tasks/quan-com-hung-ha-thuoc-lao-free.webp",
+  "status_basis": "user-supplied-project-photograph",
+  "checked_on": "2026-08-24",
+  "reviewed_by": "nguyenvandung10x7-eng",
+  "source": {
+    "description": "Photograph supplied by the project owner and identified for the Hưng Hà eatery challenge.",
+    "public_url": null,
+    "dimensions": "1080x1920",
+    "sha256": "b7df20525df1716f5b9773d16d6fe539e64a114338500553ef16489ba560b015"
+  },
+  "derivative": {
+    "dimensions": "1200x900",
+    "sha256": "65e1ed3ad98100a9167d617f1d0bb2d0a095c2793f47af291c2137fcae3eb8e2",
+    "changes": "Auto-oriented, placed full-height over a blurred crop of the same photograph, and encoded as WebP so the portrait remains legible in landscape and square UI crops.",
+    "tool": "ImageMagick 6.9.12-98"
+  },
+  "representation_note": "The project owner identified this as the image for the challenge. Authorship and public redistribution terms were not independently verified."
+}

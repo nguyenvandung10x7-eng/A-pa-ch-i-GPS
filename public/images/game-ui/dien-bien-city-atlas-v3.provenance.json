@@ -1,0 +1,15 @@
+{
+  "asset": "public/images/game-ui/dien-bien-city-atlas-v3.webp",
+  "source_type": "generated_edit",
+  "generator": "OpenAI built-in image generation",
+  "created_for": "Book of Dien Bien",
+  "created_on": "2026-08-24",
+  "source_references": [
+    "public/images/game-ui/dien-bien-city-atlas-v2.webp",
+    "public/images/game-ui/dien-bien-atlas-v1.webp"
+  ],
+  "prompt_summary": "Preserve the v2 portrait city-valley scale and enrich it with recognizable Dien Bien Phu city landmarks in the bright soft-3D adventure-atlas style of v1; no pins, labels, text, or UI.",
+  "transform": "Generated PNG converted to 941x1672 lossy WebP at quality 86 with metadata stripped.",
+  "sha256": "060d131837f6651e8bab26b3258a7a13c38e5fbc1122eb2b929992a9cbf92c23",
+  "documentary_accuracy": "Illustrative only; landmark placement and architecture are stylized and must not be used as GPS evidence."
+}

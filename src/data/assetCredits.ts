@@ -16,12 +16,59 @@ const cc = (version: '2.0' | '3.0' | '4.0') => ({
   licenseUrl: `https://creativecommons.org/licenses/by-sa/${version}/`,
 });
 
-const sourceRecordedNote = {
-  vi: 'Nguồn/licence candidate đã được ghi nhận; trạng thái này không đồng nghĩa asset đã CLEARED. Binary đang ship vẫn phải được đối chiếu với original theo release ledger.',
-  en: 'A candidate source/licence is recorded; this does not mean the asset is CLEARED. The shipped binary still has to be reconciled to the original under the release ledger.',
-};
-
 export const ASSET_CREDITS: AssetCredit[] = [
+  {
+    id: 'dien-bien-city-atlas-v4',
+    usage: {
+      vi: 'Ảnh nền atlas thành phố trên màn hình Khám phá',
+      en: 'City atlas background on the Explore screen',
+    },
+    author: 'Generated for Book of Dien Bien',
+    status: 'cleared',
+    note: {
+      vi: 'Vẽ mới hoàn toàn theo phong cách diorama game, dùng ảnh toàn cảnh có chú thích do chủ dự án cung cấp để giữ tương quan giữa Tượng đài Chiến thắng trên Đồi D1, Đồi A1, nghĩa trang A1, Bảo tàng Chiến thắng, sân vận động, các cầu và sông Nậm Rốm. Ảnh nền chỉ định hướng thị giác; vị trí pin thử thách được tính riêng từ GPS thật trong ứng dụng.',
+      en: 'Redrawn from scratch as a game diorama, using an annotated aerial overview supplied by the project owner to preserve the relationship between the D1 Victory Monument, A1 Hill, A1 cemetery, the Victory Museum, the stadium, bridges, and the Nam Rom river. The background is a visual orientation layer; challenge pins are positioned separately from real GPS data in the app.',
+    },
+  },
+  {
+    id: 'challenge-generated-illustrations',
+    usage: {
+      vi: 'Tranh minh họa cho thử thách để xe qua đêm, ngắm lòng chảo và tìm cây xoài cổ thụ',
+      en: 'Illustrations for the overnight motorbike, valley viewpoint, and old mango tree challenges',
+    },
+    author: 'Generated for Book of Dien Bien',
+    status: 'cleared',
+    note: {
+      vi: 'Hai tranh được tái sử dụng từ bộ Book v3 và một tranh cây xoài được tạo mới theo cùng phong cách 3D phiêu lưu. Đây là minh họa cảm xúc, không phải ảnh tư liệu hay xác nhận chính xác địa điểm.',
+      en: 'Two artworks are reused from the Book v3 set and one mango-tree artwork was newly generated in the same 3D adventure style. These are mood illustrations, not documentary or exact-location evidence.',
+    },
+  },
+  {
+    id: 'quan-com-hung-ha-thuoc-lao-free',
+    usage: {
+      vi: 'Ảnh thử thách tại Quán cơm Hưng Hà',
+      en: 'Challenge image for Hưng Hà Eatery',
+    },
+    author: 'Ảnh do chủ dự án cung cấp',
+    status: 'source-recorded',
+    note: {
+      vi: 'Ảnh được chủ dự án tải lên và chỉ định trực tiếp cho nhiệm vụ này. Ảnh đã được dàn lại trên khung 4:3 bằng nền mờ lấy từ chính ảnh gốc; tác giả và điều khoản phân phối công khai chưa được xác minh độc lập.',
+      en: 'The project owner uploaded and directly assigned this photograph to the challenge. It was fitted to a 4:3 frame using a blurred background derived from the same source; authorship and public redistribution terms were not independently verified.',
+    },
+  },
+  {
+    id: 'book-v3-generated-illustrations',
+    usage: {
+      vi: 'Bộ 16 tranh minh họa mới cho 13 chương của Book',
+      en: 'Set of 16 new illustrations for the Book’s 13 chapters',
+    },
+    author: 'Generated for Book of Dien Bien',
+    status: 'cleared',
+    note: {
+      vi: 'Tranh được tạo riêng theo phong cách bản đồ phiêu lưu 3D mềm. Đây là hình minh họa văn chương, không phải ảnh tư liệu hay ảnh chụp chính xác địa điểm.',
+      en: 'Created specifically in a soft 3D adventure-atlas style. These are literary illustrations, not documentary or exact location photographs.',
+    },
+  },
   {
     id: 'quang-truong-7-5-mthen',
     usage: { vi: 'Ảnh đường phố Điện Biên Phủ đại diện dùng cho Quảng trường 7-5 / artwork chương', en: 'Representative Dien Bien Phu streetscape used for 7 May Square / chapter artwork' },

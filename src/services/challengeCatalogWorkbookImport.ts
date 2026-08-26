@@ -10,8 +10,6 @@ import type { ChallengeTask } from '../types/task';
 
 const DISABLED_TASK_IDS = new Set<string>([
   'ruong-bac-thang-ta-leng-mthen',
-  'thac-ke-nenh-mthen',
-  'doi-a1-chuyen-tau-thoi-gian-1954',
   'canh-dong-muong-thanh-cat-banh',
   'quang-truong-7-5-mthen',
   'bao-tang-chien-thang-dien-bien-phu-trai-nghiem',
@@ -41,6 +39,7 @@ const overnightMotorbikeExistingPatch: TaskPatch = {
     en: 'Reach the fixed point in the city at night. Once you enter the 100 m radius, GPS confirms your arrival and the Challenge is complete. Leaving a motorbike outside overnight is the experience Chapter 13 invites you to consider; the app does not require photos, make you wait until morning, or try to prove that you actually left the bike overnight.',
   },
   gps: { lat: 21.394221, lng: 103.020336, radius: 100 },
+  image: '/images/tasks/de-xe-may-ngoai-troi-qua-dem.webp',
   enabled: true,
   experienceNote: {
     vi: 'Challenge BOTH của Chương 13 “Sự nổi loạn và thành phố ban đêm”. Chỉ cần đến trong bán kính 100 m để hoàn thành; việc để xe qua đêm là lời mời trải nghiệm, không phải điều app cố xác minh.',
@@ -49,6 +48,12 @@ const overnightMotorbikeExistingPatch: TaskPatch = {
 };
 
 const TASK_PATCHES: Record<string, TaskPatch> = {
+  'thac-ke-nenh-mthen': {
+    enabled: true,
+  },
+  'doi-a1-chuyen-tau-thoi-gian-1954': {
+    enabled: true,
+  },
   'cho-muong-nhe-tang-banh-trung-thu': {
     title: {
       vi: 'Chợ Mường Nhé – Một chiếc bánh, một lời chào',
@@ -159,6 +164,15 @@ const TASK_PATCHES: Record<string, TaskPatch> = {
     },
   },
   'de-xe-may-ngoai-troi-qua-dem': overnightMotorbikeExistingPatch,
+  'quan-com-hung-ha-thuoc-lao-free': {
+    image: '/images/tasks/quan-com-hung-ha-thuoc-lao-free.webp',
+  },
+  'nhin-xuong-long-chao-cua-chung-ta': {
+    image: '/images/tasks/nhin-xuong-long-chao-cua-chung-ta.webp',
+  },
+  'tim-cay-xoai-co-thu': {
+    image: '/images/tasks/tim-cay-xoai-co-thu.webp',
+  },
 };
 
 const ADDED_TASKS: readonly ChallengeTask[] = [
@@ -176,7 +190,7 @@ const ADDED_TASKS: readonly ChallengeTask[] = [
     difficulty: 'easy',
     points: 100,
     gps: { lat: 21.392328, lng: 103.010909, radius: 90 },
-    image: '',
+    image: '/images/tasks/quan-com-hung-ha-thuoc-lao-free.webp',
     enabled: true,
     experienceNote: {
       vi: 'Không bắt buộc quay chủ quán; chỉ ghi hình khi được đồng ý. Không khuyến khích bắt đầu hút thuốc: nếu không hút, chỉ cần trò chuyện để hoàn thành nhiệm vụ.',
@@ -191,7 +205,7 @@ const ADDED_TASKS: readonly ChallengeTask[] = [
     difficulty: 'medium',
     points: 180,
     gps: overnightMotorbikeExistingPatch.gps!,
-    image: '',
+    image: '/images/tasks/de-xe-may-ngoai-troi-qua-dem.webp',
     enabled: true,
     experienceNote: overnightMotorbikeExistingPatch.experienceNote,
   },
@@ -209,7 +223,7 @@ const ADDED_TASKS: readonly ChallengeTask[] = [
     difficulty: 'easy',
     points: 140,
     gps: { lat: 21.389481, lng: 103.067382, radius: 180 },
-    image: '',
+    image: '/images/tasks/nhin-xuong-long-chao-cua-chung-ta.webp',
     enabled: true,
     experienceNote: {
       vi: 'Chụp đúng một ảnh từ điểm nhìn. Đứng ở vị trí quan sát an toàn; không trèo qua lan can, mép taluy hoặc xuống khu vực dốc để lấy góc ảnh.',
@@ -230,7 +244,7 @@ const ADDED_TASKS: readonly ChallengeTask[] = [
     difficulty: 'medium',
     points: 220,
     gps: { lat: 21.37784, lng: 103.068867, radius: 250 },
-    image: '',
+    image: '/images/tasks/tim-cay-xoai-co-thu.webp',
     enabled: true,
     experienceNote: {
       vi: 'Không bắt buộc quay hoặc chụp; nếu muốn, chỉ chụp cây hoặc tán cây. Tọa độ là gần đúng, chỉ đi theo lối tiếp cận an toàn và không tự ý vào đất hoặc vườn riêng.',

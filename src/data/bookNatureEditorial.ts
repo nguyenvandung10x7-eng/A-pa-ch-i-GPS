@@ -1,0 +1,179 @@
+import type { BookChapter, BookLocalizedText, BookPage, ContentBlock } from '../types/book';
+
+type EditorialPageCopy = {
+  intro: BookLocalizedText;
+  body: BookLocalizedText[];
+};
+
+const CHAPTER_INTRO_OVERRIDES: Record<string, BookLocalizedText> = {
+  'chapter-03-mot-dien-bien-rat-nho': {
+    vi: 'Trước khi Điện Biên trở thành một địa danh rộng lớn trong đầu, nó từng chỉ là căn nhà của bà và một khu vườn đủ để một đứa trẻ tin rằng thế giới đã có tất cả ở đó.',
+    en: 'Before Dien Bien became a large place in the mind, it was once only grandmother’s house and a garden large enough for a child to believe the world already contained everything there.',
+  },
+  'chapter-05-long-chao': {
+    vi: 'Ra khỏi phố, lòng chảo mở ra bằng gió, nước, cỏ, đá và những vách núi xanh thẫm. Có những lúc đứng giữa cảnh ấy, con người bỗng nhớ mình vốn chỉ là một sinh vật rất nhỏ trong tự nhiên.',
+    en: 'Beyond the streets, the basin opens through wind, water, grass, stone, and dark-green mountain walls. At times, standing inside it, a person remembers that we are only small creatures within nature.',
+  },
+  'chapter-08-nhung-ngon-doi': {
+    vi: 'Những ngọn đồi không chỉ đứng sau thành phố như phông nền. Chúng chen vào đường đi, ánh sáng, tầm nhìn và cách người Điện Biên cảm nhận khoảng cách — như những mốc im lặng mà đời sống phải đi vòng quanh.',
+    en: 'The hills are not merely a backdrop behind the city. They enter roads, light, sightlines, and the way people in Dien Bien feel distance—silent markers around which ordinary life must move.',
+  },
+  'chapter-09-nhung-thu-kho-quen': {
+    vi: 'Có một Điện Biên nằm ngoài lớp học và ngoài đường phố: rừng ẩm, khe nước, đá rêu, tiếng chim lạ và những sinh vật nhỏ sống theo luật của chúng. Bọn học sinh lớn lên ở đây đôi khi chỉ vô tình bước vào câu chuyện ấy.',
+    en: 'There is a Dien Bien beyond classrooms and streets: damp forest, streams, mossy stone, strange bird calls, and small creatures living by their own rules. The students growing up here sometimes wandered into that story almost by accident.',
+  },
+};
+
+const PAGE_COPY_OVERRIDES: Record<string, EditorialPageCopy> = {
+  'vuon-nha-ba-noi': {
+    intro: {
+      vi: 'Có một thời bản đồ Điện Biên của tôi chỉ rộng bằng vài chục bước chân: từ hiên nhà bà ra cái giếng, vòng qua bếp, chạm tới khu vườn rồi mất hút sau những hàng cây.',
+      en: 'There was a time when my map of Dien Bien was only a few dozen steps wide: from grandmother’s veranda to the well, around the kitchen, into the garden, then disappearing behind rows of trees.',
+    },
+    body: [
+      {
+        vi: 'Trẻ con không đo một nơi bằng kilômét. Nó đo bằng quãng chạy trước khi bị gọi về, bằng chỗ nào có thể trốn, chỗ nào được phép nghịch nước, chỗ nào có người lớn đang ngồi nên phải đi nhẹ hơn. Căn nhà ngói ba gian của bà vì thế từng có đầy đủ phương hướng riêng. Phía này là sân. Qua sân là cái giếng và chiếc bơm tay. Xa thêm một chút là vườn rau, cây bưởi, chuồng gà, bếp củi. Không có biển chỉ đường, nhưng một đứa trẻ thuộc từng khoảng đất bằng cơ thể: chân biết chỗ nào gồ, tay biết cái then cửa nào khó mở, tai biết tiếng gọi từ trong bếp vọng ra có nghĩa là còn được chơi thêm hay phải chạy về ngay.',
+        en: 'Children do not measure a place in kilometres. They measure it by how far they can run before being called home, where they can hide, where water can be played with, and where adults are sitting so footsteps should be softer. Grandmother’s three-bay tiled house therefore had its own compass. Here was the yard. Beyond it stood the well and hand pump. A little farther were vegetable beds, the pomelo tree, chickens, and the wood stove. There were no signs, yet a child knew the ground through the body: feet remembered uneven patches, hands knew which latch resisted, and ears knew whether a call from the kitchen meant a few more minutes outside or time to run home.',
+      },
+      {
+        vi: 'Điều còn lại rõ nhất không phải hình dáng căn nhà mà là những lớp mùi không thể xếp theo thứ tự. Mùi đất ẩm quanh thành giếng. Mùi nước vừa được bơm lên, lạnh và hơi tanh của kim loại. Mùi khói bếp bám vào mái ngói và quần áo. Mùi lông chó, mùi cám lợn, mùi chuồng gà, mùi lá bưởi bị vò trong tay. Ngày ấy chẳng mùi nào trong số đó được gọi là “ký ức”. Chúng chỉ là đời sống, thậm chí có thứ còn bị coi là bẩn, là khó chịu. Nhưng trí nhớ nhiều năm sau lại không có sự sang trọng của người trưởng thành. Nó không chọn giữ những gì đẹp nhất; nó giữ những gì từng ở gần da thịt nhất. Chỉ một mùi tương tự thoáng qua cũng có thể mở lại cả khoảng sân cũ mà không cần một tấm ảnh nào.',
+        en: 'What remains most clearly is not the architecture of the house but layers of smell with no proper order: damp earth around the well, cold water newly pumped with a faint metallic trace, wood smoke held in roof tiles and clothes, dog fur, pig feed, chickens, pomelo leaves crushed in the hand. None of these were called “memory” then. They were simply life, and some were considered dirty or unpleasant. Years later memory has none of adulthood’s elegance. It does not keep only what was beautiful; it keeps what once stayed closest to the body. A passing scent can reopen the whole yard without the help of a photograph.',
+      },
+      {
+        vi: 'Phía sau nhà là vườn nhãn gần bờ sông. Ở đó, thế giới của trẻ con không bị chia thành những thửa rõ như trên giấy tờ. Một khoảng sân nối sang một hàng cây, hàng cây dẫn qua lớp lá khô, rồi chẳng biết từ lúc nào đã sang nhà khác. Những lối nhỏ ấy không thuộc về ai theo cách bọn trẻ hiểu. Chúng tồn tại vì người ta vẫn đi qua được. Một gốc cây có thể là điểm hẹn; một khe hàng rào thành đường tắt; một bãi đất trống hôm nay là sân bóng, ngày mai có thể thành chỗ đào đất tìm thứ gì đó chẳng ai nhớ. Có lẽ cảm giác tự do đầu tiên không đến từ những khái niệm lớn. Nó chỉ là việc có thể rẽ sang một lối khác mà không cần xin phép một tấm bản đồ.',
+        en: 'Behind the house was a longan garden near the river. The children’s world was not divided into neat parcels as it is on paper. One yard led to a row of trees, the trees to dry leaves, and at some point you realized you had crossed into another home. Those paths did not belong to anyone in the way children understood ownership. They existed because people could still pass through them. A tree became a meeting point, a gap in a fence a shortcut, an empty plot a football field today and an excavation site for some forgotten treasure tomorrow. Perhaps the first feeling of freedom does not come from a large idea. It is simply the ability to turn down another path without consulting a map.',
+      },
+      {
+        vi: 'Một ngày trong khu vườn ấy cũng không có nhiều sự kiện. Nắng trượt dần từ mái nhà xuống sân. Tiếng bơm nước vang lên rồi im. Gà bới lá. Người lớn làm việc của họ. Trẻ con tự nghĩ ra những việc chẳng tạo ra sản phẩm gì nhưng có thể chiếm trọn một buổi chiều. Chính sự bình thường ấy làm ký ức trở nên lạ. Ta thường tưởng rằng phải có một biến cố mới đáng nhớ, nhưng tuổi thơ được dựng phần lớn từ những giờ không có chuyện gì xảy ra. Không ai báo trước rằng một chiều nào đó sẽ là lần cuối mình nhìn cái sân theo cách ấy. Căn nhà không biến mất trong một khoảnh khắc; đứa trẻ cũng không lớn lên trong một ngày. Cả hai chỉ từ từ rời xa nhau.',
+        en: 'A day in that garden did not contain many events. Sunlight moved from roof to yard. The pump sounded, then fell silent. Chickens scratched through leaves. Adults did their work. Children invented activities that produced nothing yet could consume an entire afternoon. That ordinariness is what later makes memory strange. We imagine an event must be important to remain, yet childhood is built mostly from hours in which nothing happened. Nobody announces that one afternoon will be the last time the yard is seen in that way. The house does not disappear in a single moment, and a child does not grow up in one day. The two simply drift apart.',
+      },
+      {
+        vi: 'Sau này quay lại, điều gây hụt hẫng không nhất thiết là một vật cụ thể đã mất. Có khi mọi thứ vẫn ở gần vị trí cũ nhưng tỷ lệ đã sai. Con đường ngắn hơn. Khoảng sân hẹp hơn. Hàng cây không sâu như trí nhớ. Đó là lúc hiểu rằng tuổi thơ từng làm một công việc âm thầm: nó phóng đại nơi mình sống để đủ chỗ cho cả thế giới. Người lớn quay về bằng mắt của người lớn nên không thể nhìn thấy đúng căn nhà cũ nữa, kể cả khi vài bức tường vẫn còn. Căn nhà thật thuộc về hiện tại; căn nhà trong ký ức thuộc về một cơ thể nhỏ hơn, một nhịp thời gian chậm hơn và những người khi ấy vẫn còn ở đúng vị trí của họ.',
+        en: 'Returning later, the loss is not always one missing object. Sometimes everything remains near its old position but the proportions are wrong. The road is shorter, the yard smaller, the trees less deep than remembered. Then it becomes clear that childhood performed a quiet trick: it enlarged the place we lived until there was room for the whole world. Adults return with adult eyes and cannot see the same house again, even if some walls remain. The physical house belongs to the present; the remembered house belongs to a smaller body, slower time, and people who were still in their old places.',
+      },
+      {
+        vi: 'Vì thế “Một Điện Biên rất nhỏ” không phải câu chuyện về một nơi chật hẹp. Nó là câu chuyện về mật độ của một quê nhà. Trong vài chục bước có thể chứa một người bà, tiếng gọi ăn cơm, nước giếng, khói bếp, những con vật, những lối sang nhà hàng xóm, một vườn nhãn và cả cảm giác mình được thuộc về một nơi mà chưa từng phải giải thích vì sao. Sau này bản đồ Điện Biên mở rộng ra cánh đồng, những ngọn đồi, các con đường về phía Tây. Nhưng bản đồ đầu tiên vẫn nằm dưới tất cả những lớp ấy. Nó rất nhỏ, rất riêng, và có lẽ chính vì vậy mà không một bản đồ lớn nào thay thế được.',
+        en: 'So “A Very Small Dien Bien” is not a story about confinement. It is about the density of a homeland. Within a few dozen steps there could be a grandmother, a call to dinner, well water, wood smoke, animals, paths into neighbouring yards, a longan garden, and the unquestioned feeling of belonging somewhere. Later the map of Dien Bien expands into fields, hills, and roads west. But the first map remains beneath all those later layers. It is very small, very private, and perhaps for that reason no larger map can replace it.',
+      },
+    ],
+  },
+
+  'nhung-ngon-doi': {
+    intro: {
+      vi: 'Sống ở Điện Biên lâu ngày, người ta dễ quên rằng những ngọn đồi không đứng ngoài thành phố. Chúng cắt đường chân trời, giữ bóng chiều, ép đường sá phải uốn theo và khiến một đô thị nhỏ luôn có cảm giác đang sống rất gần đất.',
+      en: 'After living in Dien Bien for long enough, it is easy to forget that the hills do not stand outside the city. They cut the horizon, hold the evening shadow, bend roads around them, and keep a small city feeling close to the earth.',
+    },
+    body: [
+      {
+        vi: 'Ở nhiều nơi, thành phố lớn lên bằng cách che dần địa hình. Nhà cao hơn, biển hiệu nhiều hơn, đường nối sang đường cho đến khi mắt nhìn xa chỉ gặp thêm bê tông. Điện Biên khó làm điều ấy. Dù đứng giữa phố, chỉ cần ngẩng lên là một sườn đồi hoặc dải núi đã chặn tầm nhìn. Nó nhắc rằng thành phố này nằm trong một cái lòng chảo có thành bằng đất và đá, chứ không phải trên một mặt phẳng vô tận. Cảm giác khoảng cách vì thế cũng khác. Một nơi nhìn tưởng rất gần có thể phải vòng qua chân đồi. Một cơn mưa vừa đi qua sườn núi có thể chưa chạm tới phố. Bóng tối thường trườn xuống từ cao trước khi đèn đường bật lên ở dưới.',
+        en: 'In many places, a growing city gradually hides its terrain. Buildings rise, signs multiply, roads join other roads until every long view ends in more concrete. Dien Bien resists that. Even from the middle of town, lifting the eyes reveals a slope or mountain line closing the view. It reminds you that this city lies inside a basin whose walls are earth and stone, not on an endless plain. Distance therefore feels different. A place that looks close may require a road around a hill. Rain may cross a ridge before reaching the street. Darkness often descends from above before the lamps come on below.',
+      },
+      {
+        vi: 'Khi còn nhỏ, những ngọn đồi không nhất thiết có ý nghĩa. Chúng chỉ là thứ luôn có mặt, giống như hướng mặt trời lặn hay cơn gió chiều. Có đồi nằm bên đường đi học, có đồi nhìn thấy từ sân nhà, có nơi chỉ được nhận biết bằng một đường xanh ở xa. Trẻ con không cần biết độ cao, tên gọi hay lịch sử để dùng địa hình làm mốc. Chúng biết rẽ ở đâu vì “qua cái đồi ấy”, biết sắp về đến nhà khi một sườn núi quen hiện ra. Trước khi địa lý trở thành bài học, địa hình đã đi vào cơ thể bằng những cách như thế.',
+        en: 'As children, the hills did not need to mean anything. They were simply always present, like the direction of sunset or the afternoon wind. One stood beside the school road, another could be seen from a yard, another existed only as a green line in the distance. Children do not need elevation, official names, or history to use terrain as orientation. They know where to turn because it is “past that hill,” and know home is close when a familiar slope appears. Long before geography becomes a lesson, landform enters the body in these ways.',
+      },
+      {
+        vi: 'Rồi lớn lên mới biết một số ngọn đồi ấy từng có những cái tên khác trong lịch sử. Nhưng có lẽ điều quan trọng không phải biến mọi lần nhìn lên thành một giờ học. Cái lạ của Điện Biên nằm ở việc một ngọn đồi có thể đồng thời là nhiều thứ: địa hình, ký ức chiến tranh, nơi trồng cây, điểm ngắm cảnh, cái bóng đổ xuống khu dân cư và mốc phương hướng của một đứa trẻ. Không lớp nào xóa được lớp nào. Người đi làm về dưới chân đồi không nhất thiết đang nghĩ tới quá khứ; quá khứ vẫn ở đó mà không cần đòi hỏi sự chú ý liên tục. Chính khả năng cùng tồn tại ấy làm cảnh quan có chiều sâu hơn một di tích được tách riêng bằng hàng rào.',
+        en: 'Later we learn that some of those hills carried other names in history. Yet the point is not to turn every glance upward into a lesson. What is unusual about Dien Bien is that one hill can be many things at once: terrain, war memory, planted ground, viewpoint, evening shadow over a neighbourhood, and a child’s directional marker. None of these layers erases the others. Someone coming home from work at the foot of a hill may not be thinking about the past; the past remains without demanding constant attention. That coexistence gives the landscape more depth than a monument isolated behind a fence.',
+      },
+      {
+        vi: 'Buổi chiều là lúc những ngọn đồi trở lại rõ nhất. Nắng thấp làm các nếp đất nổi lên, cây trên sườn sẫm lại, còn nhà cửa dưới chân đồi bắt đầu sáng từng ô cửa. Từ cao nhìn xuống, thành phố nhỏ đến mức có thể thấy đời sống gom thành từng cụm: mái nhà, con đường, sân trường, những chiếc xe chạy như những chấm sáng. Từ dưới nhìn lên, ngọn đồi lại lớn hơn vì nó chiếm một phần bầu trời. Cùng một nơi nhưng tỷ lệ thay đổi theo vị trí người đứng. Có lẽ vì thế những ngọn đồi âm thầm dạy một điều rất đơn giản: con người luôn nhìn thế giới từ một điểm rất nhỏ của mình.',
+        en: 'Late afternoon is when the hills become clearest again. Low light reveals folds in the ground, trees darken on the slopes, and windows begin to glow below. From above, the city is small enough for life to gather into clusters: roofs, roads, a schoolyard, vehicles moving like bright points. From below, the hill becomes larger because it occupies part of the sky. The same place changes scale with the position of the observer. Perhaps the hills quietly teach something simple: people always see the world from one very small point of their own.',
+      },
+      {
+        vi: 'Thành phố rồi sẽ tiếp tục đổi. Nhà có thể cao thêm, đường rộng hơn, những khu đất trống biến mất. Nhưng chừng nào các ngọn đồi còn cắt đường chân trời, Điện Biên vẫn khó trở thành một đô thị hoàn toàn tách khỏi tự nhiên và quá khứ. Chúng không cần được nhân cách hóa như những người canh giữ. Chỉ riêng sự hiện diện vật chất của đất, đá và độ cao đã đủ. Đường phải tránh chúng. Ánh sáng phải vòng qua chúng. Mắt người phải dừng lại ở chúng. Trong một thời đại mà nhiều thành phố cố làm mọi thứ phẳng, nhanh và liên tục, việc vẫn phải sống quanh một khối đất không chịu di chuyển là một lời nhắc hiếm hoi về giới hạn.',
+        en: 'The city will continue to change. Buildings may rise, roads widen, empty land disappear. Yet as long as hills keep cutting the horizon, Dien Bien will have difficulty becoming a city entirely separated from nature and the past. They do not need to be personified as guardians. Their physical presence—earth, stone, elevation—is enough. Roads must avoid them. Light must move around them. Eyes must stop at them. In an age when many cities try to make everything flat, fast, and continuous, having to live around a mass of earth that refuses to move is a rare reminder of limits.',
+      },
+      {
+        vi: 'Có lẽ vì vậy “Những ngọn đồi” không cần kết thúc bằng một lời tưởng niệm. Chỉ cần một buổi tối bình thường: người ta về nhà, trẻ con gọi nhau dưới phố, khói bếp hoặc mùi thức ăn thoát ra từ những căn nhà thấp, đèn bật lên từng đoạn. Phía sau tất cả, đường đồi chuyển thành một khối đen và hòa vào đêm. Thành phố tiếp tục công việc của người sống; đất tiếp tục công việc chậm hơn của đất. Hai nhịp ấy nằm cạnh nhau, không cần hòa làm một. Và chính trong sự song song đó, Điện Biên có một dáng vẻ mà những nơi bằng phẳng hơn khó có được.',
+        en: 'That may be why “The Hills” does not need to end with a statement of remembrance. An ordinary evening is enough: people go home, children call to one another in the street, cooking smells leave low houses, lights appear in sections. Behind all of it, the hills become dark masses and merge with night. The city continues the work of the living; the earth continues its much slower work. The two rhythms exist side by side without needing to become one. In that parallel, Dien Bien takes on a shape that flatter places rarely possess.',
+      },
+    ],
+  },
+
+  'su-hung-vi': {
+    intro: {
+      vi: 'Có những lúc cảnh vật làm con người im đi trước khi kịp nghĩ ra một lời nào. Không phải vì nó “đẹp” theo cách của một tấm ảnh, mà vì đá, nước, cây, gió và khoảng trống bỗng khiến ta nhớ cơ thể mình vốn thuộc về cùng thế giới ấy.',
+      en: 'Sometimes a landscape silences a person before any words arrive. Not because it is “beautiful” like a photograph, but because stone, water, trees, wind, and open space suddenly remind us that our bodies belong to the same world.',
+    },
+    body: [
+      {
+        vi: 'Sự hùng vĩ của Điện Biên, nếu có, không nằm trong một điểm nhìn duy nhất. Nó thường đến bất ngờ ở những đoạn con người bớt đi. Ra khỏi phố một chút, tiếng máy nhỏ lại, không khí đổi mùi. Có mùi đất bị nắng hong sau mưa, mùi lá mục ở chỗ ẩm, mùi cỏ bị giẫm, mùi đá nóng cạnh dòng nước lạnh. Gió mang theo thứ hương rất khó gọi tên của rừng: vừa xanh, vừa ẩm, đôi khi ngai ngái, đôi khi có chút ngọt của hoa dại. Những mùi ấy không đứng riêng từng lớp. Chúng trộn lại thành cảm giác rằng mình đã đi ra khỏi phần thế giới được lau sạch, lát phẳng và sắp xếp cho con người.',
+        en: 'If Dien Bien has grandeur, it is not contained in a single viewpoint. It often arrives unexpectedly where human presence begins to thin. Leave town for a while and engines become quieter, the air changes smell. There is earth drying in the sun after rain, leaf mould in damp places, crushed grass, hot stone beside cold water. Wind carries the difficult-to-name scent of forest: green, wet, sometimes sharp, sometimes sweet with wild flowers. These do not arrive in separate layers. They mix into the sense that you have stepped beyond the part of the world cleaned, paved, and arranged for people.',
+      },
+      {
+        vi: 'Ở gần nước, giác quan thay đổi trước cả suy nghĩ. Tiếng dòng chảy che bớt tiếng người. Hơi lạnh bốc từ khe suối hoặc chân thác chạm vào da dù nắng vẫn còn trên vai. Đá dưới chân có bề mặt riêng: viên nhẵn vì nước, viên ráp vì còn sắc, viên phủ một lớp rêu khiến bàn chân phải dè chừng. Hoa cỏ mọc ở những chỗ chẳng ai trồng, không cần hợp màu với nhau và cũng chẳng cần được gọi tên để tồn tại. Một tiếng chim bật ra ở phía rừng sâu rồi im, để lại khoảng trống rộng hơn chính âm thanh vừa phát ra. Những khoảnh khắc ấy làm thế giới có vẻ cũ hơn con người rất nhiều.',
+        en: 'Near water, the senses change before thought does. Flowing water covers human voices. Cool air rises from streams or the foot of a fall and touches the skin while sunlight still rests on the shoulders. Stones have individual surfaces: some polished by water, some rough with edges, some furred with moss that makes each step cautious. Flowers and grasses grow where nobody planted them, with no need to match colours or even be named. A bird calls from deeper forest and then stops, leaving a silence larger than the sound itself. In such moments the world feels far older than people.',
+      },
+      {
+        vi: 'Có lẽ cái làm người ta siêu lòng trước tự nhiên không phải cảm giác mình chinh phục được nó, mà gần như ngược lại. Đứng trước một sườn núi phủ cây hoặc một khoảng lòng chảo mở ra sau mưa, những việc thường ngày bỗng co lại. Công việc, lịch hẹn, những tranh cãi, những thứ vừa vài giờ trước còn rất quan trọng không biến mất, nhưng tạm thời mất quyền đứng ở trung tâm. Cơ thể chú ý tới gió, nhiệt độ, độ dốc, ánh sáng, tiếng nước. Ta trở về một thứ nhận thức có trước màn hình và lịch biểu: trời sắp tối chưa, mưa có đến không, chân đang đứng chắc không, phía kia có đường đi không. Đó có lẽ là một dạng trở về nguyên thủy rất ngắn nhưng rất thật.',
+        en: 'What wins a person over in nature may not be the feeling of conquering it, but almost the opposite. Before a forested slope or a basin opening after rain, ordinary concerns shrink. Work, appointments, arguments, things that seemed urgent hours earlier do not vanish, but they temporarily lose the right to occupy the centre. The body notices wind, temperature, slope, light, water. We return to an awareness older than screens and schedules: how much daylight remains, whether rain is coming, whether the footing is secure, whether there is a path ahead. It is a brief but real return to something primal.',
+      },
+      {
+        vi: 'Nắng trong núi rừng cũng khác nắng giữa phố. Nó không phủ đều mà rơi thành mảng qua tán cây, bám trên một phiến đá, làm sáng một cụm cỏ rồi bỏ tối khoảng đất ngay bên cạnh. Mùi nắng vì thế cũng có thật: mùi cỏ khô nóng lên, mùi nhựa cây, mùi đất vừa hết ẩm. Khi gió qua, cả khu rừng phát ra những tiếng động không cần con người: lá cọ nhau, cành khô gãy ở đâu đó, côn trùng rền lên, chim gọi nhau từ những khoảng không nhìn thấy. Sự hoang vu không nhất thiết là không có sự sống. Ngược lại, nó là cảm giác nơi ấy đang có quá nhiều sự sống nhưng phần lớn không liên quan đến mình.',
+        en: 'Sunlight in the forest is different from sunlight in town. It does not spread evenly but falls in patches through foliage, clings to a rock, illuminates one cluster of grass while leaving the ground beside it dark. Sunlight seems to have a smell there: dry grass warming, resin, earth losing its dampness. Wind moves through and the forest makes sounds with no need for people—leaves rubbing, a dead branch breaking somewhere, insects rising into a drone, birds calling from unseen spaces. Wilderness is not the absence of life. It is the feeling that there is too much life, and most of it has nothing to do with us.',
+      },
+      {
+        vi: 'Có những nơi càng cố chụp lại càng thấy bức ảnh thiếu. Ống kính giữ được đường núi, mặt nước, mây và cây, nhưng không giữ được hơi lạnh chạy dọc cánh tay khi đứng gần suối, mùi đá sau mưa, tiếng chim xa đến mức không biết nó ở trên cây nào, hay cảm giác chân mình bỗng nhỏ bé trên một khối đất kéo dài ngoài tầm mắt. Sự hùng vĩ có lẽ nằm chính ở phần không mang về được. Ta có thể rời khỏi rừng với vài tấm ảnh, một đôi giày bẩn và mùi nắng còn trên áo, nhưng thứ khiến mình nhớ lại nhiều năm sau thường là một cảm giác không có hình dạng rõ ràng.',
+        en: 'Some places seem more incomplete the harder we try to photograph them. A lens can keep the mountain line, water, cloud, and trees, but not the cold moving along an arm beside a stream, the smell of stone after rain, a bird so distant you cannot locate its tree, or the sudden smallness of your feet on land extending beyond sight. Grandeur may exist precisely in what cannot be carried home. We can leave the forest with photographs, dirty shoes, and sunlight still in our clothes, yet what returns years later is often a feeling with no clear shape.',
+      },
+      {
+        vi: 'Và rồi phải quay lại thành phố. Tiếng xe trở lại, mặt đường phẳng hơn, điện thoại có sóng, con người lại trở thành trung tâm của mọi thứ mình nhìn thấy. Nhưng cơ thể dường như mang theo một phần nhịp khác. Sau khi đã nghe đủ lâu tiếng nước và tiếng chim trong một khoảng rừng không cần mình, thành phố có thể ồn hơn một chút; những lo toan có thể nhỏ hơn một chút. Nếu gọi cảm giác ấy là “hùng vĩ”, thì nó không phải lời khen dành cho phong cảnh. Nó là khoảnh khắc tự nhiên đặt con người trở lại đúng tỷ lệ của mình — không phải chủ nhân của thế giới, chỉ là một sinh vật biết ngửi mùi rừng, sợ đá trơn, khát nước, nghe chim gọi và đôi khi đủ im lặng để thấy mình đang sống.',
+        en: 'Then we return to town. Engines return, roads flatten, phones regain signal, and people again become the centre of almost everything we see. Yet the body seems to carry another rhythm for a while. After listening long enough to water and birds in a forest that does not need us, the city can feel slightly louder and our worries slightly smaller. If that feeling is called “grandeur,” it is not praise for scenery. It is the moment nature returns us to our proper scale—not owners of the world, only creatures able to smell forest, fear slippery stone, thirst, hear birds calling, and sometimes become quiet enough to notice that we are alive.',
+      },
+    ],
+  },
+
+  'con-vat': {
+    intro: {
+      vi: 'Bọn học sinh ấy không đi tìm sự hoang dã. Chúng chỉ tình cờ sinh ra ở một nơi mà sau vài con đường, vài quả đồi và một bản nhỏ, thế giới của trường lớp có thể đột ngột nhường chỗ cho rừng, đá, nước và những sinh vật chẳng biết gì về thời khóa biểu.',
+      en: 'Those students were not searching for wilderness. They simply happened to grow up somewhere where, after a few roads, hills, and a village, the world of school could suddenly give way to forest, stone, water, and creatures that knew nothing of timetables.',
+    },
+    body: [
+      {
+        vi: 'Một buổi học thêm được nghỉ là đủ để ranh giới giữa hai thế giới mở ra. Vài phút trước còn là bàn ghế, vở, giờ giấc và câu hỏi hôm nay phải học gì; một lúc sau cả bọn đã đi về phía đồi, qua bản, tìm đường xuống thác. Ở nhiều nơi, nghỉ học chỉ có nghĩa là về nhà hoặc đi quanh phố. Ở Điện Biên khi ấy, chỉ cần đi thêm một đoạn là cảnh quan đã đổi tính chất. Nhà thưa dần. Tiếng xe lùi lại. Cây cối khép gần hơn. Con đường không còn chỉ để đến một địa chỉ; nó bắt đầu phải thương lượng với dốc, đất, đá và nước. Bọn học sinh không gọi đó là thám hiểm. Đó chỉ là một buổi đi chơi.',
+        en: 'One cancelled extra class was enough to open a boundary between two worlds. Minutes earlier there had been desks, notebooks, schedules, and the question of what had to be studied; soon the group was heading toward hills, through a village, looking for the way down to a waterfall. In many places, a cancelled class means going home or wandering town. In Dien Bien then, a little farther was enough for the landscape to change character. Houses thinned out. Engines receded. Vegetation closed in. The route no longer merely connected addresses; it had to negotiate slope, soil, stone, and water. The students did not call it exploration. It was simply an afternoon out.',
+      },
+      {
+        vi: 'Càng đi sâu, rừng càng làm mất đi những thứ dùng để định vị trong thành phố. Không còn biển hiệu quen, không còn mặt tiền nhà, không còn những khoảng nhìn thẳng dài. Thay vào đó là mùi lá ẩm, đất mềm dưới chân, tiếng nước lúc gần lúc xa và tiếng chim không biết tên vọng từ phía bên kia một tán cây. Có đoạn sáng bừng vì nắng xuyên xuống; vài bước sau lại tối và mát. Những bụi cây chạm vào quần áo. Côn trùng bay ngang mặt. Một con thằn lằn hoặc thứ gì đó nhỏ hơn lẩn đi trước khi kịp nhìn rõ. Mọi sinh vật đều đang làm việc của nó, và bọn trẻ chỉ là một nhóm khách ồn ào đi xuyên qua.',
+        en: 'The deeper the group went, the more the forest erased the tools used for orientation in town. Familiar signs disappeared, house fronts vanished, long straight views were gone. In their place came damp leaves, soft earth underfoot, water sounding near and then far, and unnamed birds calling beyond the canopy. One stretch opened bright under sunlight; a few steps later it was dark and cool. Shrubs touched clothing. Insects crossed faces. A lizard or something smaller vanished before it could be clearly seen. Every creature was occupied with its own life, and the students were only a noisy group passing through.',
+      },
+      {
+        vi: 'Đến thác, nước lập tức trở thành trung tâm. Tiếng nó lớn đến mức nói chuyện phải cao giọng. Đá ướt khiến bước chân bớt tự tin. Nước lạnh chạm da kéo người ta ra khỏi mọi suy nghĩ không cần thiết. Bọn trẻ cười, gọi nhau, tìm chỗ đứng, thử gan theo cách của tuổi học trò. Nhưng xung quanh niềm vui ấy là một thế giới hoàn toàn không được dựng lên cho chúng: rêu bám đá vì rêu cần ở đó, dòng nước đi theo độ dốc, cây mọc về phía có ánh sáng, những con vật nhỏ tìm máu, thức ăn, chỗ ẩn nấp theo bản năng của chúng. Con người chỉ tình cờ bước vào giữa một hệ thống đã vận hành từ rất lâu trước khi có buổi học thêm.',
+        en: 'At the waterfall, water immediately became the centre. It was loud enough that conversation had to rise above it. Wet stone made each step less confident. Cold water on skin pushed away every unnecessary thought. The students laughed, called to one another, found places to stand, tested courage in the ordinary way of adolescence. Yet around that fun was a world not constructed for them: moss clung to stone because moss belonged there, water followed gravity, plants reached toward light, and small animals searched for blood, food, or shelter according to their own instincts. People had merely wandered into a system operating long before the extra class existed.',
+      },
+      {
+        vi: 'Rồi con vắt xuất hiện như một lời nhắc rất cụ thể. Ban đầu chỉ một người phát hiện, sau đó cả đám cúi xuống chân. Những sinh vật nhỏ, mềm, tối màu bám ở chỗ da hở hoặc chui vào nơi khó nhìn. Hai vết máu tròn trên quần jeans, cảm giác ngứa, sự ghê người và tiếng la lập tức phá vỡ ảo tưởng rằng chuyến đi chỉ là cuộc vui của con người. Với con vắt, bọn học sinh không phải nhân vật chính; chỉ là những cơ thể ấm vừa đi ngang qua rừng. Cái đáng nhớ của nó không chỉ nằm ở sự kinh hãi. Nó khiến khoảng rừng đang đẹp và vui bỗng trở lại đúng bản chất: sống, ẩm, hoang và không cần chiều theo cảm giác của khách.',
+        en: 'Then the leeches appeared as a very specific reminder. One person noticed first, then everyone looked down at their legs. Small, dark, soft bodies clung to exposed skin or worked into places difficult to see. Two round blood marks on denim, itching, disgust, and shouting immediately broke the illusion that the outing existed only for human amusement. To the leech, the students were not protagonists, merely warm bodies passing through the forest. What made the encounter memorable was not only fear. It returned the beautiful, playful forest to its actual nature: alive, wet, wild, and under no obligation to make visitors comfortable.',
+      },
+      {
+        vi: 'Nhưng chính vì sinh ra ở mảnh đất này, bọn trẻ cũng không hoàn toàn là khách. Chúng biết rằng sau thị xã có những con đường như thế, sau những con đường có bản, sau bản còn có suối, thác và rừng. Chúng lớn lên với việc núi luôn nằm ở cuối tầm mắt, nên chuyện bước vào núi đôi khi tự nhiên như trẻ nơi khác bước vào một công viên. Sự hoang sơ không phải một khái niệm du lịch; nó nằm ngay bên cạnh đời sống thường ngày, đủ gần để một buổi học nghỉ đột xuất có thể đưa cả nhóm chạm vào. Bởi vậy tuổi học trò ở Điện Biên vô tình có một phần tiểu sử chung với địa hình: những con dốc, dòng nước, cây rừng và sinh vật nhỏ đều góp mặt trong quá trình lớn lên.',
+        en: 'Yet because they were born on this land, the students were not entirely visitors either. They knew that beyond town were roads like these, beyond roads villages, and beyond villages streams, falls, and forest. They grew up with mountains always at the edge of sight, so entering them could feel as natural as children elsewhere entering a park. Wilderness was not a tourism concept; it sat next to ordinary life, close enough for a cancelled class to carry a whole group into it. Adolescence in Dien Bien therefore acquired an accidental shared biography with the terrain: slopes, water, forest plants, and small creatures all participated in growing up.',
+      },
+      {
+        vi: 'Nhiều năm sau, con vắt vẫn là chi tiết dễ kể nhất vì nó có hình dạng, có máu và có chút buồn cười. Nhưng phía sau nó là thứ lớn hơn: cảm giác một nhóm học sinh đã từng đi ra khỏi thế giới được người lớn sắp xếp và bước vào một nơi không quan tâm chúng là ai. Rừng không biết điểm số. Nước không biết giờ vào lớp. Chim vẫn kêu khi cả bọn cãi nhau. Vắt vẫn tìm máu dù ai gan hay nhát. Trong vài giờ, con người trở lại làm một loài vật giữa nhiều loài vật khác — ồn ào hơn, vụng về hơn, nhưng cũng tò mò và sống động. Có lẽ đó mới là thứ khó quên: không phải riêng một con vắt, mà là lần tuổi trẻ của mình đã vô tình hòa vào sự hoang vu của chính quê hương.',
+        en: 'Years later, the leech remains the easiest detail to tell because it has a shape, blood, and something comic about it. Behind it lies something larger: a group of students once stepped out of a world arranged by adults and entered a place that did not care who they were. The forest knew nothing of grades. Water knew nothing of class time. Birds kept calling while the group argued. Leeches looked for blood whether anyone was brave or frightened. For a few hours, people became one animal species among many—louder and clumsier, but equally curious and alive. Perhaps that is what is truly hard to forget: not one leech, but the moment youth accidentally merged with the wilderness of its own homeland.',
+      },
+    ],
+  },
+};
+
+export const withNatureEditorialChapterCopy = (chapter: BookChapter): BookChapter => {
+  const intro = CHAPTER_INTRO_OVERRIDES[chapter.id];
+  return intro ? { ...chapter, intro } : chapter;
+};
+
+export const withNatureEditorialPageCopy = (page: BookPage): BookPage => {
+  const copy = PAGE_COPY_OVERRIDES[page.id];
+  if (!copy) return page;
+
+  return {
+    ...page,
+    intro: copy.intro,
+    blocks: page.blocks.flatMap<ContentBlock>((block) => (
+      block.type === 'text'
+        ? copy.body.map((body) => ({ ...block, body }))
+        : [block]
+    )),
+  };
+};

@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { defaultTasks, enabledTasks, loadTasks, saveTasks } from '../services/tasks';
 import { migrateAllGameplayStorageTaskIds } from '../services/gameplay';
 import { applyChallengeCatalogWorkbookImport } from '../services/challengeCatalogWorkbookImport';
+import { applyChallengeCharacterCopy } from '../services/challengeCharacterCopy';
 import type { ChallengeTask } from '../types/task';
 
 const CATALOG_IMPORT_VERSION_KEY = 'book-of-dien-bien-challenge-catalog-import-version';
-const CATALOG_IMPORT_VERSION = '2026-08-23-chapter-13-artwork';
+const CATALOG_IMPORT_VERSION = '2026-08-25-chapter-13-experience-copy-v1';
 const OVERNIGHT_MOTORBIKE_TASK_ID = 'de-xe-may-ngoai-troi-qua-dem';
 const OLD_OVERNIGHT_MOTORBIKE_COVER_IMAGE = '/images/challenges/de-xe-may-ngoai-troi-qua-dem/cover-01.jpg';
-const OVERNIGHT_MOTORBIKE_COVER_IMAGE = '/images/tasks/quang-truong-7-5-mthen.webp';
+const OVERNIGHT_MOTORBIKE_COVER_IMAGE = '/images/tasks/de-xe-may-ngoai-troi-qua-dem.webp';
 
 const withCanonicalImageFallbacks = (tasks: ChallengeTask[]): ChallengeTask[] =>
   tasks.map((task) => {
@@ -19,7 +20,9 @@ const withCanonicalImageFallbacks = (tasks: ChallengeTask[]): ChallengeTask[] =>
   });
 
 const applyCurrentCatalogMigration = (tasks: ChallengeTask[]): ChallengeTask[] =>
-  withCanonicalImageFallbacks(applyChallengeCatalogWorkbookImport(tasks));
+  applyChallengeCharacterCopy(
+    withCanonicalImageFallbacks(applyChallengeCatalogWorkbookImport(tasks)),
+  );
 
 const loadImportedTasks = (): ChallengeTask[] => {
   const tasks = loadTasks();

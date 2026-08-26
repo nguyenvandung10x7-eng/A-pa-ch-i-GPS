@@ -1,9 +1,20 @@
 :root {
-  --font-book: "Source Serif 4", "Iowan Old Style", "Noto Serif", "Palatino Linotype", "Book Antiqua", Georgia, "Times New Roman", serif;
-  --font-ui: "IBM Plex Sans", Aptos, "Segoe UI Variable", "Segoe UI", "Noto Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Release-safe stacks: no remote font request and no unbundled font dependency. */
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", system-ui, sans-serif;
+  --font-book: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", "Noto Serif", Georgia, "Times New Roman", serif;
 }
 
-.editorial-shell {
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body,
+.editorial-shell,
+.explore-atlas,
+.game-book-menu,
+.game-map-page,
+.game-explore-page {
   font-family: var(--font-ui);
 }
 
@@ -37,8 +48,30 @@
 .book-reading-v2__content article > div > p,
 .book-reading-v2__content article blockquote,
 .book-reading-v2__places > header div,
-.book-reading-v2__place-list strong {
+.book-reading-v2__place-list strong,
+.book-longform__hero-copy h1,
+.book-longform__hero-copy > div,
+.book-longform-story__head h2,
+.book-longform-story__head > p,
+.book-longform-story__body,
+.book-longform__experiences > header h2,
+.book-longform__experiences > header > div,
+.book-longform-experience h3,
+.book-longform-experience > p {
   font-family: var(--font-book) !important;
+}
+
+/* The literary surface should read like a book, not like a heavy game banner. */
+.book-longform__hero-copy h1,
+.book-longform-story__head h2,
+.book-longform__experiences > header h2 {
+  font-weight: 700 !important;
+  letter-spacing: -.035em !important;
+}
+
+.book-longform-story__body > p:first-child::first-letter {
+  font-family: var(--font-book) !important;
+  font-weight: 700 !important;
 }
 
 .editorial-shell--field,
@@ -51,8 +84,24 @@
 .editorial-shell--field textarea,
 .editorial-shell--field .field-utility-frame h1,
 .editorial-shell--field .field-utility-frame h2,
-.editorial-shell--field .field-utility-frame h3 {
+.editorial-shell--field .field-utility-frame h3,
+.game-book-menu__head h2,
+.book-longform-audio,
+.game-map-page__hero h1,
+.game-explore-page__hero h1,
+.explore-atlas__banner strong,
+.explore-atlas__nearby-copy h1 {
   font-family: var(--font-ui) !important;
+}
+
+/* Impact and synthetic 950 weights render Vietnamese inconsistently across devices. */
+.editorial-shell__brand,
+.game-book-menu__head h2,
+.game-map-page__hero h1,
+.game-explore-page__hero h1,
+.explore-atlas__banner strong,
+.explore-atlas__nearby-copy h1 {
+  font-weight: 800 !important;
 }
 
 .book-v2-home,
@@ -61,14 +110,32 @@
   font-family: var(--font-ui);
 }
 
-.book-reading-v2__content article > div > p {
+.book-reading-v2__content article > div > p,
+.book-longform-story__body {
   font-kerning: normal;
-  font-optical-sizing: auto;
   text-wrap: pretty;
 }
 
 .book-v2-chapter__header h1,
 .book-v2-cover__title h1,
-.book-reading-v2__content article > h1 {
+.book-reading-v2__content article > h1,
+.book-longform__hero-copy h1,
+.book-longform-story__head h2 {
   text-wrap: balance;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: .18rem solid #f5b82b;
+  outline-offset: .16rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }

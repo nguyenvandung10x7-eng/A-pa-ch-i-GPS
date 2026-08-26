@@ -4,6 +4,7 @@ import { Card } from '../components/Card';
 import { useAuth } from '../contexts/AuthContext';
 import type { LanguageCode } from '../types/task';
 import { loadLeaderboardEntries, type LeaderboardEntry, VoteError } from '../services/voting';
+import './leaderboard-page.css';
 
 const formatDate = (value: string, language: LanguageCode) => new Date(value).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US');
 
@@ -45,77 +46,76 @@ export const LeaderboardPage = ({ language, t }: { language: LanguageCode; t: (k
   const emptyState = useMemo(() => !loading && !error && entries.length === 0, [entries.length, error, loading]);
 
   return (
-    <Card>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <Card className="leaderboard-page">
+      <div className="leaderboard-page__top">
         <div>
-      <p className="section-kicker">{t('leaderboard.heading')}</p>
-      <h1 className="text-3xl font-black text-[var(--forest-950)]">{t('leaderboard.title')}</h1>
+          <p className="leaderboard-page__kicker">{t('leaderboard.heading')}</p>
+          <h1 className="leaderboard-page__title">{t('leaderboard.title')}</h1>
         </div>
-    <div className="rounded-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.62)] px-4 py-2 text-sm font-semibold text-[var(--forest-800)]">
+        <div className="leaderboard-page__access">
           {user ? t('leaderboard.authenticated') : t('leaderboard.anonymous')}
         </div>
       </div>
 
-    <p className="mt-4 rounded-[1.4rem] border border-[rgba(112,79,39,0.16)] bg-[rgba(255,247,229,0.72)] px-4 py-3 text-sm leading-6 text-[var(--earth-900)]">
+      <p className="leaderboard-page__notice">
         {t('leaderboard.pointsNotice')}
       </p>
 
       {loading && (
-    <div className="mt-6 flex items-center gap-3 rounded-[1.4rem] bg-[rgba(255,255,255,0.62)] px-4 py-4 text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.12)]">
+        <div className="leaderboard-page__state">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>{t('leaderboard.loading')}</span>
         </div>
       )}
 
       {!loading && error && (
-    <div className="mt-6 rounded-[1.4rem] border border-[rgba(141,64,47,0.22)] bg-[rgba(170,85,70,0.12)] px-4 py-4 text-[var(--brocade-red)]">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            <span>{error}</span>
-          </div>
+        <div className="leaderboard-page__state is-error">
+          <AlertCircle className="h-5 w-5" />
+          <span>{error}</span>
         </div>
       )}
 
       {!loading && !error && emptyState && (
-    <div className="mt-6 rounded-[1.4rem] bg-[rgba(255,255,255,0.62)] px-4 py-6 text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.12)]">
-          <p className="text-lg font-semibold">{t('leaderboard.emptyTitle')}</p>
-          <p className="mt-2">{t('leaderboard.emptyDescription')}</p>
+        <div className="leaderboard-page__state">
+          <div>
+            <strong>{t('leaderboard.emptyTitle')}</strong>
+            <p>{t('leaderboard.emptyDescription')}</p>
+          </div>
         </div>
       )}
 
       {!loading && !error && !emptyState && (
-        <div className="mt-6 space-y-3">
+        <div className="leaderboard-page__list">
           {entries.map((entry) => (
-        <article key={entry.id} className="rounded-[1.6rem] border border-[rgba(61,84,52,0.12)] bg-[rgba(255,255,255,0.58)] p-4 shadow-[0_14px_28px_rgba(38,52,31,0.08)]">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-center gap-3">
-            <div className="wood-panel flex h-12 w-12 items-center justify-center rounded-full font-black text-[var(--earth-900)]">
-                    {entry.rank}
-                  </div>
-            <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-[var(--forest-700)]" />
-              <p className="break-words font-black text-[var(--forest-950)]">{entry.challengeTitleSnapshot || t('discover.unknownChallenge')}</p>
+            <article key={entry.id} className="leaderboard-page__entry">
+              <div className="leaderboard-page__entry-inner">
+                <div className="leaderboard-page__identity">
+                  <div className="leaderboard-page__rank">{entry.rank}</div>
+                  <div className="leaderboard-page__identity-copy">
+                    <div className="leaderboard-page__challenge">
+                      <Trophy aria-hidden="true" />
+                      <span>{entry.challengeTitleSnapshot || t('discover.unknownChallenge')}</span>
                     </div>
-            <p className="text-sm text-[var(--forest-800)]">{entry.displayName?.trim() || t('discover.anonymous')}</p>
-            {entry.tiktokUsername ? <p className="text-sm text-[var(--forest-700)]">@{entry.tiktokUsername}</p> : null}
+                    <div className="leaderboard-page__name">{entry.displayName?.trim() || t('discover.anonymous')}</div>
+                    {entry.tiktokUsername ? <div className="leaderboard-page__tiktok">@{entry.tiktokUsername}</div> : null}
                   </div>
                 </div>
-          <div className="flex flex-wrap gap-3 text-sm text-[var(--forest-800)]">
-            <div className="rounded-[1.2rem] bg-[rgba(255,255,255,0.72)] px-3 py-2 ring-1 ring-[rgba(61,84,52,0.12)]">
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--forest-700)]">{t('leaderboard.voteCount')}</p>
-            <p className="font-black text-[var(--forest-950)]">{entry.voteCount}</p>
+
+                <div className="leaderboard-page__metrics">
+                  <div className="leaderboard-page__metric">
+                    <small>{t('leaderboard.voteCount')}</small>
+                    <strong>{entry.voteCount}</strong>
                   </div>
-            <div className="rounded-[1.2rem] bg-[rgba(255,255,255,0.72)] px-3 py-2 ring-1 ring-[rgba(61,84,52,0.12)]">
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--forest-700)]">{t('leaderboard.submitted')}</p>
-                    <p>{formatDate(entry.createdAt, language)}</p>
+                  <div className="leaderboard-page__metric">
+                    <small>{t('leaderboard.submitted')}</small>
+                    <span>{formatDate(entry.createdAt, language)}</span>
                   </div>
                   {entry.safeLink ? (
-            <a href={entry.safeLink} target="_blank" rel="noopener noreferrer" className="wood-panel inline-flex min-h-[3rem] items-center justify-center rounded-full px-4 py-2 font-black text-[var(--earth-900)] transition hover:-translate-y-px">
+                    <a href={entry.safeLink} target="_blank" rel="noopener noreferrer" className="leaderboard-page__link">
                       {t('discover.openTikTok')}
                     </a>
                   ) : (
-            <span className="rounded-full border border-[rgba(61,84,52,0.14)] px-4 py-2 text-sm font-semibold text-[var(--forest-700)]">{t('discover.unavailableLink')}</span>
+                    <span className="leaderboard-page__link-unavailable">{t('discover.unavailableLink')}</span>
                   )}
                 </div>
               </div>

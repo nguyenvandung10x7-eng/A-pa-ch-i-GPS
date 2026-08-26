@@ -1,0 +1,19 @@
+{
+  "asset": "public/images/tasks/tim-cay-xoai-co-thu.webp",
+  "status_basis": "project-generated-challenge-illustration",
+  "checked_on": "2026-08-24",
+  "source": {
+    "generator": "OpenAI image generation",
+    "reference_asset": "public/images/book-v3/vuon-nha-ba-noi.webp",
+    "reference_role": "style reference only",
+    "sha256": "795e9d3cb77f6ab266ac8751b9abf3f81230ed90316a1d894d5768b5be4b60a5"
+  },
+  "derivative": {
+    "dimensions": "1600x1200",
+    "sha256": "fe1d117043f857aa6e588f1f6b7e50d886421f42d1f8d99120263ba5840e0f00",
+    "changes": "Center-cropped minimally to 4:3, resized, and encoded as WebP.",
+    "tool": "ImageMagick 6.9.12-98"
+  },
+  "prompt_summary": "Bright soft-3D adventure-atlas scene of an old mango tree above a low-rise Điện Biên Phủ valley city, with one traveler sitting quietly beneath it; no text or UI.",
+  "representation_note": "Purpose-built challenge illustration; not documentary photography or an exact tree identification."
+}

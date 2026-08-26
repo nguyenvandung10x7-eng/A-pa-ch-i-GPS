@@ -6,17 +6,16 @@ import {
 import { BOOK_MUSIC_TRACKS } from './music';
 import { withLiteraryChapterCopy } from './bookLiteraryCopy';
 import { withLiteraryPageCopy } from './bookLiteraryPageCopy';
-import type { BookChapter, BookExperience, BookPage, ContentBlock } from '../types/book';
+import { withLongformEditorialPageCopy } from './bookLongformEditorial';
+import { withNatureEditorialChapterCopy, withNatureEditorialPageCopy } from './bookNatureEditorial';
+import { withFirstLoveEditorialChapterCopy, withFirstLoveEditorialPageCopy } from './bookFirstLoveEditorial';
+import { withLivingDeadEditorialChapterCopy, withLivingDeadEditorialPageCopy } from './bookLivingDeadEditorial';
+import { withGoWestEditorialChapterCopy, withGoWestEditorialPageCopy } from './bookGoWestEditorial';
+import { withRebellionEditorialChapterCopy, withRebellionEditorialPageCopy } from './bookRebellionEditorial';
+import type { BookChapter, BookExperience, BookPage } from '../types/book';
 
 export const CHAPTER_13_ID = 'chapter-13-su-noi-loan-va-thanh-pho-ban-dem';
 export const CHAPTER_13_CHALLENGE_ID = 'de-xe-may-ngoai-troi-qua-dem';
-
-const CHAPTER_01_ID = 'chapter-01-dong-song';
-const NAM_ROM_PAGE_ID = 'nam-rom-buoi-chieu';
-
-const CHAPTER_01_HERO_IMAGE = '/images/tasks/ho-huoi-pha-mthen.webp';
-const NAM_ROM_INLINE_IMAGE = '/images/tasks/cong-vien-noong-bua-mthen.webp';
-const CHAPTER_13_HERO_IMAGE = '/images/tasks/quang-truong-7-5-mthen.webp';
 
 const CHAPTER_TRACK_IDS_BY_NUMBER: Record<string, string[]> = {
   '01': ['chapter-01-dong-song-track-01'],
@@ -35,11 +34,9 @@ const CHAPTER_TRACK_IDS_BY_NUMBER: Record<string, string[]> = {
 
 const withUploadedChapterAssets = (chapter: BookChapter): BookChapter => {
   const trackIds = CHAPTER_TRACK_IDS_BY_NUMBER[chapter.number];
-  const coverImage = chapter.id === CHAPTER_01_ID ? CHAPTER_01_HERO_IMAGE : chapter.coverImage;
 
   return {
     ...chapter,
-    ...(coverImage ? { coverImage } : {}),
     ...(trackIds?.length
       ? {
           music: {
@@ -65,7 +62,6 @@ const chapter13: BookChapter = {
     vi: 'Sau khi trời tối, những trật tự ban ngày lỏng ra: đường, đèn, xe máy và những khoảng vắng làm thành phố quen thuộc hiện lên theo một cách khác.',
     en: 'After dark, daytime order loosens: roads, lights, motorbikes, and empty stretches make the familiar city appear differently.',
   },
-  coverImage: CHAPTER_13_HERO_IMAGE,
   music: { mood: 'piano', trackId: chapter13TrackIds[0], trackIds: chapter13TrackIds },
   order: 13,
   status: 'published',
@@ -87,7 +83,6 @@ const chapter13Page: BookPage = {
       en: 'Rebellion here is not a slogan. It lives in the urge to step slightly outside routine: ride through the night air and quieter streets, then leave the motorbike outdoors in a legal parking place. Lock it normally, leave no valuables, and walk away. Return the next morning. The app does not need to prove that part; it only takes you to where the story begins.',
     },
   }],
-  coverImage: CHAPTER_13_HERO_IMAGE,
   location: {
     lat: 21.394221,
     lng: 103.020336,
@@ -104,14 +99,14 @@ const chapter13Experience: BookExperience = {
   id: 'experience-chapter-13-overnight-motorbike',
   chapterId: CHAPTER_13_ID,
   type: 'location',
-  title: { vi: 'Để xe máy ngoài trời qua đêm', en: 'Leave a Motorbike Outside Overnight' },
+  title: { vi: 'Cứ để nó ở đó', en: 'Just Leave It There' },
   description: {
-    vi: 'Challenge BOTH của chương. Chỉ cần đến điểm đã chốt; GPS xác nhận bạn đã bước vào nơi trải nghiệm bắt đầu.',
-    en: 'The chapter’s BOTH challenge. Simply reach the fixed location; GPS confirms that you have arrived where the experience begins.',
+    vi: 'Nhiệm vụ hôm nay: khóa xe như bình thường, để nó ngoài trời qua đêm rồi quay lưng bước đi.',
+    en: 'Tonight’s task: lock the motorbike as usual, leave it outside overnight, then turn your back and walk away.',
   },
   instruction: {
-    vi: 'Đến trong bán kính 100 m để hoàn thành Challenge. Việc có để xe qua đêm hay không thuộc về trải nghiệm của bạn, không phải thứ app cố xác minh.',
-    en: 'Reach the 100 m radius to complete the Challenge. Whether you actually leave the motorbike overnight belongs to your experience rather than something the app tries to verify.',
+    vi: 'Đến trong bán kính 100 m để hoàn thành phần GPS. Nếu thực hiện phần còn lại, hãy chọn chỗ đỗ hợp pháp và phù hợp, không để tài sản có giá trị trên xe. Sau đó: cứ để nó ở đó.',
+    en: 'Reach the 100 m radius to complete the GPS portion. If you do the rest, choose a legal and suitable parking place and leave no valuables on the motorbike. Then: just leave it there.',
   },
   location: {
     lat: 21.394221,
@@ -131,58 +126,6 @@ const chapterNumberById = new Map<string, string>([
 ]);
 
 const bookMusicTrackById = new Map(BOOK_MUSIC_TRACKS.map((track) => [track.id, track]));
-
-const imageBlock = (src: string, viAlt: string, enAlt: string, viCaption?: string, enCaption?: string): ContentBlock => ({
-  type: 'image',
-  image: {
-    src,
-    alt: { vi: viAlt, en: enAlt },
-    ...(viCaption && enCaption ? { caption: { vi: viCaption, en: enCaption } } : {}),
-  },
-});
-
-const withUploadedPageImages = (page: BookPage): BookPage => {
-  if (page.id === NAM_ROM_PAGE_ID) {
-    return {
-      ...page,
-      coverImage: CHAPTER_01_HERO_IMAGE,
-      blocks: [
-        imageBlock(
-          CHAPTER_01_HERO_IMAGE,
-          'Phong cảnh sông ở Điện Biên Phủ dùng làm ảnh đại diện cho chương Nậm Rốm',
-          'Representative Dien Bien Phu river scenery used for the Nam Rom chapter'
-        ),
-        imageBlock(
-          NAM_ROM_INLINE_IMAGE,
-          'Phong cảnh đồng quê Điện Biên Phủ dùng làm ảnh đại diện cho không gian ven sông',
-          'Representative Dien Bien Phu countryside used for the riverside setting',
-          'Ảnh đại diện cho không gian sông và đồng quê Điện Biên Phủ; không phải ảnh đã xác minh chính xác sông Nậm Rốm.',
-          'Representative Dien Bien Phu river-and-countryside imagery; not an exact verified photograph of the Nam Rom River.'
-        ),
-        ...page.blocks,
-      ],
-    };
-  }
-
-  if (page.chapterId === CHAPTER_13_ID && page.order === 1) {
-    return {
-      ...page,
-      coverImage: CHAPTER_13_HERO_IMAGE,
-      blocks: [
-        imageBlock(
-          CHAPTER_13_HERO_IMAGE,
-          'Phong cảnh đô thị Điện Biên Phủ dùng làm ảnh đại diện cho Chương 13',
-          'Representative Dien Bien Phu urban streetscape used for Chapter 13',
-          'Ảnh đường phố Điện Biên Phủ mang tính đại diện cho bối cảnh đô thị của Chương 13; không phải ảnh đã xác minh chính xác thành phố về đêm hay điểm Challenge.',
-          "Representative Dien Bien Phu streetscape used for Chapter 13's urban setting; not an exact verified night photograph or image of the Challenge point."
-        ),
-        ...page.blocks,
-      ],
-    };
-  }
-
-  return page;
-};
 
 const withUploadedChapterAudioBlocks = (page: BookPage): BookPage => {
   if (page.order !== 1) return page;
@@ -214,15 +157,68 @@ const withUploadedChapterAudioBlocks = (page: BookPage): BookPage => {
   };
 };
 
+const withDeduplicatedNarrativeBlocks = (page: BookPage): BookPage => {
+  const seenText = new Set<string>();
+  const blocks = page.blocks.filter((block) => {
+    if (block.type !== 'text') return true;
+
+    const key = `${block.body.vi}\u0000${block.body.en}`;
+    if (seenText.has(key)) return false;
+    seenText.add(key);
+    return true;
+  });
+
+  return blocks.length === page.blocks.length ? page : { ...page, blocks };
+};
+
 const withUploadedPageAssets = (page: BookPage): BookPage =>
-  withUploadedChapterAudioBlocks(withUploadedPageImages(page));
+  withUploadedChapterAudioBlocks(page);
+
+const withAllEditorialPageCopy = (page: BookPage): BookPage =>
+  withRebellionEditorialPageCopy(
+    withGoWestEditorialPageCopy(
+      withLivingDeadEditorialPageCopy(
+        withFirstLoveEditorialPageCopy(
+          withNatureEditorialPageCopy(
+            withLongformEditorialPageCopy(
+              withLiteraryPageCopy(page),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+const withAllEditorialChapterCopy = (chapter: BookChapter): BookChapter =>
+  withRebellionEditorialChapterCopy(
+    withGoWestEditorialChapterCopy(
+      withLivingDeadEditorialChapterCopy(
+        withFirstLoveEditorialChapterCopy(
+          withNatureEditorialChapterCopy(
+            withLiteraryChapterCopy(chapter),
+          ),
+        ),
+      ),
+    ),
+  );
 
 export const BOOK_CHAPTERS: BookChapter[] = [
-  ...BASE_BOOK_CHAPTERS.map(withUploadedChapterAssets).map(withLiteraryChapterCopy),
-  withLiteraryChapterCopy(chapter13),
+  ...BASE_BOOK_CHAPTERS
+    .map(withUploadedChapterAssets)
+    .map(withAllEditorialChapterCopy),
+  withAllEditorialChapterCopy(chapter13),
 ];
+
 export const BOOK_PAGES: BookPage[] = [
-  ...BASE_BOOK_PAGES.map(withLiteraryPageCopy).map(withUploadedPageAssets),
-  withUploadedPageAssets(withLiteraryPageCopy(chapter13Page)),
+  ...BASE_BOOK_PAGES
+    .map(withAllEditorialPageCopy)
+    .map(withDeduplicatedNarrativeBlocks)
+    .map(withUploadedPageAssets),
+  withUploadedPageAssets(
+    withDeduplicatedNarrativeBlocks(
+      withAllEditorialPageCopy(chapter13Page),
+    ),
+  ),
 ];
+
 export const BOOK_EXPERIENCES: BookExperience[] = [...BASE_BOOK_EXPERIENCES, chapter13Experience];

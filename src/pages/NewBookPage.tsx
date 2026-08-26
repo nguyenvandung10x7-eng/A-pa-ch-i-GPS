@@ -1,185 +1,316 @@
-import { ArrowDown, ArrowLeft, ArrowRight, MapPin } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, ExternalLink, MapPin, Music2, Sparkles } from 'lucide-react';
+import { useEffect, useRef, type KeyboardEvent, type MouseEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { BookChapterMenu } from '../components/BookChapterMenu';
+import { getBookPageIllustration } from '../data/bookIllustrations';
 import { useBookState } from '../hooks/useBookState';
-import { getChapter, getChapterPages, getPage, getPublishedChapters } from '../services/bookContent';
-import type { BookLocalizedText } from '../types/book';
+import { getChapter, getChapterExperiences, getChapterPages, getPublishedChapters } from '../services/bookContent';
+import { bookLocationMapUrl } from '../services/bookNearMe';
+import { markBookPageRead, toggleSavedBookPage } from '../services/bookState';
+import { createExactTaskExperienceMode } from '../services/experienceFilters';
+import { GAMEPLAY_MUSIC_ACTION_EVENT } from '../services/gameplayMusicEvents';
+import type { BookExperience, BookLocalizedText, BookPage, ContentBlock } from '../types/book';
 import type { LanguageCode } from '../types/task';
 import './book-rebuild.css';
-import './chapter13-night.css';
 
 type BookPageProps = { language: LanguageCode };
 
 const localized = (value: BookLocalizedText | undefined, language: LanguageCode): string =>
   value?.[language] ?? value?.vi ?? value?.en ?? '';
 
-const chapterArtwork: Record<string, string | undefined> = {
-  'chapter-01-dong-song': '/images/tasks/ho-huoi-pha-mthen.webp',
-  'chapter-02-mua-he': '/images/tasks/cong-vien-hoa-ban-mthen.webp',
-  'chapter-03-mot-dien-bien-rat-nho': '/images/tasks/ban-phieng-loi-mthen.webp',
-  'chapter-04-pho-cu': '/images/tasks/quang-truong-7-5-mthen.webp',
-  'chapter-05-thi-xa': '/images/tasks/cho-noong-bua-trai-ban.webp',
-  'chapter-06-nhung-nam-2000': '/images/tasks/quang-truong-7-5-mthen.webp',
-  'chapter-05-long-chao': '/images/tasks/canh-dong-muong-thanh-cat-banh.webp',
-  'chapter-08-nhung-ngon-doi': '/images/tasks/doi-a1-khoanh-khac-tuong-niem.webp',
-  'chapter-06-1954': '/images/tasks/bao-tang-chien-thang-dien-bien-phu-trai-nghiem.webp',
-  'chapter-09-nhung-thu-kho-quen': '/images/tasks/thac-ke-nenh-mthen.webp',
-  'chapter-11-di-ve-phia-tay': '/images/tasks/cot-co-a-pa-chai.webp',
-  'chapter-13-su-noi-loan-va-thanh-pho-ban-dem': '/images/tasks/quang-truong-7-5-mthen.webp',
-};
-
 const copy = {
   vi: {
-    subtitle: 'những điều tôi còn nhớ.',
-    proposition: 'Một cuốn sách để đọc, nghe và bước ra ngoài. Điện Biên hiện ra qua ký ức, những nơi vẫn còn, và những việc chỉ có thể hiểu khi tự mình đi đến.',
-    contents: 'Mục lục',
     chapter: 'Chương',
     back: 'Mục lục',
     noPages: 'Chương này đang được biên tập thêm.',
-    continue: 'Tiếp tục đọc',
-    begin: 'Bắt đầu đọc',
-    places: 'Những nơi trong chương',
-    pageCount: 'trang',
+    place: 'Địa điểm trong câu chuyện',
+    map: 'Xem trên bản đồ',
+    save: 'Lưu đoạn này',
+    saved: 'Đã lưu',
+    next: 'Chương tiếp theo',
+    progress: 'đoạn',
+    listen: 'Nghe cùng chương này',
+    openAudio: 'Mở bản âm thanh',
+    stepOutside: 'Sau câu chuyện',
+    experiences: 'Tiếp tục trải nghiệm',
+    experienceIntro: 'Nếu câu chuyện khiến bạn muốn đi thêm một bước, những hoạt động này sẽ nối phần đọc với một nơi có thật.',
+    openExperience: 'Mở trải nghiệm',
+    openActivity: 'Mở hoạt động',
+    directions: 'Chỉ đường',
   },
   en: {
-    subtitle: 'the things I still remember.',
-    proposition: 'A book to read, listen to, and step outside from. Dien Bien appears through memory, places that remain, and things that only make sense when you go there yourself.',
-    contents: 'Contents',
     chapter: 'Chapter',
     back: 'Contents',
     noPages: 'This chapter is still being edited.',
-    continue: 'Continue reading',
-    begin: 'Begin reading',
-    places: 'Places in this chapter',
-    pageCount: 'pages',
+    place: 'Place in this story',
+    map: 'View on map',
+    save: 'Save this story',
+    saved: 'Saved',
+    next: 'Next chapter',
+    progress: 'stories',
+    listen: 'Listen with this chapter',
+    openAudio: 'Open audio track',
+    stepOutside: 'After the story',
+    experiences: 'Continue the experience',
+    experienceIntro: 'If the story makes you want to go one step farther, these activities connect the reading with a real place.',
+    openExperience: 'Open experience',
+    openActivity: 'Open activity',
+    directions: 'Directions',
   },
 } as const;
 
+const coordinateAudioPlayback = (activeAudio: HTMLAudioElement) => {
+  document.querySelectorAll<HTMLAudioElement>('audio').forEach((audio) => {
+    if (audio !== activeAudio && !audio.paused) audio.pause();
+  });
+};
+
+const renderNarrativeBlock = (block: ContentBlock, language: LanguageCode, key: string) => {
+  if (block.type === 'text') return <p key={key}>{localized(block.body, language)}</p>;
+  if (block.type === 'quote') {
+    return (
+      <blockquote key={key}>
+        <p>{localized(block.body, language)}</p>
+        {block.attribution ? <cite>{localized(block.attribution, language)}</cite> : null}
+      </blockquote>
+    );
+  }
+  if (block.type === 'note') return <aside key={key}>{localized(block.body, language)}</aside>;
+  if (block.type === 'divider') return <hr key={key} />;
+  if (block.type === 'audio') {
+    const c = copy[language];
+    return (
+      <section key={key} className="book-longform-audio">
+        <span><Music2 aria-hidden="true" /></span>
+        <div>
+          <small>{c.listen}</small>
+          <strong>{localized(block.audio.title, language) || c.listen}</strong>
+          {block.audio.src ? (
+            <audio
+              controls
+              preload="none"
+              src={block.audio.src}
+              onPlay={(event) => coordinateAudioPlayback(event.currentTarget)}
+            />
+          ) : null}
+          {block.audio.externalUrl ? (
+            <a href={block.audio.externalUrl} target="_blank" rel="noreferrer">
+              {c.openAudio}<ExternalLink aria-hidden="true" />
+            </a>
+          ) : null}
+        </div>
+      </section>
+    );
+  }
+  return null;
+};
+
+const dispatchStartGameplayMusic = () => {
+  window.dispatchEvent(new CustomEvent<'start'>(GAMEPLAY_MUSIC_ACTION_EVENT, { detail: 'start' }));
+};
+
+const handleActivityClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented || event.detail === 0 || event.button !== 0) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  dispatchStartGameplayMusic();
+};
+
+const handleActivityKeyDown = (event: KeyboardEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented || event.key !== 'Enter' || event.repeat) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  dispatchStartGameplayMusic();
+};
+
+const ExperienceCard = ({ experience, language }: { experience: BookExperience; language: LanguageCode }) => {
+  const c = copy[language];
+  const activityPath = experience.legacyTaskId
+    ? `/challenge?experience=${encodeURIComponent(createExactTaskExperienceMode(experience.legacyTaskId))}`
+    : null;
+
+  return (
+    <article className="book-longform-experience">
+      <div className="book-longform-experience__head">
+        <span>{experience.location ? <MapPin aria-hidden="true" /> : <Sparkles aria-hidden="true" />}</span>
+        <div>
+          <h3>{localized(experience.title, language)}</h3>
+          {experience.location?.label ? <small>{localized(experience.location.label, language)}</small> : null}
+        </div>
+      </div>
+      {experience.description ? <p>{localized(experience.description, language)}</p> : null}
+      {experience.instruction ? <aside>{localized(experience.instruction, language)}</aside> : null}
+      <div className="book-longform-experience__actions">
+        {experience.externalUrl ? (
+          <a href={experience.externalUrl} target="_blank" rel="noreferrer">
+            {c.openExperience}<ExternalLink aria-hidden="true" />
+          </a>
+        ) : null}
+        {activityPath ? (
+          <Link to={activityPath} onClick={handleActivityClick} onKeyDown={handleActivityKeyDown}>
+            {c.openActivity}<ArrowRight aria-hidden="true" />
+          </Link>
+        ) : null}
+        {experience.location ? (
+          <a href={bookLocationMapUrl(experience.location)} target="_blank" rel="noreferrer" className="is-secondary">
+            {c.directions}<MapPin aria-hidden="true" />
+          </a>
+        ) : null}
+      </div>
+    </article>
+  );
+};
+
+const StorySection = ({
+  page,
+  index,
+  total,
+  language,
+  saved,
+}: {
+  page: BookPage;
+  index: number;
+  total: number;
+  language: LanguageCode;
+  saved: boolean;
+}) => {
+  const ref = useRef<HTMLElement | null>(null);
+  const c = copy[language];
+  const illustration = getBookPageIllustration(page.id);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        markBookPageRead(page.id);
+        observer.disconnect();
+      }
+    }, { threshold: 0.38 });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [page.id]);
+
+  return (
+    <article ref={ref} id={`story-${page.id}`} className="book-longform-story">
+      <div className="book-longform-story__meta">
+        <span>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</span>
+        <button
+          type="button"
+          onClick={() => toggleSavedBookPage(page.id)}
+          aria-pressed={saved}
+          aria-label={saved ? c.saved : c.save}
+          title={saved ? c.saved : c.save}
+        >
+          {saved ? <BookmarkCheck aria-hidden="true" /> : <Bookmark aria-hidden="true" />}
+          <span>{saved ? c.saved : c.save}</span>
+        </button>
+      </div>
+
+      <header className="book-longform-story__head">
+        <h2>{localized(page.title, language)}</h2>
+        {page.intro ? <p>{localized(page.intro, language)}</p> : null}
+      </header>
+
+      {illustration && index > 0 ? (
+        <figure className="book-longform-story__art">
+          <img src={illustration} alt={localized(page.title, language)} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
+        </figure>
+      ) : null}
+
+      <div className="book-longform-story__body">
+        {page.blocks.map((block, blockIndex) => renderNarrativeBlock(block, language, `${page.id}-${blockIndex}`))}
+      </div>
+
+      {page.location ? (
+        <a className="book-longform-story__place" href={bookLocationMapUrl(page.location)} target="_blank" rel="noreferrer">
+          <span><MapPin aria-hidden="true" /></span>
+          <div>
+            <small>{c.place}</small>
+            <strong>{localized(page.location.label, language) || localized(page.title, language)}</strong>
+          </div>
+          <em>{c.map}<ArrowRight aria-hidden="true" /></em>
+        </a>
+      ) : null}
+    </article>
+  );
+};
+
 export const NewBookPage = ({ language }: BookPageProps) => {
   const { chapterId } = useParams<{ chapterId?: string }>();
-  const { bookState } = useBookState();
+  const { savedState } = useBookState();
   const c = copy[language];
 
-  if (chapterId) {
-    const chapter = getChapter(chapterId);
-    if (!chapter) return <div className="book-v2-empty">{c.noPages}</div>;
-
-    const pages = getChapterPages(chapter.id);
-    const hero = chapterArtwork[chapter.id];
-    const chapterPlaces = pages.filter((page) => page.location);
-    const isRebellion = chapter.number === '13';
-
+  if (!chapterId) {
     return (
-      <main className={`book-v2-chapter ${isRebellion ? 'book-v2-chapter--rebellion' : ''}`}>
-        <div className="book-v2-chapter__nav">
-          <Link to="/book#contents" aria-label={c.back}><ArrowLeft /></Link>
-          <span>{c.chapter} {chapter.number}</span>
-        </div>
-
-        <header className="book-v2-chapter__header">
-          <p>{String(chapter.number).padStart(2, '0')} / 13</p>
-          <h1>{localized(chapter.title, language)}</h1>
-          {chapter.intro ? <div className="book-v2-chapter__intro">{localized(chapter.intro, language)}</div> : null}
-        </header>
-
-        {hero ? (
-          <figure className="book-v2-chapter__hero">
-            <img src={hero} alt="" loading="eager" decoding="async" />
-          </figure>
-        ) : null}
-
-        <section className="book-v2-chapter__pages" aria-label={c.contents}>
-          {pages.length ? pages.map((page, index) => (
-            <Link key={page.id} to={`/book/page/${page.id}`}>
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <div>
-                <strong>{localized(page.title, language)}</strong>
-                {page.intro ? <small>{localized(page.intro, language)}</small> : null}
-              </div>
-              <ArrowRight aria-hidden="true" />
-            </Link>
-          )) : <p className="book-v2-muted">{c.noPages}</p>}
-        </section>
-
-        {chapterPlaces.length > 0 ? (
-          <section className="book-v2-chapter__places">
-            <p>{c.places}</p>
-            {chapterPlaces.map((page) => (
-              <Link key={page.id} to={`/book/page/${page.id}`}>
-                <MapPin aria-hidden="true" />
-                <span>{localized(page.location?.label, language) || localized(page.title, language)}</span>
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            ))}
-          </section>
-        ) : null}
+      <main className="game-book-home">
+        <div className="game-book-home__map" aria-hidden="true" />
+        <BookChapterMenu language={language} />
       </main>
     );
   }
 
+  const chapter = getChapter(chapterId);
+  if (!chapter) return <div className="book-v2-empty">{c.noPages}</div>;
+
+  const pages = getChapterPages(chapter.id);
   const chapters = getPublishedChapters();
-  const firstChapter = chapters[0];
-  const firstPage = firstChapter ? getChapterPages(firstChapter.id)[0] : undefined;
-  const latestReadId = bookState.readPageIds[bookState.readPageIds.length - 1];
-  const latestReadPage = latestReadId ? getPage(latestReadId) : undefined;
-  const continuePage = latestReadPage ?? firstPage;
-  const continueChapter = continuePage ? getChapter(continuePage.chapterId) : firstChapter;
-  const coverImage = firstChapter ? chapterArtwork[firstChapter.id] : undefined;
+  const chapterIndex = chapters.findIndex((candidate) => candidate.id === chapter.id);
+  const nextChapter = chapterIndex >= 0 ? chapters[chapterIndex + 1] : undefined;
+  const firstIllustration = pages[0] ? getBookPageIllustration(pages[0].id) : undefined;
+  const experiences = getChapterExperiences(chapter.id);
 
   return (
-    <main className="book-v2-home">
-      <section className="book-v2-cover">
-        <div className="book-v2-cover__image">
-          {coverImage ? <img src={coverImage} alt="" loading="eager" decoding="async" /> : null}
-          <div className="book-v2-cover__veil" />
-          <div className="book-v2-cover__title">
-            <span>BOOK OF</span>
-            <h1>DIEN BIEN</h1>
-            <em>{c.subtitle}</em>
+    <main className="book-longform">
+      <div className="book-longform__nav">
+        <Link to="/book"><ArrowLeft aria-hidden="true" /><span>{c.back}</span></Link>
+        <span>{c.chapter} {chapter.number}</span>
+      </div>
+
+      <header className="book-longform__hero">
+        {firstIllustration ? <img src={firstIllustration} alt="" aria-hidden="true" /> : null}
+        <div className="book-longform__hero-veil" />
+        <div className="book-longform__hero-copy">
+          <p>{String(chapter.number).padStart(2, '0')} / {chapters.length}</p>
+          <h1>{localized(chapter.title, language)}</h1>
+          {chapter.intro ? <div>{localized(chapter.intro, language)}</div> : null}
+          <small>{pages.length} {c.progress}</small>
+        </div>
+      </header>
+
+      <section className="book-longform__stories">
+        {pages.length ? pages.map((page, index) => (
+          <StorySection
+            key={page.id}
+            page={page}
+            index={index}
+            total={pages.length}
+            language={language}
+            saved={savedState.pageIds.includes(page.id)}
+          />
+        )) : <p className="book-v2-muted">{c.noPages}</p>}
+      </section>
+
+      {experiences.length ? (
+        <section className="book-longform__experiences">
+          <header>
+            <p><Sparkles aria-hidden="true" />{c.stepOutside}</p>
+            <h2>{c.experiences}</h2>
+            <div>{c.experienceIntro}</div>
+          </header>
+          <div className="book-longform__experience-grid">
+            {experiences.map((experience) => (
+              <ExperienceCard key={experience.id} experience={experience} language={language} />
+            ))}
           </div>
+        </section>
+      ) : null}
 
-          {continuePage && continueChapter ? (
-            <Link to={`/book/page/${continuePage.id}`} className="book-v2-cover__continue">
-              <small>{latestReadPage ? c.continue : c.begin}</small>
-              <div>
-                <span>{continueChapter.number}</span>
-                <strong>{localized(continueChapter.title, language)}</strong>
-              </div>
-              <p>{localized(continuePage.title, language)}</p>
-              <ArrowRight aria-hidden="true" />
-            </Link>
-          ) : null}
-
-          <a href="#contents" className="book-v2-cover__contents-link">
-            {c.contents}<ArrowDown aria-hidden="true" />
-          </a>
-        </div>
-      </section>
-
-      <section id="contents" className="book-v2-contents">
-        <header>
-          <p>BOOK OF DIEN BIEN</p>
-          <h2>{c.contents}</h2>
-          <div>{c.proposition}</div>
-        </header>
-
-        <div className="book-v2-contents__list">
-          {chapters.map((chapter) => {
-            const pages = getChapterPages(chapter.id);
-            const isRebellion = chapter.number === '13';
-            return (
-              <Link key={chapter.id} to={`/book/chapter/${chapter.id}`} className={isRebellion ? 'is-rebellion' : ''}>
-                <span>{String(chapter.number).padStart(2, '0')}</span>
-                <div>
-                  <strong>{localized(chapter.title, language)}</strong>
-                  {chapter.intro ? <p>{localized(chapter.intro, language)}</p> : null}
-                  <small>{pages.length} {c.pageCount}</small>
-                </div>
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            );
-          })}
-        </div>
-      </section>
+      {nextChapter ? (
+        <Link className="book-longform__next" to={`/book/chapter/${nextChapter.id}`}>
+          <span>{c.next}</span>
+          <strong>{String(nextChapter.number).padStart(2, '0')} · {localized(nextChapter.title, language)}</strong>
+          <ArrowRight aria-hidden="true" />
+        </Link>
+      ) : null}
     </main>
   );
 };

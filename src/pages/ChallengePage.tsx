@@ -3,7 +3,7 @@ import { CheckCircle2, Flag, Headphones, RotateCcw, ShieldCheck, Trophy, XCircle
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { TaskMap } from '../components/TaskMap';
+import { ExploreAtlas } from '../components/ExploreAtlas';
 import {
   assignRandomChallenge,
   completeActiveChallenge,
@@ -93,6 +93,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const [failedGalleryImageKeys, setFailedGalleryImageKeys] = useState<string[]>([]);
   const [completionPanelRunId, setCompletionPanelRunId] = useState<string | null>(null);
   const [expandedInstructionsTaskId, setExpandedInstructionsTaskId] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const scopeTransitionRef = useRef<string | null>(null);
   const scopeTransitionOwnerTokenRef = useRef<number | null>(null);
   const scopeReassignTokenRef = useRef(0);
@@ -257,7 +258,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     }
   };
 
-  const startGame = async () => {
+  const startGame = async (preferredTaskIds?: string[]) => {
     if (isMutating) return;
 
     if (isScopedCompleted) {
@@ -265,7 +266,12 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       return;
     }
 
-    if (eligibleTasks.length === 0) {
+    const preferredTaskIdSet = preferredTaskIds?.length ? new Set(preferredTaskIds) : null;
+    const startCandidates = preferredTaskIdSet
+      ? eligibleTasks.filter((candidate) => preferredTaskIdSet.has(candidate.id))
+      : eligibleTasks;
+
+    if (startCandidates.length === 0) {
       setMessage(t('challenge.allDone'));
       return;
     }
@@ -274,7 +280,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
     await runMutation(async () => {
       try {
-        const result = await createNewGameWithChallenge(activeTasks, progress, eligibleTasks);
+        const result = await createNewGameWithChallenge(activeTasks, progress, startCandidates);
         setProgress(result.progress);
         setGpsStatus('idle');
         if (result.stale) {
@@ -556,9 +562,21 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     const translated = t(`challenge.difficulty.${task.difficulty}`);
     return translated === `challenge.difficulty.${task.difficulty}` ? formatTokenLabel(task.difficulty) : translated;
   })() : '';
-
   return (
-  <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,1.02fr)]">
+  <ExploreAtlas
+    tasks={eligibleTasks}
+    progressTotal={eligibleTasks.length}
+    activeTask={task}
+    score={summary.score}
+    completedCount={summary.completedCount}
+    completedTaskIds={progress.completedTaskIds}
+    language={language}
+    detailsOpen={detailsOpen}
+    isMutating={isMutating}
+    onOpenDetails={() => setDetailsOpen(true)}
+    onCloseDetails={() => setDetailsOpen(false)}
+    onStart={(taskIds) => { void startGame(taskIds); }}
+  >
     <Card className="overflow-visible p-0">
     <div className="overflow-hidden rounded-[1.9rem]">
       {task && hasAdditionalTaskImages ? (
@@ -756,7 +774,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       </div>
     </div>
     </Card>
-    <TaskMap tasks={task ? [task] : eligibleTasks} language={language} t={t} />
-  </div>
+  </ExploreAtlas>
   );
 };
