@@ -25,7 +25,7 @@
   position: absolute;
   z-index: -2;
   inset: 0;
-  background: url('/images/game-ui/dien-bien-city-atlas-v3.webp') center top / cover no-repeat;
+  background: url('/images/game-ui/dien-bien-city-atlas-v4.webp') center top / cover no-repeat;
   transform: scale(1.006);
 }
 

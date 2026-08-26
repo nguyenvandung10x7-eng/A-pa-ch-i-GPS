@@ -18,7 +18,7 @@ const cc = (version: '2.0' | '3.0' | '4.0') => ({
 
 export const ASSET_CREDITS: AssetCredit[] = [
   {
-    id: 'dien-bien-city-atlas-v3',
+    id: 'dien-bien-city-atlas-v4',
     usage: {
       vi: 'Ảnh nền atlas thành phố trên màn hình Khám phá',
       en: 'City atlas background on the Explore screen',
@@ -26,8 +26,8 @@ export const ASSET_CREDITS: AssetCredit[] = [
     author: 'Generated for Book of Dien Bien',
     status: 'cleared',
     note: {
-      vi: 'Tạo mới từ hai ảnh concept nội bộ: giữ tỷ lệ thung lũng đô thị của bản v2 và bổ sung các mốc thị giác như Tượng đài Chiến thắng, Đồi A1, bảo tàng, cầu Mường Thanh và sân bay. Đây là bản đồ minh họa phong cách game, không thay thế bản đồ định vị GPS.',
-      en: 'Created from two internal concept images: it keeps the v2 urban-valley scale while adding visual landmarks including the Victory Monument, A1 Hill, museum, Mường Thanh Bridge, and airport. This is a game-style illustrated atlas, not a replacement for GPS mapping.',
+      vi: 'Vẽ mới hoàn toàn theo phong cách diorama game, dùng ảnh toàn cảnh có chú thích do chủ dự án cung cấp để giữ tương quan giữa Tượng đài Chiến thắng trên Đồi D1, Đồi A1, nghĩa trang A1, Bảo tàng Chiến thắng, sân vận động, các cầu và sông Nậm Rốm. Ảnh nền chỉ định hướng thị giác; vị trí pin thử thách được tính riêng từ GPS thật trong ứng dụng.',
+      en: 'Redrawn from scratch as a game diorama, using an annotated aerial overview supplied by the project owner to preserve the relationship between the D1 Victory Monument, A1 Hill, A1 cemetery, the Victory Museum, the stadium, bridges, and the Nam Rom river. The background is a visual orientation layer; challenge pins are positioned separately from real GPS data in the app.',
     },
   },
   {

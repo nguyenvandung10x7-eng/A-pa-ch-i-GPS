@@ -75,8 +75,18 @@ const PIN_COLORS = ['#f25643', '#f3aa20', '#6b70e8', '#10a997', '#a653ef'];
 const CITY_ATLAS_BOUNDS = {
   north: 21.432,
   south: 21.374,
-  west: 103.005,
+  west: 103.008,
   east: 103.071,
+} as const;
+
+// Keep the GPS layer inside the part of the illustrated atlas that remains
+// readable above the destination card. The artwork is intentionally a
+// diorama; these values, rather than painted landmarks, place task pins.
+const CITY_ATLAS_FRAME = {
+  left: 10,
+  right: 90,
+  top: 26,
+  bottom: 60,
 } as const;
 
 const PLACE_NAMES: Partial<Record<string, Record<LanguageCode, string>>> = {
@@ -100,7 +110,7 @@ const CITY_PIN_LABEL_PLACEMENTS: Partial<Record<string, PinLabelPlacement>> = {
   'doi-a1-chuyen-tau-thoi-gian-1954': 'bottom',
   'ban-phieng-loi-mthen': 'right',
   'thac-ke-nenh-mthen': 'top',
-  'quan-com-hung-ha-thuoc-lao-free': 'left',
+  'quan-com-hung-ha-thuoc-lao-free': 'right',
   'de-xe-may-ngoai-troi-qua-dem': 'top',
   'nhin-xuong-long-chao-cua-chung-ta': 'left',
   'tim-cay-xoai-co-thu': 'left',
@@ -117,8 +127,10 @@ const projectTaskToAtlas = (task: ChallengeTask) => {
   const longitudeRatio = (task.gps.lng - CITY_ATLAS_BOUNDS.west) / (CITY_ATLAS_BOUNDS.east - CITY_ATLAS_BOUNDS.west);
   const latitudeRatio = (CITY_ATLAS_BOUNDS.north - task.gps.lat) / (CITY_ATLAS_BOUNDS.north - CITY_ATLAS_BOUNDS.south);
   return {
-    x: 11 + Math.max(0, Math.min(1, longitudeRatio)) * 78,
-    y: 35 + Math.max(0, Math.min(1, latitudeRatio)) * 32,
+    x: CITY_ATLAS_FRAME.left
+      + Math.max(0, Math.min(1, longitudeRatio)) * (CITY_ATLAS_FRAME.right - CITY_ATLAS_FRAME.left),
+    y: CITY_ATLAS_FRAME.top
+      + Math.max(0, Math.min(1, latitudeRatio)) * (CITY_ATLAS_FRAME.bottom - CITY_ATLAS_FRAME.top),
   };
 };
 

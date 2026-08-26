@@ -1,0 +1,37 @@
+{
+  "asset": "public/images/game-ui/dien-bien-city-atlas-v4.webp",
+  "source_type": "generated_from_scratch",
+  "generator": "OpenAI built-in image generation",
+  "created_for": "Book of Dien Bien",
+  "created_on": "2026-08-26",
+  "source_references": [
+    "User-supplied annotated aerial overview: thanh-pho-dien-bien-phu-35-1713457302465.webp",
+    "Internal generated Book of Dien Bien soft-3D diorama style reference"
+  ],
+  "source_reference_sha256": "b06625a5269777ec3a1d1e84957fba6199eac18e7badc167b8c21d06cb389448",
+  "prompt_summary": "Repaint the user-supplied annotated aerial city-core view as a new 941x1672 soft-3D adventure-game diorama. Preserve the relative layout of D1 and the Victory Monument below A1 Hill, the A1 cemetery and Victory Museum to the north, the stadium to the west, and the Nam Rom river and bridges to the east; omit all source labels, UI and watermark.",
+  "gps_projection": {
+    "bounds": {
+      "north": 21.432,
+      "south": 21.374,
+      "west": 103.008,
+      "east": 103.071
+    },
+    "frame_percent": {
+      "left": 10,
+      "right": 90,
+      "top": 26,
+      "bottom": 60
+    },
+    "note": "Runtime challenge pins use this deterministic GPS projection. Painted landmarks are illustrative orientation cues and are not navigation controls."
+  },
+  "landmark_coordinate_references": {
+    "a1_hill": [21.38102, 103.01674],
+    "d1_victory_monument": [21.3921301, 103.0188767],
+    "de_castries_bunker": [21.3853, 103.01116]
+  },
+  "transform": "Generated PNG converted to 941x1672 lossy WebP at quality 86 with metadata stripped.",
+  "source_png_sha256": "580ae6a55491db0b53682b41298b11c379ad858c1c4050f3b88282a650a08a51",
+  "sha256": "a1206660f05971faa66f420d3d56df0e7cafa020a86c0c3b34620c65a04fb842",
+  "documentary_accuracy": "Illustrative diorama only. Landmark forms and spacing are stylized; GPS challenge pins remain the location source of truth."
+}
