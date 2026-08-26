@@ -669,6 +669,55 @@ body.public-shell-active::after {
 
 .game-map-page .leaflet-container { border-radius: 1.35rem !important; }
 
+.task-map-region-tabs {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .35rem;
+  margin-bottom: .55rem;
+  border: 1px solid rgba(74, 111, 58, .14);
+  border-radius: 1rem;
+  background: rgba(235, 240, 218, .72);
+  padding: .28rem;
+}
+
+.task-map-region-tabs button {
+  display: flex;
+  min-height: 2.8rem;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  border: 0;
+  border-radius: .78rem;
+  background: transparent;
+  color: #627056;
+  padding: .45rem .7rem;
+  font: inherit;
+  font-size: .75rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.task-map-region-tabs button strong {
+  display: grid;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(61, 100, 57, .1);
+  font-size: .64rem;
+}
+
+.task-map-region-tabs button.is-active {
+  background: #fffaf0;
+  color: #365f36;
+  box-shadow: 0 .25rem .65rem rgba(55, 72, 43, .12);
+}
+
+.task-map-region-tabs button.is-active strong { background: #4f824b; color: white; }
+.task-map-region-tabs button:focus-visible { outline: .18rem solid #f1b932; outline-offset: .08rem; }
+
 .game-map-page__empty {
   max-width: 68rem;
   margin: 0 auto;

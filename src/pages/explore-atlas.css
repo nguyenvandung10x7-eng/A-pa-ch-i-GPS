@@ -343,6 +343,38 @@
   50% { box-shadow: inset 0 0 0 .1rem var(--pin-color), 0 0 0 .45rem rgba(255, 231, 99, .4), 0 .35rem .55rem rgba(45, 35, 22, .28); }
 }
 
+.explore-atlas__west-route {
+  position: absolute;
+  z-index: 5;
+  top: calc(7.9rem + env(safe-area-inset-top));
+  left: .65rem;
+  display: inline-flex;
+  min-height: 2.15rem;
+  align-items: center;
+  gap: .32rem;
+  border: 1px solid rgba(91, 67, 39, .16);
+  border-radius: 999px;
+  background: rgba(255, 250, 240, .92);
+  color: #4f633e;
+  padding: .3rem .48rem;
+  font: inherit;
+  font-size: clamp(.5rem, 1.85vw, .64rem);
+  font-weight: 900;
+  box-shadow: 0 .35rem .8rem rgba(54, 45, 29, .16), inset 0 1px rgba(255,255,255,.86);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.explore-atlas__west-route.is-selected {
+  background: #fff0be;
+  color: #5b3c1d;
+  box-shadow: 0 0 0 .12rem rgba(255,255,255,.74), 0 .45rem .9rem rgba(95, 62, 26, .2);
+}
+
+.explore-atlas__west-route svg { width: .82rem; height: .82rem; flex: none; stroke-width: 2.6; }
+.explore-atlas__west-route svg:last-child { width: .7rem; }
+.explore-atlas__west-route:focus-visible { outline: .2rem solid white; outline-offset: .14rem; }
+
 .explore-atlas__compass {
   position: absolute;
   z-index: 3;

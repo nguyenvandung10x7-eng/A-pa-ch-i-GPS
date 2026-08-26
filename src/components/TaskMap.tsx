@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { icon } from 'leaflet';
 import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
@@ -24,6 +24,15 @@ type TaskPlace = {
   radius: number;
   tasks: ChallengeTask[];
 };
+
+type MapRegion = 'city' | 'west';
+
+const isDienBienCityPlace = (place: TaskPlace): boolean => (
+  place.lat >= 21.35
+  && place.lat <= 21.46
+  && place.lng >= 102.98
+  && place.lng <= 103.11
+);
 
 const MapViewport = ({ places }: { places: TaskPlace[] }) => {
   const map = useMap();
@@ -78,6 +87,7 @@ export const TaskMap = ({
   t: (key: string) => string;
   groupByLocation?: boolean;
 }) => {
+  const [mapRegion, setMapRegion] = useState<MapRegion>('city');
   const places = useMemo(
     () => groupByLocation
       ? getDistinctTaskPlaces(tasks)
@@ -90,7 +100,18 @@ export const TaskMap = ({
         })),
     [groupByLocation, tasks],
   );
-  const first = places[0];
+  const cityPlaces = useMemo(() => places.filter(isDienBienCityPlace), [places]);
+  const westPlaces = useMemo(() => places.filter((place) => !isDienBienCityPlace(place)), [places]);
+  const hasRegionalTabs = groupByLocation && cityPlaces.length > 0 && westPlaces.length > 0;
+  const resolvedRegion: MapRegion = mapRegion === 'west' && westPlaces.length > 0
+    ? 'west'
+    : cityPlaces.length > 0
+      ? 'city'
+      : 'west';
+  const visiblePlaces = hasRegionalTabs
+    ? resolvedRegion === 'city' ? cityPlaces : westPlaces
+    : places;
+  const first = visiblePlaces[0];
   const firstTask = tasks[0];
   const mapTitle = groupByLocation
     ? (language === 'vi' ? 'Các địa điểm' : 'Places')
@@ -123,11 +144,37 @@ export const TaskMap = ({
           </p>
         </div>
       ) : null}
+      {hasRegionalTabs ? (
+        <div
+          className="task-map-region-tabs"
+          role="group"
+          aria-label={language === 'vi' ? 'Chọn vùng bản đồ' : 'Choose a map region'}
+        >
+          <button
+            type="button"
+            className={resolvedRegion === 'city' ? 'is-active' : ''}
+            aria-pressed={resolvedRegion === 'city'}
+            onClick={() => setMapRegion('city')}
+          >
+            <span>{language === 'vi' ? 'Thành phố' : 'City'}</span>
+            <strong>{cityPlaces.length}</strong>
+          </button>
+          <button
+            type="button"
+            className={resolvedRegion === 'west' ? 'is-active' : ''}
+            aria-pressed={resolvedRegion === 'west'}
+            onClick={() => setMapRegion('west')}
+          >
+            <span>{language === 'vi' ? 'Phía Tây' : 'West'}</span>
+            <strong>{westPlaces.length}</strong>
+          </button>
+        </div>
+      ) : null}
       <div className="relative z-0 min-h-[360px] rounded-[1.7rem]">
         <MapContainer center={[first.lat, first.lng]} zoom={13} scrollWheelZoom={false} className="h-[420px] sm:h-[540px] lg:h-[680px]">
-          <MapViewport places={places} />
+          <MapViewport places={visiblePlaces} />
           <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          {places.map((place) => {
+          {visiblePlaces.map((place) => {
             const placeFirstTask = place.tasks[0];
             const placeLabel = place.tasks.length > 1
               ? `${localize(placeFirstTask.title, language)} · ${place.tasks.length}`

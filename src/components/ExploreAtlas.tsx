@@ -34,6 +34,7 @@ const copy = {
     oneJourney: 'một hành trình',
     points: 'điểm',
     discoveries: 'khám phá',
+    places: 'địa danh',
     active: 'Điểm đến hiện tại',
     available: 'Khám phá đang mở',
     newJourney: 'Chuyến đi mới',
@@ -43,6 +44,7 @@ const copy = {
     close: 'Đóng chi tiết địa điểm',
     details: 'Chi tiết địa điểm',
     westRoute: 'Hành trình phía Tây',
+    westPlaces: 'địa danh phía Tây',
     leaderboard: 'Bảng xếp hạng',
     atThisStop: 'khám phá tại đây',
     completed: 'Đã hoàn thành',
@@ -53,6 +55,7 @@ const copy = {
     oneJourney: 'one journey',
     points: 'points',
     discoveries: 'discoveries',
+    places: 'places',
     active: 'Current destination',
     available: 'Open discovery',
     newJourney: 'New journey',
@@ -62,6 +65,7 @@ const copy = {
     close: 'Close place details',
     details: 'Place details',
     westRoute: 'Journey west',
+    westPlaces: 'places in the west',
     leaderboard: 'Leaderboard',
     atThisStop: 'discoveries here',
     completed: 'Completed',
@@ -298,12 +302,12 @@ export const ExploreAtlas = ({
           <div className="explore-atlas__banner">
             <span aria-hidden="true">🇻🇳</span>
             <strong>BOOK OF DIEN BIEN</strong>
-            <small>{tasks.length} {c.discoveries}, {c.oneJourney}</small>
+            <small>{placeGroups.length} {c.places} · {tasks.length} {c.discoveries}, {c.oneJourney}</small>
           </div>
 
-          <div className="explore-atlas__stats" aria-label={`${score} ${c.points}, ${tasks.length} ${c.discoveries}`}>
+          <div className="explore-atlas__stats" aria-label={`${score} ${c.points}, ${placeGroups.length} ${c.places}`}>
             <span><Medal aria-hidden="true" /><b>{score.toLocaleString('vi-VN')}</b> {c.points}</span>
-            <span><MapPin aria-hidden="true" /><b>{tasks.length}</b> {c.discoveries}</span>
+            <span><MapPin aria-hidden="true" /><b>{placeGroups.length}</b> {c.places}</span>
           </div>
         </header>
 
@@ -342,6 +346,19 @@ export const ExploreAtlas = ({
             );
           })}
         </section>
+
+        {westGroups.length ? (
+          <button
+            type="button"
+            className={`explore-atlas__west-route ${selectedIsWest ? 'is-selected' : ''}`}
+            onClick={() => selectGroup(westGroups[0].id)}
+            aria-pressed={selectedIsWest}
+          >
+            <Navigation aria-hidden="true" />
+            <span>{westGroups.length} {c.westPlaces}</span>
+            <ChevronRight aria-hidden="true" />
+          </button>
+        ) : null}
 
         <div className="explore-atlas__compass" aria-hidden="true">
           <i>N</i><i>E</i><i>S</i><i>W</i><Navigation />
