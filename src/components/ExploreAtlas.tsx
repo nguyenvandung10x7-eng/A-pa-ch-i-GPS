@@ -114,7 +114,7 @@ const CITY_PIN_LABEL_PLACEMENTS: Partial<Record<string, PinLabelPlacement>> = {
   'doi-a1-chuyen-tau-thoi-gian-1954': 'bottom',
   'ban-phieng-loi-mthen': 'right',
   'thac-ke-nenh-mthen': 'top',
-  'quan-com-hung-ha-thuoc-lao-free': 'right',
+  'quan-com-hung-ha-thuoc-lao-free': 'bottom',
   'de-xe-may-ngoai-troi-qua-dem': 'top',
   'nhin-xuong-long-chao-cua-chung-ta': 'left',
   'tim-cay-xoai-co-thu': 'left',
