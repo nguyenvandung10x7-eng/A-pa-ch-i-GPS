@@ -43,6 +43,7 @@ const copy = {
     close: 'Đóng chi tiết địa điểm',
     details: 'Chi tiết địa điểm',
     westRoute: 'Hành trình phía Tây',
+    leaderboard: 'Bảng xếp hạng',
     atThisStop: 'khám phá tại đây',
     completed: 'Đã hoàn thành',
     startHere: 'Bắt đầu tại đây',
@@ -61,6 +62,7 @@ const copy = {
     close: 'Close place details',
     details: 'Place details',
     westRoute: 'Journey west',
+    leaderboard: 'Leaderboard',
     atThisStop: 'discoveries here',
     completed: 'Completed',
     startHere: 'Start here',
@@ -278,7 +280,7 @@ export const ExploreAtlas = ({
         <header className="explore-atlas__hud">
           <button type="button" className="explore-atlas__avatar" onClick={() => setLeaderboardOpen(true)} aria-label={language === 'vi' ? 'Mở bảng xếp hạng' : 'Open leaderboard'}>
             <img src="/images/game-ui/explorer-avatar-v1.webp" alt="" />
-            <span className="explore-atlas__avatar-rank" aria-hidden="true"><Trophy /></span>
+            <span className="explore-atlas__avatar-rank" aria-hidden="true"><Trophy /><b>{c.leaderboard}</b></span>
           </button>
 
           <div className="explore-atlas__banner">
@@ -343,10 +345,10 @@ export const ExploreAtlas = ({
             <span><MapPin aria-hidden="true" />{selectedIsActive ? c.active : selectedGroupIsComplete ? c.completed : !activeTask ? c.newJourney : selectedIsWest ? c.westRoute : c.available}</span>
             <h1>{selectedGroup ? groupPlaceName(selectedGroup, language) : (language === 'vi' ? 'Điện Biên đang chờ bạn' : 'Dien Bien awaits')}</h1>
             {selectedTask ? (
-              <p>
-                <Footprints aria-hidden="true" />
-                {selectedGroupCount > 1 ? `${selectedGroupCount} ${c.discoveries} · ` : ''}{c.radius} {selectedTask.gps.radius} m
-              </p>
+              <div className="explore-atlas__nearby-meta">
+                <span><Footprints aria-hidden="true" />{selectedGroupCount > 1 ? `${selectedGroupCount} ${c.discoveries} · ` : ''}{c.radius} {selectedTask.gps.radius} m</span>
+                <span><Medal aria-hidden="true" />{selectedTask.points} {c.points}</span>
+              </div>
             ) : <p>{language === 'vi' ? 'Nhận một địa điểm ngẫu nhiên để bắt đầu.' : 'Pick a random place to begin.'}</p>}
           </div>
           <button type="button" onClick={handlePrimaryAction} disabled={isMutating}>
