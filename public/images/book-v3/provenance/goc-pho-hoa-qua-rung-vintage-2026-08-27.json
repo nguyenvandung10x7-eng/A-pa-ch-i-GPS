@@ -1,0 +1,14 @@
+{
+  "asset": "public/images/book-v3/goc-pho-hoa-qua-rung.webp",
+  "replaces_asset": "public/images/book-v3/goc-pho-hoa-qua-rung.webp",
+  "generator": "OpenAI built-in image generation",
+  "source_reference_asset": "public/images/book-v3/goc-pho-hoa-qua-rung.webp",
+  "generated_png": "/workspace/scratch/523b1120d150/generated_images/call_8kXKj896kOZj1r2cWYRhzzbK.png",
+  "generated_png_sha256": "3730c716951fb16e133a76078ff224e8bc86d675c91bf5c5edbe5b81f169fdec",
+  "shipped_webp_sha256": "13ec255e03cc461edfd98e3c3d9e5f3332353a2a6649cbe70ecb1f499659fb21",
+  "shipped_webp_bytes": 201714,
+  "created_utc": "2026-08-27",
+  "transform": "Generated PNG converted to 1536x1024 lossy WebP with ffmpeg, Lanczos scaling, metadata stripped.",
+  "prompt_summary": "Vintage stylized 3D Dien Bien Phu street-corner memory scene with forest fruit sellers, children, bicycles, low-rise town houses, green hills, muted amber and faded green palette, no text or watermark.",
+  "rights_note": "Generated specifically for Book of Dien Bien as a literary illustration, not documentary evidence of an exact street corner."
+}

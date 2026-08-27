@@ -18,8 +18,8 @@ export const BOOK_CHAPTER_LITERARY_INTROS: Record<string, BookLocalizedText> = {
     en: 'Some roads keep their names after they have disappeared. Adults call it change; a child only knows that the place once run through no longer has a way back.',
   },
   'chapter-05-thi-xa': {
-    vi: 'Thị xã ngày ấy vừa đủ nhỏ để người ta nhận ra nhau ngoài phố, vừa đủ lớn để một đứa trẻ tin rằng sau mỗi góc đường đều có một thế giới khác.',
-    en: 'The town was small enough for people to recognize one another in the street, yet large enough for a child to believe another world waited beyond every corner.',
+    vi: 'Thị xã ngày ấy nằm ở quãng giữa rất đẹp: đủ nhỏ để người ta nhận ra nhau ngoài phố, đủ rộng để một đứa trẻ tin rằng sau mỗi góc đường vẫn còn một thế giới chưa mở hết.',
+    en: 'The town lived in a beautiful in-between: small enough for people to recognize one another in the street, wide enough for a child to believe each corner still held an unopened world.',
   },
   'chapter-06-nhung-nam-2000': {
     vi: 'Có một thời tương lai sáng lên từ màn hình máy tính, một bài nhạc mới, chiếc quần rộng hay một kiểu tóc lạ. Rồi rất lâu sau mới biết những thứ từng mới nhất lại là thứ cũ đi nhanh nhất.',
