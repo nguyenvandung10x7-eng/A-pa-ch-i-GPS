@@ -80,14 +80,7 @@ export const CHALLENGE_NAVIGATION_ITEMS: ReadonlyArray<ProductNavigationItem> = 
   },
 ];
 
-export const CHALLENGE_STAFF_NAVIGATION_ITEMS: ReadonlyArray<ProductNavigationItem> = [
-  {
-    id: 'moderation',
-    path: '/moderation',
-    labelKey: 'nav.moderation',
-    surface: 'challenge',
-    kind: 'staff',
-  },
+export const CHALLENGE_ADMIN_NAVIGATION_ITEMS: ReadonlyArray<ProductNavigationItem> = [
   {
     id: 'admin',
     path: '/admin',
@@ -95,6 +88,21 @@ export const CHALLENGE_STAFF_NAVIGATION_ITEMS: ReadonlyArray<ProductNavigationIt
     surface: 'challenge',
     kind: 'staff',
   },
+];
+
+export const CHALLENGE_MODERATION_NAVIGATION_ITEMS: ReadonlyArray<ProductNavigationItem> = [
+  {
+    id: 'moderation',
+    path: '/moderation',
+    labelKey: 'nav.moderation',
+    surface: 'challenge',
+    kind: 'staff',
+  },
+];
+
+export const CHALLENGE_STAFF_NAVIGATION_ITEMS: ReadonlyArray<ProductNavigationItem> = [
+  ...CHALLENGE_ADMIN_NAVIGATION_ITEMS,
+  ...CHALLENGE_MODERATION_NAVIGATION_ITEMS,
 ];
 
 export const getNavigationItemsForSurface = (
