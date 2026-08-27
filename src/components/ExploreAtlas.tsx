@@ -364,6 +364,7 @@ export const ExploreAtlas = ({
                   className={selected ? 'is-selected' : ''}
                   onClick={() => selectGroup(group.id)}
                   aria-pressed={selected}
+                  aria-label={`${groupPlaceName(group, language)}${groupIsComplete ? ` · ${c.completed}` : ''}`}
                 >
                   <Navigation aria-hidden="true" />
                   <span>{groupPlaceName(group, language)}</span>
