@@ -59,7 +59,7 @@ const shuffleTracks = <T,>(items: T[]): T[] => {
   return shuffled;
 };
 
-const createShuffleQueue = (tracks: MusicTrack[], excludeTrackId: string | null): string[] => {
+const createShuffleQueue = (tracks: readonly MusicTrack[], excludeTrackId: string | null): string[] => {
   const trackIds = tracks.map((track) => track.id);
   if (trackIds.length <= 1) {
     return [];
