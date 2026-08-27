@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
-import { Loader2, LogIn, ShieldCheck } from 'lucide-react';
+import { Loader2, LogIn } from 'lucide-react';
 import { Layout } from './components/Layout';
 import { MobileAppShell } from './components/MobileAppShell';
 import { ProductSurfaceFrame } from './components/ProductSurfaceFrame';
@@ -8,7 +8,6 @@ import { Card } from './components/Card';
 import { useAuth } from './contexts/AuthContext';
 import { useTasks } from './hooks/useTasks';
 import { useTranslation } from './hooks/useTranslation';
-import { useAdminStatus } from './hooks/useAdminStatus';
 import { AdminPage } from './pages/AdminPage';
 import { NewBookPage } from './pages/NewBookPage';
 import { BookPageRoute } from './pages/BookPageRoute';
@@ -38,7 +37,7 @@ const normalizeRoutePath = (pathname: string): string => {
   return normalized || '/';
 };
 
-const AdminOnlyRoute = ({
+const AuthenticatedRoute = ({
   t,
   redirectPath,
   children,
@@ -48,14 +47,13 @@ const AdminOnlyRoute = ({
   children: ReactElement;
 }) => {
   const { user, loading, signIn } = useAuth();
-  const { isAdmin, checkingAdmin } = useAdminStatus();
 
   if (loading) {
     return (
       <Card>
         <div className="flex items-center gap-3 text-slate-200">
           <Loader2 className="h-5 w-5 animate-spin" />
-          <span>{t('moderation.authLoading')}</span>
+          <span>{t('admin.authLoading')}</span>
         </div>
       </Card>
     );
@@ -66,39 +64,16 @@ const AdminOnlyRoute = ({
       <Card>
         <div className="flex items-center gap-3 text-cyan-200">
           <LogIn className="h-5 w-5" />
-          <p className="text-lg font-semibold">{t('moderation.signInRequired')}</p>
+          <p className="text-lg font-semibold">{t('admin.signInRequired')}</p>
         </div>
-        <p className="mt-4 text-slate-300">{t('moderation.signInDescription')}</p>
+        <p className="mt-4 text-slate-300">{t('admin.signInDescription')}</p>
         <button
           type="button"
           onClick={() => { void signIn(`${window.location.origin}${redirectPath}`); }}
           className="mt-6 rounded-full bg-cyan-400 px-5 py-3 font-black text-slate-950 transition hover:bg-cyan-300"
         >
-          {t('moderation.signIn')}
+          {t('admin.signIn')}
         </button>
-      </Card>
-    );
-  }
-
-  if (checkingAdmin) {
-    return (
-      <Card>
-        <div className="flex items-center gap-3 text-slate-200">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>{t('moderation.checkingAuthorization')}</span>
-        </div>
-      </Card>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <Card>
-        <div className="flex items-center gap-3 text-rose-200">
-          <ShieldCheck className="h-5 w-5" />
-          <p className="text-lg font-semibold">{t('moderation.unauthorizedTitle')}</p>
-        </div>
-        <p className="mt-4 text-slate-300">{t('moderation.unauthorizedDescription')}</p>
       </Card>
     );
   }
@@ -183,7 +158,7 @@ export default function App() {
           <Route path="/privacy" element={<LegalSafetyPage t={t} />} />
           <Route path="/legal" element={<LegalSafetyPage t={t} />} />
           <Route path="/moderation" element={<ModerationPage language={language} t={t} />} />
-          <Route path="/admin" element={<AdminOnlyRoute t={t} redirectPath="/admin"><AdminPage tasks={tasks} setTasks={setTasks} t={t} /></AdminOnlyRoute>} />
+          <Route path="/admin" element={<AuthenticatedRoute t={t} redirectPath="/admin"><AdminPage tasks={tasks} setTasks={setTasks} t={t} /></AuthenticatedRoute>} />
         </Routes>
       ) : (
         <MobileAppShell language={language} setLanguage={setLanguage}>{publicRoutes}</MobileAppShell>
