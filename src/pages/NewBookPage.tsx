@@ -3,7 +3,9 @@ import { useEffect, useRef, type KeyboardEvent, type MouseEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { BookChapterMenu } from '../components/BookChapterMenu';
 import { getBookPageIllustration } from '../data/bookIllustrations';
+import { BOOK_MUSIC_TRACKS } from '../data/music';
 import { useBookState } from '../hooks/useBookState';
+import { requestBookAudioStart } from '../services/bookAudioEvents';
 import { getChapter, getChapterExperiences, getChapterPages, getPublishedChapters } from '../services/bookContent';
 import { bookLocationMapUrl } from '../services/bookNearMe';
 import { markBookPageRead, toggleSavedBookPage } from '../services/bookState';
@@ -119,6 +121,20 @@ const handleActivityKeyDown = (event: KeyboardEvent<HTMLAnchorElement>) => {
   if (event.defaultPrevented || event.key !== 'Enter' || event.repeat) return;
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   dispatchStartGameplayMusic();
+};
+
+const shouldStartBookAudioFromClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented) return false;
+  if (event.detail === 0) return true;
+  if (event.button !== 0) return false;
+  return !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+};
+
+const requestChapterAudio = (chapterTrackId: string | undefined) => {
+  const track = chapterTrackId
+    ? BOOK_MUSIC_TRACKS.find((candidate) => candidate.id === chapterTrackId)
+    : undefined;
+  requestBookAudioStart(track);
 };
 
 const ExperienceCard = ({ experience, language }: { experience: BookExperience; language: LanguageCode }) => {
@@ -305,7 +321,13 @@ export const NewBookPage = ({ language }: BookPageProps) => {
       ) : null}
 
       {nextChapter ? (
-        <Link className="book-longform__next" to={`/book/chapter/${nextChapter.id}`}>
+        <Link
+          className="book-longform__next"
+          to={`/book/chapter/${nextChapter.id}`}
+          onClick={(event) => {
+            if (shouldStartBookAudioFromClick(event)) requestChapterAudio(nextChapter.music?.trackId);
+          }}
+        >
           <span>{c.next}</span>
           <strong>{String(nextChapter.number).padStart(2, '0')} · {localized(nextChapter.title, language)}</strong>
           <ArrowRight aria-hidden="true" />
