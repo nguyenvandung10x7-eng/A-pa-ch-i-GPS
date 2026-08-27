@@ -1,9 +1,12 @@
 import { Bookmark, BookOpen, Check, ChevronRight, MapPin, X } from 'lucide-react';
+import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { getBookPageIllustration } from '../data/bookIllustrations';
+import { BOOK_MUSIC_TRACKS } from '../data/music';
 import { useBookState } from '../hooks/useBookState';
+import { requestBookAudioStart } from '../services/bookAudioEvents';
 import { getChapterPages, getPublishedChapters } from '../services/bookContent';
-import type { BookLocalizedText } from '../types/book';
+import type { BookChapter, BookLocalizedText } from '../types/book';
 import type { LanguageCode } from '../types/task';
 
 type BookChapterMenuProps = {
@@ -38,6 +41,20 @@ const copy = {
     close: 'Close book',
   },
 } as const;
+
+const shouldStartAudioFromClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  if (event.defaultPrevented) return false;
+  if (event.detail === 0) return true;
+  if (event.button !== 0) return false;
+  return !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+};
+
+const requestChapterAudioStart = (chapter: BookChapter) => {
+  const track = chapter.music?.trackId
+    ? BOOK_MUSIC_TRACKS.find((candidate) => candidate.id === chapter.music?.trackId)
+    : undefined;
+  requestBookAudioStart(track);
+};
 
 export const BookChapterMenu = ({ language, onNavigate, onClose, compact = false }: BookChapterMenuProps) => {
   const chapters = getPublishedChapters();
@@ -78,7 +95,10 @@ export const BookChapterMenu = ({ language, onNavigate, onClose, compact = false
               key={chapter.id}
               to={`/book/chapter/${chapter.id}`}
               className="game-book-menu__chapter"
-              onClick={onNavigate}
+              onClick={(event) => {
+                if (shouldStartAudioFromClick(event)) requestChapterAudioStart(chapter);
+                onNavigate?.();
+              }}
             >
               <div className="game-book-menu__thumb">
                 {illustration ? <img src={illustration} alt="" loading="lazy" decoding="async" /> : <BookOpen />}

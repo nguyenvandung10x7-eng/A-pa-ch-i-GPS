@@ -4,11 +4,15 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { BookChapterDrawer } from './BookChapterDrawer';
 import { BOOK_MUSIC_TRACKS } from '../data/music';
+import {
+  BOOK_AUDIO_START_EVENT,
+  persistBookSoundEnabled,
+  readBookSoundEnabled,
+  type BookAudioStartDetail,
+} from '../services/bookAudioEvents';
 import { getChapter, getPage } from '../services/bookContent';
 import type { LanguageCode } from '../types/task';
 import '../mobile-shell.css';
-
-const BOOK_SOUND_STORAGE_KEY = 'book-of-dien-bien-sound-enabled-v1';
 
 const labels = {
   vi: {
@@ -76,11 +80,6 @@ const isFieldSurface = (pathname: string) => (
   || pathname === '/leaderboard'
   || pathname === '/submit-tiktok'
 );
-
-const readBookSoundEnabled = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  return window.localStorage.getItem(BOOK_SOUND_STORAGE_KEY) === '1';
-};
 
 const coordinateAudioPlayback = (activeAudio: HTMLAudioElement) => {
   document.querySelectorAll<HTMLAudioElement>('audio').forEach((audio) => {
@@ -188,8 +187,40 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(BOOK_SOUND_STORAGE_KEY, bookSoundEnabled ? '1' : '0');
+    persistBookSoundEnabled(bookSoundEnabled);
   }, [bookSoundEnabled]);
+
+  useEffect(() => {
+    const handleBookAudioStart = (event: Event) => {
+      const audio = audioRef.current;
+      const detail = (event as CustomEvent<BookAudioStartDetail>).detail;
+      if (!audio || !detail?.trackId || !detail.fileName) {
+        setBookSoundEnabled(true);
+        setBookSoundBlocked(false);
+        return;
+      }
+
+      const source = `/audio/${detail.fileName}`;
+      if (audio.dataset.trackId !== detail.trackId) {
+        audio.pause();
+        audio.src = source;
+        audio.dataset.trackId = detail.trackId;
+        audio.load();
+      }
+
+      setBookSoundEnabled(true);
+      rememberPlayingAppAudio();
+      void audio.play()
+        .then(() => setBookSoundBlocked(false))
+        .catch(() => {
+          setBookSoundPlaying(false);
+          setBookSoundBlocked(true);
+        });
+    };
+
+    window.addEventListener(BOOK_AUDIO_START_EVENT, handleBookAudioStart);
+    return () => window.removeEventListener(BOOK_AUDIO_START_EVENT, handleBookAudioStart);
+  }, []);
 
   useEffect(() => {
     if (!accountOpen) return;
