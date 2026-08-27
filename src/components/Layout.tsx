@@ -4,7 +4,11 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdminStatus } from '../hooks/useAdminStatus';
 import { MUSIC_TRACKS, type MusicTrack } from '../data/music';
-import { CHALLENGE_STAFF_NAVIGATION_ITEMS, PRODUCT_ENTRY_POINTS } from '../data/productNavigation';
+import {
+  CHALLENGE_ADMIN_NAVIGATION_ITEMS,
+  CHALLENGE_MODERATION_NAVIGATION_ITEMS,
+  PRODUCT_ENTRY_POINTS,
+} from '../data/productNavigation';
 import { resolveProductSurface } from '../data/productSurfaces';
 import {
   GAMEPLAY_MUSIC_ACTION_EVENT,
@@ -107,7 +111,10 @@ export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
   const musicPreparationSnapshotRef = useRef<MusicPreparationSnapshot | null>(null);
   const musicShuffleQueueRef = useRef<string[]>(createShuffleQueue(MUSIC_TRACKS, musicTrackId));
   const selectedTrack = useMemo(() => MUSIC_TRACKS.find((track) => track.id === musicTrackId) ?? MUSIC_TRACKS[0], [musicTrackId]);
-  const staffNavItems = user && !checkingAdmin && isAdmin ? CHALLENGE_STAFF_NAVIGATION_ITEMS : [];
+  const staffNavItems = [
+    ...(user ? CHALLENGE_ADMIN_NAVIGATION_ITEMS : []),
+    ...(user && !checkingAdmin && isAdmin ? CHALLENGE_MODERATION_NAVIGATION_ITEMS : []),
+  ];
   const activeProductSurface = resolveProductSurface(location.pathname);
 
   const handleSignIn = async () => {
