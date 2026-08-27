@@ -67,9 +67,11 @@ export const BookChapterDrawer = ({ language, onClose }: BookChapterDrawerProps)
     <div className="game-book-drawer" role="presentation" onMouseDown={onClose}>
       <div
         ref={dialogRef}
+        id="game-book-chapter-drawer"
         className="game-book-drawer__panel"
         role="dialog"
         aria-modal="true"
+        aria-label={language === 'vi' ? 'Mục lục các chương' : 'Book chapters'}
         tabIndex={-1}
         onMouseDown={(event) => event.stopPropagation()}
       >
