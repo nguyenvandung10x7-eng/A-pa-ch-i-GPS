@@ -88,33 +88,33 @@ export const BOOK_PAGE_LITERARY_COPY: Record<string, LiteraryPageCopy> = {
   },
   'goc-pho-hoa-qua-rung': {
     intro: {
-      vi: 'Một thị xã có thể được nhớ bằng những thứ bày thấp sát vỉa hè hơn là bằng những tòa nhà cao.',
-      en: 'A town can be remembered more clearly by things laid low beside the pavement than by anything tall.',
+      vi: 'Một thị xã có thể được nhớ bằng những thứ nằm thấp sát mặt đường: mẹt quả rừng, bát muối ớt và một buổi chiều không ai nghĩ sẽ có ngày biến mất.',
+      en: 'A town can be remembered by things laid low beside the road: trays of forest fruit, a bowl of chili salt, and an afternoon no one imagined would disappear.',
     },
     body: [
       {
-        vi: 'Củ đậu, mắc sim, quả me, một bát muối ớt. Người bán ngồi ở góc phố như một phần tự nhiên của buổi chiều, còn người đi qua chẳng nghĩ mình đang nhìn thấy điều gì đặc biệt. Nhiều năm sau mới hiểu chính những cảnh bình thường nhất ấy mới làm một nơi khác với mọi nơi khác.',
-        en: 'Jicama, wild fruit, tamarind, a bowl of chili salt. Sellers sat at street corners as naturally as part of the afternoon, while passersby saw nothing remarkable. Years later, it becomes clear that the most ordinary scenes were what made one place unlike every other.',
+        vi: 'Củ đậu, mắc sim, quả me, muối ớt đỏ au. Người bán ngồi ở góc phố như một phần tự nhiên của cảnh vật, còn người đi qua cúi xuống mua một túi nhỏ rồi đi tiếp. Khi còn sống trong cảnh ấy, chẳng ai gọi nó là bản sắc; nhiều năm sau mới hiểu chính những điều bình thường nhất đã làm nơi này khác với mọi nơi khác.',
+        en: 'Jicama, wild berries, tamarind, red chili salt. Sellers sat at street corners as naturally as part of the scenery, while passersby bent down, bought a small bag, and moved on. While living inside the scene, nobody called it identity; years later it becomes clear that the most ordinary details made this place unlike anywhere else.',
       },
       {
-        vi: 'Bọn trẻ nhớ đường bằng vị giác: góc này có quả chua làm nhăn mặt, ngã kia có thứ ngọt tím đầu ngón tay, đoạn gần trường chỉ cần vài đồng là đủ chia nhau một túi nhỏ. Thành phố của tuổi thơ vì thế không đo bằng cây số. Nó được nối bằng những lần dừng chân, bằng muối ớt dính quanh miệng và tiếng cười sau một miếng quá chua. Khi những mẹt quả ấy thưa dần, một phần bản đồ cũng lặng lẽ mất theo.',
-        en: 'Children remembered the way by taste: sour fruit at one corner, something sweet that stained fingertips purple at the next, and near the school a few coins enough for a small bag to share. Childhood’s city was not measured in kilometers. It was joined by pauses, chili salt at the lips, and laughter after a bite too sharp. As those trays of fruit grew scarce, part of the map quietly disappeared with them.',
+        vi: 'Bọn trẻ nhớ đường bằng vị giác: góc này có quả chua làm nhăn mặt, ngã kia có thứ làm tím đầu ngón tay, đoạn gần trường chỉ cần vài đồng là đủ chia nhau một túi nhỏ. Thành phố của tuổi thơ vì thế không đo bằng cây số. Nó được nối bằng những lần dừng chân, bằng muối ớt dính quanh miệng và tiếng cười sau một miếng quá chua. Khi những mẹt quả ấy thưa dần, một phần bản đồ cũng lặng lẽ mất theo.',
+        en: 'Children remembered the way by taste: sour fruit at one corner, something that stained fingertips purple at the next, and near school a few coins enough for a small bag to share. Childhood’s city was not measured in kilometers. It was joined by pauses, chili salt at the lips, and laughter after a bite too sharp. As those trays grew scarce, part of the map quietly disappeared with them.',
       },
     ],
   },
   'nhung-quan-che': {
     intro: {
-      vi: 'Có thời cả thế giới bên ngoài đi vào thị xã qua một chiếc tivi đặt trong quán chè.',
-      en: 'There was a time when the outside world entered the town through a television in a sweet-soup shop.',
+      vi: 'Có thời thế giới bên ngoài đi vào thị xã rất chậm: qua một chiếc tivi nhỏ trong quán chè và ánh màn hình xanh rơi lên mặt bọn trẻ.',
+      en: 'There was a time when the outside world entered the town slowly: through a small television in a sweet-soup shop and blue screen-light falling across children’s faces.',
     },
     body: [
       {
-        vi: 'Người trong giang hồ, Cú đấm máu, Ỷ Thiên Đồ Long Ký. Chỉ cần những cái tên ấy là một dãy quán, ánh màn hình và những buổi tối cũ tự trở lại. Khi ấy chẳng ai gọi đó là hoài niệm; chỉ là ngồi xem thêm một đoạn, ăn thêm một cốc chè, rồi về nhà khi phim vẫn còn chạy.',
-        en: 'Young and Dangerous, Bloodfight, The Heaven Sword and Dragon Saber. The titles alone can bring back a row of shops, television light, and evenings long gone. Nobody called it nostalgia then; it was simply watching a little longer, finishing another sweet soup, and going home while the film was still running.',
+        vi: 'Người trong giang hồ, Cú đấm máu, Ỷ Thiên Đồ Long Ký. Chỉ cần những cái tên ấy là một dãy quán, mấy chiếc ghế nhựa, bóng xe đạp sát vỉa hè và những buổi tối cũ tự trở lại. Khi ấy chẳng ai gọi đó là hoài niệm; chỉ là ngồi xem thêm một đoạn, ăn thêm một cốc chè, rồi về nhà khi phim vẫn còn chạy.',
+        en: 'Young and Dangerous, Bloodfight, The Heaven Sword and Dragon Saber. The titles alone can bring back a row of shops, low plastic stools, bicycles by the curb, and evenings long gone. Nobody called it nostalgia then; it was simply watching a little longer, finishing another sweet soup, and going home while the film was still running.',
       },
       {
-        vi: 'Tiếng thìa chạm thành cốc, tiếng quạt quay, tiếng xe máy ngoài đường lẫn vào lời thoại từ chiếc tivi nhỏ. Thế giới xa xôi đến với thị xã chậm rãi như vậy, qua một bộ phim đang chiếu dở và chỗ ngồi phải ghé sát mới nhìn rõ. Quán chè chẳng định trở thành rạp chiếu hay cánh cửa nào cả. Nhưng với bọn trẻ ngồi dưới ánh màn hình xanh, nơi ấy từng rộng hơn mọi con phố chúng biết.',
-        en: 'Spoons touched glass, a fan turned, and motorbikes outside mingled with dialogue from the little television. That was how the distant world reached the town: slowly, through a film already in progress and seats drawn close enough to see. The sweet-soup shop never meant to become a cinema or a doorway. Yet to the children sitting in its blue screen-light, it was once larger than every street they knew.',
+        vi: 'Tiếng thìa chạm thành cốc, tiếng quạt quay, tiếng xe máy ngoài đường lẫn vào lời thoại từ chiếc tivi nhỏ. Thế giới xa xôi đến với thị xã qua một bộ phim đang chiếu dở và chỗ ngồi phải ghé sát mới nhìn rõ. Quán chè chẳng định trở thành rạp chiếu hay cánh cửa nào cả. Nhưng với bọn trẻ ngồi dưới ánh màn hình xanh, nơi ấy từng rộng hơn mọi con phố chúng biết.',
+        en: 'Spoons touched glass, a fan turned, and motorbikes outside mingled with dialogue from the little television. The distant world reached the town through a film already in progress and seats drawn close enough to see. The sweet-soup shop never meant to become a cinema or a doorway. Yet to the children sitting in its blue screen-light, it was once larger than every street they knew.',
       },
     ],
   },

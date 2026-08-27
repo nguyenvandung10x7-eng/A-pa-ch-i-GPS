@@ -1,0 +1,14 @@
+{
+  "asset": "public/images/book-v3/nhung-quan-che-phim-chuong.webp",
+  "replaces_asset": "public/images/book-v3/nhung-quan-che-phim-chuong.webp",
+  "generator": "OpenAI built-in image generation",
+  "source_reference_asset": "public/images/book-v3/nhung-quan-che-phim-chuong.webp",
+  "generated_png": "/workspace/scratch/523b1120d150/generated_images/call_YWldaQVe2hnlCqX5YBxT6eZs.png",
+  "generated_png_sha256": "3cd420fd427dd51be3bc587e4a6018e9b9c64abc80f0632125f660c7430ef83d",
+  "shipped_webp_sha256": "9ef15b7d8b01c9a1c752c38913480cf885fd7ad759c978c03f6420c9de6b0393",
+  "shipped_webp_bytes": 165848,
+  "created_utc": "2026-08-27",
+  "transform": "Generated PNG converted to 1536x1024 lossy WebP with ffmpeg, Lanczos scaling, metadata stripped.",
+  "prompt_summary": "Vintage stylized 3D evening sweet-soup shop street with CRT televisions, generic martial-arts silhouettes, children on stools, bicycles, warm shop lights, blue dusk, low-rise Dien Bien Phu town, no text or watermark.",
+  "rights_note": "Generated specifically for Book of Dien Bien as a literary illustration, not documentary evidence of an exact street or copyrighted film scene."
+}
