@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { BookOpen, Bookmark, ChevronRight, ChevronUp, Compass, Languages, LogIn, LogOut, Map, MapPin, Music2, Pause, Play, UserRound, X } from 'lucide-react';
+import { BookOpen, Bookmark, ChevronRight, ChevronUp, Compass, Languages, LogIn, LogOut, Map, MapPin, Music2, Pause, Play, Settings2, ShieldCheck, UserRound, X } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useAdminStatus } from '../hooks/useAdminStatus';
 import { BookChapterDrawer } from './BookChapterDrawer';
 import { BOOK_MUSIC_TRACKS } from '../data/music';
 import {
@@ -21,6 +22,8 @@ const labels = {
     signIn: 'Đăng nhập',
     saved: 'Dấu trang',
     nearby: 'Gần tôi',
+    admin: 'Quản trị',
+    moderation: 'Kiểm duyệt',
     language: 'Ngôn ngữ',
     privacy: 'Quyền riêng tư',
     legal: 'Pháp lý',
@@ -40,6 +43,8 @@ const labels = {
     signIn: 'Sign in',
     saved: 'Bookmarks',
     nearby: 'Near me',
+    admin: 'Administration',
+    moderation: 'Moderation',
     language: 'Language',
     privacy: 'Privacy',
     legal: 'Legal',
@@ -125,6 +130,7 @@ const getUserLabel = (user: ReturnType<typeof useAuth>['user']): string | null =
 export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShellProps) => {
   const { pathname } = useLocation();
   const { user, loading, signIn, signOutUser } = useAuth();
+  const { isAdmin, checkingAdmin } = useAdminStatus();
   const [accountOpen, setAccountOpen] = useState(false);
   const [bookMenuOpen, setBookMenuOpen] = useState(false);
   const [bookSoundEnabled, setBookSoundEnabled] = useState(readBookSoundEnabled);
@@ -526,6 +532,12 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
             <div className="editorial-account-sheet__links">
               <Link to="/saved" onClick={() => closeAccountDialog(false)}><Bookmark /><span>{copy.saved}</span><ChevronRight /></Link>
               <Link to="/nearby" onClick={() => closeAccountDialog(false)}><MapPin /><span>{copy.nearby}</span><ChevronRight /></Link>
+              {user ? (
+                <Link to="/admin" onClick={() => closeAccountDialog(false)}><Settings2 /><span>{copy.admin}</span><ChevronRight /></Link>
+              ) : null}
+              {user && !checkingAdmin && isAdmin ? (
+                <Link to="/moderation" onClick={() => closeAccountDialog(false)}><ShieldCheck /><span>{copy.moderation}</span><ChevronRight /></Link>
+              ) : null}
               {onBookSurface ? (
                 <button type="button" onClick={toggleBookSound}>
                   <Music2 /><span>{copy.sound}</span><strong>{bookSoundEnabled ? copy.soundOn : copy.soundOff}</strong>
