@@ -91,6 +91,7 @@ const renderNarrativeBlock = (block: ContentBlock, language: LanguageCode, key: 
             <audio
               controls
               preload="none"
+              loop
               src={block.audio.src}
               onPlay={(event) => coordinateAudioPlayback(event.currentTarget)}
             />
