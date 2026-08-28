@@ -1,0 +1,37 @@
+{
+  "asset": "public/images/game-ui/dien-bien-city-atlas-v5.webp",
+  "source_type": "generated_from_reference",
+  "generator": "OpenAI built-in image generation",
+  "created_for": "Book of Dien Bien",
+  "created_on": "2026-08-28",
+  "source_references": [
+    "public/images/game-ui/dien-bien-city-atlas-v4.webp",
+    "Current Book of Dien Bien soft-3D atlas UI direction"
+  ],
+  "source_reference_sha256": "a1206660f05971faa66f420d3d56df0e7cafa020a86c0c3b34620c65a04fb842",
+  "prompt_summary": "Create a new 941x1672 portrait tourist terrain diorama from the v4 atlas style reference. Keep the warm game-map illustration style, but show roughly twice the perceived geography: Dien Bien Phu basin and historic city cues in the lower/near layer, then hills, terraced fields, streams, small sparse hamlets and a waterfall on the right, fading into distant mountain ranges at the top horizon for very far Muong Nhe / A Pa Chai destinations. No UI, text, pins, labels, logos or watermark.",
+  "gps_projection": {
+    "bounds": {
+      "north": 21.432,
+      "south": 21.374,
+      "west": 103.008,
+      "east": 103.071
+    },
+    "frame_percent": {
+      "left": 10,
+      "right": 90,
+      "top": 26,
+      "bottom": 60
+    },
+    "note": "Runtime challenge pins still use deterministic GPS-derived grouping for the city atlas plus visual depth overrides for far western and hillside groups. Painted landmarks remain illustrative orientation cues, not navigation controls."
+  },
+  "visual_depth_intent": {
+    "foreground": "Dien Bien Phu basin and city/historic core in the lower map area.",
+    "midground": "Valley-edge hills, terraced fields, waterfall, nearby hamlets and viewpoint terrain.",
+    "background": "Remote Muong Nhe / A Pa Chai journey markers placed near the distant mountain horizon."
+  },
+  "transform": "Generated PNG converted to 941x1672 lossy WebP at quality 86 with metadata stripped.",
+  "source_png_sha256": "31b21027f6c8238608968635cee4b40e33c8e280c833aa64f5940e850c6bc812",
+  "sha256": "05f31efce4825632b01b0200c8afd9ab0cc0e70165a6f32ebeeb4e4709bd6cae",
+  "documentary_accuracy": "Illustrative diorama only. Landmark forms and spacing are stylized; GPS challenge data remains the location source of truth."
+}
