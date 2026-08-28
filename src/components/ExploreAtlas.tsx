@@ -109,6 +109,14 @@ const PLACE_NAMES: Partial<Record<string, Record<LanguageCode, string>>> = {
 };
 
 type PinLabelPlacement = 'left' | 'right' | 'top' | 'bottom';
+type AtlasPinDepth = 'foreground' | 'midground' | 'background';
+
+type AtlasPinPlacement = {
+  x: number;
+  y: number;
+  depth: AtlasPinDepth;
+  labelPlacement?: PinLabelPlacement;
+};
 
 const CITY_PIN_LABEL_PLACEMENTS: Partial<Record<string, PinLabelPlacement>> = {
   'doi-a1-chuyen-tau-thoi-gian-1954': 'bottom',
@@ -118,6 +126,29 @@ const CITY_PIN_LABEL_PLACEMENTS: Partial<Record<string, PinLabelPlacement>> = {
   'de-xe-may-ngoai-troi-qua-dem': 'top',
   'nhin-xuong-long-chao-cua-chung-ta': 'left',
   'tim-cay-xoai-co-thu': 'left',
+};
+
+const GROUP_LABEL_PRIORITY = [
+  'thac-ke-nenh-mthen',
+  'ban-a-pa-chai-tang-banh-trung-thu',
+  'cot-co-a-pa-chai-mthen',
+  'cot-co-a-pa-chai-trai-ban-lanh-lung',
+] as const;
+
+const CITY_VISUAL_PLACEMENTS: Partial<Record<string, AtlasPinPlacement>> = {
+  'ca-phe-ke-nenh-cat-banh': { x: 87.8, y: 33.8, depth: 'midground', labelPlacement: 'left' },
+  'ruong-bac-thang-ta-leng-mthen': { x: 87.8, y: 33.8, depth: 'midground', labelPlacement: 'left' },
+  'thac-ke-nenh-mthen': { x: 87.8, y: 33.8, depth: 'midground', labelPlacement: 'left' },
+  'nhin-xuong-long-chao-cua-chung-ta': { x: 74.4, y: 31.2, depth: 'midground', labelPlacement: 'left' },
+  'tim-cay-xoai-co-thu': { x: 80.8, y: 42.2, depth: 'midground', labelPlacement: 'left' },
+};
+
+const WEST_VISUAL_PLACEMENTS: Partial<Record<string, AtlasPinPlacement>> = {
+  'ban-a-pa-chai-tang-banh-trung-thu': { x: 35.8, y: 14.7, depth: 'background', labelPlacement: 'right' },
+  'cot-co-a-pa-chai-mthen': { x: 35.8, y: 14.7, depth: 'background', labelPlacement: 'right' },
+  'cot-co-a-pa-chai-trai-ban-lanh-lung': { x: 35.8, y: 14.7, depth: 'background', labelPlacement: 'right' },
+  'cau-ta-ko-khu-tang-banh-trung-thu': { x: 49.2, y: 17.1, depth: 'background', labelPlacement: 'bottom' },
+  'cho-muong-nhe-tang-banh-trung-thu': { x: 63.4, y: 19.5, depth: 'background', labelPlacement: 'left' },
 };
 
 const isWithinCityAtlas = (task: ChallengeTask) => (
@@ -163,9 +194,35 @@ const shortPlaceName = (task: ChallengeTask, language: LanguageCode) => {
   return title.split(/\s+[–-]\s+/)[0]?.trim() || title;
 };
 
-const groupPlaceName = (group: AtlasPlaceGroup, language: LanguageCode) => {
+const groupRepresentativeTask = (group: AtlasPlaceGroup) => {
   const aPaChaiTask = group.tasks.find((task) => task.id.includes('a-pa-chai'));
-  return shortPlaceName(aPaChaiTask ?? group.anchorTask, language);
+  const priorityTask = GROUP_LABEL_PRIORITY
+    .map((taskId) => group.tasks.find((task) => task.id === taskId))
+    .find((task): task is ChallengeTask => Boolean(task));
+  return aPaChaiTask ?? priorityTask ?? group.anchorTask;
+};
+
+const groupPlaceName = (group: AtlasPlaceGroup, language: LanguageCode) => (
+  shortPlaceName(groupRepresentativeTask(group), language)
+);
+
+const findPlacementOverride = (
+  group: AtlasPlaceGroup,
+  placements: Partial<Record<string, AtlasPinPlacement>>,
+) => group.tasks
+  .map((task) => placements[task.id])
+  .find((placement): placement is AtlasPinPlacement => Boolean(placement));
+
+const inferCityDepth = (y: number): AtlasPinDepth => (y < 44 ? 'midground' : 'foreground');
+
+const getGroupAtlasPlacement = (group: AtlasPlaceGroup): AtlasPinPlacement => {
+  if (!isWithinCityAtlas(group.anchorTask)) {
+    return findPlacementOverride(group, WEST_VISUAL_PLACEMENTS) ?? { x: 56, y: 23, depth: 'background', labelPlacement: 'top' };
+  }
+
+  const base = projectTaskToAtlas(group.anchorTask);
+  const override = findPlacementOverride(group, CITY_VISUAL_PLACEMENTS);
+  return override ?? { ...base, depth: inferCityDepth(base.y) };
 };
 
 export const ExploreAtlas = ({
@@ -190,6 +247,10 @@ export const ExploreAtlas = ({
   const placeGroups = useMemo(() => getPlaceGroups(tasks), [tasks]);
   const cityGroups = useMemo(() => placeGroups.filter((group) => isWithinCityAtlas(group.anchorTask)), [placeGroups]);
   const westGroups = useMemo(() => placeGroups.filter((group) => !isWithinCityAtlas(group.anchorTask)), [placeGroups]);
+  const atlasGroups = useMemo(
+    () => [...westGroups, ...cityGroups].sort((a, b) => getGroupAtlasPlacement(a).y - getGroupAtlasPlacement(b).y),
+    [cityGroups, westGroups],
+  );
   const activeTaskId = activeTask?.id ?? '';
   const activeGroup = placeGroups.find((group) => groupContainsTask(group, activeTaskId));
   const completedTaskIdSet = useMemo(() => new Set(completedTaskIds), [completedTaskIds]);
@@ -263,7 +324,7 @@ export const ExploreAtlas = ({
       ?? '';
   const selectedGroup = placeGroups.find((group) => group.id === selectedGroupId) ?? activeGroup ?? placeGroups[0];
   const selectedIsActive = Boolean(selectedGroup && groupContainsTask(selectedGroup, activeTaskId));
-  const selectedTask = selectedIsActive ? activeTask : selectedGroup?.anchorTask;
+  const selectedTask = selectedIsActive ? activeTask : selectedGroup ? groupRepresentativeTask(selectedGroup) : undefined;
   const selectedIsWest = Boolean(selectedGroup && !isWithinCityAtlas(selectedGroup.anchorTask));
   const selectedGroupCount = selectedGroup?.tasks.length ?? 0;
   const selectedGroupCompletedCount = selectedGroup?.tasks.filter((task) => completedTaskIdSet.has(task.id)).length ?? 0;
@@ -311,20 +372,20 @@ export const ExploreAtlas = ({
           </div>
         </header>
 
-        <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trong thành phố' : 'City discoveries'}>
-          {cityGroups.map((group, index) => {
+        <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trên bản đồ' : 'Atlas discoveries'}>
+          {atlasGroups.map((group, index) => {
             const selected = selectedGroup?.id === group.id;
             const isActive = groupContainsTask(group, activeTaskId);
-            const imageTask = isActive ? activeTask ?? group.anchorTask : group.anchorTask;
+            const imageTask = isActive ? activeTask ?? groupRepresentativeTask(group) : groupRepresentativeTask(group);
             const groupCompletedCount = group.tasks.filter((task) => completedTaskIdSet.has(task.id)).length;
             const groupIsComplete = groupCompletedCount === group.tasks.length;
-            const atlasPoint = projectTaskToAtlas(group.anchorTask);
-            const labelPlacement = CITY_PIN_LABEL_PLACEMENTS[group.anchorTask.id] ?? (atlasPoint.x > 64 ? 'left' : 'right');
+            const atlasPoint = getGroupAtlasPlacement(group);
+            const labelPlacement = atlasPoint.labelPlacement ?? CITY_PIN_LABEL_PLACEMENTS[group.anchorTask.id] ?? (atlasPoint.x > 64 ? 'left' : 'right');
             return (
               <button
                 key={group.id}
                 type="button"
-                className={`explore-atlas__pin is-label-${labelPlacement} ${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''} ${groupIsComplete ? 'is-complete' : ''}`}
+                className={`explore-atlas__pin is-depth-${atlasPoint.depth} is-label-${labelPlacement} ${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''} ${groupIsComplete ? 'is-complete' : ''}`}
                 style={{ left: `${atlasPoint.x}%`, top: `${atlasPoint.y}%`, '--pin-color': PIN_COLORS[index % PIN_COLORS.length] } as CSSProperties}
                 onClick={() => selectGroup(group.id)}
                 aria-pressed={selected}
@@ -346,36 +407,6 @@ export const ExploreAtlas = ({
             );
           })}
         </section>
-
-        {westGroups.length ? (
-          <div
-            className="explore-atlas__west-route"
-            role="group"
-            aria-label={`${c.westRoute} · ${westGroups.length} ${c.westPlaces}`}
-          >
-            {westGroups.map((group) => {
-              const selected = selectedGroup?.id === group.id;
-              const groupIsComplete = group.tasks.every((task) => completedTaskIdSet.has(task.id));
-
-              return (
-                <button
-                  key={group.id}
-                  type="button"
-                  className={selected ? 'is-selected' : ''}
-                  onClick={() => selectGroup(group.id)}
-                  aria-pressed={selected}
-                  aria-label={`${groupPlaceName(group, language)}${groupIsComplete ? ` · ${c.completed}` : ''}`}
-                >
-                  <Navigation aria-hidden="true" />
-                  <span>{groupPlaceName(group, language)}</span>
-                  {groupIsComplete
-                    ? <Check aria-hidden="true" />
-                    : <ChevronRight aria-hidden="true" />}
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
 
         <div className="explore-atlas__compass" aria-hidden="true">
           <i>N</i><i>E</i><i>S</i><i>W</i><Navigation />
