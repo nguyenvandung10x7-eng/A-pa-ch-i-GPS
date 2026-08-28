@@ -38,7 +38,7 @@ export const BOOK_MUSIC_TRACKS: readonly BookMusicTrack[] = Object.freeze([
   Object.freeze({ id: 'chapter-05-thi-xa-track-01', fileName: 'chapter-05-thi-xa-track-01.mp3', label: Object.freeze({ vi: 'Chương 05 · Thị xã', en: 'Chapter 05 · The Town' }) }),
   Object.freeze({ id: 'chapter-06-nhung-nam-2000-track-01', fileName: 'chapter-06-nhung-nam-2000-track-01.mp3', label: Object.freeze({ vi: 'Chương 06 · Những năm 2000', en: 'Chapter 06 · The 2000s' }) }),
   Object.freeze({ id: 'chapter-07-long-chao-track-01', fileName: 'chapter-07-long-chao-track-01.mp3', label: Object.freeze({ vi: 'Chương 07 · Lòng chảo', en: 'Chapter 07 · The Basin' }) }),
-  Object.freeze({ id: 'chapter-08-nhung-ngon-doi-track-01', fileName: 'chapter-08-nhung-ngon-doi-track-01.mp3', label: Object.freeze({ vi: 'Chương 08 · Những ngọn đồi', en: 'Chapter 08 · The Hills' }) }),
+  Object.freeze({ id: 'chapter-08-nhung-ngon-doi-track-01', fileName: 'chapter-08-nhung-ngon-doi-track-01.mp3', label: Object.freeze({ vi: 'Chương 08 · Dưới những ngọn đồi', en: 'Chapter 08 · Beneath the Hills' }) }),
   Object.freeze({ id: 'chapter-09-1954-track-01', fileName: 'chapter-09-1954-track-01.mp3', label: Object.freeze({ vi: 'Chương 09 · 1954 · Track 1', en: 'Chapter 09 · 1954 · Track 1' }) }),
   Object.freeze({ id: 'chapter-09-1954-track-02', fileName: 'chapter-09-1954-track-02.mp3', label: Object.freeze({ vi: 'Chương 09 · 1954 · Track 2', en: 'Chapter 09 · 1954 · Track 2' }) }),
   Object.freeze({ id: 'chapter-10-con-vat-track-01', fileName: 'chapter-10-con-vat-track-01.mp3', label: Object.freeze({ vi: 'Chương 10 · Những thứ khó quên', en: 'Chapter 10 · Things Hard to Forget' }) }),
