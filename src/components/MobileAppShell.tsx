@@ -559,7 +559,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
         </div>
       ) : null}
 
-      <audio ref={audioRef} preload="metadata" className="editorial-book-audio" />
+      <audio ref={audioRef} preload="metadata" loop className="editorial-book-audio" />
     </div>
   );
 };
