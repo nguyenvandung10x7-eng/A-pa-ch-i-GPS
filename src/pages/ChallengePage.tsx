@@ -778,8 +778,8 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
               </div>
 
               <aside className="challenge-editorial__rail">
-                <section className="challenge-editorial__status-panel" aria-live="polite">
-                  <div className="challenge-editorial__status-message">{message}</div>
+                <section className="challenge-editorial__status-panel">
+                  <div className="challenge-editorial__status-message" aria-live="polite">{message}</div>
                   <p className="challenge-editorial__gps-line">
                     <ShieldCheck aria-hidden="true" />
                     <span>{gpsStatus !== 'idle' ? t('challenge.gpsStatus') + ': ' + t('challenge.status.' + gpsStatus) : t('challenge.ready')}</span>
