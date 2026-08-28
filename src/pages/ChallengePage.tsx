@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, Flag, Headphones, RotateCcw, ShieldCheck, Trophy, XCircle } from 'lucide-react';
+import { Bike, CheckCircle2, ChevronDown, Compass, Cookie, Film, Flag, Headphones, Leaf, MapPin, RotateCcw, ShieldCheck, Star, Trophy, XCircle } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -38,6 +38,43 @@ const splitTaskHeading = (value: string) => {
   return {
     locationName: locationName?.trim() || value,
     subtitle: rest.join(' - ').trim(),
+  };
+};
+
+type ChallengeAccent = 'paper' | 'cinematic' | 'playful' | 'mooncake' | 'nature' | 'horizon';
+
+const getChallengeAccent = (task?: ChallengeTask): { className: string; kind: ChallengeAccent } => {
+  if (!task) return { className: 'is-paper', kind: 'paper' };
+
+  const id = task.id.toLowerCase();
+  const classes: string[] = [];
+  const isCinematic = id === 'doi-a1-chuyen-tau-thoi-gian-1954';
+  const isPlayful = id === 'de-xe-may-ngoai-troi-qua-dem';
+  const isMooncake = task.category === 'mooncake' || id.includes('banh') || id.includes('mooncake');
+  const isHorizon = /a-pa-chai|muong-nhe|ta-ko-khu/.test(id);
+  const isNature = /long-chao|thac|ruong|xoai|phieng-loi|pa-khoang|huoi-pha/.test(id);
+
+  if (isCinematic) classes.push('is-cinematic');
+  if (isPlayful) classes.push('is-playful');
+  if (isMooncake) classes.push('is-mooncake');
+  if (isHorizon) classes.push('is-horizon');
+  if (isNature) classes.push('is-nature');
+
+  const kind: ChallengeAccent = isCinematic
+    ? 'cinematic'
+    : isPlayful
+      ? 'playful'
+      : isMooncake
+        ? 'mooncake'
+        : isHorizon
+          ? 'horizon'
+          : isNature
+            ? 'nature'
+            : 'paper';
+
+  return {
+    className: classes.length > 0 ? classes.join(' ') : 'is-paper',
+    kind,
   };
 };
 
@@ -562,218 +599,323 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     const translated = t(`challenge.difficulty.${task.difficulty}`);
     return translated === `challenge.difficulty.${task.difficulty}` ? formatTokenLabel(task.difficulty) : translated;
   })() : '';
+  const challengeAccent = getChallengeAccent(task);
+  const currentTaskCompleted = progress.completedTaskIds.includes(task?.id ?? '');
+  const currentTaskGpsVerified = Boolean(progress.activeRun?.gpsVerified);
   return (
-  <ExploreAtlas
-    tasks={eligibleTasks}
-    progressTotal={eligibleTasks.length}
-    activeTask={task}
-    score={summary.score}
-    completedCount={summary.completedCount}
-    completedTaskIds={progress.completedTaskIds}
-    language={language}
-    detailsOpen={detailsOpen}
-    isMutating={isMutating}
-    onOpenDetails={() => setDetailsOpen(true)}
-    onCloseDetails={() => setDetailsOpen(false)}
-    onStart={(taskIds) => { void startGame(taskIds); }}
-  >
-    <Card className="overflow-visible p-0">
-    <div className="overflow-hidden rounded-[1.9rem]">
-      {task && hasAdditionalTaskImages ? (
-      <div className="relative">
-        <div key={task.id} className="flex snap-x snap-mandatory overflow-x-auto" aria-label={t('admin.additionalImages')}>
-          {taskGalleryImages.map((imagePath, index) => {
-            const imageKey = `${task.id}:${index}:${imagePath}`;
-            const imageFailed = failedGalleryImageKeys.includes(imageKey);
+    <ExploreAtlas
+      tasks={eligibleTasks}
+      progressTotal={eligibleTasks.length}
+      activeTask={task}
+      score={summary.score}
+      completedCount={summary.completedCount}
+      completedTaskIds={progress.completedTaskIds}
+      language={language}
+      detailsOpen={detailsOpen}
+      isMutating={isMutating}
+      onOpenDetails={() => setDetailsOpen(true)}
+      onCloseDetails={() => setDetailsOpen(false)}
+      onStart={(taskIds) => { void startGame(taskIds); }}
+    >
+      <Card
+        className={[
+          'challenge-editorial overflow-visible p-0',
+          challengeAccent.className,
+          currentTaskCompleted ? 'is-complete' : '',
+          currentTaskGpsVerified ? 'is-gps-verified' : '',
+        ].filter(Boolean).join(' ')}
+      >
+        <div className="challenge-editorial__frame">
+          <section className="challenge-editorial__hero">
+            <div className="challenge-editorial__media">
+              {task && hasAdditionalTaskImages ? (
+                <div key={task.id} className="challenge-editorial__gallery" aria-label={t('admin.additionalImages')}>
+                  {taskGalleryImages.map((imagePath, index) => {
+                    const imageKey = task.id + ':' + index + ':' + imagePath;
+                    const imageFailed = failedGalleryImageKeys.includes(imageKey);
 
-            return (
-              <div key={imageKey} className="relative aspect-[4/3] min-h-[16rem] w-full shrink-0 snap-start sm:aspect-[16/10] sm:min-h-[18rem]">
-                {imageFailed ? (
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(161,189,177,0.64),rgba(46,72,44,0.9))]" />
-                ) : (
-                  <img
-                    src={imagePath}
-                    alt={localizedTaskTitle}
-                    className="h-full w-full object-cover object-center"
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                    onError={() => setFailedGalleryImageKeys((previousKeys) => (previousKeys.includes(imageKey) ? previousKeys : [...previousKeys, imageKey]))}
-                  />
-                )}
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,20,12,0.02)_22%,rgba(10,18,12,0.18)_48%,rgba(14,22,16,0.84)_100%)]" />
-                <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-                  <div className="max-w-[min(100%,34rem)]">
-                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-[rgba(247,240,226,0.78)]">{t('challenge.title')}</p>
-                    <h1 className="mt-2 text-[1.9rem] font-black leading-tight text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.45)] sm:text-[2.3rem]">{locationName}</h1>
-                    {locationSubtitle ? <p className="mt-2 max-w-[28rem] text-sm leading-6 text-[rgba(247,240,226,0.92)]">{locationSubtitle}</p> : null}
-                    {imageFailed ? <p className="mt-2 text-xs font-semibold text-[rgba(247,240,226,0.88)]">{t('challenge.imageUnavailable')}</p> : null}
-                  </div>
+                    return (
+                      <div key={imageKey} className="challenge-editorial__slide">
+                        {imageFailed ? (
+                          <div className="challenge-editorial__image-fallback">
+                            <p>{t('challenge.imageUnavailable')}</p>
+                          </div>
+                        ) : (
+                          <img
+                            src={imagePath}
+                            alt={localizedTaskTitle}
+                            loading={index === 0 ? 'eager' : 'lazy'}
+                            onError={() => setFailedGalleryImageKeys((previousKeys) => (
+                              previousKeys.includes(imageKey) ? previousKeys : [...previousKeys, imageKey]
+                            ))}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      ) : task?.image && failedTaskImageKey !== currentTaskImageKey ? (
-      <div className="relative aspect-[4/3] min-h-[16rem] sm:aspect-[16/10] sm:min-h-[18rem]">
-        <img
-          src={task.image}
-          alt={localizedTaskTitle}
-          className="h-full w-full object-cover object-center"
-          onError={() => setFailedTaskImageKey(currentTaskImageKey)}
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,20,12,0.02)_22%,rgba(10,18,12,0.18)_48%,rgba(14,22,16,0.84)_100%)]" />
-        <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-          <div className="max-w-[min(100%,34rem)]">
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-[rgba(247,240,226,0.78)]">{t('challenge.title')}</p>
-            <h1 className="mt-2 text-[1.9rem] font-black leading-tight text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.45)] sm:text-[2.3rem]">{locationName}</h1>
-            {locationSubtitle ? <p className="mt-2 max-w-[28rem] text-sm leading-6 text-[rgba(247,240,226,0.92)]">{locationSubtitle}</p> : null}
-          </div>
-        </div>
-      </div>
-      ) : (
-      <div className="relative aspect-[4/3] min-h-[15rem] bg-[linear-gradient(180deg,rgba(161,189,177,0.64),rgba(46,72,44,0.9))] sm:aspect-[16/10]">
-        <p className="absolute inset-x-4 top-4 rounded-[0.9rem] bg-[rgba(255,255,255,0.42)] px-3 py-2 text-xs font-semibold text-[var(--forest-900)]">
-          {t('challenge.imageUnavailable')}
-        </p>
-        <div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent,rgba(20,34,18,0.72))] p-5 sm:p-6">
-          <h1 className="text-[1.85rem] font-black leading-tight text-white sm:text-[2.2rem]">{locationName}</h1>
-          {locationSubtitle ? <p className="mt-2 text-sm leading-6 text-[rgba(247,240,226,0.92)]">{locationSubtitle}</p> : null}
-        </div>
-      </div>
-      )}
-
-      <div className="p-5 sm:p-6">
-      {task && progress.activeRun ? (
-        <div className="min-w-0">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-[var(--forest-700)]">{t('challenge.title')}</p>
-        <h2 className="mt-2 break-words text-[1.95rem] font-black leading-tight text-[var(--forest-950)] sm:text-[2.4rem]">{localizedTaskTitle}</h2>
-        {taskExperienceNote ? (
-          <p className="mt-2 text-sm leading-6 text-[var(--forest-800)]">
-            <span className="font-semibold uppercase tracking-[0.12em] text-[var(--forest-700)]">{t('challenge.experienceNoteLabel')}:</span> {taskExperienceNote}
-          </p>
-        ) : null}
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[var(--forest-900)]">
-          <span className="rounded-full bg-[rgba(255,247,229,0.62)] px-3 py-1.5 font-bold ring-1 ring-[rgba(112,79,39,0.1)]">{task.points} {t('challenge.points')}</span>
-          <span className="rounded-full bg-[rgba(255,255,255,0.58)] px-3 py-1.5 font-bold ring-1 ring-[rgba(61,84,52,0.1)]">{t('challenge.radius')} {task.gps.radius}m</span>
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-          <span className="rounded-full bg-[rgba(255,247,229,0.52)] px-2.5 py-1 font-semibold uppercase tracking-[0.14em] text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.1)]">{categoryLabel}</span>
-          <span className="rounded-full bg-[rgba(255,255,255,0.5)] px-2.5 py-1 font-semibold uppercase tracking-[0.12em] text-[var(--forest-700)] ring-1 ring-[rgba(61,84,52,0.1)]">{difficultyLabel}</span>
-          {statusBadge ? <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(201,148,62,0.14)] px-2.5 py-1 font-semibold uppercase tracking-[0.12em] text-[var(--earth-900)] ring-1 ring-[rgba(112,79,39,0.12)]"><span className="h-1.5 w-1.5 rounded-full bg-[var(--earth-800)]" aria-hidden="true" />{statusBadge}</span> : null}
-        </div>
-        <div className="mt-5 rounded-[1.25rem] bg-[rgba(255,255,255,0.34)] px-4 py-4 ring-1 ring-[rgba(61,84,52,0.08)]">
-          {instructionsExpanded ? (
-            <div className="space-y-3 text-base leading-7 text-[var(--forest-800)]">
-              {instructionParagraphs.map((paragraph) => <p key={paragraph} style={{ whiteSpace: 'pre-line' }}>{paragraph}</p>)}
+              ) : task?.image && failedTaskImageKey !== currentTaskImageKey ? (
+                <img
+                  src={task.image}
+                  alt={localizedTaskTitle}
+                  onError={() => setFailedTaskImageKey(currentTaskImageKey)}
+                />
+              ) : (
+                <div className="challenge-editorial__image-fallback">
+                  <p>{t('challenge.imageUnavailable')}</p>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="line-clamp-4 text-base leading-7 text-[var(--forest-800)]" style={{ whiteSpace: 'pre-line' }}>{localizedTaskDescription}</div>
-          )}
-          <button
-            type="button"
-            onClick={() => setExpandedInstructionsTaskId(instructionsExpanded ? null : task.id)}
-            className="mt-3 inline-flex min-h-[2.75rem] items-center rounded-full px-4 py-2 text-sm font-black text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.12)] transition hover:bg-[rgba(255,255,255,0.46)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)]"
-          >
-            {instructionsExpanded ? t('challenge.collapseInstructions') : t('challenge.viewFullInstructions')}
-          </button>
-        </div>
-        {taskLocationIntro ? (
-          <div className="mt-4 rounded-[1.2rem] bg-[rgba(255,255,255,0.34)] px-4 py-3 ring-1 ring-[rgba(61,84,52,0.08)]">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--forest-700)]">{t('challenge.locationIntroLabel')}</p>
-            <p className="mt-2 text-sm leading-6 text-[var(--forest-800)]">{taskLocationIntro}</p>
+
+            <div className="challenge-editorial__treatment" aria-hidden="true" />
+            <div className="challenge-editorial__hero-shade" aria-hidden="true" />
+
+            {challengeAccent.kind !== 'paper' ? (
+              <div className="challenge-editorial__accent" aria-hidden="true">
+                {challengeAccent.kind === 'cinematic' ? <Film /> : null}
+                {challengeAccent.kind === 'playful' ? <Bike /> : null}
+                {challengeAccent.kind === 'mooncake' ? <Cookie /> : null}
+                {challengeAccent.kind === 'nature' ? <Leaf /> : null}
+                {challengeAccent.kind === 'horizon' ? <Compass /> : null}
+              </div>
+            ) : null}
+
+            {statusBadge ? (
+              <span className="challenge-editorial__hero-status">
+                <span aria-hidden="true" />
+                {statusBadge}
+              </span>
+            ) : null}
+
+            <div className="challenge-editorial__hero-copy">
+              <p>{t('challenge.title')}</p>
+              <h1>{locationName}</h1>
+              {locationSubtitle ? <p>{locationSubtitle}</p> : null}
+            </div>
+          </section>
+
+          <div className="challenge-editorial__content">
+            <div className="challenge-editorial__grid">
+              <div className="challenge-editorial__main">
+                {task && progress.activeRun ? (
+                  <>
+                    <header className="challenge-editorial__heading">
+                      <p>{t('challenge.title')}</p>
+                      <h2 id="challenge-task-title">{localizedTaskTitle}</h2>
+                      {taskExperienceNote ? (
+                        <p className="challenge-editorial__experience">
+                          <span>{t('challenge.experienceNoteLabel')}:</span> {taskExperienceNote}
+                        </p>
+                      ) : null}
+                    </header>
+
+                    <div className="challenge-editorial__facts">
+                      <div className="challenge-editorial__fact is-reward">
+                        <Star aria-hidden="true" />
+                        <span>{task.points} {t('challenge.points')}</span>
+                      </div>
+                      <div className="challenge-editorial__fact is-gps">
+                        <MapPin aria-hidden="true" />
+                        <span>{t('challenge.radius')} {task.gps.radius}m</span>
+                      </div>
+                    </div>
+
+                    <div className="challenge-editorial__taxonomy">
+                      <span>{categoryLabel}</span>
+                      <span>{difficultyLabel}</span>
+                      {statusBadge ? (
+                        <span className="is-status">
+                          <i aria-hidden="true" />
+                          {statusBadge}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <section className="challenge-editorial__mission" aria-label={t('challenge.title')}>
+                      <span className="challenge-editorial__mission-mark" aria-hidden="true" />
+                      {instructionsExpanded ? (
+                        <div className="challenge-editorial__prose">
+                          {instructionParagraphs.map((paragraph) => (
+                            <p key={paragraph} style={{ whiteSpace: 'pre-line' }}>{paragraph}</p>
+                          ))}
+                        </div>
+                      ) : (
+                        <div
+                          className="challenge-editorial__prose line-clamp-4"
+                          style={{ whiteSpace: 'pre-line' }}
+                        >
+                          {localizedTaskDescription}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        aria-expanded={instructionsExpanded}
+                        onClick={() => setExpandedInstructionsTaskId(instructionsExpanded ? null : task.id)}
+                        className="challenge-editorial__text-toggle"
+                      >
+                        {instructionsExpanded ? t('challenge.collapseInstructions') : t('challenge.viewFullInstructions')}
+                        <ChevronDown aria-hidden="true" />
+                      </button>
+                    </section>
+
+                    {taskExternalUrl ? (
+                      <a
+                        href={taskExternalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="challenge-editorial__external-action"
+                      >
+                        {t('challenge.externalAction')}
+                      </a>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="challenge-editorial__pending">
+                    <h1>{isFinished ? t('challenge.allDone') : t('challenge.pending')}</h1>
+                    <p>{t('challenge.pendingDescription')}</p>
+                  </div>
+                )}
+              </div>
+
+              <aside className="challenge-editorial__rail">
+                <section className="challenge-editorial__status-panel" aria-live="polite">
+                  <div className="challenge-editorial__status-message">{message}</div>
+                  <p className="challenge-editorial__gps-line">
+                    <ShieldCheck aria-hidden="true" />
+                    <span>{gpsStatus !== 'idle' ? t('challenge.gpsStatus') + ': ' + t('challenge.status.' + gpsStatus) : t('challenge.ready')}</span>
+                  </p>
+
+                  <div className="challenge-editorial__state-badges">
+                    {currentTaskGpsVerified ? (
+                      <span>
+                        <CheckCircle2 aria-hidden="true" />
+                        {t('challenge.gpsStatus')}
+                      </span>
+                    ) : null}
+                    {currentTaskCompleted ? (
+                      <span>
+                        <CheckCircle2 aria-hidden="true" />
+                        {t('challenge.completedStatus')}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <p className="challenge-editorial__safety">{t('challenge.safetyNotice')}</p>
+
+                  {completionPanelRunId ? (
+                    <div className="challenge-editorial__completion">
+                      <p>{t('challenge.completionHandoff.title')}</p>
+                      <p>{t('challenge.completionHandoff.description')}</p>
+                      <p>{t('challenge.completionHandoff.sampleHint')}</p>
+                      <div>
+                        <a
+                          href={SAMPLE_TIKTOK_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {t('challenge.completionHandoff.sampleAction')}
+                        </a>
+                        <Button type="button" onClick={handleNavigateToTikTokSubmission}>
+                          {t('challenge.completionHandoff.submitAction')}
+                        </Button>
+                        <Button type="button" onClick={handleDismissCompletionPanel} variant="secondary">
+                          {t('challenge.completionHandoff.laterAction')}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <p className="challenge-editorial__headphone">
+                    <Headphones aria-hidden="true" />
+                    <span>{t('challenge.headphoneRecommendation')}</span>
+                  </p>
+                </section>
+
+                <div className="challenge-editorial__primary-action">
+                  <Button
+                    onClick={() => { void verifyGps(); }}
+                    disabled={!canComplete || isMutating}
+                    variant="gpsPrimary"
+                    className="w-full"
+                    style={{ scrollMarginBottom: '7rem' }}
+                  >
+                    <ShieldCheck className="h-5 w-5" />
+                    {t('challenge.verifyGps')}
+                  </Button>
+                </div>
+
+                <section className="challenge-editorial__progress">
+                  <div>
+                    <div>
+                      <p>{t('challenge.journeyProgress')}</p>
+                      <p>{t('challenge.progressCompletedLine', { completed: summary.completedCount, total: summary.enabledCount })}</p>
+                      <p>{t('challenge.progressRemainingLine', { remaining: summary.remainingCount })}</p>
+                    </div>
+                    <p>{progressPercent}%</p>
+                  </div>
+                  <div className="challenge-editorial__progress-track">
+                    <div style={{ width: String(progressPercent) + '%' }} />
+                  </div>
+                  <p>{t('challenge.progressBreakdown', { completed: summary.completedCount, skipped: summary.skippedCount, remaining: summary.remainingCount })}</p>
+                </section>
+
+                <div className="challenge-editorial__secondary-actions">
+                  <Button
+                    onClick={() => { void startGame(); }}
+                    disabled={isMutating}
+                    variant="secondary"
+                    className="w-full border border-[rgba(91,67,38,0.14)] bg-[rgba(247,242,231,0.86)]"
+                  >
+                    <RotateCcw className="h-5 w-5" />
+                    {isScopedCompleted ? scopeCompletionPrimaryLabel : t('challenge.newGame')}
+                  </Button>
+                  {!isScopedCompleted ? (
+                    <Button
+                      onClick={() => { void startNextChallenge(); }}
+                      disabled={canComplete || isMutating || eligibleTasks.length === 0}
+                      variant="secondary"
+                      className="w-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.68)]"
+                    >
+                      <Trophy className="h-5 w-5" />
+                      {t('challenge.next')}
+                    </Button>
+                  ) : null}
+                  <Button
+                    onClick={() => { void skipChallenge(); }}
+                    disabled={!canComplete || isMutating}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    <XCircle className="h-5 w-5" />
+                    {t('challenge.skip')}
+                  </Button>
+                  <Button
+                    onClick={() => { void failChallenge(); }}
+                    disabled={!canComplete || isMutating}
+                    variant="secondary"
+                    className="w-full text-[var(--brocade-red)]"
+                  >
+                    <Flag className="h-5 w-5" />
+                    {t('challenge.fail')}
+                  </Button>
+                </div>
+              </aside>
+            </div>
+
+            {taskLocationIntro ? (
+              <details className="challenge-editorial__details">
+                <summary>
+                  <span>{t('challenge.locationIntroLabel')}</span>
+                  <ChevronDown aria-hidden="true" />
+                </summary>
+                <div>
+                  <p>{taskLocationIntro}</p>
+                </div>
+              </details>
+            ) : null}
           </div>
-        ) : null}
-        {taskExternalUrl ? (
-          <a
-            href={taskExternalUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex min-h-[3rem] items-center justify-center rounded-full bg-[rgba(255,255,255,0.62)] px-5 py-3 text-sm font-black text-[var(--forest-900)] ring-1 ring-[rgba(61,84,52,0.12)] transition hover:bg-white"
-          >
-            {t('challenge.externalAction')}
-          </a>
-        ) : null}
         </div>
-      ) : (
-        <div className="mt-1 rounded-[1.35rem] bg-[rgba(255,255,255,0.44)] p-5 ring-1 ring-[rgba(61,84,52,0.1)]">
-        <h1 className="text-3xl font-black text-[var(--forest-950)]">{isFinished ? t('challenge.allDone') : t('challenge.pending')}</h1>
-        <p className="mt-3 text-[var(--forest-800)]">{t('challenge.pendingDescription')}</p>
-        </div>
-      )}
-
-      <div className="mt-5 rounded-[1.35rem] bg-[rgba(255,255,255,0.38)] px-4 py-3 ring-1 ring-[rgba(61,84,52,0.08)]">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-[var(--forest-700)]">{t('challenge.journeyProgress')}</p>
-            <p className="mt-2 text-base font-black text-[var(--forest-900)]">{t('challenge.progressCompletedLine', { completed: summary.completedCount, total: summary.enabledCount })}</p>
-            <p className="mt-1 text-sm text-[var(--forest-700)]">{t('challenge.progressRemainingLine', { remaining: summary.remainingCount })}</p>
-          </div>
-          <p className="shrink-0 text-sm font-black text-[var(--forest-800)]">{progressPercent}%</p>
-        </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-[rgba(61,84,52,0.12)]">
-          <div className="h-full rounded-full bg-[linear-gradient(90deg,#2d4d2f,#597154)] transition-[width] duration-300" style={{ width: `${progressPercent}%` }} />
-        </div>
-        <p className="mt-2 text-sm leading-6 text-[var(--forest-700)]">{t('challenge.progressBreakdown', { completed: summary.completedCount, skipped: summary.skippedCount, remaining: summary.remainingCount })}</p>
-      </div>
-
-      <div className="mt-5 space-y-3 rounded-[1.35rem] bg-[rgba(245,242,233,0.52)] p-4 ring-1 ring-[rgba(61,84,52,0.08)]">
-        <div className="rounded-[1.05rem] bg-[rgba(234,241,229,0.72)] px-3.5 py-3 text-[var(--forest-900)]">
-          {message}
-        </div>
-        <p className="text-sm leading-6 text-[var(--forest-700)]">{gpsStatus !== 'idle' ? `${t('challenge.gpsStatus')}: ${t(`challenge.status.${gpsStatus}`)}` : t('challenge.ready')}</p>
-        <p className="rounded-[1rem] border border-[rgba(112,79,39,0.14)] bg-[rgba(255,247,229,0.5)] p-3 text-sm leading-6 text-[var(--earth-900)]">
-          {t('challenge.safetyNotice')}
-        </p>
-
-        {completionPanelRunId && (
-          <div className="rounded-[1.2rem] border border-[rgba(61,84,52,0.12)] bg-[rgba(255,255,255,0.62)] p-4 text-[var(--forest-900)]">
-          <p className="text-base font-bold text-[var(--forest-950)]">{t('challenge.completionHandoff.title')}</p>
-          <p className="mt-2 text-sm leading-6 text-[var(--forest-800)]">{t('challenge.completionHandoff.description')}</p>
-          <p className="mt-2 text-sm leading-6 text-[var(--forest-700)]">{t('challenge.completionHandoff.sampleHint')}</p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <a
-            href={SAMPLE_TIKTOK_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-[3rem] items-center justify-center rounded-full border border-[rgba(61,84,52,0.16)] bg-[rgba(255,255,255,0.58)] px-4 py-2 text-sm font-black text-[var(--forest-900)] transition hover:bg-white"
-            >
-            {t('challenge.completionHandoff.sampleAction')}
-            </a>
-            <Button type="button" onClick={handleNavigateToTikTokSubmission}>
-            {t('challenge.completionHandoff.submitAction')}
-            </Button>
-            <Button type="button" onClick={handleDismissCompletionPanel} variant="secondary">
-            {t('challenge.completionHandoff.laterAction')}
-            </Button>
-          </div>
-          </div>
-        )}
-
-        <p className="inline-flex items-start gap-2 rounded-[1rem] bg-[rgba(255,255,255,0.5)] px-3 py-2 text-sm text-[var(--forest-800)] ring-1 ring-[rgba(61,84,52,0.1)]">
-          <Headphones className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{t('challenge.headphoneRecommendation')}</span>
-        </p>
-
-        <div className="flex flex-wrap gap-3 text-sm text-[var(--forest-700)]">
-          {progress.activeRun?.gpsVerified ? <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(234,241,229,0.72)] px-3 py-1.5 ring-1 ring-[rgba(61,84,52,0.12)]"><CheckCircle2 className="h-4 w-4 text-[var(--forest-700)]" />{t('challenge.gpsStatus')}</span> : null}
-          {progress.completedTaskIds.includes(task?.id ?? '') ? <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(255,247,229,0.72)] px-3 py-1.5 ring-1 ring-[rgba(112,79,39,0.12)]"><CheckCircle2 className="h-4 w-4 text-[var(--earth-800)]" />{t('challenge.completedStatus')}</span> : null}
-        </div>
-      </div>
-
-      <div className="mt-5">
-        <Button onClick={() => { void verifyGps(); }} disabled={!canComplete || isMutating} variant="gpsPrimary" className="w-full" style={{ scrollMarginBottom: '7rem' }}><ShieldCheck className="h-5 w-5" />{t('challenge.verifyGps')}</Button>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Button onClick={() => { void startGame(); }} disabled={isMutating} variant="secondary" className="w-full border border-[rgba(91,67,38,0.14)] bg-[rgba(247,242,231,0.86)]"><RotateCcw className="h-5 w-5" />{isScopedCompleted ? scopeCompletionPrimaryLabel : t('challenge.newGame')}</Button>
-          {!isScopedCompleted ? (
-<Button onClick={() => { void startNextChallenge(); }} disabled={canComplete || isMutating || eligibleTasks.length === 0} variant="secondary" className="w-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.68)]"><Trophy className="h-5 w-5" />{t('challenge.next')}</Button>
-) : null}
-          <Button onClick={() => { void skipChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full"><XCircle className="h-5 w-5" />{t('challenge.skip')}</Button>
-          <Button onClick={() => { void failChallenge(); }} disabled={!canComplete || isMutating} variant="secondary" className="w-full text-[var(--brocade-red)]"><Flag className="h-5 w-5" />{t('challenge.fail')}</Button>
-        </div>
-      </div>
-      </div>
-    </div>
-    </Card>
-  </ExploreAtlas>
+      </Card>
+    </ExploreAtlas>
   );
 };
