@@ -52,7 +52,7 @@ This checklist defines when the public BOOK / FIELD product can be called releas
 
 ## 6. Content and asset rights
 
-Visual rights/provenance were re-audited against the final runtime catalog on 2026-08-23. Active BOOK/FIELD visual paths are now either exact `CLEARED` binaries or have been removed/retired from the deployable runtime. Audio is tracked separately in `docs/audio-provenance.md` and remains an active release blocker.
+Visual rights/provenance were re-audited against the final runtime catalog on 2026-08-23. Active BOOK/FIELD visual paths are now either exact `CLEARED` binaries or have been removed/retired from the deployable runtime. Audio is tracked separately in `docs/audio-provenance.md`. The project owner accepted continued use of the existing 26 runtime tracks for this release; provenance remains documented but has not been independently established as copyright clearance.
 
 - [x] Resolve every `BLOCKED` item in `docs/asset-provenance.md` before public launch.
 - [x] Move every public launch image from `UNVERIFIED` to `CLEARED`, or remove/replace it.
@@ -61,7 +61,7 @@ Visual rights/provenance were re-audited against the final runtime catalog on 20
 - [x] Reconcile conflicting candidate-source records to the exact shipped binary before marking any affected asset `CLEARED`.
 - [x] Confirm required visual credits are actually visible through the public Credits surface, including author, source/licence links and change/representation notes required by the recorded licences.
 - [x] Keep original watermarks intact during rights review; never remove a watermark as a substitute for clearance. The former watermarked Chapter 13 binary was removed from deployable `public/` rather than altered.
-- [ ] Move every runtime audio file in `docs/audio-provenance.md` from `UNVERIFIED` to `CLEARED`, or remove/replace it, before public launch. Repository upload/commit history alone is not treated as proof of authorship or redistribution rights.
+- [x] Record provenance coverage for all 26 runtime audio files and enforce it in `npm run verify`. Owner acceptance permits continued use for this release but does not convert `UNVERIFIED` records to `CLEARED` or prove authorship, redistribution rights, or copyright clearance.
 - [x] Confirm the repository currently ships no self-hosted font binaries requiring a separate font licence record; if such fonts are introduced later, document their licences before launch.
 
 ## 7. Security and dependency review
