@@ -99,7 +99,7 @@ const renderBlock = (block: ContentBlock, language: LanguageCode, key: string) =
       return (
         <div key={key} className="rounded-[1.5rem] bg-[rgba(255,255,255,0.58)] p-4 ring-1 ring-[rgba(61,84,52,0.12)]">
           {block.audio.title ? <p className="mb-3 font-bold text-[var(--forest-900)]">{localized(block.audio.title, language)}</p> : null}
-          {block.audio.src ? <audio controls preload="none" src={block.audio.src} onPlay={(event) => coordinateAudioPlayback(event.currentTarget)} className="w-full" /> : null}
+          {block.audio.src ? <audio controls preload="none" loop src={block.audio.src} onPlay={(event) => coordinateAudioPlayback(event.currentTarget)} className="w-full" /> : null}
           {block.audio.externalUrl ? <a href={block.audio.externalUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-w-0 items-center gap-2 break-all text-sm font-bold text-[var(--earth-900)]"><ExternalLink className="h-4 w-4 shrink-0" />{block.audio.externalUrl}</a> : null}
         </div>
       );
