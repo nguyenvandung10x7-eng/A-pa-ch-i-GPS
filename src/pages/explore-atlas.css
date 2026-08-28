@@ -747,7 +747,7 @@
 }
 
 .challenge-editorial__frame {
-  overflow: hidden;
+  overflow: visible;
   border-radius: 1.55rem 1.55rem 0 0;
   background:
     linear-gradient(90deg, rgba(112, 79, 39, .018) 1px, transparent 1px) 0 0 / 1.45rem 1.45rem,
