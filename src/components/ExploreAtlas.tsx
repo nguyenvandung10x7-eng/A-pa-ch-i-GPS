@@ -194,13 +194,17 @@ const shortPlaceName = (task: ChallengeTask, language: LanguageCode) => {
   return title.split(/\s+[–-]\s+/)[0]?.trim() || title;
 };
 
-const groupPlaceName = (group: AtlasPlaceGroup, language: LanguageCode) => {
+const groupRepresentativeTask = (group: AtlasPlaceGroup) => {
   const aPaChaiTask = group.tasks.find((task) => task.id.includes('a-pa-chai'));
   const priorityTask = GROUP_LABEL_PRIORITY
     .map((taskId) => group.tasks.find((task) => task.id === taskId))
     .find((task): task is ChallengeTask => Boolean(task));
-  return shortPlaceName(aPaChaiTask ?? priorityTask ?? group.anchorTask, language);
+  return aPaChaiTask ?? priorityTask ?? group.anchorTask;
 };
+
+const groupPlaceName = (group: AtlasPlaceGroup, language: LanguageCode) => (
+  shortPlaceName(groupRepresentativeTask(group), language)
+);
 
 const findPlacementOverride = (
   group: AtlasPlaceGroup,
@@ -320,7 +324,7 @@ export const ExploreAtlas = ({
       ?? '';
   const selectedGroup = placeGroups.find((group) => group.id === selectedGroupId) ?? activeGroup ?? placeGroups[0];
   const selectedIsActive = Boolean(selectedGroup && groupContainsTask(selectedGroup, activeTaskId));
-  const selectedTask = selectedIsActive ? activeTask : selectedGroup?.anchorTask;
+  const selectedTask = selectedIsActive ? activeTask : selectedGroup ? groupRepresentativeTask(selectedGroup) : undefined;
   const selectedIsWest = Boolean(selectedGroup && !isWithinCityAtlas(selectedGroup.anchorTask));
   const selectedGroupCount = selectedGroup?.tasks.length ?? 0;
   const selectedGroupCompletedCount = selectedGroup?.tasks.filter((task) => completedTaskIdSet.has(task.id)).length ?? 0;
@@ -372,7 +376,7 @@ export const ExploreAtlas = ({
           {atlasGroups.map((group, index) => {
             const selected = selectedGroup?.id === group.id;
             const isActive = groupContainsTask(group, activeTaskId);
-            const imageTask = isActive ? activeTask ?? group.anchorTask : group.anchorTask;
+            const imageTask = isActive ? activeTask ?? groupRepresentativeTask(group) : groupRepresentativeTask(group);
             const groupCompletedCount = group.tasks.filter((task) => completedTaskIdSet.has(task.id)).length;
             const groupIsComplete = groupCompletedCount === group.tasks.length;
             const atlasPoint = getGroupAtlasPlacement(group);
