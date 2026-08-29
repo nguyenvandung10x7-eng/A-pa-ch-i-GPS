@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { icon } from 'leaflet';
 import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
@@ -26,6 +26,57 @@ type TaskPlace = {
 };
 
 type MapRegion = 'city' | 'west';
+
+const mapTileProviders = [
+  {
+    id: 'osm-fr',
+    url: 'https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  },
+  {
+    id: 'open-topo-map',
+    url: 'https://tile.openmaps.fr/opentopomap/{z}/{x}/{y}.png',
+    attribution: '<a href="https://github.com/sletuffe/OpenTopoMap">&copy; OpenTopoMap-R</a> <a href="https://openmaps.fr/donate">&#10084;&#65039; Donation</a> <a href="https://www.openstreetmap.org/copyright">&copy; OpenStreetMap</a>',
+  },
+] as const;
+
+const ResilientTileLayer = () => {
+  const [providerIndex, setProviderIndex] = useState(0);
+  const hasLoadedTile = useRef(false);
+  const tileErrorCount = useRef(0);
+  const provider = mapTileProviders[providerIndex];
+
+  const tryNextProvider = useCallback(() => {
+    hasLoadedTile.current = false;
+    tileErrorCount.current = 0;
+    setProviderIndex((current) => Math.min(current + 1, mapTileProviders.length - 1));
+  }, []);
+
+  useEffect(() => {
+    const fallbackTimer = window.setTimeout(() => {
+      if (!hasLoadedTile.current) tryNextProvider();
+    }, 6000);
+
+    return () => window.clearTimeout(fallbackTimer);
+  }, [providerIndex, tryNextProvider]);
+
+  return (
+    <TileLayer
+      key={provider.id}
+      attribution={provider.attribution}
+      url={provider.url}
+      eventHandlers={{
+        tileload: () => {
+          hasLoadedTile.current = true;
+        },
+        tileerror: () => {
+          tileErrorCount.current += 1;
+          if (tileErrorCount.current >= 2) tryNextProvider();
+        },
+      }}
+    />
+  );
+};
 
 const isDienBienCityPlace = (place: TaskPlace): boolean => (
   place.lat >= 21.35
@@ -173,7 +224,7 @@ export const TaskMap = ({
       <div className="relative z-0 min-h-[360px] rounded-[1.7rem]">
         <MapContainer center={[first.lat, first.lng]} zoom={13} scrollWheelZoom={false} className="h-[420px] sm:h-[540px] lg:h-[680px]">
           <MapViewport places={visiblePlaces} />
-          <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <ResilientTileLayer />
           {visiblePlaces.map((place) => {
             const placeFirstTask = place.tasks[0];
             const placeLabel = place.tasks.length > 1
