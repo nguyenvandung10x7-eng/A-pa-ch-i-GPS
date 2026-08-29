@@ -173,7 +173,7 @@ export const TaskMap = ({
       <div className="relative z-0 min-h-[360px] rounded-[1.7rem]">
         <MapContainer center={[first.lat, first.lng]} zoom={13} scrollWheelZoom={false} className="h-[420px] sm:h-[540px] lg:h-[680px]">
           <MapViewport places={visiblePlaces} />
-          <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
           {visiblePlaces.map((place) => {
             const placeFirstTask = place.tasks[0];
             const placeLabel = place.tasks.length > 1
