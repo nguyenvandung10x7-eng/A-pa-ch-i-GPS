@@ -246,6 +246,14 @@ textarea {
 	line-height: 1.35;
 }
 
+.task-map-place-popup strong {
+	display: block;
+	color: #2d1d11;
+	font-weight: 950;
+	letter-spacing: -0.01em;
+	text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
 .leaflet-control-zoom a,
 .leaflet-control-attribution {
 	background: rgba(231, 222, 200, 0.94) !important;
