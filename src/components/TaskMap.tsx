@@ -239,7 +239,6 @@ export const TaskMap = ({
                       {place.tasks.map((task) => (
                         <div key={task.id}>
                           <strong>{localize(task.title, language)}</strong>
-                          <p>{localize(task.description, language)}</p>
                         </div>
                       ))}
                     </div>
