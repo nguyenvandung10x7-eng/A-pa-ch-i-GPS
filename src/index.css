@@ -235,15 +235,15 @@ textarea {
 
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
-	background: rgba(231, 222, 200, 0.94);
+	background: rgba(248, 244, 232, 0.96);
 	color: var(--forest-950);
-	box-shadow: 0 14px 30px rgba(35, 36, 24, 0.18);
-	border: 1px solid rgba(87, 68, 45, 0.1);
+	box-shadow: 0 12px 24px rgba(35, 36, 24, 0.16);
+	border: 1px solid rgba(87, 68, 45, 0.14);
 }
 
 .leaflet-popup-content {
-	margin: 12px 14px;
-	line-height: 1.5;
+	margin: 10px 12px;
+	line-height: 1.35;
 }
 
 .leaflet-control-zoom a,
