@@ -42,19 +42,19 @@ const mapTileProviders = [
 
 const ResilientTileLayer = () => {
   const [providerIndex, setProviderIndex] = useState(0);
-  const hasLoadedTile = useRef(false);
+  const hasLoadedTileSet = useRef(false);
   const tileErrorCount = useRef(0);
   const provider = mapTileProviders[providerIndex];
 
   const tryNextProvider = useCallback(() => {
-    hasLoadedTile.current = false;
+    hasLoadedTileSet.current = false;
     tileErrorCount.current = 0;
     setProviderIndex((current) => Math.min(current + 1, mapTileProviders.length - 1));
   }, []);
 
   useEffect(() => {
     const fallbackTimer = window.setTimeout(() => {
-      if (!hasLoadedTile.current) tryNextProvider();
+      if (!hasLoadedTileSet.current) tryNextProvider();
     }, 6000);
 
     return () => window.clearTimeout(fallbackTimer);
@@ -66,8 +66,8 @@ const ResilientTileLayer = () => {
       attribution={provider.attribution}
       url={provider.url}
       eventHandlers={{
-        tileload: () => {
-          hasLoadedTile.current = true;
+        load: () => {
+          hasLoadedTileSet.current = true;
         },
         tileerror: () => {
           tileErrorCount.current += 1;
