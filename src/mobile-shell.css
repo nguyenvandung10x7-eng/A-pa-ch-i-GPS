@@ -629,7 +629,6 @@ body.public-shell-active::after {
 
 .editorial-shell--field .game-map-page .leaflet-container {
   background: #e8eee3 !important;
-  filter: saturate(.88) contrast(1.03);
 }
 
 .game-map-page__hero {
