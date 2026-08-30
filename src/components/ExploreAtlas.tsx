@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Check, ChevronRight, Footprints, MapPin, Medal, Navigation, Sparkles, Trophy, X } from 'lucide-react';
+import { Check, ChevronRight, Footprints, Info, MapPin, Medal, Navigation, Sparkles, Trophy, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LeaderboardDrawer } from './LeaderboardDrawer';
 import { localize } from '../services/i18n';
@@ -50,6 +50,7 @@ const copy = {
     completed: 'Đã hoàn thành',
     startHere: 'Bắt đầu tại đây',
     replay: 'Chơi lại tại đây',
+    atlasDisclaimer: 'Sa hình và vị trí chỉ để minh họa · Không dùng để tìm đường',
   },
   en: {
     oneJourney: 'one journey',
@@ -71,6 +72,7 @@ const copy = {
     completed: 'Completed',
     startHere: 'Start here',
     replay: 'Play here again',
+    atlasDisclaimer: 'Atlas and positions are illustrative only · Not for navigation',
   },
 } as const;
 
@@ -411,6 +413,8 @@ export const ExploreAtlas = ({
         <div className="explore-atlas__compass" aria-hidden="true">
           <i>N</i><i>E</i><i>S</i><i>W</i><Navigation />
         </div>
+
+        <p className="explore-atlas__map-note"><Info aria-hidden="true" />{c.atlasDisclaimer}</p>
 
         <section className="explore-atlas__nearby" aria-live="polite">
           <div className="explore-atlas__nearby-image">
