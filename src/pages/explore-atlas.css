@@ -476,6 +476,31 @@
 .explore-atlas__compass i:nth-child(3) { bottom: .14rem; left: 50%; transform: translateX(-50%); }
 .explore-atlas__compass i:nth-child(4) { top: 50%; left: .2rem; transform: translateY(-50%); }
 
+.explore-atlas__map-note {
+  position: absolute;
+  z-index: 6;
+  bottom: calc(13.25rem + env(safe-area-inset-bottom));
+  left: .75rem;
+  display: inline-flex;
+  width: max-content;
+  max-width: calc(100% - 5.5rem);
+  align-items: center;
+  gap: .24rem;
+  margin: 0;
+  border: 1px solid rgba(96, 69, 38, .13);
+  border-radius: 999px;
+  background: rgba(255, 250, 240, .84);
+  color: #66543f;
+  padding: .25rem .48rem;
+  font-size: clamp(.46rem, 1.72vw, .61rem);
+  font-weight: 780;
+  line-height: 1.2;
+  box-shadow: 0 .25rem .65rem rgba(48, 39, 24, .12);
+  backdrop-filter: blur(8px);
+}
+
+.explore-atlas__map-note svg { width: .72rem; height: .72rem; flex: none; stroke-width: 2.4; }
+
 .explore-atlas__nearby {
   position: absolute;
   z-index: 7;
