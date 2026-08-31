@@ -1,8 +1,8 @@
 {
   "app.name": "GPS Challenge",
-  "opening.edition": "Dien Bien · A digital book",
-  "opening.eyebrow": "A digital book about Dien Bien",
-  "opening.introduction": "This is a digital book about Dien Bien. Begin with a story. If it makes you want to go farther, step outside and visit the place.",
+  "opening.edition": "Dien Bien · A book",
+  "opening.eyebrow": "A book about Dien Bien",
+  "opening.introduction": "This is a book about Dien Bien. Begin with a story. If it makes you want to go farther, step outside and visit the place.",
   "opening.sequenceLabel": "From the book to journeys in the field",
   "opening.bookStep": "Read a story first.",
   "opening.fieldStep": "Step outside, only if you want to go farther.",

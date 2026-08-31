@@ -23,7 +23,7 @@ const localized = (value: BookLocalizedText | undefined, language: LanguageCode)
 const copy = {
   vi: {
     eyebrow: 'BOOK OF DIEN BIEN',
-    intro: 'Một cuốn sách số về Điện Biên — đọc trước, rồi mới bước ra ngoài khi một câu chuyện khiến bạn muốn đến đó.',
+    intro: 'Một cuốn sách về Điện Biên — đọc trước, rồi mới bước ra ngoài khi một câu chuyện khiến bạn muốn đến đó.',
     contents: 'Mục lục',
     openChapter: 'Mở chương',
     pages: 'trang',
@@ -41,7 +41,7 @@ const copy = {
   },
   en: {
     eyebrow: 'BOOK OF DIEN BIEN',
-    intro: 'A digital book about Dien Bien — read first, then step outside when a story makes you want to see the place for yourself.',
+    intro: 'A book about Dien Bien — read first, then step outside when a story makes you want to see the place for yourself.',
     contents: 'Contents',
     openChapter: 'Open chapter',
     pages: 'pages',
