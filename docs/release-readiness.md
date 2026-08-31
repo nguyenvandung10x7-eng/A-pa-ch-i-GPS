@@ -2,6 +2,8 @@
 
 This checklist defines when the public BOOK / FIELD product can be called release-ready. A successful build alone is not sufficient.
 
+Issue [#105](https://github.com/nguyenvandung10x7-eng/A-pa-ch-i-GPS/issues/105) is the authoritative manual acceptance record. The latest verified production baseline before the final admin-access closeout is `fa927e7a14b71535f79d40040e793478b130408e` (2026-08-31 UTC): GitHub Verify run `33355012408`, Production Security Audit run `33355012419`, and Tracked Secret Scan run `33355012424` all succeeded. Production served the Book-first opening and the 1954 temporal-threshold treatment, and the direct-route smoke test passed. Any later closeout merge must still be checked at its exact resulting `main` SHA before release.
+
 ## 1. Product structure
 
 - [x] Public information architecture is reduced to the two primary surfaces: BOOK and FIELD.
@@ -46,9 +48,11 @@ This checklist defines when the public BOOK / FIELD product can be called releas
 
 - [x] Public reading does not require authentication.
 - [x] OAuth return paths preserve pathname, query and hash where the public shell initiates sign-in.
+- [x] The app performs one shared Supabase administrator check per active account and reuses it for staff navigation and the moderation page; authenticated local task configuration remains separate at `/admin`.
 - [ ] Confirm production OAuth redirect URLs are registered with the identity provider.
 - [ ] Confirm production Supabase/Netlify environment variables are set and do not contain development-only values. Production Netlify builds now fail early when the required Supabase URL/key are missing or still use repository placeholders; provider/OAuth configuration still requires production verification.
 - [ ] Confirm sign-in, sign-out and a fresh anonymous session on the production origin.
+- [ ] With an administrator assigned in the production `admin_users` table, confirm the account sheet exposes `/moderation` and the queue loads. Source inspection cannot complete this check.
 
 ## 6. Content and asset rights
 
@@ -76,7 +80,7 @@ Visual rights/provenance were re-audited against the final runtime catalog on 20
 
 ## 8. Accessibility and device smoke tests
 
-- [ ] Keyboard-test BOOK/FIELD navigation, account sheet, bookmark control and key FIELD actions.
+- [x] Keyboard-test BOOK/FIELD navigation, account sheet, bookmark control and key FIELD actions. Cloud-browser smoke covered focus order, account-dialog trapping/Escape return, Book navigation and key FIELD controls.
 - [ ] Screen-reader-check the public shell landmarks and interactive labels on at least one representative Book page and Challenge page.
 - [ ] Check text contrast in BOOK, FIELD and Chapter 13 night surfaces after the final asset/font choices.
 - [ ] Check 320–390 px mobile widths for horizontal overflow and safe-area behaviour.
@@ -85,4 +89,4 @@ Visual rights/provenance were re-audited against the final runtime catalog on 20
 
 ## Release decision
 
-The project is code-complete only when its functional gates are green. It is public-release-ready only when the remaining unchecked production configuration, rights, security and real-device checks above are also closed.
+The project is code-complete only when its functional gates are green. It is public-release-ready only when the remaining unchecked production configuration, rights, security and real-device checks above are also closed in issue #105 with exact commit, production URL/build reference, device/browser versions and failure notes. Repository inspection must not be used to mark account, physical-device, assistive-technology or real-location checks complete.
