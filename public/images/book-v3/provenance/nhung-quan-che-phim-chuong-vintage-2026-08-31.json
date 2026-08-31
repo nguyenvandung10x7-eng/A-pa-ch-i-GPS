@@ -3,12 +3,12 @@
   "replaces_asset": "public/images/book-v3/nhung-quan-che-phim-chuong.webp",
   "generator": "OpenAI built-in image generation",
   "source_reference_asset": null,
-  "generated_png": "/workspace/scratch/f179ba18f1a4/generated_images/exec-654aed01-fcdd-4037-b39b-e43ddbed517d.png",
-  "generated_png_sha256": "fd124b91fa4f909eb3288d635c362e7c2ed0fdcbb86336d539dadba3c5f9b810",
-  "shipped_webp_sha256": "1a6b5cb63e5301747bbb1e08e4365d306ca40861b94ef7f5b43c57b08ba91cd4",
-  "shipped_webp_bytes": 170402,
+  "generated_png": "/workspace/scratch/f179ba18f1a4/generated_images/exec-48935243-96f6-46eb-8457-2dc147574bf4.png",
+  "generated_png_sha256": "e5c2f0dc42ff2e6d3c4b2e9f2516630289024e9531d2f20d7ccfbe1630cfe5c6",
+  "shipped_webp_sha256": "9802977a3382a419112ee84a0c60ce815d8f3c20cdd0550028596bcdbb409448",
+  "shipped_webp_bytes": 163522,
   "created_utc": "2026-08-31",
   "transform": "Generated PNG converted to 1536x1024 lossy WebP with ffmpeg, Lanczos scaling, metadata stripped.",
-  "prompt_summary": "High three-quarter bird's-eye view over a dark late-1990s-to-2000 Dien Bien Phu street of weathered sweet-soup shops, damp uneven road, CRT televisions, children on low stools, bicycles and period motorbikes, sparse tungsten light, distant hills, and exact program-board titles Ỷ Thiên Đồ Long Ký, Thần Điêu Đại Hiệp, and Thiên Long Bát Bộ.",
+  "prompt_summary": "New-from-scratch high three-quarter view over a dark late-1990s-to-2000 Dien Bien Phu street. Every weathered sweet-soup shop is set about ten metres back from the road behind broad earthen or grassy forecourts, drainage edges and footpaths; sparse tungsten and CRT light reveal period bicycles, motorbikes, distant hills, and exact program-board titles Ỷ Thiên Đồ Long Ký, Thần Điêu Đại Hiệp, and Thiên Long Bát Bộ.",
   "rights_note": "Generated specifically for Book of Dien Bien as a literary illustration. The scene is not documentary evidence of an exact street; screens use generic martial-arts silhouettes rather than copied film frames, actors, logos, or poster layouts."
 }
