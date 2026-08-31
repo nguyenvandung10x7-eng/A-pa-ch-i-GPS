@@ -1,16 +1,17 @@
 {
   "asset": "public/images/tasks/nhin-xuong-long-chao-cua-chung-ta.webp",
   "status_basis": "project-generated-illustration-reuse",
-  "checked_on": "2026-08-24",
+  "checked_on": "2026-08-31",
   "source": {
     "asset": "public/images/book-v3/su-hung-vi.webp",
-    "generator": "OpenAI image generation",
-    "sha256": "3b2dbea4334b936585bac1a87a3bdb331fd907d6e5c0e66c12d4be56f2e0c53f"
+    "generator": "OpenAI built-in image generation",
+    "sha256": "3607e19f69bff051f0e57b51e4808152dd055380275becd016d693708a464f90",
+    "provenance": "public/images/book-v3/provenance/su-hung-vi-1957-2026-08-31.json"
   },
   "derivative": {
     "dimensions": "1536x1024",
-    "sha256": "3b2dbea4334b936585bac1a87a3bdb331fd907d6e5c0e66c12d4be56f2e0c53f",
+    "sha256": "3607e19f69bff051f0e57b51e4808152dd055380275becd016d693708a464f90",
     "changes": "Exact binary copy; no visual changes."
   },
-  "representation_note": "Purpose-built literary illustration reused for the valley-view challenge; not documentary photography or an exact surveyed panorama."
+  "representation_note": "The chapter's interpretive 1957 reconstruction is reused for the valley-view challenge as a memory layer. It is not a present-day panorama, documentary photography, navigational guidance, or an exact surveyed view."
 }

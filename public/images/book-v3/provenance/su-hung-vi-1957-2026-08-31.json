@@ -1,0 +1,17 @@
+{
+  "asset": "public/images/book-v3/su-hung-vi.webp",
+  "replaces_asset": "public/images/book-v3/su-hung-vi.webp",
+  "generator": "OpenAI built-in image generation",
+  "generated_png_sha256": "b49d222d8b72e6da28e3ff01f158077a4c257965d6e11a98ea1f1b320f1fdcdc",
+  "generated_dimensions": "1536x1024",
+  "shipped_webp_sha256": "3607e19f69bff051f0e57b51e4808152dd055380275becd016d693708a464f90",
+  "shipped_webp_bytes": 220008,
+  "created_utc": "2026-08-31",
+  "transform": "Generated PNG re-encoded as 1536x1024 lossy WebP without crop or visual content edits.",
+  "prompt_summary": "Interpretive historical literary scene of the Mường Thanh basin around 1957: a lone newly arrived man, broad damp fields, a narrow natural river, a few sparse stilt-house clusters, dirt paths, mist, and long rounded mountain ridges, with no modern city or infrastructure.",
+  "historical_context": {
+    "basis": "The scene is intentionally set before the military farm and associated migration began reshaping Điện Biên from 1958 onward.",
+    "reference": "https://nvsk.vnanet.vn/print/lich-su-tinh-dien-bien-noi-chien-thang-39lung-lay-nam-chau-chan-dong-dia-cau-164026.vna"
+  },
+  "rights_note": "Generated specifically for Book of Dien Bien as a literary historical reconstruction. It is not an archival photograph or independent evidence of the exact appearance of Điện Biên in 1957."
+}
