@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Bike, CheckCircle2, ChevronDown, Compass, Cookie, Film, Flag, Headphones, Leaf, MapPin, RotateCcw, ShieldCheck, Star, Trophy, XCircle } from 'lucide-react';
+import { ArrowRight, Bike, CheckCircle2, ChevronDown, Compass, Cookie, Film, Flag, Headphones, Leaf, MapPin, RotateCcw, ShieldCheck, Star, Trophy, XCircle } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -758,7 +758,31 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
                       </button>
                     </section>
 
-                    {taskExternalUrl ? (
+                    {taskExternalUrl && challengeAccent.kind === 'cinematic' ? (
+                      <section
+                        className="challenge-editorial__temporal-threshold"
+                        aria-labelledby="challenge-temporal-threshold-title"
+                      >
+                        <div className="challenge-editorial__temporal-copy">
+                          <p id="challenge-temporal-threshold-title">{t('challenge.temporalThreshold.label')}</p>
+                          <strong>{t('challenge.temporalThreshold.message')}</strong>
+                        </div>
+                        <span className="challenge-editorial__temporal-boundary" aria-hidden="true" />
+                        <span className="challenge-editorial__temporal-present" aria-hidden="true">
+                          {t('challenge.temporalThreshold.present')}
+                        </span>
+                        <span className="challenge-editorial__temporal-year" aria-hidden="true">1954</span>
+                        <a
+                          href={taskExternalUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="challenge-editorial__temporal-action"
+                        >
+                          <span>{t('challenge.externalAction')}</span>
+                          <ArrowRight aria-hidden="true" />
+                        </a>
+                      </section>
+                    ) : taskExternalUrl ? (
                       <a
                         href={taskExternalUrl}
                         target="_blank"

@@ -19,6 +19,7 @@ import { GameMapPage } from './pages/GameMapPage';
 import { LegalSafetyPage } from './pages/LegalSafetyPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ModerationPage } from './pages/ModerationPage';
+import { OpeningPage } from './pages/OpeningPage';
 import { SavedBookPage } from './pages/SavedBookPage';
 import { TikTokSubmissionPage } from './pages/TikTokSubmissionPage';
 import { CHALLENGE_CLEAR_VERSION_KEY, getChallengeClearVersion } from './services/tasks';
@@ -129,7 +130,7 @@ export default function App() {
 
   const publicRoutes = (
     <Routes>
-      <Route path="/" element={<Navigate to="/challenge" replace />} />
+      <Route path="/" element={<OpeningPage language={language} setLanguage={setLanguage} t={t} />} />
       <Route path="/book" element={<NewBookPage language={language} />} />
       <Route path="/book/chapter/:chapterId" element={<NewBookPage language={language} />} />
       <Route path="/book/page/:pageId" element={<BookPageRoute />} />
