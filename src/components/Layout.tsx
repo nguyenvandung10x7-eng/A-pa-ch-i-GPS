@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { BookOpen, ChevronDown, Loader2, Menu, Music2, Pause, Play, Volume2, X } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useAdminStatus } from '../hooks/useAdminStatus';
 import { MUSIC_TRACKS, type MusicTrack } from '../data/music';
 import {
   CHALLENGE_ADMIN_NAVIGATION_ITEMS,
@@ -20,7 +19,14 @@ import {
 import { LanguageSwitch } from './LanguageSwitch';
 import type { LanguageCode } from '../types/task';
 
-type LayoutProps = { children: ReactNode; language: LanguageCode; setLanguage: (language: LanguageCode) => void; t: (key: string) => string };
+type LayoutProps = {
+  children: ReactNode;
+  language: LanguageCode;
+  setLanguage: (language: LanguageCode) => void;
+  t: (key: string) => string;
+  isAdmin: boolean;
+  checkingAdmin: boolean;
+};
 
 type MusicSettings = { enabled: boolean; volume: number; trackId: string };
 type MusicPreparationSnapshot = { trackId: string | null; currentTime: number; wasPlaying: boolean; wasMuted: boolean; previousVolume: number };
@@ -86,9 +92,8 @@ const logMusicPlaybackWarning = (context: string, error: unknown) => {
   console.warn(`[music] ${context} failed (${errorName}).`, error);
 };
 
-export const Layout = ({ children, language, setLanguage, t }: LayoutProps) => {
+export const Layout = ({ children, language, setLanguage, t, isAdmin, checkingAdmin }: LayoutProps) => {
   const { user, loading, signIn, signOutUser } = useAuth();
-  const { isAdmin, checkingAdmin } = useAdminStatus();
   const location = useLocation();
   const [authBusy, setAuthBusy] = useState(false);
   const [musicPickerOpen, setMusicPickerOpen] = useState(false);

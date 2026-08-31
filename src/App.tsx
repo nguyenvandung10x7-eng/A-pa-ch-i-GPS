@@ -6,6 +6,7 @@ import { MobileAppShell } from './components/MobileAppShell';
 import { ProductSurfaceFrame } from './components/ProductSurfaceFrame';
 import { Card } from './components/Card';
 import { useAuth } from './contexts/AuthContext';
+import { useAdminStatus } from './hooks/useAdminStatus';
 import { useTasks } from './hooks/useTasks';
 import { useTranslation } from './hooks/useTranslation';
 import { AdminPage } from './pages/AdminPage';
@@ -85,6 +86,7 @@ const AuthenticatedRoute = ({
 export default function App() {
   const { language, setLanguage, t } = useTranslation();
   const { tasks, setTasks } = useTasks();
+  const { isAdmin, checkingAdmin, adminCheckFailed } = useAdminStatus();
   const [clearVersion, setClearVersion] = useState(() => getChallengeClearVersion());
   const location = useLocation();
   const navigationType = useNavigationType();
@@ -153,16 +155,37 @@ export default function App() {
   const staffOrLegalRoute = ['/admin', '/moderation', '/privacy', '/legal'].includes(normalizedPathname);
 
   return (
-    <Layout language={language} setLanguage={setLanguage} t={t}>
+    <Layout
+      language={language}
+      setLanguage={setLanguage}
+      t={t}
+      isAdmin={isAdmin}
+      checkingAdmin={checkingAdmin}
+    >
       {staffOrLegalRoute ? (
         <Routes>
           <Route path="/privacy" element={<LegalSafetyPage t={t} />} />
           <Route path="/legal" element={<LegalSafetyPage t={t} />} />
-          <Route path="/moderation" element={<ModerationPage language={language} t={t} />} />
+          <Route path="/moderation" element={(
+            <ModerationPage
+              language={language}
+              t={t}
+              isAdmin={isAdmin}
+              checkingAdmin={checkingAdmin}
+              adminCheckFailed={adminCheckFailed}
+            />
+          )} />
           <Route path="/admin" element={<AuthenticatedRoute t={t} redirectPath="/admin"><AdminPage tasks={tasks} setTasks={setTasks} t={t} /></AuthenticatedRoute>} />
         </Routes>
       ) : (
-        <MobileAppShell language={language} setLanguage={setLanguage}>{publicRoutes}</MobileAppShell>
+        <MobileAppShell
+          language={language}
+          setLanguage={setLanguage}
+          isAdmin={isAdmin}
+          checkingAdmin={checkingAdmin}
+        >
+          {publicRoutes}
+        </MobileAppShell>
       )}
     </Layout>
   );

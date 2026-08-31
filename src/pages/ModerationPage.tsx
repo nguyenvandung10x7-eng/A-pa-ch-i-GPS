@@ -3,7 +3,6 @@ import { AlertCircle, Loader2, LogIn, RefreshCw, ShieldCheck } from 'lucide-reac
 import { Link, useLocation } from 'react-router-dom';
 import { Card } from '../components/Card';
 import { useAuth } from '../contexts/AuthContext';
-import { useAdminStatus } from '../hooks/useAdminStatus';
 import {
   approveSubmission,
   loadPendingSubmissions,
@@ -16,10 +15,23 @@ import type { LanguageCode } from '../types/task';
 
 const formatDate = (value: string, language: LanguageCode) => new Date(value).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US');
 
-export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
+type ModerationPageProps = {
+  language: LanguageCode;
+  t: (key: string, values?: Record<string, string | number>) => string;
+  isAdmin: boolean;
+  checkingAdmin: boolean;
+  adminCheckFailed: boolean;
+};
+
+export const ModerationPage = ({
+  language,
+  t,
+  isAdmin,
+  checkingAdmin,
+  adminCheckFailed,
+}: ModerationPageProps) => {
   const location = useLocation();
   const { user, loading: authLoading, signIn } = useAuth();
-  const { isAdmin, checkingAdmin } = useAdminStatus();
   const [submissions, setSubmissions] = useState<ModerationSubmission[]>([]);
   const [nextCursor, setNextCursor] = useState<ModerationCursor | null>(null);
   const [queueLoading, setQueueLoading] = useState(true);
@@ -290,6 +302,17 @@ export const ModerationPage = ({ language, t }: { language: LanguageCode; t: (ke
     <div className="flex items-center gap-3 text-[var(--forest-900)]">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>{t('moderation.checkingAuthorization')}</span>
+        </div>
+      </Card>
+    );
+  }
+
+  if (adminCheckFailed) {
+    return (
+      <Card>
+        <div className="flex items-center gap-3 text-[var(--brocade-red)]">
+          <AlertCircle className="h-5 w-5" />
+          <p className="text-lg font-semibold">{t('moderation.error.adminCheckFailed')}</p>
         </div>
       </Card>
     );
