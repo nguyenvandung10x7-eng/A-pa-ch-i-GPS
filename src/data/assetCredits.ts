@@ -65,8 +65,8 @@ export const ASSET_CREDITS: AssetCredit[] = [
     author: 'Generated for Book of Dien Bien',
     status: 'cleared',
     note: {
-      vi: 'Tranh được tạo riêng theo phong cách bản đồ phiêu lưu 3D mềm. Đây là hình minh họa văn chương, không phải ảnh tư liệu hay ảnh chụp chính xác địa điểm.',
-      en: 'Created specifically in a soft 3D adventure-atlas style. These are literary illustrations, not documentary or exact location photographs.',
+      vi: 'Tranh được tạo riêng như một bộ minh họa văn chương; từng trang có thể dùng xử lý 3D mềm, vintage hoặc tái dựng lịch sử tùy ký ức được kể. Đây không phải ảnh tư liệu hay ảnh chụp xác nhận chính xác địa điểm hoặc thời kỳ.',
+      en: 'Created specifically as a literary illustration set, with soft 3D, vintage, or historical-reconstruction treatments selected for each memory. These are not documentary photographs or exact evidence of a location or period.',
     },
   },
   {
@@ -155,14 +155,12 @@ export const ASSET_CREDITS: AssetCredit[] = [
   },
   {
     id: 'cau-ta-ko-khu-tang-banh-trung-thu',
-    usage: { vi: 'Ảnh sông Điện Biên Phủ đại diện dùng cho Cầu Tả Kó Khừ', en: 'Representative Dien Bien Phu river scenery used for Ta Ko Khu bridge' },
-    author: 'Adam Jones from Kelowna, BC, Canada',
-    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Ron_River_View_-_Dien_Bien_Phu_-_Vietnam_(48159135931).jpg',
-    ...cc('2.0'),
+    usage: { vi: 'Tranh minh họa riêng cho thử thách Cầu Tả Kó Khừ', en: 'Purpose-built illustration for the Ta Ko Khu bridge challenge' },
+    author: 'Generated for Book of Dien Bien',
     status: 'cleared',
     note: {
-      vi: 'Exact binary đang ship dùng lại chính derivative đã CLEARED của ho-huoi-pha-mthen, giữ nguyên derivative SHA-256 77ca90a38d4b1632a777e1d605eab6f6a81c05dd309358ead55e357d6c579989 và source SHA-256 a229af8197b17851420e8ff3b02119083e0619b28ae711f2b2a1c84a2d109f6f. Derivative này đã được resize theo tỷ lệ xuống chiều rộng 1920 px bằng Lanczos và re-encode thành lossy WebP. Đây là ảnh sông Điện Biên Phủ mang tính đại diện, không phải ảnh đã xác minh chính xác Cầu Tả Kó Khừ. CLEARED chỉ xác nhận quyền/provenance của exact shipped binary. CC BY-SA 2.0 yêu cầu ghi công, liên kết giấy phép, nêu thay đổi và tuân thủ share-alike.',
-      en: 'The shipped binary reuses the exact already-CLEARED derivative from ho-huoi-pha-mthen, preserving derivative SHA-256 77ca90a38d4b1632a777e1d605eab6f6a81c05dd309358ead55e357d6c579989 and source SHA-256 a229af8197b17851420e8ff3b02119083e0619b28ae711f2b2a1c84a2d109f6f. This derivative was proportionally resized to 1920 px width with Lanczos filtering and re-encoded as lossy WebP. It is representative Dien Bien Phu river scenery, not an exact verified photograph of Ta Ko Khu bridge. CLEARED covers rights/provenance for the exact shipped binary only. CC BY-SA 2.0 requires attribution, a licence link, change notice, and share-alike.',
+      vi: 'Tranh AI được tạo riêng sau khi đối chiếu điểm GPS hiện có bằng ảnh vệ tinh và ảnh 360°: cầu bê tông có lan can đỏ-trắng, lòng suối đá hẹp, bản nhỏ và sườn núi rừng bao quanh. Đây là diễn giải thị giác, không phải ảnh chụp tư liệu hoặc bằng chứng nhận dạng chính xác hiện trạng.',
+      en: 'Purpose-built AI artwork created after checking the existing GPS point against satellite and 360° imagery: a concrete bridge with red-and-white parapets, a narrow rocky stream, a sparse village, and enclosing forested slopes. It is a visual interpretation, not documentary photography or evidence of exact present-day conditions.',
     },
   },
   {
