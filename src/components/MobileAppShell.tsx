@@ -139,6 +139,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   const restoreAccountFocusRef = useRef(true);
   const copy = labels[language];
   const normalizedPathname = normalizePublicPathname(pathname);
+  const onOpeningSurface = normalizedPathname === '/';
   const onBookSurface = isBookSurface(normalizedPathname);
   const onExploreSurface = normalizedPathname === '/challenge';
   const readingMode = normalizedPathname.startsWith('/book/chapter/')
@@ -396,9 +397,9 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
   };
 
   return (
-    <div className={`editorial-shell min-h-dvh ${isFieldSurface(normalizedPathname) ? 'editorial-shell--field' : 'editorial-shell--book'} ${onExploreSurface ? 'editorial-shell--explore' : ''}`}>
-      <div className="editorial-shell__frame mx-auto min-h-dvh w-full max-w-[72rem] pb-[calc(5.6rem+env(safe-area-inset-bottom))]">
-        <header className="editorial-shell__header">
+    <div className={`editorial-shell min-h-dvh ${isFieldSurface(normalizedPathname) ? 'editorial-shell--field' : 'editorial-shell--book'} ${onExploreSurface ? 'editorial-shell--explore' : ''} ${onOpeningSurface ? 'editorial-shell--opening' : ''}`}>
+      <div className={`editorial-shell__frame mx-auto min-h-dvh w-full max-w-[72rem] ${onOpeningSurface ? 'pb-0' : 'pb-[calc(5.6rem+env(safe-area-inset-bottom))]'}`}>
+        {!onOpeningSurface ? <header className="editorial-shell__header">
           <Link to="/book" className="editorial-shell__brand" aria-label="Book of Dien Bien">
             BOOK OF DIEN BIEN
           </Link>
@@ -437,7 +438,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
               <strong>{language.toUpperCase()}</strong>
             </button>
           </div>
-        </header>
+        </header> : null}
 
         {readingMode && activeBookTrack && bookSoundEnabled && (
           <div className={`editorial-soundtrack-pop ${bookSoundBlocked ? 'is-blocked' : ''}`}>
@@ -481,7 +482,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
         {children}
       </div>
 
-      <nav aria-label={language === 'vi' ? 'Điều hướng chính' : 'Primary navigation'} className="editorial-shell__surface-nav">
+      {!onOpeningSurface ? <nav aria-label={language === 'vi' ? 'Điều hướng chính' : 'Primary navigation'} className="editorial-shell__surface-nav">
         <div className="editorial-shell__surface-nav-inner">
           <NavLink to="/challenge" className={({ isActive }) => isActive ? 'is-active' : ''}>
             <Compass className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
@@ -500,7 +501,7 @@ export const MobileAppShell = ({ language, setLanguage, children }: MobileAppShe
             <BookOpen className="editorial-shell__nav-book" aria-hidden="true" /><span>{language === 'vi' ? 'Cuốn sách' : 'Book'}</span><ChevronUp className="editorial-shell__nav-chevron" aria-hidden="true" />
           </button>
         </div>
-      </nav>
+      </nav> : null}
 
       {bookMenuOpen ? <BookChapterDrawer language={language} onClose={() => setBookMenuOpen(false)} /> : null}
 
