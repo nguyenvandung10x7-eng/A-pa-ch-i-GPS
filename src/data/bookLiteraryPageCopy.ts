@@ -109,8 +109,8 @@ export const BOOK_PAGE_LITERARY_COPY: Record<string, LiteraryPageCopy> = {
     },
     body: [
       {
-        vi: 'Người trong giang hồ, Cú đấm máu, Ỷ Thiên Đồ Long Ký. Chỉ cần những cái tên ấy là một dãy quán, mấy chiếc ghế nhựa, bóng xe đạp sát vỉa hè và những buổi tối cũ tự trở lại. Khi ấy chẳng ai gọi đó là hoài niệm; chỉ là ngồi xem thêm một đoạn, ăn thêm một cốc chè, rồi về nhà khi phim vẫn còn chạy.',
-        en: 'Young and Dangerous, Bloodfight, The Heaven Sword and Dragon Saber. The titles alone can bring back a row of shops, low plastic stools, bicycles by the curb, and evenings long gone. Nobody called it nostalgia then; it was simply watching a little longer, finishing another sweet soup, and going home while the film was still running.',
+        vi: 'Ỷ Thiên Đồ Long Ký, Thần Điêu Đại Hiệp, Thiên Long Bát Bộ. Chỉ cần những cái tên ấy là một dãy quán, mấy chiếc ghế nhựa, bóng xe đạp sát vỉa hè và những buổi tối cũ tự trở lại. Khi ấy chẳng ai gọi đó là hoài niệm; chỉ là ngồi xem thêm một đoạn, ăn thêm một cốc chè, rồi về nhà khi phim vẫn còn chạy.',
+        en: 'The Heaven Sword and Dragon Saber, The Return of the Condor Heroes, Demi-Gods and Semi-Devils. The titles alone can bring back a row of shops, low plastic stools, bicycles by the curb, and evenings long gone. Nobody called it nostalgia then; it was simply watching a little longer, finishing another sweet soup, and going home while the film was still running.',
       },
       {
         vi: 'Tiếng thìa chạm thành cốc, tiếng quạt quay, tiếng xe máy ngoài đường lẫn vào lời thoại từ chiếc tivi nhỏ. Thế giới xa xôi đến với thị xã qua một bộ phim đang chiếu dở và chỗ ngồi phải ghé sát mới nhìn rõ. Quán chè chẳng định trở thành rạp chiếu hay cánh cửa nào cả. Nhưng với bọn trẻ ngồi dưới ánh màn hình xanh, nơi ấy từng rộng hơn mọi con phố chúng biết.',

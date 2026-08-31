@@ -1,0 +1,14 @@
+{
+  "asset": "public/images/book-v3/nhung-quan-che-phim-chuong.webp",
+  "replaces_asset": "public/images/book-v3/nhung-quan-che-phim-chuong.webp",
+  "generator": "OpenAI built-in image generation",
+  "source_reference_asset": null,
+  "generated_png": "/workspace/scratch/f179ba18f1a4/generated_images/exec-654aed01-fcdd-4037-b39b-e43ddbed517d.png",
+  "generated_png_sha256": "fd124b91fa4f909eb3288d635c362e7c2ed0fdcbb86336d539dadba3c5f9b810",
+  "shipped_webp_sha256": "1a6b5cb63e5301747bbb1e08e4365d306ca40861b94ef7f5b43c57b08ba91cd4",
+  "shipped_webp_bytes": 170402,
+  "created_utc": "2026-08-31",
+  "transform": "Generated PNG converted to 1536x1024 lossy WebP with ffmpeg, Lanczos scaling, metadata stripped.",
+  "prompt_summary": "High three-quarter bird's-eye view over a dark late-1990s-to-2000 Dien Bien Phu street of weathered sweet-soup shops, damp uneven road, CRT televisions, children on low stools, bicycles and period motorbikes, sparse tungsten light, distant hills, and exact program-board titles Ỷ Thiên Đồ Long Ký, Thần Điêu Đại Hiệp, and Thiên Long Bát Bộ.",
+  "rights_note": "Generated specifically for Book of Dien Bien as a literary illustration. The scene is not documentary evidence of an exact street; screens use generic martial-arts silhouettes rather than copied film frames, actors, logos, or poster layouts."
+}
