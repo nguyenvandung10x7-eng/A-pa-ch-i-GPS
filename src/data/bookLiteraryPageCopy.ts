@@ -8,24 +8,24 @@ type LiteraryPageCopy = {
 export const BOOK_PAGE_LITERARY_COPY: Record<string, LiteraryPageCopy> = {
   'nam-rom-buoi-chieu': {
     intro: {
-      vi: 'Nậm Rốm vẫn chảy qua thành phố. Bờ sông trong trí nhớ thì đã dời sang một nơi chỉ những đứa trẻ năm ấy còn tìm được.',
-      en: 'Nam Rom still runs through the city. The riverbank in memory has moved somewhere only the children from those years can still find.',
+      vi: 'Nậm Rốm vẫn chảy qua thành phố. Chỉ có bờ sông trong trí nhớ là không còn ở đúng chỗ cũ.',
+      en: 'Nam Rom still runs through the city. Only the riverbank in memory is no longer quite where it used to be.',
     },
     body: [
       {
-        vi: 'Ngày ấy, con sông thuộc về những cuộc trốn người lớn, tiếng bạn gọi nhau xuống nước và mấy trò nghịch dại rồi ai cũng tưởng sẽ quên. Nhiều năm sau, nước vẫn đi qua Điện Biên, còn những đứa trẻ đã tản về nhiều phía. Đứng bên bờ đủ lâu, chúng ta lại thấy một buổi chiều cũ nổi lên giữa những gợn sáng.',
-        en: 'Back then, the river belonged to escapes from adults, friends calling one another into the water, and foolish games everyone assumed they would forget. Years later, the water still passes through Dien Bien while those children have scattered in different directions. Stand on the bank long enough and an old afternoon rises among the glints on the current.',
+        vi: 'Ngày ấy, con sông không phải phong cảnh. Nó là một lối trốn khỏi người lớn, là đám bạn rủ nhau xuống nước, là những trò nghịch dại tưởng rồi sẽ quên. Nhiều năm sau, nước vẫn đi qua Điện Biên như chưa từng biết những đứa trẻ ấy đã lớn. Chỉ cần đứng gần bờ một lúc, đôi khi một buổi chiều cũ lại nổi lên rất rõ.',
+        en: 'Back then the river was not scenery. It was a way of slipping away from adults, friends calling one another into the water, and foolish games everyone assumed would be forgotten. Years later, the river still passes through Dien Bien as though it never knew those children grew up. Stand near the bank long enough and an old afternoon can sometimes surface intact.',
       },
       {
-        vi: 'Buổi chiều ấy có mùi bùn non, rêu bám trên đá và tiếng ai gọi với từ một mái nhà bên kia bờ. Nắng rút chậm khỏi mặt nước, để lại những vệt sáng chao theo dòng. Thuở bé, chúng ta đâu để ý nước đang mang ngày tháng đi xa. Khi trở về, con sông vẫn ở đó, vẫn một âm thanh đều đặn; bên bờ chỉ thiếu vài tiếng gọi quen.',
-        en: 'That afternoon carries the smell of new mud, moss on stone, and someone calling from a house across the water. Sunlight withdraws slowly, leaving bright streaks rocking with the current. As children, we never noticed the water carrying the years away. When we return, the river is still there with the same steady sound; only a few familiar calls are missing from the bank.',
+        vi: 'Trong buổi chiều ấy có mùi bùn non, rêu bám vào đá và tiếng ai gọi với từ một mái nhà bên kia bờ. Nắng rút chậm khỏi mặt nước, để lại những vệt sáng chao nghiêng theo dòng. Khi còn bé, chẳng ai nghĩ con sông đang mang thời gian đi mất. Chỉ đến lúc trở về, nhìn nước vẫn chảy mà không tìm thấy đủ những gương mặt cũ, người ta mới hiểu: Nậm Rốm đã dạy mình bài học đầu tiên về những điều vừa ở lại, vừa không ngừng trôi.',
+        en: 'That afternoon carries the smell of new mud, moss on stone, and someone calling from a house across the water. Sunlight withdraws slowly, leaving bright streaks that tilt with the current. As children, nobody imagined the river was carrying time away. Only on returning—finding the water still moving but not all the old faces beside it—does the lesson become clear: Nam Rom first taught us how something can remain and keep departing at once.',
       },
     ],
   },
   'mua-hoa-nhan-hoa-vai': {
     intro: {
-      vi: 'Mùa hè ngày ấy tự báo tin bằng hoa nhãn, hoa vải và tiếng ve ran lên trong buổi trưa.',
-      en: 'Summer announced itself through longan and lychee blossom and cicadas rising through the noon heat.',
+      vi: 'Có một mùa hè không cần ngày tháng: chỉ cần hoa nhãn, hoa vải và tiếng ve là biết nó đã về.',
+      en: 'There was a summer that needed no dates: longan blossom, lychee blossom, and cicadas were enough to know it had arrived.',
     },
     body: [
       {
@@ -33,8 +33,8 @@ export const BOOK_PAGE_LITERARY_COPY: Record<string, LiteraryPageCopy> = {
         en: 'Blossom came first, then fruit slowly filled out through the long heat. There was green banana dipped in chili salt, longan eaten while it was being peeled, and days of paid tray work exchanged for a little game money. As a child, summer seemed incapable of ending. Later it survives as a few smells, a few tastes, and a distant field of light.',
       },
       {
-        vi: 'Những nong nhãn xếp dưới hiên, nhựa quả dính đầu ngón tay, mấy đồng tiền công còn ấm trong túi quần. Niềm vui đếm được bằng vài đồng mà đủ làm một đứa trẻ mong sáng mai đến thật nhanh. Bây giờ hoa vẫn nở đúng mùa, tiếng ve vẫn bật lên trong nắng; ngày tháng đã ngắn đi từ lúc nào. Giữa một trưa xa nhà, vị chua của quả non chợt trở lại trên đầu lưỡi, kéo theo cả mùa hè tưởng đã thất lạc.',
-        en: 'Trays of longan rested beneath the eaves, fruit sap clung to fingertips, and a few warm coins of wages waited in a pocket. Joy could be counted in a handful of coins and still make a child impatient for morning. Blossom still opens in season and cicadas still break into the heat; somehow the days have grown shorter. One noon, far from home, the sourness of unripe fruit returns to the tongue and brings back a summer thought lost.',
+        vi: 'Những nong nhãn xếp dưới hiên, nhựa quả dính đầu ngón tay, mấy đồng tiền công còn ấm trong túi quần. Niềm vui ngày ấy nhỏ đến mức có thể đếm được, vậy mà đủ làm một đứa trẻ mong sáng mai đến thật nhanh. Bây giờ mùa hè vẫn về, hoa vẫn nở đúng lúc, chỉ có ngày tháng dường như ngắn hơn. Có lẽ tuổi thơ không mất hẳn; nó co lại, nằm trong vị chua của quả non và tiếng ve bất chợt vang lên giữa một trưa đã rất xa nhà.',
+        en: 'Trays of longan rested beneath the eaves, fruit sap clung to fingertips, and a few warm coins of wages waited in a pocket. Joy was small enough to count then, yet large enough to make a child impatient for morning. Summer still returns and blossom still opens on time; only the days seem shorter now. Perhaps childhood never vanishes. It contracts into the sourness of unripe fruit and a sudden cicada call heard one noon, far from home.',
       },
     ],
   },
@@ -141,12 +141,12 @@ export const BOOK_PAGE_LITERARY_COPY: Record<string, LiteraryPageCopy> = {
     },
     body: [
       {
-        vi: 'Giữa cánh đồng Mường Thanh, gió đi thấp qua mặt đất, đường sá lùi xa và người ta tiếp tục công việc của một ngày bình thường. Ruộng, núi, người đang sống và một lớp thời gian cũ cùng nằm trong một khung nhìn. Không ai phải gọi tên lịch sử, nó vẫn ở đó.',
-        en: 'In Muong Thanh Field, wind travels low over the ground, roads recede, and people continue the work of an ordinary day. Field, mountain, those living now, and an older layer of time share the same view. History remains even when nobody names it.',
+        vi: 'Giữa cánh đồng Mường Thanh, gió đi thấp qua mặt đất, đường sá nằm xa hơn và người ta vẫn làm công việc của một ngày bình thường. Lịch sử ở đây không cần lúc nào cũng được gọi tên. Nó nằm cùng ruộng, cùng núi, cùng những người đang sống — một lớp thời gian lặng lẽ dưới cảnh vật trước mắt.',
+        en: 'In Muong Thanh Field, wind moves low across the ground, roads seem farther away, and people continue the work of an ordinary day. History does not always need to be named here. It lies with field, mountain, and the people still living—a quiet layer of time beneath the visible landscape.',
       },
       {
-        vi: 'Sau mùa gặt, gốc rạ làm cánh đồng ngả sang màu cũ. Khói rơm bay mỏng ở vài nơi; một bóng người đi qua nhỏ hẳn dưới khoảng trời. Từ đây mới thấy lòng chảo rộng đến đâu và thành phố được vòng núi giữ kín thế nào. Người qua đường đứng lại một lúc, nghe gió xào qua chân rạ. Đất, lúa và những mùa nối nhau vốn đã ở đây từ trước mọi tên gọi lớn lao.',
-        en: 'After harvest, the stubble turns the field an older colour. Thin straw smoke drifts in places; a passing figure grows small beneath the sky. From here we see both the breadth of the basin and how closely the mountains hold the city. A traveller pauses and hears wind moving through the stubble. Earth, rice, and the succession of seasons were here before every grand name.',
+        vi: 'Sau mùa gặt, gốc rạ làm cánh đồng ngả màu cũ, đôi chỗ khói rơm bay mỏng và một bóng người đi qua bỗng nhỏ hẳn dưới khoảng trời. Từ đây mới thấy lòng chảo rộng đến đâu, cũng thấy thành phố thực ra được ôm kín thế nào. Có người chỉ đi ngang, có người đã sống cả đời trong vòng núi ấy. Dù thế nào, đứng lâu một chút cũng dễ nghe gió nhắc rằng trước mọi tên gọi lớn lao, nơi này từng là đất, lúa và những mùa nối nhau.',
+        en: 'After harvest, the stubble gives the field an older color. Thin straw smoke drifts in places, and a passing figure suddenly looks small beneath the sky. From here the basin reveals both its breadth and how completely the mountains hold the city. Some only pass through; others spend a lifetime within that ring. Stay a little longer and the wind seems to recall that before every grand name, this place was earth, rice, and one season following another.',
       },
     ],
   },
@@ -184,17 +184,17 @@ export const BOOK_PAGE_LITERARY_COPY: Record<string, LiteraryPageCopy> = {
   },
   '1954-duoi-mot-thanh-pho-dang-song': {
     intro: {
-      vi: 'Năm 1954 ở trong bảo tàng, trên những ngọn đồi và dưới một thành phố vẫn mở cửa mỗi sáng.',
-      en: 'The year 1954 is held in the museum, on the hills, and beneath a city that still opens every morning.',
+      vi: '1954 không chỉ ở trong bảo tàng. Nó nằm dưới một thành phố vẫn mở cửa mỗi sáng.',
+      en: '1954 is not only in a museum. It lies beneath a city that still opens every morning.',
     },
     body: [
       {
-        vi: 'Người ta đi làm, trẻ con đi học, xe chạy qua phố, hàng quán bật đèn. Cũng trên mặt đất ấy từng là một thời khác, có những người đã chết và những dấu tích chưa biến mất. Lịch sử Điện Biên nằm sát đời sống đến vậy: đọc một trang trong bảo tàng rồi bước ra đường, câu chuyện vẫn tiếp tục dưới chân.',
-        en: 'People go to work, children go to school, traffic crosses the streets, and shops switch on their lights. The same ground once held another time, people who died, and traces that have not vanished. History sits this close to everyday life in Dien Bien: leave a page in the museum and step outside, and the story continues beneath our feet.',
+        vi: 'Người ta đi làm, trẻ con đi học, xe chạy qua những con phố và hàng quán bật đèn. Cùng trên mặt đất ấy từng là một thời khác, với những người đã chết và những dấu tích chưa biến mất. Có lẽ lịch sử ở Điện Biên nên được đọc như vậy: không tách khỏi đời sống, cũng không biến thành phông nền. Đọc chậm, rồi bước ra đường nếu muốn.',
+        en: 'People go to work, children go to school, traffic crosses the streets, and shops turn on their lights. The same ground once held another time, with people who died and traces that never fully disappeared. Perhaps history in Dien Bien is best read this way: neither separated from life nor reduced to backdrop. Read slowly, then step outside if you wish.',
       },
       {
-        vi: 'Một thành phố đâu thể sống mọi ngày trong nhịp của lễ tưởng niệm. Người bán hàng vẫn tính tiền, một đứa trẻ vẫn muộn học, đèn đỏ vẫn giữ dòng xe trên vùng đất từng rung chuyển. Những việc nhỏ ấy tiếp diễn sau mất mát, bền bỉ đến mức thành đời sống. Mỗi sáng thành phố thức dậy, năm 1954 vẫn lặng im trong nền đất.',
-        en: 'A city cannot live every day at the pace of a memorial ceremony. A shopkeeper still counts change, a child still runs late for school, and a red light still holds traffic above ground that once shook. Small acts continued after loss, steadily enough to become ordinary life. Each morning the city wakes, 1954 remains quiet in the earth beneath it.',
+        vi: 'Không ai có thể sống mỗi ngày với sự trang nghiêm của một ngày kỷ niệm. Người bán hàng vẫn phải tính tiền, một đứa trẻ vẫn muộn học, đèn đỏ vẫn giữ dòng xe lại ngay trên vùng đất từng rung chuyển. Chính sự bình thường ấy không làm quá khứ nhỏ đi. Trái lại, nó cho thấy sau mất mát, đời sống đã khó nhọc trở về và bén rễ. Năm 1954 vì thế không chỉ nằm phía sau; nó im lặng có mặt trong từng buổi sáng thành phố lại thức dậy.',
+        en: 'No one can live every day with the solemnity of an anniversary. A shopkeeper must still count change, a child still runs late for school, and a red light still holds traffic over ground that once shook. Such ordinariness does not diminish the past. It shows how, after loss, life worked its way back and took root. In that sense, 1954 is not only behind the city; it is quietly present each morning the city wakes again.',
       },
     ],
   },
