@@ -22,7 +22,7 @@ const localized = (value: BookLocalizedText | undefined, language: LanguageCode)
 const copy = {
   vi: {
     title: 'CUỐN SÁCH ĐIỆN BIÊN',
-    subtitle: '13 chương · những điều chúng ta còn nhớ',
+    subtitle: '13 chương · những điều tôi còn nhớ',
     chapters: 'Chương',
     saved: 'Đã lưu',
     nearby: 'Gần tôi',
@@ -32,7 +32,7 @@ const copy = {
   },
   en: {
     title: 'THE DIEN BIEN BOOK',
-    subtitle: '13 chapters · the things we still remember',
+    subtitle: '13 chapters · the things I still remember',
     chapters: 'Chapters',
     saved: 'Saved',
     nearby: 'Near me',
