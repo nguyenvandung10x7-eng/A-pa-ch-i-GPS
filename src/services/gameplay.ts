@@ -655,7 +655,7 @@ export const loadProgress = (tasks: ChallengeTask[] = []): PlayerProgress | unde
 export const loadOrCreateProgress = (tasks: ChallengeTask[] = []) => loadProgress(tasks) ?? buildCurrentVersionGame();
 
 export const getAvailableTasks = (tasks: ChallengeTask[], progress: PlayerProgress) => (
-  tasks.filter((task) => task.enabled && !progress.completedTaskIds.includes(task.id) && !progress.skippedTaskIds.includes(task.id) && !progress.failedTaskIds.includes(task.id))
+  tasks.filter((task) => task.enabled && !progress.completedTaskIds.includes(task.id))
 );
 
 export const assignRandomChallenge = async (
@@ -748,7 +748,6 @@ export const completeActiveChallenge = async (
   task: ChallengeTask,
   coordinates: Coordinates,
   accuracy?: number,
-  candidateTasks?: ChallengeTask[],
 ): Promise<CompleteChallengeResult> => {
   if (!progress.activeRun || progress.activeRun.status !== 'active') {
     return { progress, stale: false, completed: false, duplicate: true };
@@ -814,7 +813,10 @@ export const completeActiveChallenge = async (
       }
 
       return {
-        progress: assignRandomChallengeWhileLocked(catalogTasks, outcomePersisted, candidateTasks),
+        // Completion now pauses on the place the visitor has just reached.
+        // The next experience is chosen deliberately from the atlas instead of
+        // being assigned in the background while the completion state is shown.
+        progress: outcomePersisted,
         stale: false,
         completed: true,
         duplicate: false,
