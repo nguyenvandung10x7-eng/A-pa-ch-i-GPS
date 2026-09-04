@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Lock, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Check, Crosshair, LockKeyhole, MapPin } from 'lucide-react';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
 import { ChallengeLeaderboardPreview } from './ChallengeLeaderboardPreview';
@@ -17,32 +17,32 @@ type ChallengeLevelOneMenuProps = {
 
 const copy = {
   vi: {
-    eyebrow: 'KHÁM PHÁ · CHALLENGE',
-    level: 'LEVEL 1',
-    title: 'Đây là trò chơi. Bạn có muốn chơi không?',
-    prompt: 'Xác nhận bạn hơi hâm và muốn tham gia. Hoàn thành 1 thử thách để mở khóa tất cả.',
-    accept: 'Tôi hơi hâm. Chơi',
-    choose: 'Chọn một chuyện hơi hâm',
-    chooseHint: 'Không cần làm hết. Một chuyện là đủ để Book mở phần còn lại.',
-    open: 'Xem lời mời',
+    eyebrow: 'BOOK OF DIEN BIEN · PLAY MODE',
+    level: 'LEVEL 01',
+    title: 'Đủ ngầu thì vào cuộc.',
+    prompt: 'Bật chế độ chơi. Hoàn thành 1 thử thách mở màn để mở toàn bộ hành trình.',
+    accept: 'Tôi đủ ngầu. Chơi',
+    choose: 'Chọn màn mở đầu',
+    chooseHint: 'Không cần làm hết. Một thử thách là đủ để mở Level 2.',
+    open: 'Nhận thử thách',
     continue: 'Tiếp tục',
     completed: 'Đã xong',
-    locked: 'Challenge đang khóa',
-    moreLocked: '+ còn nhiều chuyện hơi hâm đang bị khóa',
+    locked: 'LEVEL 02 · ĐANG KHÓA',
+    moreLocked: 'Qua màn mở đầu để mở toàn bộ hành trình',
   },
   en: {
-    eyebrow: 'EXPLORE · CHALLENGE',
-    level: 'LEVEL 1',
-    title: 'This is a game. Do you want to play?',
-    prompt: 'Confirm that you are a little strange and want in. Finish one challenge to unlock everything.',
-    accept: 'I am a little strange. Play',
-    choose: 'Choose one slightly strange thing',
-    chooseHint: 'There is no need to do them all. One is enough for the Book to open the rest.',
-    open: 'Read invitation',
+    eyebrow: 'BOOK OF DIEN BIEN · PLAY MODE',
+    level: 'LEVEL 01',
+    title: 'Cool enough? Step in.',
+    prompt: 'Switch on play mode. Clear 1 opening challenge to unlock the full journey.',
+    accept: 'I am cool enough. Play',
+    choose: 'Choose your opening move',
+    chooseHint: 'There is no need to clear them all. One challenge unlocks Level 2.',
+    open: 'Take challenge',
     continue: 'Continue',
     completed: 'Done',
-    locked: 'Locked challenges',
-    moreLocked: '+ more slightly strange things are still locked',
+    locked: 'LEVEL 02 · LOCKED',
+    moreLocked: 'Clear the opening move to unlock the full journey',
   },
 } as const;
 
@@ -68,14 +68,17 @@ export const ChallengeLevelOneMenu = ({
 
   return (
     <div className="challenge-level-one">
-      <header className="challenge-level-one__intro">
-        <div className="challenge-level-one__eyebrow"><Sparkles aria-hidden="true" />{c.eyebrow}</div>
-        <span className="challenge-level-one__badge">{c.level}</span>
+      <header className={`challenge-level-one__intro ${accepted ? 'is-accepted' : ''}`}>
+        <div className="challenge-level-one__topline">
+          <div className="challenge-level-one__eyebrow"><Crosshair aria-hidden="true" />{c.eyebrow}</div>
+          <span className="challenge-level-one__badge">{c.level}</span>
+        </div>
+        <span className="challenge-level-one__level-mark" aria-hidden="true">01</span>
         <h1>{c.title}</h1>
         <p>{c.prompt}</p>
         {!accepted ? (
           <button type="button" className="challenge-level-one__accept" onClick={onAccept}>
-            {c.accept}<ChevronRight aria-hidden="true" />
+            {c.accept}<ArrowUpRight aria-hidden="true" />
           </button>
         ) : null}
       </header>
@@ -87,10 +90,11 @@ export const ChallengeLevelOneMenu = ({
             <p>{c.chooseHint}</p>
           </header>
           <div className="challenge-level-one__grid">
-            {tasks.map((task) => {
+            {tasks.map((task, index) => {
               const title = splitTitle(task, language);
               const completed = completedTaskIdSet.has(task.id);
               const active = activeTaskId === task.id;
+              const actionLabel = active ? c.continue : completed ? c.completed : c.open;
               return (
                 <button
                   key={task.id}
@@ -98,15 +102,17 @@ export const ChallengeLevelOneMenu = ({
                   className={`challenge-level-one__choice ${completed ? 'is-complete' : ''} ${active ? 'is-active' : ''}`}
                   onClick={() => onChoose(task.id)}
                   disabled={isMutating || completed}
+                  aria-label={`${title.invitation}. ${title.place}. ${actionLabel}`}
                 >
                   <span className="challenge-level-one__choice-image">
-                    {task.image ? <img src={task.image} alt="" /> : <Sparkles aria-hidden="true" />}
+                    <b aria-hidden="true">{String(index + 1).padStart(2, '0')}</b>
+                    {task.image ? <img src={task.image} alt="" /> : <Crosshair aria-hidden="true" />}
                     {completed ? <i aria-label={c.completed}><Check aria-hidden="true" /></i> : null}
                   </span>
                   <span className="challenge-level-one__choice-copy">
-                    <small>{title.place}</small>
                     <strong>{title.invitation}</strong>
-                    <span>{active ? c.continue : completed ? c.completed : c.open}<ChevronRight aria-hidden="true" /></span>
+                    <small><MapPin aria-hidden="true" />{title.place}</small>
+                    <span>{actionLabel}<ArrowUpRight aria-hidden="true" /></span>
                   </span>
                 </button>
               );
@@ -117,14 +123,14 @@ export const ChallengeLevelOneMenu = ({
 
       <section className="challenge-level-one__locked" aria-labelledby="challenge-locked-title">
         <header>
-          <span><Lock aria-hidden="true" /></span>
+          <span><LockKeyhole aria-hidden="true" /></span>
           <div><small>{c.locked}</small><h2 id="challenge-locked-title">{c.moreLocked}</h2></div>
         </header>
         <div className="challenge-level-one__locked-row" aria-hidden="true">
           {lockedTasks.slice(0, 3).map((task) => (
             <article key={task.id}>
               {task.image ? <img src={task.image} alt="" /> : null}
-              <span><Lock />{splitTitle(task, language).place}</span>
+              <span><LockKeyhole />{splitTitle(task, language).place}</span>
             </article>
           ))}
         </div>

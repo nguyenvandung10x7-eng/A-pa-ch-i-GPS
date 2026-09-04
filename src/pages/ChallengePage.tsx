@@ -156,6 +156,8 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const summary = useMemo(() => getScopedProgressSummary(eligibleTasks, progress), [eligibleTasks, progress]);
   const canComplete = Boolean(task && progress.activeRun?.status === 'active');
   const canPlay = eligibleTasks.length > 0 || canComplete || isScopedLocked;
+  const showLevelOneMenu = canPlay && !isScopedLocked && !isLevelTwo && (!isScopedMode || !levelOneAccepted);
+  const showLevelHome = canPlay && (isScopedLocked || showLevelOneMenu);
   const isFinished = summary.enabledCount > 0 && summary.remainingCount === 0 && !canComplete;
   const isScopedCompleted = isScopedMode && isFinished;
   const scopeCompletionPrimaryLabel = language === 'vi' ? 'Quay lại Sách' : 'Back to Book';
@@ -208,6 +210,11 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   useLayoutEffect(() => {
     latestScopeContextRef.current = scopeContext;
   }, [scopeContext]);
+
+  useLayoutEffect(() => {
+    document.body.classList.toggle('challenge-level-menu-active', showLevelHome);
+    return () => document.body.classList.remove('challenge-level-menu-active');
+  }, [showLevelHome]);
 
   useEffect(() => {
     const cancelInFlightScopeReassign = () => {
@@ -507,7 +514,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   };
   const levelHomeContent = isScopedLocked ? (
     <ChallengeLockedExperience language={language} onReturn={() => { void navigate('/challenge'); }} />
-  ) : !isLevelTwo && (!isScopedMode || !levelOneAccepted) ? (
+  ) : showLevelOneMenu ? (
     <ChallengeLevelOneMenu
       accepted={levelOneAccepted}
       tasks={isScopedMode ? eligibleTasks : levelOneTasks}
