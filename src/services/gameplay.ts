@@ -753,7 +753,7 @@ export const completeActiveChallenge = async (
     return { progress, stale: false, completed: false, duplicate: true };
   }
 
-  if (progress.completedTaskIds.includes(task.id) || progress.skippedTaskIds.includes(task.id) || progress.failedTaskIds.includes(task.id)) {
+  if (progress.completedTaskIds.includes(task.id)) {
     return { progress, stale: false, completed: false, duplicate: true };
   }
 
@@ -779,7 +779,7 @@ export const completeActiveChallenge = async (
         return { progress: authoritative, stale: true, completed: false, duplicate: false };
       }
 
-      if (authoritative.completedTaskIds.includes(task.id) || authoritative.skippedTaskIds.includes(task.id) || authoritative.failedTaskIds.includes(task.id)) {
+      if (authoritative.completedTaskIds.includes(task.id)) {
         return { progress: authoritative, stale: false, completed: false, duplicate: true };
       }
 
@@ -804,6 +804,8 @@ export const completeActiveChallenge = async (
         score: authoritative.score + task.points,
         activeRun: run,
         completedTaskIds: unique([...authoritative.completedTaskIds, task.id]),
+        skippedTaskIds: authoritative.skippedTaskIds.filter((taskId) => taskId !== task.id),
+        failedTaskIds: authoritative.failedTaskIds.filter((taskId) => taskId !== task.id),
         attemptedTaskIds: unique([...authoritative.attemptedTaskIds, task.id]),
         updatedAt: completedAt,
       }, gate.actionClearVersion);

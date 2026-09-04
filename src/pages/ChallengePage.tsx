@@ -449,6 +449,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       tasks={eligibleTasks}
       progressTotal={eligibleTasks.length}
       activeTask={task}
+      invitationOpen={canComplete}
       completedCount={summary.completedCount}
       completedTaskIds={progress.completedTaskIds}
       language={language}

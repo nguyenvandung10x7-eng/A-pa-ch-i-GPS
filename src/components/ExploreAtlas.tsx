@@ -8,6 +8,7 @@ type ExploreAtlasProps = {
   tasks: ChallengeTask[];
   progressTotal: number;
   activeTask?: ChallengeTask;
+  invitationOpen: boolean;
   completedCount: number;
   completedTaskIds: string[];
   language: LanguageCode;
@@ -221,6 +222,7 @@ export const ExploreAtlas = ({
   tasks,
   progressTotal,
   activeTask,
+  invitationOpen,
   completedCount,
   completedTaskIds,
   language,
@@ -314,7 +316,7 @@ export const ExploreAtlas = ({
       ?? westGroups[0]?.id
       ?? '';
   const selectedGroup = placeGroups.find((group) => group.id === selectedGroupId) ?? activeGroup ?? placeGroups[0];
-  const selectedIsActive = Boolean(selectedGroup && groupContainsTask(selectedGroup, activeTaskId));
+  const selectedIsActive = Boolean(invitationOpen && selectedGroup && groupContainsTask(selectedGroup, activeTaskId));
   const selectedTask = selectedIsActive ? activeTask : selectedGroup ? groupRepresentativeTask(selectedGroup) : undefined;
   const selectedGroupCount = selectedGroup?.tasks.length ?? 0;
   const selectedGroupCompletedCount = selectedGroup?.tasks.filter((task) => completedTaskIdSet.has(task.id)).length ?? 0;
@@ -363,7 +365,7 @@ export const ExploreAtlas = ({
         <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trên bản đồ' : 'Atlas discoveries'}>
           {atlasGroups.map((group, index) => {
             const selected = selectedGroup?.id === group.id;
-            const isActive = groupContainsTask(group, activeTaskId);
+            const isActive = invitationOpen && groupContainsTask(group, activeTaskId);
             const imageTask = isActive ? activeTask ?? groupRepresentativeTask(group) : groupRepresentativeTask(group);
             const groupCompletedCount = group.tasks.filter((task) => completedTaskIdSet.has(task.id)).length;
             const groupIsComplete = groupCompletedCount === group.tasks.length;
