@@ -1,5 +1,6 @@
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { isLevelOneTaskId } from '../services/challengeLevels';
 import { createEmptyTask, resetTasks } from '../services/tasks';
 import type { ChallengeTask } from '../types/task';
 
@@ -10,6 +11,7 @@ type GpsField = 'lat' | 'lng' | 'radius';
 type IntroField = 'vi' | 'en';
 
 export const AdminPage = ({ tasks, setTasks, t }: AdminPageProps) => {
+  const enabledLevelOneTaskCount = tasks.filter((task) => task.enabled && isLevelOneTaskId(task.id)).length;
   const updateTask = (id: string, patch: Partial<ChallengeTask>) => setTasks(tasks.map((task) => task.id === id ? { ...task, ...patch } : task));
   const updateText = (id: string, field: TextField, value: string) => updateTask(id, { [field]: value });
   const updateNumber = (id: string, field: NumberField, value: number) => updateTask(id, { [field]: value });
@@ -57,7 +59,10 @@ export const AdminPage = ({ tasks, setTasks, t }: AdminPageProps) => {
     <div className="flex flex-wrap gap-2"><Button onClick={addTask}>{t('admin.add')}</Button><Button onClick={exportTasks} variant="secondary">{t('admin.export')}</Button><Button onClick={restoreDefaults} variant="secondary">{t('admin.reset')}</Button></div>
       </div>
       <div className="mt-6 grid gap-5">
-        {tasks.map((task) => (
+        {tasks.map((task) => {
+          const isLastEnabledLevelOneTask = task.enabled && isLevelOneTaskId(task.id) && enabledLevelOneTaskCount === 1;
+
+          return (
       <article key={task.id} className="grid gap-3 rounded-[1.8rem] bg-[rgba(255,255,255,0.58)] p-4 ring-1 ring-[rgba(61,84,52,0.12)] md:grid-cols-4">
       <label className="text-sm font-semibold text-[var(--forest-900)]">{t('admin.titleVi')}<input value={task.title.vi} onChange={(event) => updateTask(task.id, { title: { ...task.title, vi: event.target.value } })} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
       <label className="text-sm font-semibold text-[var(--forest-900)]">{t('admin.titleEn')}<input value={task.title.en} onChange={(event) => updateTask(task.id, { title: { ...task.title, en: event.target.value } })} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
@@ -75,9 +80,10 @@ export const AdminPage = ({ tasks, setTasks, t }: AdminPageProps) => {
       <label className="text-sm font-semibold text-[var(--forest-900)]">{t('admin.radius')}<input type="number" value={task.gps.radius} onChange={(event) => updateGps(task.id, task, 'radius', Number(event.target.value))} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
       <label className="text-sm font-semibold text-[var(--forest-900)] md:col-span-2">{t('admin.image')}<input value={task.image} onChange={(event) => updateText(task.id, 'image', event.target.value)} className="mt-1 w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" /></label>
       <label className="text-sm font-semibold text-[var(--forest-900)] md:col-span-2">{t('admin.additionalImages')}<textarea value={(task.images ?? []).join('\n')} onChange={(event) => updateAdditionalImagesDraft(task.id, event.target.value)} onBlur={(event) => updateAdditionalImages(task.id, event.target.value)} className="mt-1 min-h-[8rem] w-full rounded-[1.1rem] border border-[rgba(61,84,52,0.14)] bg-[rgba(255,249,236,0.82)] p-3 text-[var(--forest-950)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.22)]" placeholder={t('admin.additionalImagesHint')} /></label>
-            <div className="flex items-end gap-2 md:col-span-2"><Button onClick={() => updateTask(task.id, { enabled: !task.enabled })} variant="secondary">{task.enabled ? t('admin.enabled') : t('admin.disabled')}</Button><Button onClick={() => deleteTask(task.id)} variant="danger">{t('admin.delete')}</Button></div>
+            <div className="flex items-end gap-2 md:col-span-2"><Button onClick={() => updateTask(task.id, { enabled: !task.enabled })} disabled={isLastEnabledLevelOneTask} variant="secondary">{task.enabled ? t('admin.enabled') : t('admin.disabled')}</Button><Button onClick={() => deleteTask(task.id)} disabled={isLastEnabledLevelOneTask} variant="danger">{t('admin.delete')}</Button></div>
           </article>
-        ))}
+          );
+        })}
       </div>
     </Card>
   );
