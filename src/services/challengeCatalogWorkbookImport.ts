@@ -11,7 +11,6 @@ import type { ChallengeTask } from '../types/task';
 const DISABLED_TASK_IDS = new Set<string>([
   'ruong-bac-thang-ta-leng-mthen',
   'canh-dong-muong-thanh-cat-banh',
-  'quang-truong-7-5-mthen',
   'bao-tang-chien-thang-dien-bien-phu-trai-nghiem',
   'ho-huoi-pha-mthen',
   'khu-du-lich-him-lam-trai-ban',
@@ -48,6 +47,9 @@ const overnightMotorbikeExistingPatch: TaskPatch = {
 };
 
 const TASK_PATCHES: Record<string, TaskPatch> = {
+  'quang-truong-7-5-mthen': {
+    enabled: true,
+  },
   'thac-ke-nenh-mthen': {
     enabled: true,
   },
@@ -176,6 +178,27 @@ const TASK_PATCHES: Record<string, TaskPatch> = {
 };
 
 const ADDED_TASKS: readonly ChallengeTask[] = [
+  {
+    id: 'quang-truong-7-5-hat-quoc-ca',
+    title: {
+      vi: 'Quảng trường 7-5 – Hát một đoạn Quốc ca',
+      en: '7 May Square – Sing a Verse of the National Anthem',
+    },
+    description: {
+      vi: 'Đến Quảng trường 7-5, chọn một vị trí công cộng an toàn và không cản trở người khác. Hát một đoạn Quốc ca ở âm lượng vừa đủ để chính bạn nghe thấy. Không cần biểu diễn, quay phim hay thu hút đám đông; hát xong thì đi tiếp. Nếu thấy hơi ngượng thì đúng rồi.',
+      en: 'Go to 7 May Square and choose a safe public spot where you will not obstruct anyone. Sing a verse of Vietnam’s national anthem at a volume just loud enough for you to hear yourself. There is no need to perform, film it, or draw a crowd; sing, then carry on. If it feels slightly awkward, that is about right.',
+    },
+    category: 'surprise',
+    difficulty: 'easy',
+    points: 120,
+    gps: { lat: 21.38825, lng: 103.016, radius: 120 },
+    image: '/images/tasks/quang-truong-7-5-mthen.webp',
+    enabled: true,
+    experienceNote: {
+      vi: 'Giữ âm lượng vừa phải, không cản lối đi và không làm gián đoạn hoạt động đang diễn ra tại quảng trường. Challenge chỉ xác nhận việc bạn đã đến trong bán kính GPS.',
+      en: 'Keep the volume moderate, do not block walkways, and do not interrupt activities already taking place in the square. The Challenge only verifies that you reached the GPS radius.',
+    },
+  },
   {
     id: 'quan-com-hung-ha-thuoc-lao-free',
     title: {

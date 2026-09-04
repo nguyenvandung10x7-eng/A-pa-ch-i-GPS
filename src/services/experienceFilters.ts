@@ -57,6 +57,8 @@ const MODE_TASK_IDS: Record<NamedExperienceMode, Set<string>> = {
   'in-the-city': new Set([
     'quan-com-hung-ha-thuoc-lao-free',
     'de-xe-may-ngoai-troi-qua-dem',
+    'quang-truong-7-5-hat-quoc-ca',
+    'quang-truong-7-5-mthen',
   ]),
   'surprise-missions': new Set(),
 };
@@ -66,7 +68,6 @@ const RETIRED_EXACT_TASK_IDS = new Set<string>([
   'thac-ke-nenh-mthen',
   'doi-a1-chuyen-tau-thoi-gian-1954',
   'canh-dong-muong-thanh-cat-banh',
-  'quang-truong-7-5-mthen',
   'bao-tang-chien-thang-dien-bien-phu-trai-nghiem',
   'ho-huoi-pha-mthen',
   'khu-du-lich-him-lam-trai-ban',
