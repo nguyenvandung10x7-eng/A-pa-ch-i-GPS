@@ -3,6 +3,7 @@ import type { ChallengeTask } from '../types/task';
 import { withChallengeStorageLock } from './challengeStorageLock';
 import { isRetiredChallengeTaskId } from './challengeTaskMigrationContract';
 import { migrateTaskId } from './taskIdMigration';
+import { CHALLENGE_LEVEL_ONE_ACCEPTED_KEY } from './challengeLevels';
 
 const TASKS_KEY = 'gps-challenge-tasks';
 export const CHALLENGE_CLEAR_VERSION_KEY = 'gps-challenge-clear-version';
@@ -327,6 +328,7 @@ export const clearLocalChallengeData = async (): Promise<void> => {
       protocol: localStorage.getItem(CHALLENGE_STORAGE_PROTOCOL_KEY),
       progressV2: localStorage.getItem(CHALLENGE_PROGRESS_KEY_V2),
       historyV2: localStorage.getItem(CHALLENGE_HISTORY_KEY_V2),
+      levelOneAccepted: localStorage.getItem(CHALLENGE_LEVEL_ONE_ACCEPTED_KEY),
     };
 
     const restoreKey = (key: string, raw: string | null) => {
@@ -344,12 +346,14 @@ export const clearLocalChallengeData = async (): Promise<void> => {
       localStorage.setItem(CHALLENGE_STORAGE_PROTOCOL_KEY, CHALLENGE_STORAGE_PROTOCOL_V2);
       localStorage.removeItem(CHALLENGE_PROGRESS_KEY_V2);
       localStorage.removeItem(CHALLENGE_HISTORY_KEY_V2);
+      localStorage.removeItem(CHALLENGE_LEVEL_ONE_ACCEPTED_KEY);
     } catch (error) {
       try {
         restoreKey(CHALLENGE_CLEAR_VERSION_KEY, snapshot.clearVersion);
         restoreKey(CHALLENGE_STORAGE_PROTOCOL_KEY, snapshot.protocol);
         restoreKey(CHALLENGE_PROGRESS_KEY_V2, snapshot.progressV2);
         restoreKey(CHALLENGE_HISTORY_KEY_V2, snapshot.historyV2);
+        restoreKey(CHALLENGE_LEVEL_ONE_ACCEPTED_KEY, snapshot.levelOneAccepted);
       } catch {
         // Preserve the original protocol-v2 transaction error.
       }

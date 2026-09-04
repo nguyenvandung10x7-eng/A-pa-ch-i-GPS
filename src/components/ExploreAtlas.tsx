@@ -19,6 +19,9 @@ type ExploreAtlasProps = {
   onChoose: (taskIds: string[]) => void;
   completionActionLabel?: string;
   onCompletionAction?: () => void;
+  homeContent?: ReactNode;
+  levelLabel?: string;
+  introAside?: ReactNode;
   children: ReactNode;
 };
 
@@ -233,6 +236,9 @@ export const ExploreAtlas = ({
   onChoose,
   completionActionLabel,
   onCompletionAction,
+  homeContent,
+  levelLabel,
+  introAside,
   children,
 }: ExploreAtlasProps) => {
   const c = copy[language];
@@ -346,19 +352,23 @@ export const ExploreAtlas = ({
 
   return (
     <>
-      <main className="explore-atlas">
+      <main className={`explore-atlas ${homeContent ? 'is-level-menu' : ''}`}>
         <div className="explore-atlas__world" aria-hidden="true" />
+        {homeContent}
 
         <header className="explore-atlas__intro">
           <span className="explore-atlas__intro-mark" aria-hidden="true"><Compass /></span>
           <div className="explore-atlas__intro-copy">
-            <span>{c.fieldKicker}</span>
+            <span>{levelLabel ? `${levelLabel} · ${c.fieldKicker}` : c.fieldKicker}</span>
             <strong>{c.fieldTitle}</strong>
             <small>{c.fieldHint}</small>
           </div>
-          <div className="explore-atlas__journey-count" aria-label={`${completedCount} / ${progressTotal} ${c.visited}`}>
-            <span><b>{completedCount}</b>/{progressTotal}</span>
-            <small>{c.visited}</small>
+          <div className="explore-atlas__intro-aside">
+            <div className="explore-atlas__journey-count" aria-label={`${completedCount} / ${progressTotal} ${c.visited}`}>
+              <span><b>{completedCount}</b>/{progressTotal}</span>
+              <small>{c.visited}</small>
+            </div>
+            {introAside}
           </div>
         </header>
 

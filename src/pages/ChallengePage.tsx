@@ -3,6 +3,9 @@ import { ArrowRight, Bike, CheckCircle2, ChevronDown, Compass, Cookie, Film, Hea
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { ChallengeLeaderboardPreview } from '../components/ChallengeLeaderboardPreview';
+import { ChallengeLevelOneMenu } from '../components/ChallengeLevelOneMenu';
+import { ChallengeLockedExperience } from '../components/ChallengeLockedExperience';
 import { ExploreAtlas } from '../components/ExploreAtlas';
 import {
   assignRandomChallenge,
@@ -11,6 +14,15 @@ import {
   reassignActiveRunForScope,
 } from '../services/gameplay';
 import { ChallengeStorageLockUnavailableError } from '../services/challengeStorageLock';
+import {
+  CHALLENGE_LEVEL_ONE_ACCEPTED_KEY,
+  acceptLevelOne,
+  getLevelOneTasks,
+  getLockedChallengeTasks,
+  hasUnlockedAllChallenges,
+  isLevelOneTaskId,
+  readLevelOneAccepted,
+} from '../services/challengeLevels';
 import { getEligibleTasksForExperience, getScopedExperienceModeFromSearch } from '../services/experienceFilters';
 import {
   GAMEPLAY_MUSIC_ADVANCE_EVENT,
@@ -20,6 +32,7 @@ import {
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
 import { GeolocationRequestError, getCurrentPosition } from '../utils/geo';
+import './challenge-levels.css';
 
 const findRunTask = (tasks: ChallengeTask[], taskId?: string) => tasks.find((task) => task.id === taskId);
 
@@ -101,8 +114,9 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const location = useLocation();
   const activeTasks = useMemo(() => tasks.filter((task) => task.enabled), [tasks]);
   const scopedExperienceMode = useMemo(() => getScopedExperienceModeFromSearch(location.search), [location.search]);
-  const eligibleTasks = useMemo(() => scopedExperienceMode ? getEligibleTasksForExperience(activeTasks, scopedExperienceMode) : activeTasks, [activeTasks, scopedExperienceMode]);
   const [progress, setProgress] = useState(() => loadOrCreateProgress(activeTasks));
+  const [levelOneAccepted, setLevelOneAccepted] = useState(() => readLevelOneAccepted());
+  const [showLevelUnlock, setShowLevelUnlock] = useState(false);
   const [message, setMessage] = useState(() => t('challenge.ready'));
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
   const [isMutating, setIsMutating] = useState(false);
@@ -117,13 +131,32 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const scopeMutatingTokenRef = useRef<number | null>(null);
   const latestScopeContextRef = useRef<string>('');
   const previousResetStateRef = useRef<{ activeTasks: ChallengeTask[]; clearVersion: number } | null>(null);
-  const task = findRunTask(scopedExperienceMode ? eligibleTasks : activeTasks, progress.activeRun?.taskId);
+  const isLevelTwo = hasUnlockedAllChallenges(progress.completedTaskIds);
+  const levelOneTasks = useMemo(() => getLevelOneTasks(activeTasks), [activeTasks]);
+  const lockedTasks = useMemo(() => getLockedChallengeTasks(activeTasks), [activeTasks]);
+  const scopedCatalogTasks = useMemo(
+    () => scopedExperienceMode ? getEligibleTasksForExperience(activeTasks, scopedExperienceMode) : activeTasks,
+    [activeTasks, scopedExperienceMode],
+  );
+  const eligibleTasks = useMemo(() => {
+    const accessScope = isLevelTwo ? activeTasks : levelOneTasks;
+    if (!scopedExperienceMode) return accessScope;
+    const accessibleTaskIds = new Set(accessScope.map((candidate) => candidate.id));
+    return scopedCatalogTasks.filter((candidate) => accessibleTaskIds.has(candidate.id));
+  }, [activeTasks, isLevelTwo, levelOneTasks, scopedCatalogTasks, scopedExperienceMode]);
+  const isScopedMode = scopedExperienceMode !== null;
+  const isScopedLocked = Boolean(
+    isScopedMode
+    && !isLevelTwo
+    && scopedCatalogTasks.length > 0
+    && scopedCatalogTasks.every((candidate) => !isLevelOneTaskId(candidate.id)),
+  );
+  const task = findRunTask(eligibleTasks, progress.activeRun?.taskId);
   const eligibleTaskIdSet = useMemo(() => new Set(eligibleTasks.map((candidate) => candidate.id)), [eligibleTasks]);
   const summary = useMemo(() => getScopedProgressSummary(eligibleTasks, progress), [eligibleTasks, progress]);
   const canComplete = Boolean(task && progress.activeRun?.status === 'active');
-  const canPlay = eligibleTasks.length > 0 || canComplete;
+  const canPlay = eligibleTasks.length > 0 || canComplete || isScopedLocked;
   const isFinished = summary.enabledCount > 0 && summary.remainingCount === 0 && !canComplete;
-  const isScopedMode = scopedExperienceMode !== null;
   const isScopedCompleted = isScopedMode && isFinished;
   const scopeCompletionPrimaryLabel = language === 'vi' ? 'Quay lại Sách' : 'Back to Book';
 
@@ -142,6 +175,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
     const timeoutId = window.setTimeout(() => {
       setProgress(loadOrCreateProgress(activeTasks));
+      setLevelOneAccepted(readLevelOneAccepted());
       setGpsStatus('idle');
       setMessage(t('challenge.ready'));
       if (shouldClearCompletionPanel) {
@@ -153,6 +187,23 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       window.clearTimeout(timeoutId);
     };
   }, [activeTasks, clearVersion, t]);
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.storageArea !== window.localStorage) return;
+      if (event.key !== CHALLENGE_LEVEL_ONE_ACCEPTED_KEY) return;
+      setLevelOneAccepted(event.newValue === '1');
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  useEffect(() => {
+    if (!showLevelUnlock) return;
+    const timeoutId = window.setTimeout(() => setShowLevelUnlock(false), 3600);
+    return () => window.clearTimeout(timeoutId);
+  }, [showLevelUnlock]);
 
   useLayoutEffect(() => {
     latestScopeContextRef.current = scopeContext;
@@ -179,7 +230,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       scopeTransitionOwnerTokenRef.current = null;
     };
 
-    if (!scopedExperienceMode) {
+    if (!scopedExperienceMode || isScopedLocked || eligibleTasks.length === 0) {
       cancelInFlightScopeReassign();
       return;
     }
@@ -252,7 +303,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           scopeTransitionOwnerTokenRef.current = null;
         }
       });
-  }, [activeTasks, eligibleTaskIdSet, eligibleTasks, progress, scopedExperienceMode, scopeContext, t]);
+  }, [activeTasks, eligibleTaskIdSet, eligibleTasks, isScopedLocked, progress, scopedExperienceMode, scopeContext, t]);
 
   const currentTaskImageKey = task?.image ? `${task.id}:${task.image}` : null;
   const localizedTaskTitle = task ? localize(task.title, language) : '';
@@ -385,6 +436,9 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
         setGpsStatus('verified');
         setMessage(t('challenge.arrivalConfirmed', { meters: result.gps?.meters ?? 0 }));
+        if (result.completed && isLevelOneTaskId(task.id) && !hasUnlockedAllChallenges(progress.completedTaskIds)) {
+          setShowLevelUnlock(true);
+        }
         if (result.completed && completedRunId) {
           setCompletionPanelRunId(completedRunId);
         }
@@ -444,23 +498,51 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const challengeAccent = getChallengeAccent(task);
   const currentTaskCompleted = progress.completedTaskIds.includes(task?.id ?? '');
   const currentTaskGpsVerified = Boolean(progress.activeRun?.gpsVerified);
-  return (
-    <ExploreAtlas
-      tasks={eligibleTasks}
-      progressTotal={eligibleTasks.length}
-      activeTask={task}
-      invitationOpen={canComplete}
-      completedCount={summary.completedCount}
+  const handleAcceptLevelOne = () => {
+    try {
+      acceptLevelOne();
+    } finally {
+      setLevelOneAccepted(true);
+    }
+  };
+  const levelHomeContent = isScopedLocked ? (
+    <ChallengeLockedExperience language={language} onReturn={() => { void navigate('/challenge'); }} />
+  ) : !isLevelTwo && (!isScopedMode || !levelOneAccepted) ? (
+    <ChallengeLevelOneMenu
+      accepted={levelOneAccepted}
+      tasks={isScopedMode ? eligibleTasks : levelOneTasks}
+      lockedTasks={lockedTasks}
       completedTaskIds={progress.completedTaskIds}
-      language={language}
-      detailsOpen={detailsOpen}
+      activeTaskId={task?.id}
       isMutating={isMutating}
-      onOpenDetails={() => setDetailsOpen(true)}
-      onCloseDetails={() => setDetailsOpen(false)}
-      onChoose={(taskIds) => { void chooseExperience(taskIds); }}
-      completionActionLabel={isScopedCompleted ? scopeCompletionPrimaryLabel : undefined}
-      onCompletionAction={isScopedCompleted ? () => { void navigate('/book'); } : undefined}
-    >
+      language={language}
+      onAccept={handleAcceptLevelOne}
+      onChoose={(taskId) => { void chooseExperience([taskId]); }}
+    />
+  ) : undefined;
+  const atlasTasks = eligibleTasks.length > 0 ? eligibleTasks : levelOneTasks;
+
+  return (
+    <>
+      <ExploreAtlas
+        tasks={atlasTasks}
+        progressTotal={eligibleTasks.length}
+        activeTask={task}
+        invitationOpen={canComplete}
+        completedCount={summary.completedCount}
+        completedTaskIds={progress.completedTaskIds}
+        language={language}
+        detailsOpen={detailsOpen}
+        isMutating={isMutating}
+        onOpenDetails={() => setDetailsOpen(true)}
+        onCloseDetails={() => setDetailsOpen(false)}
+        onChoose={(taskIds) => { void chooseExperience(taskIds); }}
+        completionActionLabel={isScopedCompleted ? scopeCompletionPrimaryLabel : undefined}
+        onCompletionAction={isScopedCompleted ? () => { void navigate('/book'); } : undefined}
+        homeContent={levelHomeContent}
+        levelLabel={isLevelTwo ? 'LEVEL 2' : 'LEVEL 1'}
+        introAside={isLevelTwo ? <ChallengeLeaderboardPreview language={language} compact /> : undefined}
+      >
       <Card
         className={[
           'challenge-editorial overflow-visible p-0',
@@ -680,6 +762,14 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           </div>
         </div>
       </Card>
-    </ExploreAtlas>
+      </ExploreAtlas>
+
+      {showLevelUnlock ? (
+        <div className="challenge-level-unlocked" role="status" aria-live="polite">
+          <strong>LEVEL 2 UNLOCKED</strong>
+          <span>{language === 'vi' ? 'Bạn đã chứng minh đủ rồi. Phần còn lại mở hết.' : 'You have proved enough. Everything else is now open.'}</span>
+        </div>
+      ) : null}
+    </>
   );
 };
