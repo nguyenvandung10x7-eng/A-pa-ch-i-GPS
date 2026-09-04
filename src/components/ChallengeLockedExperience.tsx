@@ -5,12 +5,12 @@ export const ChallengeLockedExperience = ({ language, onReturn }: { language: La
   const copy = language === 'vi' ? {
     level: 'LEVEL 2',
     title: 'Lời mời này vẫn đang khóa.',
-    description: 'Chọn một chuyện hơi hâm ở Level 1 và hoàn thành nó. Phần còn lại sẽ mở hết.',
+    description: 'Chọn một thử thách mở màn ở Level 1 và hoàn thành nó. Phần còn lại sẽ mở hết.',
     action: 'Về Level 1',
   } : {
     level: 'LEVEL 2',
     title: 'This invitation is still locked.',
-    description: 'Choose one slightly strange thing in Level 1 and finish it. Everything else will open.',
+    description: 'Choose one opening challenge in Level 1 and finish it. Everything else will open.',
     action: 'Go to Level 1',
   };
 

@@ -12,7 +12,7 @@ type ChallengeLeaderboardPreviewProps = {
 
 const copy = {
   vi: {
-    title: 'Có người còn hâm hơn bạn.',
+    title: 'Những người đã vào cuộc.',
     label: 'BXH',
     votes: 'phiếu',
     view: 'Xem BXH',
@@ -23,7 +23,7 @@ const copy = {
     yourRank: 'Bạn · hạng',
   },
   en: {
-    title: 'Someone is even stranger than you.',
+    title: 'Players already in the game.',
     label: 'RANKS',
     votes: 'votes',
     view: 'View ranks',
