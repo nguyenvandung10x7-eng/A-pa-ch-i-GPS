@@ -655,7 +655,7 @@ export const loadProgress = (tasks: ChallengeTask[] = []): PlayerProgress | unde
 export const loadOrCreateProgress = (tasks: ChallengeTask[] = []) => loadProgress(tasks) ?? buildCurrentVersionGame();
 
 export const getAvailableTasks = (tasks: ChallengeTask[], progress: PlayerProgress) => (
-  tasks.filter((task) => task.enabled && !progress.completedTaskIds.includes(task.id) && !progress.skippedTaskIds.includes(task.id) && !progress.failedTaskIds.includes(task.id))
+  tasks.filter((task) => task.enabled && !progress.completedTaskIds.includes(task.id))
 );
 
 export const assignRandomChallenge = async (
@@ -748,13 +748,12 @@ export const completeActiveChallenge = async (
   task: ChallengeTask,
   coordinates: Coordinates,
   accuracy?: number,
-  candidateTasks?: ChallengeTask[],
 ): Promise<CompleteChallengeResult> => {
   if (!progress.activeRun || progress.activeRun.status !== 'active') {
     return { progress, stale: false, completed: false, duplicate: true };
   }
 
-  if (progress.completedTaskIds.includes(task.id) || progress.skippedTaskIds.includes(task.id) || progress.failedTaskIds.includes(task.id)) {
+  if (progress.completedTaskIds.includes(task.id)) {
     return { progress, stale: false, completed: false, duplicate: true };
   }
 
@@ -780,7 +779,7 @@ export const completeActiveChallenge = async (
         return { progress: authoritative, stale: true, completed: false, duplicate: false };
       }
 
-      if (authoritative.completedTaskIds.includes(task.id) || authoritative.skippedTaskIds.includes(task.id) || authoritative.failedTaskIds.includes(task.id)) {
+      if (authoritative.completedTaskIds.includes(task.id)) {
         return { progress: authoritative, stale: false, completed: false, duplicate: true };
       }
 
@@ -805,6 +804,8 @@ export const completeActiveChallenge = async (
         score: authoritative.score + task.points,
         activeRun: run,
         completedTaskIds: unique([...authoritative.completedTaskIds, task.id]),
+        skippedTaskIds: authoritative.skippedTaskIds.filter((taskId) => taskId !== task.id),
+        failedTaskIds: authoritative.failedTaskIds.filter((taskId) => taskId !== task.id),
         attemptedTaskIds: unique([...authoritative.attemptedTaskIds, task.id]),
         updatedAt: completedAt,
       }, gate.actionClearVersion);
@@ -814,7 +815,10 @@ export const completeActiveChallenge = async (
       }
 
       return {
-        progress: assignRandomChallengeWhileLocked(catalogTasks, outcomePersisted, candidateTasks),
+        // Completion now pauses on the place the visitor has just reached.
+        // The next experience is chosen deliberately from the atlas instead of
+        // being assigned in the background while the completion state is shown.
+        progress: outcomePersisted,
         stale: false,
         completed: true,
         duplicate: false,

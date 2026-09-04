@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, Bike, CheckCircle2, ChevronDown, Compass, Cookie, Film, Flag, Headphones, Leaf, MapPin, RotateCcw, ShieldCheck, Star, Trophy, XCircle } from 'lucide-react';
+import { ArrowRight, Bike, CheckCircle2, ChevronDown, Compass, Cookie, Film, Headphones, Leaf, MapPin, ShieldCheck } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -7,16 +7,12 @@ import { ExploreAtlas } from '../components/ExploreAtlas';
 import {
   assignRandomChallenge,
   completeActiveChallenge,
-  createNewGameWithChallenge,
-  failActiveChallenge,
   loadOrCreateProgress,
   reassignActiveRunForScope,
-  skipActiveChallenge,
 } from '../services/gameplay';
 import { ChallengeStorageLockUnavailableError } from '../services/challengeStorageLock';
 import { getEligibleTasksForExperience, getScopedExperienceModeFromSearch } from '../services/experienceFilters';
 import {
-  GAMEPLAY_MUSIC_ACTION_EVENT,
   GAMEPLAY_MUSIC_ADVANCE_EVENT,
   GAMEPLAY_MUSIC_CANCEL_EVENT,
   GAMEPLAY_MUSIC_PREPARE_EVENT,
@@ -26,12 +22,6 @@ import type { ChallengeTask, LanguageCode } from '../types/task';
 import { GeolocationRequestError, getCurrentPosition } from '../utils/geo';
 
 const findRunTask = (tasks: ChallengeTask[], taskId?: string) => tasks.find((task) => task.id === taskId);
-
-const formatTokenLabel = (value: string) => value
-  .split('-')
-  .filter(Boolean)
-  .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-  .join(' ');
 
 const splitTaskHeading = (value: string) => {
   const [locationName, ...rest] = value.split(/\s+[-\u2013]\s+/);
@@ -82,23 +72,13 @@ const getScopedProgressSummary = (tasks: ChallengeTask[], progress: ReturnType<t
   const enabledTaskIds = new Set(tasks.filter((task) => task.enabled).map((task) => task.id));
   const countInScope = (taskIds: string[]) => taskIds.filter((taskId) => enabledTaskIds.has(taskId)).length;
   const completedCount = countInScope(progress.completedTaskIds);
-  const skippedCount = countInScope(progress.skippedTaskIds);
-  const scopedAttemptedCount = new Set([
-    ...progress.completedTaskIds.filter((taskId) => enabledTaskIds.has(taskId)),
-    ...progress.skippedTaskIds.filter((taskId) => enabledTaskIds.has(taskId)),
-    ...progress.failedTaskIds.filter((taskId) => enabledTaskIds.has(taskId)),
-    ...progress.attemptedTaskIds.filter((taskId) => enabledTaskIds.has(taskId)),
-  ]).size;
 
   const enabledCount = enabledTaskIds.size;
 
   return {
     enabledCount,
     completedCount,
-    skippedCount,
-    attemptedCount: scopedAttemptedCount,
-    remainingCount: Math.max(0, enabledCount - scopedAttemptedCount),
-    score: progress.score,
+    remainingCount: Math.max(0, enabledCount - completedCount),
   };
 };
 
@@ -278,7 +258,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const localizedTaskTitle = task ? localize(task.title, language) : '';
   const localizedTaskDescription = task ? localize(task.description, language) : '';
   const { locationName, subtitle: locationSubtitle } = splitTaskHeading(localizedTaskTitle);
-  const progressPercent = summary.enabledCount > 0 ? Math.round((summary.completedCount / summary.enabledCount) * 100) : 0;
   const instructionsExpanded = Boolean(task?.id && expandedInstructionsTaskId === task.id);
   const instructionParagraphs = localizedTaskDescription
     .split(/\n\s*\n/)
@@ -295,7 +274,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     }
   };
 
-  const startGame = async (preferredTaskIds?: string[]) => {
+  const chooseExperience = async (preferredTaskIds: string[]) => {
     if (isMutating) return;
 
     if (isScopedCompleted) {
@@ -303,64 +282,29 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       return;
     }
 
-    const preferredTaskIdSet = preferredTaskIds?.length ? new Set(preferredTaskIds) : null;
-    const startCandidates = preferredTaskIdSet
-      ? eligibleTasks.filter((candidate) => preferredTaskIdSet.has(candidate.id))
-      : eligibleTasks;
+    const preferredTaskIdSet = new Set(preferredTaskIds);
+    const candidates = eligibleTasks.filter((candidate) => (
+      preferredTaskIdSet.has(candidate.id)
+      && !progress.completedTaskIds.includes(candidate.id)
+    ));
 
-    if (startCandidates.length === 0) {
+    if (candidates.length === 0) {
       setMessage(t('challenge.allDone'));
       return;
     }
 
-    window.dispatchEvent(new CustomEvent<'next'>(GAMEPLAY_MUSIC_ACTION_EVENT, { detail: 'next' }));
-
-    await runMutation(async () => {
-      try {
-        const result = await createNewGameWithChallenge(activeTasks, progress, startCandidates);
-        setProgress(result.progress);
-        setGpsStatus('idle');
-        if (result.stale) {
-          setMessage(t('challenge.ready'));
-          return;
-        }
-
-        setCompletionPanelRunId(null);
-        setMessage(result.progress.activeRun?.status === 'active' ? t('challenge.active') : t('challenge.allDone'));
-      } catch (error) {
-        if (error instanceof ChallengeStorageLockUnavailableError) {
-          setGpsStatus('idle');
-          setMessage(t('challenge.status.unavailable'));
-          return;
-        }
-        console.error('Unexpected error while starting a new game', error);
-        setGpsStatus('unavailable');
-        setMessage(t('challenge.status.unavailable'));
-      }
-    });
-  };
-
-  const startNextChallenge = async () => {
-    if (isMutating) return;
-
-    if (isScopedCompleted) {
-      void navigate('/book');
+    if (progress.activeRun?.status === 'active' && candidates.some((candidate) => candidate.id === progress.activeRun?.taskId)) {
+      setDetailsOpen(true);
       return;
     }
-
-    if (eligibleTasks.length === 0) {
-      setMessage(t('challenge.allDone'));
-      return;
-    }
-    const shouldStartNewGame = !isScopedMode && progress.status === 'completed' && summary.remainingCount === 0;
 
     window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
 
     await runMutation(async () => {
       try {
-        const result = shouldStartNewGame
-          ? await createNewGameWithChallenge(activeTasks, progress, eligibleTasks)
-          : await assignRandomChallenge(activeTasks, progress, eligibleTasks);
+        const result = progress.activeRun?.status === 'active'
+          ? await reassignActiveRunForScope(activeTasks, progress, candidates)
+          : await assignRandomChallenge(activeTasks, progress, candidates);
         setProgress(result.progress);
         setGpsStatus('idle');
         if (result.stale) {
@@ -371,15 +315,13 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
         if (result.progress.activeRun?.status === 'active') {
           window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
+          setCompletionPanelRunId(null);
+          setMessage(t('challenge.active'));
+          setDetailsOpen(true);
         } else {
           window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
+          setMessage(t('challenge.allDone'));
         }
-
-        if (shouldStartNewGame && 'started' in result && result.started) {
-          setCompletionPanelRunId(null);
-        }
-
-        setMessage(result.progress.activeRun?.status === 'active' ? t('challenge.active') : t('challenge.allDone'));
       } catch (error) {
         window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
         if (error instanceof ChallengeStorageLockUnavailableError) {
@@ -387,7 +329,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           setMessage(t('challenge.status.unavailable'));
           return;
         }
-        console.error('Unexpected error while assigning next challenge', error);
+        console.error('Unexpected error while choosing an experience', error);
         setGpsStatus('unavailable');
         setMessage(t('challenge.status.unavailable'));
       }
@@ -414,7 +356,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           task,
           { lat: position.coords.latitude, lng: position.coords.longitude },
           position.coords.accuracy,
-          eligibleTasks,
         );
         setProgress(result.progress);
 
@@ -440,14 +381,10 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
           return;
         }
 
-        if (result.completed && result.progress.activeRun?.status === 'active') {
-          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
-        } else {
-          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
-        }
+        window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
 
         setGpsStatus('verified');
-        setMessage(t('challenge.verified', { title: localize(task.title, language), meters: result.gps?.meters ?? 0 }));
+        setMessage(t('challenge.arrivalConfirmed', { meters: result.gps?.meters ?? 0 }));
         if (result.completed && completedRunId) {
           setCompletionPanelRunId(completedRunId);
         }
@@ -474,104 +411,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     });
   };
 
-  const skipChallenge = async () => {
-    if (!task || !canComplete) return;
-
-    const shouldSkip = window.confirm(t('challenge.confirmSkip'));
-    if (!shouldSkip) return;
-
-    window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
-
-    await runMutation(async () => {
-      try {
-        const result = await skipActiveChallenge(activeTasks, progress, eligibleTasks);
-        setProgress(result.progress);
-        if (result.stale) {
-          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
-          setGpsStatus('idle');
-          setMessage(t('challenge.ready'));
-          return;
-        }
-
-        if (!result.skipped) {
-          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
-          setGpsStatus('idle');
-          setMessage(t('challenge.duplicate'));
-          return;
-        }
-
-        if (result.progress.activeRun?.status === 'active') {
-          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
-        } else {
-          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
-        }
-
-        setCompletionPanelRunId(null);
-        setGpsStatus('idle');
-        setMessage(result.progress.activeRun ? t('challenge.skipped') : t('challenge.allDone'));
-      } catch (error) {
-        window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
-        if (error instanceof ChallengeStorageLockUnavailableError) {
-          setGpsStatus('idle');
-          setMessage(t('challenge.status.unavailable'));
-          return;
-        }
-        console.error('Unexpected error while skipping challenge', error);
-        setGpsStatus('unavailable');
-        setMessage(t('challenge.status.unavailable'));
-      }
-    });
-  };
-
-  const failChallenge = async () => {
-    window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_PREPARE_EVENT));
-
-    await runMutation(async () => {
-      try {
-        const failedResult = await failActiveChallenge(activeTasks, progress, eligibleTasks);
-        setProgress(failedResult.progress);
-        if (failedResult.stale) {
-          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
-          setGpsStatus('idle');
-          setMessage(t('challenge.ready'));
-          return;
-        }
-
-        if (!failedResult.failed) {
-          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
-          setGpsStatus('idle');
-          setMessage(t('challenge.duplicate'));
-          return;
-        }
-
-        if (failedResult.progress.activeRun?.status === 'active') {
-          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_ADVANCE_EVENT));
-        } else {
-          window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
-        }
-
-        setCompletionPanelRunId(null);
-        setGpsStatus('idle');
-        setMessage(failedResult.progress.activeRun ? t('challenge.failed') : t('challenge.allDone'));
-      } catch (error) {
-        window.dispatchEvent(new CustomEvent(GAMEPLAY_MUSIC_CANCEL_EVENT));
-        if (error instanceof ChallengeStorageLockUnavailableError) {
-          setGpsStatus('idle');
-          setMessage(t('challenge.status.unavailable'));
-          return;
-        }
-        console.error('Unexpected error while failing challenge', error);
-        setGpsStatus('unavailable');
-        setMessage(t('challenge.status.unavailable'));
-      }
-    });
-  };
-
   if (!canPlay) return <Card><p className="text-emerald-900">{t('challenge.empty')}</p></Card>;
-
-  const handleDismissCompletionPanel = () => {
-    setCompletionPanelRunId(null);
-  };
 
   const handleNavigateToTikTokSubmission = () => {
     if (!completionPanelRunId) return;
@@ -580,7 +420,17 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     void navigate(destination);
   };
 
-  const statusBadge = progress.activeRun?.status === 'active' ? t('history.active') : progress.activeRun?.status;
+  const leaveCompletedExperience = () => {
+    setCompletionPanelRunId(null);
+    setDetailsOpen(false);
+    if (isScopedMode) void navigate('/book');
+  };
+
+  const statusBadge = progress.activeRun?.status === 'active'
+    ? t('challenge.invitationOpen')
+    : progress.activeRun?.status === 'completed'
+      ? t('challenge.completedStatus')
+      : '';
   const taskExternalUrl = task && isValidExternalChallengeUrl(task.externalUrl) ? task.externalUrl : null;
   const taskLocationIntro = task?.locationIntro ? localize(task.locationIntro, language).trim() : '';
   const taskExperienceNote = task?.experienceNote ? localize(task.experienceNote, language).trim() : '';
@@ -591,14 +441,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     .filter((imagePath) => imagePath.length > 0 && imagePath !== taskCoverImage) ?? [];
   const taskGalleryImages = task ? [...(taskCoverImage ? [taskCoverImage] : []), ...additionalTaskImages] : [];
   const hasAdditionalTaskImages = additionalTaskImages.length > 0;
-  const categoryLabel = task ? (() => {
-    const translated = t(`challenge.category.${task.category}`);
-    return translated === `challenge.category.${task.category}` ? formatTokenLabel(task.category) : translated;
-  })() : '';
-  const difficultyLabel = task ? (() => {
-    const translated = t(`challenge.difficulty.${task.difficulty}`);
-    return translated === `challenge.difficulty.${task.difficulty}` ? formatTokenLabel(task.difficulty) : translated;
-  })() : '';
   const challengeAccent = getChallengeAccent(task);
   const currentTaskCompleted = progress.completedTaskIds.includes(task?.id ?? '');
   const currentTaskGpsVerified = Boolean(progress.activeRun?.gpsVerified);
@@ -607,7 +449,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       tasks={eligibleTasks}
       progressTotal={eligibleTasks.length}
       activeTask={task}
-      score={summary.score}
+      invitationOpen={canComplete}
       completedCount={summary.completedCount}
       completedTaskIds={progress.completedTaskIds}
       language={language}
@@ -615,7 +457,9 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       isMutating={isMutating}
       onOpenDetails={() => setDetailsOpen(true)}
       onCloseDetails={() => setDetailsOpen(false)}
-      onStart={(taskIds) => { void startGame(taskIds); }}
+      onChoose={(taskIds) => { void chooseExperience(taskIds); }}
+      completionActionLabel={isScopedCompleted ? scopeCompletionPrimaryLabel : undefined}
+      onCompletionAction={isScopedCompleted ? () => { void navigate('/book'); } : undefined}
     >
       <Card
         className={[
@@ -688,255 +532,151 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
             ) : null}
 
             <div className="challenge-editorial__hero-copy">
-              <p>{t('challenge.title')}</p>
+              <p>{t('challenge.fieldLabel')}</p>
               <h1>{locationName}</h1>
               {locationSubtitle ? <p>{locationSubtitle}</p> : null}
             </div>
           </section>
 
           <div className="challenge-editorial__content">
-            <div className="challenge-editorial__grid">
-              <div className="challenge-editorial__main">
-                {task && progress.activeRun ? (
-                  <>
-                    <header className="challenge-editorial__heading">
-                      <p>{t('challenge.title')}</p>
-                      <h2 id="challenge-task-title">{localizedTaskTitle}</h2>
-                      {taskExperienceNote ? (
-                        <p className="challenge-editorial__experience">
-                          <span>{t('challenge.experienceNoteLabel')}:</span> {taskExperienceNote}
-                        </p>
-                      ) : null}
-                    </header>
-
-                    <div className="challenge-editorial__facts">
-                      <div className="challenge-editorial__fact is-reward">
-                        <Star aria-hidden="true" />
-                        <span>{task.points} {t('challenge.points')}</span>
-                      </div>
-                      <div className="challenge-editorial__fact is-gps">
-                        <MapPin aria-hidden="true" />
-                        <span>{t('challenge.radius')} {task.gps.radius}m</span>
-                      </div>
+            {task && progress.activeRun ? (
+              <>
+                <section className="challenge-editorial__invitation" aria-labelledby="challenge-task-title">
+                  <p id="challenge-task-title">{t('challenge.invitationLabel')}</p>
+                  {instructionsExpanded ? (
+                    <div className="challenge-editorial__prose">
+                      {instructionParagraphs.map((paragraph) => (
+                        <p key={paragraph} style={{ whiteSpace: 'pre-line' }}>{paragraph}</p>
+                      ))}
                     </div>
-
-                    <div className="challenge-editorial__taxonomy">
-                      <span>{categoryLabel}</span>
-                      <span>{difficultyLabel}</span>
-                      {statusBadge ? (
-                        <span className="is-status">
-                          <i aria-hidden="true" />
-                          {statusBadge}
-                        </span>
-                      ) : null}
+                  ) : (
+                    <div className="challenge-editorial__prose line-clamp-4" style={{ whiteSpace: 'pre-line' }}>
+                      {localizedTaskDescription}
                     </div>
+                  )}
+                  <button
+                    type="button"
+                    aria-expanded={instructionsExpanded}
+                    onClick={() => setExpandedInstructionsTaskId(instructionsExpanded ? null : task.id)}
+                    className="challenge-editorial__text-toggle"
+                  >
+                    {instructionsExpanded ? t('challenge.collapseInstructions') : t('challenge.viewFullInstructions')}
+                    <ChevronDown aria-hidden="true" />
+                  </button>
+                </section>
 
-                    <section className="challenge-editorial__mission" aria-label={t('challenge.title')}>
-                      <span className="challenge-editorial__mission-mark" aria-hidden="true" />
-                      {instructionsExpanded ? (
-                        <div className="challenge-editorial__prose">
-                          {instructionParagraphs.map((paragraph) => (
-                            <p key={paragraph} style={{ whiteSpace: 'pre-line' }}>{paragraph}</p>
-                          ))}
-                        </div>
-                      ) : (
-                        <div
-                          className="challenge-editorial__prose line-clamp-4"
-                          style={{ whiteSpace: 'pre-line' }}
-                        >
-                          {localizedTaskDescription}
-                        </div>
-                      )}
-                      <button
-                        type="button"
-                        aria-expanded={instructionsExpanded}
-                        onClick={() => setExpandedInstructionsTaskId(instructionsExpanded ? null : task.id)}
-                        className="challenge-editorial__text-toggle"
-                      >
-                        {instructionsExpanded ? t('challenge.collapseInstructions') : t('challenge.viewFullInstructions')}
-                        <ChevronDown aria-hidden="true" />
-                      </button>
-                    </section>
+                {taskExperienceNote ? (
+                  <p className="challenge-editorial__experience">
+                    <span>{t('challenge.beforeGoing')}:</span> {taskExperienceNote}
+                  </p>
+                ) : null}
 
-                    {taskExternalUrl && challengeAccent.kind === 'cinematic' ? (
-                      <section
-                        className="challenge-editorial__temporal-threshold"
-                        aria-labelledby="challenge-temporal-threshold-title"
-                      >
-                        <div className="challenge-editorial__temporal-copy">
-                          <p id="challenge-temporal-threshold-title">{t('challenge.temporalThreshold.label')}</p>
-                          <strong>{t('challenge.temporalThreshold.message')}</strong>
-                        </div>
-                        <span className="challenge-editorial__temporal-boundary" aria-hidden="true" />
-                        <span className="challenge-editorial__temporal-present" aria-hidden="true">
-                          {t('challenge.temporalThreshold.present')}
-                        </span>
-                        <span className="challenge-editorial__temporal-year" aria-hidden="true">1954</span>
-                        <a
-                          href={taskExternalUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="challenge-editorial__temporal-action"
-                        >
-                          <span>{t('challenge.externalAction')}</span>
-                          <ArrowRight aria-hidden="true" />
-                        </a>
-                      </section>
-                    ) : taskExternalUrl ? (
-                      <a
-                        href={taskExternalUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="challenge-editorial__external-action"
-                      >
-                        {t('challenge.externalAction')}
-                      </a>
-                    ) : null}
-                  </>
+                {taskExternalUrl && challengeAccent.kind === 'cinematic' ? (
+                  <section className="challenge-editorial__temporal-threshold" aria-labelledby="challenge-temporal-threshold-title">
+                    <div className="challenge-editorial__temporal-copy">
+                      <p id="challenge-temporal-threshold-title">{t('challenge.temporalThreshold.label')}</p>
+                      <strong>{t('challenge.temporalThreshold.message')}</strong>
+                    </div>
+                    <span className="challenge-editorial__temporal-boundary" aria-hidden="true" />
+                    <span className="challenge-editorial__temporal-present" aria-hidden="true">{t('challenge.temporalThreshold.present')}</span>
+                    <span className="challenge-editorial__temporal-year" aria-hidden="true">1954</span>
+                    <a href={taskExternalUrl} target="_blank" rel="noopener noreferrer" className="challenge-editorial__temporal-action">
+                      <span>{t('challenge.externalAction')}</span>
+                      <ArrowRight aria-hidden="true" />
+                    </a>
+                  </section>
+                ) : taskExternalUrl ? (
+                  <a href={taskExternalUrl} target="_blank" rel="noopener noreferrer" className="challenge-editorial__external-action">
+                    {t('challenge.externalAction')}
+                  </a>
+                ) : null}
+
+                {currentTaskCompleted ? (
+                  <section className="challenge-editorial__arrival">
+                    <span aria-hidden="true"><CheckCircle2 /></span>
+                    <div>
+                      <strong>{t('challenge.arrivalTitle')}</strong>
+                      <p>{t('challenge.arrivalReflection')}</p>
+                    </div>
+                    <Button type="button" onClick={leaveCompletedExperience} variant="secondary">
+                      {isScopedMode ? scopeCompletionPrimaryLabel : t('challenge.backToAtlas')}
+                    </Button>
+                  </section>
                 ) : (
-                  <div className="challenge-editorial__pending">
-                    <h1>{isFinished ? t('challenge.allDone') : t('challenge.pending')}</h1>
-                    <p>{t('challenge.pendingDescription')}</p>
+                  <div className="challenge-editorial__primary-action">
+                    <Button
+                      onClick={() => { void verifyGps(); }}
+                      disabled={!canComplete || isMutating}
+                      variant="gpsPrimary"
+                      className="w-full"
+                      style={{ scrollMarginBottom: '7rem' }}
+                    >
+                      <MapPin className="h-5 w-5" />
+                      {gpsStatus === 'requestingPermission' || gpsStatus === 'locating'
+                        ? t('challenge.status.locating')
+                        : t('challenge.confirmArrival')}
+                    </Button>
                   </div>
                 )}
-              </div>
 
-              <aside className="challenge-editorial__rail">
-                <section className="challenge-editorial__status-panel">
-                  <div className="challenge-editorial__status-message" aria-live="polite">{message}</div>
-                  <p className="challenge-editorial__gps-line">
-                    <ShieldCheck aria-hidden="true" />
-                    <span>{gpsStatus !== 'idle' ? t('challenge.gpsStatus') + ': ' + t('challenge.status.' + gpsStatus) : t('challenge.ready')}</span>
-                  </p>
-
-                  <div className="challenge-editorial__state-badges">
-                    {currentTaskGpsVerified ? (
-                      <span>
-                        <CheckCircle2 aria-hidden="true" />
-                        {t('challenge.gpsStatus')}
-                      </span>
-                    ) : null}
-                    {currentTaskCompleted ? (
-                      <span>
-                        <CheckCircle2 aria-hidden="true" />
-                        {t('challenge.completedStatus')}
-                      </span>
+                <details className="challenge-editorial__details challenge-editorial__gps-details" open={gpsStatus !== 'idle' && gpsStatus !== 'verified'}>
+                  <summary>
+                    <span><ShieldCheck aria-hidden="true" />{t('challenge.gpsAndSafety')}</span>
+                    <small>{t('challenge.radius')} {task.gps.radius}m</small>
+                    <ChevronDown aria-hidden="true" />
+                  </summary>
+                  <div>
+                    <p className="challenge-editorial__status-message" aria-live="polite">{message}</p>
+                    <p className="challenge-editorial__gps-line">
+                      <ShieldCheck aria-hidden="true" />
+                      <span>{gpsStatus !== 'idle' ? t('challenge.status.' + gpsStatus) : t('challenge.arrivalBoundary')}</span>
+                    </p>
+                    <p className="challenge-editorial__safety">{t('challenge.safetyNotice')}</p>
+                    {taskExternalUrl ? (
+                      <p className="challenge-editorial__headphone">
+                        <Headphones aria-hidden="true" />
+                        <span>{t('challenge.headphoneRecommendation')}</span>
+                      </p>
                     ) : null}
                   </div>
+                </details>
 
-                  <p className="challenge-editorial__safety">{t('challenge.safetyNotice')}</p>
+                {taskLocationIntro ? (
+                  <details className="challenge-editorial__details">
+                    <summary>
+                      <span>{t('challenge.locationIntroLabel')}</span>
+                      <ChevronDown aria-hidden="true" />
+                    </summary>
+                    <div><p>{taskLocationIntro}</p></div>
+                  </details>
+                ) : null}
 
-                  {completionPanelRunId ? (
-                    <div className="challenge-editorial__completion">
-                      <p>{t('challenge.completionHandoff.title')}</p>
-                      <p>{t('challenge.completionHandoff.description')}</p>
+                {completionPanelRunId ? (
+                  <details className="challenge-editorial__details challenge-editorial__share">
+                    <summary>
+                      <span>{t('challenge.keepMoment')}</span>
+                      <ChevronDown aria-hidden="true" />
+                    </summary>
+                    <div>
                       <p>{t('challenge.completionHandoff.sampleHint')}</p>
-                      <div>
-                        <a
-                          href={SAMPLE_TIKTOK_URL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
+                      <div className="challenge-editorial__share-actions">
+                        <a href={SAMPLE_TIKTOK_URL} target="_blank" rel="noopener noreferrer">
                           {t('challenge.completionHandoff.sampleAction')}
                         </a>
-                        <Button type="button" onClick={handleNavigateToTikTokSubmission}>
+                        <Button type="button" onClick={handleNavigateToTikTokSubmission} variant="secondary">
                           {t('challenge.completionHandoff.submitAction')}
-                        </Button>
-                        <Button type="button" onClick={handleDismissCompletionPanel} variant="secondary">
-                          {t('challenge.completionHandoff.laterAction')}
                         </Button>
                       </div>
                     </div>
-                  ) : null}
-
-                  <p className="challenge-editorial__headphone">
-                    <Headphones aria-hidden="true" />
-                    <span>{t('challenge.headphoneRecommendation')}</span>
-                  </p>
-                </section>
-
-                <div className="challenge-editorial__primary-action">
-                  <Button
-                    onClick={() => { void verifyGps(); }}
-                    disabled={!canComplete || isMutating}
-                    variant="gpsPrimary"
-                    className="w-full"
-                    style={{ scrollMarginBottom: '7rem' }}
-                  >
-                    <ShieldCheck className="h-5 w-5" />
-                    {t('challenge.verifyGps')}
-                  </Button>
-                </div>
-
-                <section className="challenge-editorial__progress">
-                  <div>
-                    <div>
-                      <p>{t('challenge.journeyProgress')}</p>
-                      <p>{t('challenge.progressCompletedLine', { completed: summary.completedCount, total: summary.enabledCount })}</p>
-                      <p>{t('challenge.progressRemainingLine', { remaining: summary.remainingCount })}</p>
-                    </div>
-                    <p>{progressPercent}%</p>
-                  </div>
-                  <div className="challenge-editorial__progress-track">
-                    <div style={{ width: String(progressPercent) + '%' }} />
-                  </div>
-                  <p>{t('challenge.progressBreakdown', { completed: summary.completedCount, skipped: summary.skippedCount, remaining: summary.remainingCount })}</p>
-                </section>
-
-                <div className="challenge-editorial__secondary-actions">
-                  <Button
-                    onClick={() => { void startGame(); }}
-                    disabled={isMutating}
-                    variant="secondary"
-                    className="w-full border border-[rgba(91,67,38,0.14)] bg-[rgba(247,242,231,0.86)]"
-                  >
-                    <RotateCcw className="h-5 w-5" />
-                    {isScopedCompleted ? scopeCompletionPrimaryLabel : t('challenge.newGame')}
-                  </Button>
-                  {!isScopedCompleted ? (
-                    <Button
-                      onClick={() => { void startNextChallenge(); }}
-                      disabled={canComplete || isMutating || eligibleTasks.length === 0}
-                      variant="secondary"
-                      className="w-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.68)]"
-                    >
-                      <Trophy className="h-5 w-5" />
-                      {t('challenge.next')}
-                    </Button>
-                  ) : null}
-                  <Button
-                    onClick={() => { void skipChallenge(); }}
-                    disabled={!canComplete || isMutating}
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    <XCircle className="h-5 w-5" />
-                    {t('challenge.skip')}
-                  </Button>
-                  <Button
-                    onClick={() => { void failChallenge(); }}
-                    disabled={!canComplete || isMutating}
-                    variant="secondary"
-                    className="w-full text-[var(--brocade-red)]"
-                  >
-                    <Flag className="h-5 w-5" />
-                    {t('challenge.fail')}
-                  </Button>
-                </div>
-              </aside>
-            </div>
-
-            {taskLocationIntro ? (
-              <details className="challenge-editorial__details">
-                <summary>
-                  <span>{t('challenge.locationIntroLabel')}</span>
-                  <ChevronDown aria-hidden="true" />
-                </summary>
-                <div>
-                  <p>{taskLocationIntro}</p>
-                </div>
-              </details>
-            ) : null}
+                  </details>
+                ) : null}
+              </>
+            ) : (
+              <div className="challenge-editorial__pending">
+                <h1>{isFinished ? t('challenge.allDone') : t('challenge.choosePlace')}</h1>
+                <p>{t('challenge.choosePlaceDescription')}</p>
+              </div>
+            )}
           </div>
         </div>
       </Card>
