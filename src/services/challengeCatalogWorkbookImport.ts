@@ -48,6 +48,7 @@ const overnightMotorbikeExistingPatch: TaskPatch = {
 
 const TASK_PATCHES: Record<string, TaskPatch> = {
   'quang-truong-7-5-mthen': {
+    image: '/images/tasks/quang-truong-7-5-mthen-generated.webp',
     enabled: true,
   },
   'thac-ke-nenh-mthen': {
@@ -192,7 +193,7 @@ const ADDED_TASKS: readonly ChallengeTask[] = [
     difficulty: 'easy',
     points: 120,
     gps: { lat: 21.38825, lng: 103.016, radius: 120 },
-    image: '/images/tasks/quang-truong-7-5-mthen.webp',
+    image: '/images/tasks/quang-truong-7-5-hat-quoc-ca.webp',
     enabled: true,
     experienceNote: {
       vi: 'Giữ âm lượng vừa phải, không cản lối đi và không làm gián đoạn hoạt động đang diễn ra tại quảng trường. Challenge chỉ xác nhận việc bạn đã đến trong bán kính GPS.',

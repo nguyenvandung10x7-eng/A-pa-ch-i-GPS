@@ -28,15 +28,3 @@ export const getLevelOneTasks = (tasks: ChallengeTask[]): ChallengeTask[] => {
 export const getLockedChallengeTasks = (tasks: ChallengeTask[]): ChallengeTask[] => (
   tasks.filter((task) => !isLevelOneTaskId(task.id))
 );
-
-export const readLevelOneAccepted = (): boolean => {
-  try {
-    return window.localStorage.getItem(CHALLENGE_LEVEL_ONE_ACCEPTED_KEY) === '1';
-  } catch {
-    return false;
-  }
-};
-
-export const acceptLevelOne = (): void => {
-  window.localStorage.setItem(CHALLENGE_LEVEL_ONE_ACCEPTED_KEY, '1');
-};

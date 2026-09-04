@@ -1,0 +1,20 @@
+{
+  "asset": "public/images/tasks/quang-truong-7-5-hat-quoc-ca.webp",
+  "status_basis": "project-generated-editorial-illustration",
+  "checked_on": "2026-09-04",
+  "source": {
+    "generator": "OpenAI built-in image generation",
+    "generated_png_sha256": "98e5899b786827a186212f59a5e34df28607534bac51c4586bc3cb86e96056b4",
+    "generated_dimensions": "1536x1024"
+  },
+  "derivative": {
+    "dimensions": "1440x960",
+    "sha256": "016741e8d43f226de3d1960ba7ac27aacbc13b50a8f74ea8689e06ded37da0aa",
+    "bytes": 98234,
+    "changes": "Generated PNG proportionally resized with Lanczos filtering and re-encoded as lossy WebP without crop or visual content edits.",
+    "command": "ffmpeg -i GENERATED.png -vf scale=1440:-2:flags=lanczos -c:v libwebp -quality 82 OUTPUT.webp",
+    "tool": "ffmpeg"
+  },
+  "prompt_summary": "A clearly adult young Vietnamese man stands comically rigid while singing with intensely earnest concentration in a fictionalized quiet highland-city square. The humor is limited to the over-formal posture; no flag, emblem, uniform, crowd, text, or exact landmark is shown.",
+  "representation_note": "Purpose-built challenge illustration. It is not documentary photography, an exact depiction of 7 May Square, or a record of a real person or event."
+}
