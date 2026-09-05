@@ -142,7 +142,7 @@ const asGuildSlug = (value: string): GuildSlug => (
 
 const mapLeaderboardEntry = (row: RawGuildLeaderboardEntry): GuildLeaderboardEntry => ({
   rank: Number(row.rank ?? 0),
-  guildSlug: asGuildSlug(row.guild_slug),
+  slug: asGuildSlug(row.guild_slug),
   nameVi: row.name_vi,
   nameEn: row.name_en,
   descriptionVi: row.description_vi,
