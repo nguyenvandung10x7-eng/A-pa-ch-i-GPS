@@ -53,6 +53,7 @@ export const GuildPage = ({
   t: (key: string, values?: Record<string, string | number>) => string;
 }) => {
   const { user, loading: authLoading, signIn } = useAuth();
+  const userId = user?.id ?? null;
   const [leaderboard, setLeaderboard] = useState<GuildLeaderboardEntry[]>([]);
   const [membership, setMembership] = useState<GuildMembership | null>(null);
   const [roster, setRoster] = useState<GuildRosterEntry[]>([]);
@@ -77,7 +78,7 @@ export const GuildPage = ({
     try {
       const [nextLeaderboard, nextMembership] = await Promise.all([
         loadGuildLeaderboard(),
-        loadMyGuildMembership(user?.id),
+        loadMyGuildMembership(userId),
       ]);
 
       setLeaderboard(nextLeaderboard);
@@ -92,14 +93,14 @@ export const GuildPage = ({
       }
 
       const syncResult = await syncCompletedChallengeRuns({
-        userId: user?.id,
+        userId,
         runs: loadHistory(),
       });
       setSyncWarning(syncResult.failed > 0);
 
       const [latestLeaderboard, latestMembership, nextRoster, nextPosts] = await Promise.all([
         loadGuildLeaderboard(),
-        loadMyGuildMembership(user?.id),
+        loadMyGuildMembership(userId),
         loadGuildRoster(nextMembership.guildSlug),
         loadGuildPosts(nextMembership.guildSlug),
       ]);
@@ -118,11 +119,14 @@ export const GuildPage = ({
       setLoading(false);
       setRefreshing(false);
     }
-  }, [t, user?.id]);
+  }, [t, userId]);
 
   useEffect(() => {
     if (authLoading) return;
-    void refresh();
+    const timeoutId = window.setTimeout(() => {
+      void refresh();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [authLoading, refresh]);
 
   const selectedGuild = useMemo(
