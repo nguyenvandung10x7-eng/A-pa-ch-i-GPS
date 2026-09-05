@@ -23,7 +23,11 @@ create table if not exists public.guild_memberships (
   updated_at timestamptz not null default now(),
   constraint guild_memberships_nickname_length check (char_length(btrim(nickname)) between 2 and 24),
   constraint guild_memberships_nickname_trimmed check (nickname = btrim(nickname)),
-  constraint guild_memberships_nickname_no_line_breaks check (nickname !~ E'[\\r\\n\\t]')
+  constraint guild_memberships_nickname_no_line_breaks check (
+    position(chr(13) in nickname) = 0
+    and position(chr(10) in nickname) = 0
+    and position(chr(9) in nickname) = 0
+  )
 );
 
 create table if not exists public.guild_score_catalog (
@@ -333,7 +337,11 @@ begin
     raise exception 'GUILD_NOT_FOUND';
   end if;
 
-  if char_length(v_nickname) < 2 or char_length(v_nickname) > 24 or v_nickname ~ E'[\\r\\n\\t]' then
+  if char_length(v_nickname) < 2
+    or char_length(v_nickname) > 24
+    or position(chr(13) in v_nickname) > 0
+    or position(chr(10) in v_nickname) > 0
+    or position(chr(9) in v_nickname) > 0 then
     raise exception 'GUILD_INVALID_NICKNAME';
   end if;
 
