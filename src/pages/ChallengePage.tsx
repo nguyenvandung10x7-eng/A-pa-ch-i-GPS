@@ -3,6 +3,7 @@ import { ArrowRight, Bike, CheckCircle2, ChevronDown, Compass, Cookie, Film, Hea
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { useAuth } from '../contexts/AuthContext';
 import { ChallengeLeaderboardPreview } from '../components/ChallengeLeaderboardPreview';
 import { ChallengeLevelOneMenu } from '../components/ChallengeLevelOneMenu';
 import { ChallengeLockedExperience } from '../components/ChallengeLockedExperience';
@@ -15,6 +16,7 @@ import {
   reassignActiveRunForScope,
 } from '../services/gameplay';
 import { ChallengeStorageLockUnavailableError } from '../services/challengeStorageLock';
+import { GuildError, recordGuildChallengeEvent } from '../services/guilds';
 import {
   getLevelOneTasks,
   getLockedChallengeTasks,
@@ -111,6 +113,7 @@ const isValidExternalChallengeUrl = (value?: string): value is string => {
 export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: ChallengeTask[]; clearVersion: number; language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const activeTasks = useMemo(() => tasks.filter((task) => task.enabled), [tasks]);
   const scopedExperienceMode = useMemo(() => getScopedExperienceModeFromSearch(location.search), [location.search]);
   const [progress, setProgress] = useState(() => loadOrCreateProgress(activeTasks));
@@ -446,6 +449,23 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         }
         if (result.completed && completedRunId) {
           setCompletionPanelRunId(completedRunId);
+          if (user) {
+            void recordGuildChallengeEvent({
+              userId: user.id,
+              clientEventId: completedRunId,
+              challengeId: task.id,
+            })
+              .then((contribution) => {
+                if (contribution?.accepted && !contribution.duplicate) {
+                  setMessage(t('challenge.guildContribution', { points: contribution.points }));
+                }
+              })
+              .catch((syncError) => {
+                if (!(syncError instanceof GuildError) || syncError.code !== 'MEMBERSHIP_REQUIRED') {
+                  console.warn('Unable to sync Guild contribution', syncError);
+                }
+              });
+          }
         }
         if (!result.progress.activeRun) {
           setMessage(t('challenge.allDone'));
