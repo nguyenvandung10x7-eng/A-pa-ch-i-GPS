@@ -4,14 +4,12 @@ import type { ChallengeTask, LanguageCode } from '../types/task';
 import { ChallengeLeaderboardPreview } from './ChallengeLeaderboardPreview';
 
 type ChallengeLevelOneMenuProps = {
-  accepted: boolean;
   tasks: ChallengeTask[];
   lockedTasks: ChallengeTask[];
   completedTaskIds: string[];
   activeTaskId?: string;
   isMutating: boolean;
   language: LanguageCode;
-  onAccept: () => void;
   onChoose: (taskId: string) => void;
 };
 
@@ -21,7 +19,6 @@ const copy = {
     level: 'LEVEL 01',
     title: 'Đủ ngầu thì vào cuộc.',
     prompt: 'Bật chế độ chơi. Hoàn thành 1 thử thách mở màn để mở toàn bộ hành trình.',
-    accept: 'Tôi đủ ngầu. Chơi',
     choose: 'Chọn màn mở đầu',
     chooseHint: 'Không cần làm hết. Một thử thách là đủ để mở Level 2.',
     open: 'Nhận thử thách',
@@ -35,7 +32,6 @@ const copy = {
     level: 'LEVEL 01',
     title: 'Cool enough? Step in.',
     prompt: 'Switch on play mode. Clear 1 opening challenge to unlock the full journey.',
-    accept: 'I am cool enough. Play',
     choose: 'Choose your opening move',
     chooseHint: 'There is no need to clear them all. One challenge unlocks Level 2.',
     open: 'Take challenge',
@@ -53,14 +49,12 @@ const splitTitle = (task: ChallengeTask, language: LanguageCode) => {
 };
 
 export const ChallengeLevelOneMenu = ({
-  accepted,
   tasks,
   lockedTasks,
   completedTaskIds,
   activeTaskId,
   isMutating,
   language,
-  onAccept,
   onChoose,
 }: ChallengeLevelOneMenuProps) => {
   const c = copy[language];
@@ -68,7 +62,7 @@ export const ChallengeLevelOneMenu = ({
 
   return (
     <div className="challenge-level-one">
-      <header className={`challenge-level-one__intro ${accepted ? 'is-accepted' : ''}`}>
+      <header className="challenge-level-one__intro">
         <div className="challenge-level-one__topline">
           <div className="challenge-level-one__eyebrow"><Crosshair aria-hidden="true" />{c.eyebrow}</div>
           <span className="challenge-level-one__badge">{c.level}</span>
@@ -76,50 +70,43 @@ export const ChallengeLevelOneMenu = ({
         <span className="challenge-level-one__level-mark" aria-hidden="true">01</span>
         <h1>{c.title}</h1>
         <p>{c.prompt}</p>
-        {!accepted ? (
-          <button type="button" className="challenge-level-one__accept" onClick={onAccept}>
-            {c.accept}<ArrowUpRight aria-hidden="true" />
-          </button>
-        ) : null}
       </header>
 
-      {accepted ? (
-        <section className="challenge-level-one__choices" aria-labelledby="challenge-level-one-title">
-          <header>
-            <h2 id="challenge-level-one-title">{c.choose}</h2>
-            <p>{c.chooseHint}</p>
-          </header>
-          <div className="challenge-level-one__grid">
-            {tasks.map((task, index) => {
-              const title = splitTitle(task, language);
-              const completed = completedTaskIdSet.has(task.id);
-              const active = activeTaskId === task.id;
-              const actionLabel = active ? c.continue : completed ? c.completed : c.open;
-              return (
-                <button
-                  key={task.id}
-                  type="button"
-                  className={`challenge-level-one__choice ${completed ? 'is-complete' : ''} ${active ? 'is-active' : ''}`}
-                  onClick={() => onChoose(task.id)}
-                  disabled={isMutating || completed}
-                  aria-label={`${title.invitation}. ${title.place}. ${actionLabel}`}
-                >
-                  <span className="challenge-level-one__choice-image">
-                    <b aria-hidden="true">{String(index + 1).padStart(2, '0')}</b>
-                    {task.image ? <img src={task.image} alt="" /> : <Crosshair aria-hidden="true" />}
-                    {completed ? <i aria-label={c.completed}><Check aria-hidden="true" /></i> : null}
-                  </span>
-                  <span className="challenge-level-one__choice-copy">
-                    <strong>{title.invitation}</strong>
-                    <small><MapPin aria-hidden="true" />{title.place}</small>
-                    <span>{actionLabel}<ArrowUpRight aria-hidden="true" /></span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
+      <section className="challenge-level-one__choices" aria-labelledby="challenge-level-one-title">
+        <header>
+          <h2 id="challenge-level-one-title">{c.choose}</h2>
+          <p>{c.chooseHint}</p>
+        </header>
+        <div className="challenge-level-one__grid">
+          {tasks.map((task, index) => {
+            const title = splitTitle(task, language);
+            const completed = completedTaskIdSet.has(task.id);
+            const active = activeTaskId === task.id;
+            const actionLabel = active ? c.continue : completed ? c.completed : c.open;
+            return (
+              <button
+                key={task.id}
+                type="button"
+                className={`challenge-level-one__choice ${completed ? 'is-complete' : ''} ${active ? 'is-active' : ''}`}
+                onClick={() => onChoose(task.id)}
+                disabled={isMutating || completed}
+                aria-label={`${title.invitation}. ${title.place}. ${actionLabel}`}
+              >
+                <span className="challenge-level-one__choice-image">
+                  <b aria-hidden="true">{String(index + 1).padStart(2, '0')}</b>
+                  {task.image ? <img src={task.image} alt="" /> : <Crosshair aria-hidden="true" />}
+                  {completed ? <i aria-label={c.completed}><Check aria-hidden="true" /></i> : null}
+                </span>
+                <span className="challenge-level-one__choice-copy">
+                  <strong>{title.invitation}</strong>
+                  <small><MapPin aria-hidden="true" />{title.place}</small>
+                  <span>{actionLabel}<ArrowUpRight aria-hidden="true" /></span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       <section className="challenge-level-one__locked" aria-labelledby="challenge-locked-title">
         <header>

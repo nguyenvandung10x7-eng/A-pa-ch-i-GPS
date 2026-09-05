@@ -10,6 +10,7 @@ import {
   readBookSoundEnabled,
   type BookAudioStartDetail,
 } from '../services/bookAudioEvents';
+import { requestChallengeGateReset } from '../services/challengeGateEvents';
 import { getChapter, getPage } from '../services/bookContent';
 import type { LanguageCode } from '../types/task';
 import '../mobile-shell.css';
@@ -488,7 +489,13 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
 
       {!onOpeningSurface ? <nav aria-label={language === 'vi' ? 'Điều hướng chính' : 'Primary navigation'} className="editorial-shell__surface-nav">
         <div className="editorial-shell__surface-nav-inner">
-          <NavLink to="/challenge" className={({ isActive }) => isActive ? 'is-active' : ''}>
+          <NavLink
+            to="/challenge"
+            className={({ isActive }) => isActive ? 'is-active' : ''}
+            onClick={() => {
+              if (onExploreSurface) requestChallengeGateReset();
+            }}
+          >
             <Compass className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
           </NavLink>
           <NavLink to="/map" className={({ isActive }) => isActive ? 'is-active' : ''}>

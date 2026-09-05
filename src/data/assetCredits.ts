@@ -44,6 +44,19 @@ export const ASSET_CREDITS: AssetCredit[] = [
     },
   },
   {
+    id: 'challenge-level-one-character-illustrations',
+    usage: {
+      vi: 'Hai tranh nhân vật cho thử thách hát Quốc ca và “Cô gái đẹp Mường Then” tại Quảng trường 7-5',
+      en: 'Two character illustrations for the anthem and “Beautiful Mường Then Girl” challenges at 7 May Square',
+    },
+    author: 'Generated for Book of Dien Bien',
+    status: 'cleared',
+    note: {
+      vi: 'Tranh được tạo riêng bằng OpenAI built-in image generation. Bối cảnh quảng trường được hư cấu theo không khí một đô thị vùng cao; nhân vật không đại diện cho người thật. Đây là minh họa hài hước, không phải ảnh tư liệu, ảnh xác minh địa điểm hay ghi nhận một sự kiện có thật.',
+      en: 'Created specifically with OpenAI built-in image generation. The square is a fictional highland-city setting and the people do not represent real individuals. These are humorous illustrations, not documentary photography, location verification, or records of real events.',
+    },
+  },
+  {
     id: 'quan-com-hung-ha-thuoc-lao-free',
     usage: {
       vi: 'Ảnh thử thách tại Quán cơm Hưng Hà',
@@ -71,14 +84,14 @@ export const ASSET_CREDITS: AssetCredit[] = [
   },
   {
     id: 'quang-truong-7-5-mthen',
-    usage: { vi: 'Ảnh đường phố Điện Biên Phủ đại diện dùng cho Quảng trường 7-5 / artwork chương', en: 'Representative Dien Bien Phu streetscape used for 7 May Square / chapter artwork' },
+    usage: { vi: 'Ảnh đường phố Điện Biên Phủ đại diện dùng cho thẻ “Trong thành phố” và artwork chương', en: 'Representative Dien Bien Phu streetscape used for the “In the City” card and chapter artwork' },
     author: 'Ioe2015',
     sourceUrl: 'https://commons.wikimedia.org/wiki/File:A_route_in_Dien_Bien_Phu.jpg',
     ...cc('4.0'),
     status: 'cleared',
     note: {
-      vi: 'Exact binary đang ship được tái tạo trong PR #80 từ canonical Commons original do MediaWiki API trả về, có hash nguồn/derivative và recipe trong release ledger. Nguồn được ghi nhận là ảnh đại diện, không phải ảnh đã xác minh chính xác Quảng trường 7-5. CLEARED chỉ xác nhận quyền/provenance của binary. Ảnh đã được resize và re-encode sang WebP; CC BY-SA 4.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
-      en: 'The exact shipped binary was regenerated in PR #80 from the canonical Commons original returned by the MediaWiki API, with source/derivative hashes and the transform recipe recorded in the release ledger. The source is recorded as representative, not an exact verified photograph of 7 May Square. CLEARED covers rights/provenance for the binary only. The image was resized and re-encoded to WebP; CC BY-SA 4.0 attribution/share-alike terms still apply.',
+      vi: 'Exact binary đang ship được tái tạo trong PR #80 từ canonical Commons original do MediaWiki API trả về, có hash nguồn/derivative và recipe trong release ledger. Nguồn được ghi nhận là ảnh đường phố Điện Biên Phủ mang tính đại diện, không phải ảnh đã xác minh chính xác thẻ trải nghiệm hoặc bối cảnh chương. CLEARED chỉ xác nhận quyền/provenance của binary. Ảnh đã được resize và re-encode sang WebP; CC BY-SA 4.0 và yêu cầu attribution/share-alike vẫn áp dụng.',
+      en: 'The exact shipped binary was regenerated in PR #80 from the canonical Commons original returned by the MediaWiki API, with source/derivative hashes and the transform recipe recorded in the release ledger. The source is representative Dien Bien Phu streetscape imagery, not an exact verified photograph of the experience card or chapter setting. CLEARED covers rights/provenance for the binary only. The image was resized and re-encoded to WebP; CC BY-SA 4.0 attribution/share-alike terms still apply.',
     },
   },
   {
