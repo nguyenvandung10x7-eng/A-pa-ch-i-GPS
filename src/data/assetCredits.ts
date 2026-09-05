@@ -52,8 +52,8 @@ export const ASSET_CREDITS: AssetCredit[] = [
     author: 'Generated for Book of Dien Bien',
     status: 'cleared',
     note: {
-      vi: 'Tranh được tạo riêng bằng OpenAI built-in image generation. Bối cảnh quảng trường được hư cấu theo không khí một đô thị vùng cao; nhân vật không đại diện cho người thật. Đây là minh họa hài hước, không phải ảnh tư liệu, ảnh xác minh địa điểm hay ghi nhận một sự kiện có thật.',
-      en: 'Created specifically with OpenAI built-in image generation. The square is a fictional highland-city setting and the people do not represent real individuals. These are humorous illustrations, not documentary photography, location verification, or records of real events.',
+      vi: 'Tranh được tạo riêng bằng OpenAI built-in image generation; artwork “Cô gái đẹp Mường Then” được dàn lại từ một ảnh tham chiếu do chủ dự án cung cấp. Bối cảnh quảng trường được hư cấu theo không khí một đô thị vùng cao; nhân vật không đại diện cho người thật. Đây là minh họa hài hước, không phải ảnh tư liệu, ảnh xác minh địa điểm hay ghi nhận một sự kiện có thật.',
+      en: 'Created specifically with OpenAI built-in image generation; the “Beautiful Mường Then Girl” artwork was recomposed from a project-owner-supplied reference image. The square is a fictional highland-city setting and the people do not represent real individuals. These are humorous illustrations, not documentary photography, location verification, or records of real events.',
     },
   },
   {
