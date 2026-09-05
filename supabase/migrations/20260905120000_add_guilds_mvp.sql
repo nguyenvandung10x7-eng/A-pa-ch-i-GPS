@@ -388,7 +388,8 @@ declare
   v_user_id uuid;
   v_guild_slug text;
   v_points integer;
-  v_existing public.guild_score_events%rowtype;
+  v_existing_points integer;
+  v_existing_guild_slug text;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -430,12 +431,12 @@ begin
   end if;
 
   select e.points, e.guild_slug
-  into v_existing
+  into v_existing_points, v_existing_guild_slug
   from public.guild_score_events as e
   where e.user_id = v_user_id
     and e.client_event_id = btrim(p_client_event_id);
 
-  return query select false, true, v_existing.points, v_existing.guild_slug;
+  return query select false, true, v_existing_points, v_existing_guild_slug;
 end;
 $$;
 
@@ -473,7 +474,7 @@ begin
   end if;
 
   v_body := btrim(coalesce(p_body, ''));
-  if char_length(v_body) < 10 or char_length(v_body) > 800 or v_body ~ E'[\\x00]' then
+  if char_length(v_body) < 10 or char_length(v_body) > 800 then
     raise exception 'GUILD_INVALID_POST';
   end if;
 
