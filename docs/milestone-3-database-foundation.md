@@ -15,7 +15,7 @@ Run these migrations manually in the Supabase SQL Editor in order:
 11. Note that `tiktok_video_id` is expected to be supplied during insert and is not updated through the client-facing update policy.
 12. Note that submitted TikTok URLs are immutable after submission; if a URL is incorrect, the user must create a new submission.
 13. After the moderation migration, run [supabase/migrations/20260905120000_add_guilds_mvp.sql](../supabase/migrations/20260905120000_add_guilds_mvp.sql) to create the four Guilds, memberships, server-catalogued contribution events, Guild notes, RLS policies, and Guild moderation RPCs.
-14. Verify that the seeded Guild rows are exactly `history`, `nature`, `walk`, and `rebellion), then test the public Guild leaderboard before enabling the feature for players.
+14. Verify that the seeded Guild rows are exactly `history`, `nature`, `walk`, and `rebellion`, then test the public Guild leaderboard before enabling the feature for players.
 15. Note that Guild score events are idempotent by authenticated user and client run ID, but the existing GPS check remains browser-side in this MVP and is not a server-side anti-cheat proof.
 
 These migrations are intentionally not applied automatically by the app.
