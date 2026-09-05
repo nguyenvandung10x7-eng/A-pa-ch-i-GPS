@@ -93,7 +93,7 @@ create table if not exists public.guild_posts (
     or (status = 'approved' and reviewed_by is not null and reviewed_at is not null and rejection_reason is null)
     or (status = 'rejected' and reviewed_by is not null and reviewed_at is not null and rejection_reason is not null and char_length(btrim(rejection_reason)) between 1 and 1000)
     or status = 'hidden'
-  ) not valid
+  )
 );
 
 create table if not exists public.guild_post_moderation_audit (
