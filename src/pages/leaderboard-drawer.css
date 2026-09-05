@@ -50,7 +50,7 @@
 .explore-atlas__leaderboard-copy strong,
 .explore-atlas__leaderboard-copy small { display: block; }
 .explore-atlas__leaderboard-copy strong { font-size: .75rem; font-weight: 900; }
-.explore-atlas__leaderboard-copy small { margin-top: .13rem; color: #aca79e; font-size: .53rem; font-weight: 750; }
+.explore-atlas__leaderboard-copy small { margin-top: .13rem; color: #c5c0b6; font-size: .6rem; font-weight: 750; }
 .explore-atlas__leaderboard-launch > button > svg { width: 1rem; height: 1rem; color: #d7b46d; }
 
 .explore-leaderboard-layer {
@@ -61,7 +61,7 @@
   align-items: flex-end;
   justify-content: center;
   background: rgba(7, 10, 8, .72);
-  padding: 3rem .45rem max(.45rem, env(safe-area-inset-bottom));
+  padding: max(3rem, env(safe-area-inset-top)) .45rem max(.45rem, env(safe-area-inset-bottom));
   backdrop-filter: blur(7px);
 }
 
@@ -113,14 +113,16 @@
 .explore-leaderboard-sheet__head > button { border: 1px solid rgba(242, 238, 230, .13); background: rgba(255,255,255,.05); color: #d7d0c6; cursor: pointer; }
 .explore-leaderboard-sheet__head button:focus-visible { outline: .18rem solid #f0bd55; outline-offset: .12rem; }
 .explore-leaderboard-sheet__head svg { width: 1.05rem; height: 1.05rem; }
-.explore-leaderboard-sheet__head strong { display: block; color: #f2eee6; font-size: .95rem; font-weight: 900; }
-.explore-leaderboard-sheet__head small { display: block; margin-top: .15rem; color: #aaa59b; font-size: .58rem; font-weight: 700; }
+.explore-leaderboard-sheet__head strong { display: block; min-width: 0; color: #f2eee6; font-size: 1rem; font-weight: 900; line-height: 1.15; }
+.explore-leaderboard-sheet__head small { display: block; margin-top: .15rem; color: #c0bbb2; font-size: .65rem; font-weight: 700; }
 
 .explore-leaderboard-sheet__content {
   max-height: calc(min(88dvh, 52rem) - 4.5rem);
   overflow: auto;
   padding: .85rem .8rem 1.1rem;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
 }
 
 .explore-leaderboard-sheet__content > .leaderboard-page {
@@ -135,7 +137,7 @@
 
 @media (max-width: 390px) {
   .explore-atlas__leaderboard-launch { top: calc(7.45rem + env(safe-area-inset-top)); }
-  .explore-atlas__leaderboard-copy small { font-size: .5rem; }
+  .explore-atlas__leaderboard-copy small { font-size: .58rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
