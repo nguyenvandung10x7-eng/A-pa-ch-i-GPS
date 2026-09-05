@@ -42,7 +42,7 @@ const getGuildDescription = (guild: GuildLeaderboardEntry, language: LanguageCod
 );
 
 const getInitialSlug = (membership: GuildMembership | null, options: GuildLeaderboardEntry[]): GuildSlug => (
-  membership?.guildSlug ?? options[0]?.guildSlug ?? 'history'
+  membership?.guildSlug ?? options[0]?.slug ?? 'history'
 );
 
 export const GuildPage = ({
