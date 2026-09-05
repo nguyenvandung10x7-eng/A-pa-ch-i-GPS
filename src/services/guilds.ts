@@ -383,7 +383,7 @@ export const moderateGuildPost = async ({
   postId: string;
   action: 'approve' | 'reject';
   rejectionReason?: string;
-}): Promise<GuildModerationPost> => {
+}): Promise<void> => {
   const { data, error } = await supabase.rpc('moderate_guild_post', {
     p_post_id: postId,
     p_action: action,
@@ -392,7 +392,7 @@ export const moderateGuildPost = async ({
 
   if (error) throw mapRpcError(error.message ?? '');
 
-  const row = firstRow<RawPost>(data);
-  if (!row) throw new GuildError('SUPABASE_ERROR', 'moderation.error.actionFailed');
-  return mapModerationPost(row);
+  if (rowsFrom<unknown>(data).length === 0) {
+    throw new GuildError('SUPABASE_ERROR', 'moderation.error.actionFailed');
+  }
 };
