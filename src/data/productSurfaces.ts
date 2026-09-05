@@ -22,6 +22,7 @@ export const PRODUCT_SURFACES = {
       '/discover',
       '/history',
       '/leaderboard',
+      '/guild',
       '/submit-tiktok',
       '/moderation',
       '/admin',
