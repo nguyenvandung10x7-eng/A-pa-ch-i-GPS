@@ -59,7 +59,10 @@ export const GuildModerationPage = ({
 
   useEffect(() => {
     if (authLoading || checkingAdmin || !isAdmin) return;
-    void loadQueue();
+    const timeoutId = window.setTimeout(() => {
+      void loadQueue();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [authLoading, checkingAdmin, isAdmin, loadQueue]);
 
   const handleAction = async (postId: string, action: 'approve' | 'reject') => {
