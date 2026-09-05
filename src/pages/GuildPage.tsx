@@ -126,12 +126,12 @@ export const GuildPage = ({
   }, [authLoading, refresh]);
 
   const selectedGuild = useMemo(
-    () => leaderboard.find((guild) => guild.guildSlug === selectedSlug) ?? leaderboard[0],
+    () => leaderboard.find((guild) => guild.slug === selectedSlug) ?? leaderboard[0],
     [leaderboard, selectedSlug],
   );
 
   const currentGuild = useMemo(
-    () => membership ? leaderboard.find((guild) => guild.guildSlug === membership.guildSlug) : selectedGuild,
+    () => membership ? leaderboard.find((guild) => guild.slug === membership.guildSlug) : selectedGuild,
     [leaderboard, membership, selectedGuild],
   );
 
@@ -250,11 +250,11 @@ export const GuildPage = ({
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           {leaderboard.map((guild) => {
-            const Icon = guildIcon(guild.guildSlug);
-            const isCurrent = membership?.guildSlug === guild.guildSlug;
+            const Icon = guildIcon(guild.slug);
+            const isCurrent = membership?.guildSlug === guild.slug;
             return (
               <article
-                key={guild.guildSlug}
+                key={guild.slug}
                 className={[
                   'rounded-[1.5rem] border p-4 shadow-[0_12px_24px_rgba(38,52,31,0.08)]',
                   isCurrent
@@ -315,11 +315,11 @@ export const GuildPage = ({
             <fieldset className="grid gap-3 sm:grid-cols-2">
               <legend className="sr-only">{t('guild.chooseLegend')}</legend>
               {leaderboard.map((guild) => {
-                const Icon = guildIcon(guild.guildSlug);
-                const selected = selectedSlug === guild.guildSlug;
+                const Icon = guildIcon(guild.slug);
+                const selected = selectedSlug === guild.slug;
                 return (
                   <label
-                    key={guild.guildSlug}
+                    key={guild.slug}
                     className={[
                       'flex min-h-[7rem] cursor-pointer items-start gap-3 rounded-[1.4rem] border p-4 transition',
                       selected
@@ -330,9 +330,9 @@ export const GuildPage = ({
                     <input
                       type="radio"
                       name="guild"
-                      value={guild.guildSlug}
+                      value={guild.slug}
                       checked={selected}
-                      onChange={() => setSelectedSlug(guild.guildSlug)}
+                      onChange={() => setSelectedSlug(guild.slug)}
                       className="mt-1 h-5 w-5 accent-[var(--brocade-red)]"
                     />
                     <span className="min-w-0">
