@@ -550,8 +550,10 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
                 <Link to="/admin" onClick={() => closeAccountDialog(false)}><Settings2 /><span>{copy.admin}</span><ChevronRight /></Link>
               ) : null}
               {user && !checkingAdmin && isAdmin ? (
-                <Link to="/moderation" onClick={() => closeAccountDialog(false)}><ShieldCheck /><span>{copy.moderation}</span><ChevronRight /></Link>
-                <Link to="/moderation/guilds" onClick={() => closeAccountDialog(false)}><Users /><span>{copy.guildModeration}</span><ChevronRight /></Link>
+                <>
+                  <Link to="/moderation" onClick={() => closeAccountDialog(false)}><ShieldCheck /><span>{copy.moderation}</span><ChevronRight /></Link>
+                  <Link to="/moderation/guilds" onClick={() => closeAccountDialog(false)}><Users /><span>{copy.guildModeration}</span><ChevronRight /></Link>
+                </>
               ) : null}
               {onBookSurface ? (
                 <button type="button" onClick={toggleBookSound}>
