@@ -479,6 +479,7 @@ body.public-shell-active::after {
   font-weight: 850;
   letter-spacing: 0;
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -515,7 +516,18 @@ body.public-shell-active::after {
 
 @media (max-width: 390px) {
   .editorial-shell__nav-chevron { display: none; }
-  .editorial-shell__brand { font-size: .66rem; }
+  .editorial-shell__header { gap: .55rem; }
+  .editorial-shell__brand {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    font-size: .66rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .editorial-shell__header-actions { min-width: 0; flex: 0 1 auto; }
+  .editorial-shell__account { min-width: 0; }
+  .editorial-shell__language { flex: none; }
   .editorial-shell__sound span { display: none; }
   .editorial-shell__sound { width: 2.35rem; padding-inline: 0; }
   .editorial-shell__account span { max-width: 4.8rem; }
