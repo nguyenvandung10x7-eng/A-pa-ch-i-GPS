@@ -22,12 +22,14 @@ export const GuildModerationPage = ({
   isAdmin,
   checkingAdmin,
   adminCheckFailed,
+  onRetryAdminCheck,
 }: {
   language: LanguageCode;
   t: (key: string, values?: Record<string, string | number>) => string;
   isAdmin: boolean;
   checkingAdmin: boolean;
   adminCheckFailed: boolean;
+  onRetryAdminCheck: () => void;
 }) => {
   const location = useLocation();
   const { user, loading: authLoading, signIn } = useAuth();
@@ -150,6 +152,14 @@ export const GuildModerationPage = ({
           <AlertCircle className="h-5 w-5" aria-hidden="true" />
           <p className="text-lg font-semibold">{t('moderation.error.adminCheckFailed')}</p>
         </div>
+        <button
+          type="button"
+          onClick={onRetryAdminCheck}
+          className="mt-5 inline-flex min-h-[3rem] items-center justify-center rounded-full border border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.52)] px-4 py-2 text-sm font-semibold text-[var(--forest-900)] transition hover:bg-[rgba(255,255,255,0.72)]"
+        >
+          <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+          {t('moderation.retry')}
+        </button>
       </Card>
     );
   }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { checkCurrentUserIsAdmin } from '../services/moderation';
 
@@ -7,6 +7,7 @@ export const useAdminStatus = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkedUserId, setCheckedUserId] = useState<string | null>(null);
   const [adminCheckFailed, setAdminCheckFailed] = useState(false);
+  const [retryVersion, setRetryVersion] = useState(0);
   const requestIdRef = useRef(0);
   const activeUserId = user?.id ?? null;
   const checkingAdmin = loading || (activeUserId !== null && checkedUserId !== activeUserId);
@@ -14,6 +15,12 @@ export const useAdminStatus = () => {
   const resolvedAdminCheckFailed = activeUserId !== null
     && checkedUserId === activeUserId
     && adminCheckFailed;
+
+  const retryAdminCheck = useCallback(() => {
+    setCheckedUserId(null);
+    setAdminCheckFailed(false);
+    setRetryVersion((current) => current + 1);
+  }, []);
 
   useEffect(() => {
     if (loading || !activeUserId) {
@@ -45,11 +52,12 @@ export const useAdminStatus = () => {
         requestIdRef.current += 1;
       }
     };
-  }, [activeUserId, loading]);
+  }, [activeUserId, loading, retryVersion]);
 
   return {
     isAdmin: resolvedIsAdmin,
     checkingAdmin,
     adminCheckFailed: resolvedAdminCheckFailed,
+    retryAdminCheck,
   };
 };
