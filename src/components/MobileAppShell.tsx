@@ -10,7 +10,6 @@ import {
   readBookSoundEnabled,
   type BookAudioStartDetail,
 } from '../services/bookAudioEvents';
-import { requestChallengeGateReset } from '../services/challengeGateEvents';
 import { getChapter, getPage } from '../services/bookContent';
 import type { LanguageCode } from '../types/task';
 import '../mobile-shell.css';
@@ -497,9 +496,6 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
           <NavLink
             to="/challenge"
             className={({ isActive }) => isActive ? 'is-active' : ''}
-            onClick={() => {
-              if (onExploreSurface) requestChallengeGateReset();
-            }}
           >
             <Compass className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
           </NavLink>

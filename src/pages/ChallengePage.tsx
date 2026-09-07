@@ -23,7 +23,6 @@ import {
   hasUnlockedAllChallenges,
   isLevelOneTaskId,
 } from '../services/challengeLevels';
-import { CHALLENGE_GATE_RESET_EVENT } from '../services/challengeGateEvents';
 import { getEligibleTasksForExperience, getScopedExperienceModeFromSearch } from '../services/experienceFilters';
 import {
   GAMEPLAY_MUSIC_ADVANCE_EVENT,
@@ -110,6 +109,28 @@ const isValidExternalChallengeUrl = (value?: string): value is string => {
   }
 };
 
+const CHALLENGE_GATE_ACCEPTED_KEY = 'book-of-dien-bien:challenge-gate-accepted:v1';
+let challengeGateAcceptedInMemory = false;
+
+const loadChallengeGateAccepted = (): boolean => {
+  if (challengeGateAcceptedInMemory) return true;
+  try {
+    challengeGateAcceptedInMemory = window.localStorage.getItem(CHALLENGE_GATE_ACCEPTED_KEY) === 'accepted';
+  } catch {
+    // Keep the acknowledgement for this page lifetime when storage is unavailable.
+  }
+  return challengeGateAcceptedInMemory;
+};
+
+const rememberChallengeGateAccepted = () => {
+  challengeGateAcceptedInMemory = true;
+  try {
+    window.localStorage.setItem(CHALLENGE_GATE_ACCEPTED_KEY, 'accepted');
+  } catch {
+    // The in-memory fallback still prevents an immediate repeat prompt.
+  }
+};
+
 export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: ChallengeTask[]; clearVersion: number; language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -117,7 +138,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const activeTasks = useMemo(() => tasks.filter((task) => task.enabled), [tasks]);
   const scopedExperienceMode = useMemo(() => getScopedExperienceModeFromSearch(location.search), [location.search]);
   const [progress, setProgress] = useState(() => loadOrCreateProgress(activeTasks));
-  const [challengeGateAccepted, setChallengeGateAccepted] = useState(false);
+  const [challengeGateAccepted, setChallengeGateAccepted] = useState(loadChallengeGateAccepted);
   const [showLevelUnlock, setShowLevelUnlock] = useState(false);
   const [message, setMessage] = useState(() => t('challenge.ready'));
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
@@ -134,6 +155,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const latestScopeContextRef = useRef<string>('');
   const previousResetStateRef = useRef<{ activeTasks: ChallengeTask[]; clearVersion: number } | null>(null);
   const isLevelTwo = hasUnlockedAllChallenges(progress.completedTaskIds);
+  const challengeGateVisible = !challengeGateAccepted && !isLevelTwo;
   const levelOneTasks = useMemo(() => getLevelOneTasks(activeTasks), [activeTasks]);
   const lockedTasks = useMemo(() => getLockedChallengeTasks(activeTasks), [activeTasks]);
   const scopedCatalogTasks = useMemo(
@@ -192,12 +214,6 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   }, [activeTasks, clearVersion, t]);
 
   useEffect(() => {
-    const resetGate = () => setChallengeGateAccepted(false);
-    window.addEventListener(CHALLENGE_GATE_RESET_EVENT, resetGate);
-    return () => window.removeEventListener(CHALLENGE_GATE_RESET_EVENT, resetGate);
-  }, []);
-
-  useEffect(() => {
     if (!showLevelUnlock) return;
     const timeoutId = window.setTimeout(() => setShowLevelUnlock(false), 3600);
     return () => window.clearTimeout(timeoutId);
@@ -213,9 +229,9 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   }, [showLevelHome]);
 
   useLayoutEffect(() => {
-    document.body.classList.toggle('challenge-cool-gate-active', !challengeGateAccepted);
+    document.body.classList.toggle('challenge-cool-gate-active', challengeGateVisible);
     return () => document.body.classList.remove('challenge-cool-gate-active');
-  }, [challengeGateAccepted]);
+  }, [challengeGateVisible]);
 
   useEffect(() => {
     const cancelInFlightScopeReassign = () => {
@@ -538,11 +554,14 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   ) : undefined;
   const atlasTasks = eligibleTasks.length > 0 ? eligibleTasks : levelOneTasks;
 
-  if (!challengeGateAccepted) {
+  if (challengeGateVisible) {
     return (
       <ChallengeCoolGate
         language={language}
-        onAccept={() => setChallengeGateAccepted(true)}
+        onAccept={() => {
+          rememberChallengeGateAccepted();
+          setChallengeGateAccepted(true);
+        }}
         onDecline={() => { void navigate('/book'); }}
       />
     );
