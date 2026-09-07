@@ -18,9 +18,9 @@ const copy = {
     eyebrow: 'BOOK OF DIEN BIEN · PLAY MODE',
     level: 'LEVEL 01',
     title: 'Đủ ngầu thì vào cuộc.',
-    prompt: 'Bật chế độ chơi. Hoàn thành 1 thử thách mở màn để mở toàn bộ hành trình.',
-    choose: 'Chọn màn mở đầu',
-    chooseHint: 'Không cần làm hết. Một thử thách là đủ để mở Level 2.',
+    prompt: 'Bật chế độ chơi. Hoàn thành thử thách mở màn để mở toàn bộ hành trình.',
+    choose: 'Thử thách mở màn',
+    chooseHint: 'Hoàn thành thử thách này để mở Level 2.',
     open: 'Nhận thử thách',
     continue: 'Tiếp tục',
     completed: 'Đã xong',
@@ -31,9 +31,9 @@ const copy = {
     eyebrow: 'BOOK OF DIEN BIEN · PLAY MODE',
     level: 'LEVEL 01',
     title: 'Cool enough? Step in.',
-    prompt: 'Switch on play mode. Clear 1 opening challenge to unlock the full journey.',
-    choose: 'Choose your opening move',
-    chooseHint: 'There is no need to clear them all. One challenge unlocks Level 2.',
+    prompt: 'Switch on play mode. Clear the opening challenge to unlock the full journey.',
+    choose: 'Opening challenge',
+    chooseHint: 'Complete this challenge to unlock Level 2.',
     open: 'Take challenge',
     continue: 'Continue',
     completed: 'Done',
@@ -77,7 +77,7 @@ export const ChallengeLevelOneMenu = ({
           <h2 id="challenge-level-one-title">{c.choose}</h2>
           <p>{c.chooseHint}</p>
         </header>
-        <div className="challenge-level-one__grid">
+        <div className={`challenge-level-one__grid ${tasks.length === 1 ? 'is-single' : ''}`}>
           {tasks.map((task, index) => {
             const title = splitTitle(task, language);
             const completed = completedTaskIdSet.has(task.id);

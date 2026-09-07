@@ -504,6 +504,15 @@ body.challenge-level-menu-active .editorial-shell__explore-tools button:hover {
   gap: .48rem;
 }
 
+.challenge-level-one__grid.is-single {
+  grid-template-columns: minmax(0, min(100%, 32rem));
+  justify-content: center;
+}
+
+.challenge-level-one__grid.is-single .challenge-level-one__choice {
+  grid-template-rows: clamp(10rem, 42vw, 19rem) auto;
+}
+
 .challenge-level-one__choice {
   position: relative;
   display: grid;

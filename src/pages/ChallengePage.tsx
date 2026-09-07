@@ -21,6 +21,7 @@ import {
   getLevelOneTasks,
   getLockedChallengeTasks,
   hasUnlockedAllChallenges,
+  isLegacyLevelOneTaskId,
   isLevelOneTaskId,
 } from '../services/challengeLevels';
 import { getEligibleTasksForExperience, getScopedExperienceModeFromSearch } from '../services/experienceFilters';
@@ -157,23 +158,36 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const isLevelTwo = hasUnlockedAllChallenges(progress.completedTaskIds);
   const challengeGateVisible = !challengeGateAccepted && !isLevelTwo;
   const levelOneTasks = useMemo(() => getLevelOneTasks(activeTasks), [activeTasks]);
-  const lockedTasks = useMemo(() => getLockedChallengeTasks(activeTasks), [activeTasks]);
+  const activeRunTask = findRunTask(activeTasks, progress.activeRun?.taskId);
+  const levelOneEntryTasks = useMemo(() => (
+    !isLevelTwo && activeRunTask && isLegacyLevelOneTaskId(activeRunTask.id)
+      ? [activeRunTask]
+      : levelOneTasks
+  ), [activeRunTask, isLevelTwo, levelOneTasks]);
+  const levelOneEntryTaskIds = useMemo(
+    () => new Set(levelOneEntryTasks.map((candidate) => candidate.id)),
+    [levelOneEntryTasks],
+  );
+  const lockedTasks = useMemo(
+    () => getLockedChallengeTasks(activeTasks, [...levelOneEntryTaskIds]),
+    [activeTasks, levelOneEntryTaskIds],
+  );
   const scopedCatalogTasks = useMemo(
     () => scopedExperienceMode ? getEligibleTasksForExperience(activeTasks, scopedExperienceMode) : activeTasks,
     [activeTasks, scopedExperienceMode],
   );
   const eligibleTasks = useMemo(() => {
-    const accessScope = isLevelTwo ? activeTasks : levelOneTasks;
+    const accessScope = isLevelTwo ? activeTasks : levelOneEntryTasks;
     if (!scopedExperienceMode) return accessScope;
     const accessibleTaskIds = new Set(accessScope.map((candidate) => candidate.id));
     return scopedCatalogTasks.filter((candidate) => accessibleTaskIds.has(candidate.id));
-  }, [activeTasks, isLevelTwo, levelOneTasks, scopedCatalogTasks, scopedExperienceMode]);
+  }, [activeTasks, isLevelTwo, levelOneEntryTasks, scopedCatalogTasks, scopedExperienceMode]);
   const isScopedMode = scopedExperienceMode !== null;
   const isScopedLocked = Boolean(
     isScopedMode
     && !isLevelTwo
     && scopedCatalogTasks.length > 0
-    && scopedCatalogTasks.every((candidate) => !isLevelOneTaskId(candidate.id)),
+    && scopedCatalogTasks.every((candidate) => !levelOneEntryTaskIds.has(candidate.id)),
   );
   const task = findRunTask(eligibleTasks, progress.activeRun?.taskId);
   const eligibleTaskIdSet = useMemo(() => new Set(eligibleTasks.map((candidate) => candidate.id)), [eligibleTasks]);
@@ -543,7 +557,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     <ChallengeLockedExperience language={language} onReturn={() => { void navigate('/challenge'); }} />
   ) : showLevelOneMenu ? (
     <ChallengeLevelOneMenu
-      tasks={isScopedMode ? eligibleTasks : levelOneTasks}
+      tasks={isScopedMode ? eligibleTasks : levelOneEntryTasks}
       lockedTasks={lockedTasks}
       completedTaskIds={progress.completedTaskIds}
       activeTaskId={task?.id}
@@ -552,7 +566,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       onChoose={(taskId) => { void chooseExperience([taskId]); }}
     />
   ) : undefined;
-  const atlasTasks = eligibleTasks.length > 0 ? eligibleTasks : levelOneTasks;
+  const atlasTasks = eligibleTasks.length > 0 ? eligibleTasks : levelOneEntryTasks;
 
   if (challengeGateVisible) {
     return (
