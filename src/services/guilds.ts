@@ -29,7 +29,6 @@ export type GuildRosterEntry = {
   rank: number;
   nickname: string;
   totalPoints: number;
-  joinedAt: string;
 };
 
 export type GuildPost = {
@@ -105,7 +104,6 @@ type RawRosterEntry = {
   rank: number;
   nickname: string;
   total_points: number;
-  joined_at: string;
 };
 
 type RawPost = {
@@ -254,7 +252,6 @@ export const loadGuildRoster = async (guildSlug: GuildSlug): Promise<GuildRoster
     rank: Number(row.rank ?? 0),
     nickname: row.nickname,
     totalPoints: Number(row.total_points ?? 0),
-    joinedAt: row.joined_at,
   }));
 };
 

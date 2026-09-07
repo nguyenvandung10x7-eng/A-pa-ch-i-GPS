@@ -132,9 +132,9 @@ export const LeaderboardPage = ({ language, t }: { language: LanguageCode; t: (k
             <span>{c.live}</span>
           </header>
 
-          <div className="leaderboard-page__list">
+          <ol className="leaderboard-page__list" aria-label={c.boardTitle}>
             {entries.map((entry) => (
-              <article
+              <li
                 key={entry.id}
                 className={[
                   'leaderboard-page__entry',
@@ -172,9 +172,9 @@ export const LeaderboardPage = ({ language, t }: { language: LanguageCode; t: (k
                     <span className="leaderboard-page__link-unavailable">{c.unavailable}</span>
                   )}
                 </div>
-              </article>
+              </li>
             ))}
-          </div>
+          </ol>
         </section>
       )}
     </section>

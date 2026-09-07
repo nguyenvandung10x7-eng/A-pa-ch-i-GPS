@@ -195,7 +195,9 @@
 .leaderboard-page__list {
   display: grid;
   gap: .45rem;
-  margin-top: .55rem;
+  margin: .55rem 0 0;
+  padding: 0;
+  list-style: none;
 }
 
 .leaderboard-page__entry {
