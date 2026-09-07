@@ -17,8 +17,11 @@ Run these migrations manually in the Supabase SQL Editor in order:
 13. After the moderation migration, run [supabase/migrations/20260905120000_add_guilds_mvp.sql](../supabase/migrations/20260905120000_add_guilds_mvp.sql) to create the four Guilds, memberships, server-catalogued contribution events, Guild notes, RLS policies, and Guild moderation RPCs.
 14. Immediately run [supabase/migrations/20260907032258_harden_rpc_execute_privileges.sql](../supabase/migrations/20260907032258_harden_rpc_execute_privileges.sql) to remove Supabase's default anonymous execute grants from member, moderation, and trigger functions. The Guild leaderboard and Guild roster remain intentionally public.
 15. Run [supabase/migrations/20260907083510_minimize_public_guild_roster.sql](../supabase/migrations/20260907083510_minimize_public_guild_roster.sql) so the public roster returns only rank, nickname, and contribution points; exact membership timestamps remain private and are used only as an internal tie-breaker.
-16. Verify that the seeded Guild rows are exactly `history`, `nature`, `walk`, and `rebellion`, then test the public Guild leaderboard before enabling the feature for players.
-17. Note that Guild score events are idempotent by authenticated user and client run ID, but the existing GPS check remains browser-side in this MVP and is not a server-side anti-cheat proof.
+16. Run [supabase/migrations/20260907084028_sync_guild_score_catalog.sql](../supabase/migrations/20260907084028_sync_guild_score_catalog.sql) to add the five Challenge tasks supplied by the runtime catalog import. The enabled server score catalog must contain all 26 current Challenge tasks.
+17. Verify that the seeded Guild rows are exactly `history`, `nature`, `walk`, and `rebellion`, then test the public Guild leaderboard before enabling the feature for players.
+18. Note that Guild score events are idempotent by authenticated user and client run ID, but the existing GPS check remains browser-side in this MVP and is not a server-side anti-cheat proof.
+
+Score classification for this release: the 26 enabled entries in the server-owned `guild_score_catalog` are scoring Challenges. BOOK/FIELD editorial pages and guide links do not create Guild points by themselves. A score event is attempted only for an authenticated player's completed, GPS-verified Challenge run; the server catalog supplies the awarded points.
 
 These migrations are intentionally not applied automatically by the app.
 
