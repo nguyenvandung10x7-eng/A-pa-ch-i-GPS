@@ -155,8 +155,8 @@ export const GuildPage = ({
       });
       setMembership(nextMembership);
       setNickname(nextMembership.nickname);
-      setNotice(t('guild.joinSuccess'));
       await refresh();
+      setNotice(t('guild.joinSuccess'));
     } catch (nextError) {
       if (nextError instanceof GuildError) {
         setError(t(nextError.translationKey));
