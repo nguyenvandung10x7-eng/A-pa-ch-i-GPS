@@ -276,7 +276,11 @@ export const ExploreAtlas = ({
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const sheet = sheetRef.current;
     document.body.style.overflow = 'hidden';
-    sheet?.focus();
+    const getFocusableElements = () => sheet ? [...sheet.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )].filter((element) => element.getClientRects().length > 0 && element.getAttribute('aria-hidden') !== 'true') : [];
+    const initialFocusable = getFocusableElements();
+    (initialFocusable[0] ?? sheet)?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -285,9 +289,7 @@ export const ExploreAtlas = ({
         return;
       }
       if (event.key !== 'Tab' || !sheet) return;
-      const focusable = [...sheet.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )].filter((element) => element.offsetParent !== null && element.getAttribute('aria-hidden') !== 'true');
+      const focusable = getFocusableElements();
       if (!focusable.length) {
         event.preventDefault();
         sheet.focus();
@@ -296,10 +298,13 @@ export const ExploreAtlas = ({
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       const focused = document.activeElement;
-      if (event.shiftKey && (focused === first || !sheet.contains(focused))) {
+      if (!(focused instanceof Node) || focused === sheet || !sheet.contains(focused)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && focused === first) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && (focused === last || !sheet.contains(focused))) {
+      } else if (!event.shiftKey && focused === last) {
         event.preventDefault();
         first.focus();
       }
@@ -309,7 +314,7 @@ export const ExploreAtlas = ({
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', onKeyDown);
-      previouslyFocused?.focus();
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
     };
   }, [detailsOpen]);
 

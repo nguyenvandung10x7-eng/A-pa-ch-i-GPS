@@ -32,23 +32,62 @@ const copy = {
 } as const;
 
 export const ChallengeCoolGate = ({ language, onAccept, onDecline }: ChallengeCoolGateProps) => {
+  const dialogRef = useRef<HTMLDivElement | null>(null);
   const acceptButtonRef = useRef<HTMLButtonElement | null>(null);
+  const onDeclineRef = useRef(onDecline);
   const c = copy[language];
 
   useEffect(() => {
-    acceptButtonRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onDecline();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    onDeclineRef.current = onDecline;
   }, [onDecline]);
 
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    acceptButtonRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onDeclineRef.current();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !dialog) return;
+      const focusable = [...dialog.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )].filter((element) => element.getClientRects().length > 0 && element.getAttribute('aria-hidden') !== 'true');
+
+      if (!focusable.length) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (!(active instanceof Node) || active === dialog || !dialog.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
+    };
+  }, []);
+
   return (
-    <div className="challenge-cool-gate" role="dialog" aria-modal="true" aria-labelledby="challenge-cool-gate-title" aria-describedby="challenge-cool-gate-description">
+    <div ref={dialogRef} className="challenge-cool-gate" role="dialog" aria-modal="true" aria-labelledby="challenge-cool-gate-title" aria-describedby="challenge-cool-gate-description" tabIndex={-1}>
       <div className="challenge-cool-gate__noise" aria-hidden="true" />
       <section className="challenge-cool-gate__panel">
         <header className="challenge-cool-gate__header">

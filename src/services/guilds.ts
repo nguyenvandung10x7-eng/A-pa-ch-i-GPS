@@ -179,7 +179,9 @@ const mapRpcError = (message: string): GuildError => {
   if (message.includes('GUILD_MEMBERSHIP_REQUIRED')) return new GuildError('MEMBERSHIP_REQUIRED', 'guild.error.membershipRequired');
   if (message.includes('GUILD_MEMBERSHIP_EXISTS')) return new GuildError('MEMBERSHIP_EXISTS', 'guild.error.membershipExists');
   if (message.includes('GUILD_INVALID_NICKNAME')) return new GuildError('INVALID_NICKNAME', 'guild.error.invalidNickname');
-  if (message.includes('GUILD_INVALID_EVENT')) return new GuildError('INVALID_EVENT', 'guild.error.score');
+  if (message.includes('GUILD_INVALID_EVENT') || message.includes('GUILD_EVENT_ID_REUSED')) {
+    return new GuildError('INVALID_EVENT', 'guild.error.score');
+  }
   if (message.includes('GUILD_CHALLENGE_NOT_SCORABLE')) return new GuildError('CHALLENGE_NOT_SCORABLE', 'guild.error.score');
   if (message.includes('GUILD_INVALID_POST')) return new GuildError('INVALID_POST', 'guild.error.invalidPost');
   if (message.includes('GUILD_POST_LIMIT')) return new GuildError('POST_LIMIT', 'guild.error.postLimit');
