@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Check, ChevronRight, Compass, Info, MapPin, Navigation, Sparkles, X } from 'lucide-react';
+import { Check, ChevronRight, Compass, Crosshair, Info, LocateFixed, MapPin, Navigation, Sparkles, X } from 'lucide-react';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
+import { distanceMeters, GeolocationRequestError, getCurrentPosition } from '../utils/geo';
 import '../pages/explore-atlas.css';
 
 type ExploreAtlasProps = {
@@ -45,6 +46,13 @@ const copy = {
     details: 'Chi tiết địa điểm',
     completed: 'Đã đi qua',
     invitationsHere: 'lời mời tại đây',
+    locate: 'Vị trí của tôi',
+    locating: 'Đang định vị…',
+    youAreHere: 'Bạn đang ở đây',
+    distanceToPlace: 'Cách điểm này {{distance}}',
+    accuracy: 'sai số khoảng {{distance}}',
+    locationDenied: 'Trình duyệt chưa cho phép lấy vị trí.',
+    locationUnavailable: 'Chưa lấy được vị trí lúc này.',
     atlasDisclaimer: 'Sa hình và vị trí chỉ để minh họa · Không dùng để tìm đường',
   },
   en: {
@@ -60,6 +68,13 @@ const copy = {
     details: 'Place details',
     completed: 'Visited',
     invitationsHere: 'invitations here',
+    locate: 'My location',
+    locating: 'Locating…',
+    youAreHere: 'You are here',
+    distanceToPlace: '{{distance}} from this place',
+    accuracy: 'accuracy about {{distance}}',
+    locationDenied: 'Location permission is not enabled for this browser.',
+    locationUnavailable: 'Your location could not be found right now.',
     atlasDisclaimer: 'Atlas and positions are illustrative only · Not for navigation',
   },
 } as const;
@@ -148,16 +163,26 @@ const isWithinCityAtlas = (task: ChallengeTask) => (
   && task.gps.lng <= CITY_ATLAS_BOUNDS.east
 );
 
-const projectTaskToAtlas = (task: ChallengeTask) => {
-  const longitudeRatio = (task.gps.lng - CITY_ATLAS_BOUNDS.west) / (CITY_ATLAS_BOUNDS.east - CITY_ATLAS_BOUNDS.west);
-  const latitudeRatio = (CITY_ATLAS_BOUNDS.north - task.gps.lat) / (CITY_ATLAS_BOUNDS.north - CITY_ATLAS_BOUNDS.south);
+const formatDistance = (meters: number, language: LanguageCode) => {
+  if (meters < 1000) return `${Math.max(1, Math.round(meters))} m`;
+  return `${(meters / 1000).toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US', {
+    minimumFractionDigits: meters < 10000 ? 1 : 0,
+    maximumFractionDigits: meters < 10000 ? 1 : 0,
+  })} km`;
+};
+
+const interpolate = (start: number, end: number, ratio: number) => start + Math.max(0, Math.min(1, ratio)) * (end - start);
+
+const projectCoordinatesToAtlas = (coordinates: Pick<ChallengeTask['gps'], 'lat' | 'lng'>) => {
+  const longitudeRatio = (coordinates.lng - CITY_ATLAS_BOUNDS.west) / (CITY_ATLAS_BOUNDS.east - CITY_ATLAS_BOUNDS.west);
+  const latitudeRatio = (CITY_ATLAS_BOUNDS.north - coordinates.lat) / (CITY_ATLAS_BOUNDS.north - CITY_ATLAS_BOUNDS.south);
   return {
-    x: CITY_ATLAS_FRAME.left
-      + Math.max(0, Math.min(1, longitudeRatio)) * (CITY_ATLAS_FRAME.right - CITY_ATLAS_FRAME.left),
-    y: CITY_ATLAS_FRAME.top
-      + Math.max(0, Math.min(1, latitudeRatio)) * (CITY_ATLAS_FRAME.bottom - CITY_ATLAS_FRAME.top),
+    x: interpolate(CITY_ATLAS_FRAME.left, CITY_ATLAS_FRAME.right, longitudeRatio),
+    y: interpolate(CITY_ATLAS_FRAME.top, CITY_ATLAS_FRAME.bottom, latitudeRatio),
   };
 };
+
+const projectTaskToAtlas = (task: ChallengeTask) => projectCoordinatesToAtlas(task.gps);
 
 const getPlaceGroups = (tasks: ChallengeTask[]) => {
   const groups = new Map<string, AtlasPlaceGroup>();
@@ -257,6 +282,9 @@ export const ExploreAtlas = ({
   const completedTaskIdSet = useMemo(() => new Set(completedTaskIds), [completedTaskIds]);
   const [manualSelection, setManualSelection] = useState<{ activeTaskId: string; groupId: string } | null>(null);
   const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set());
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; accuracy?: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationMessage, setLocationMessage] = useState<string | null>(null);
 
   const markImageFailed = (taskId: string) => {
     setFailedImageIds((current) => {
@@ -337,6 +365,10 @@ export const ExploreAtlas = ({
   const selectedGroupRemainingCount = selectedGroupCount - selectedGroupCompletedCount;
   const selectedGroupIsComplete = selectedGroupCount > 0 && selectedGroupCompletedCount === selectedGroupCount;
   const selectedInvitation = selectedTask ? invitationName(selectedTask, language) : '';
+  const selectedDistance = userLocation && selectedTask
+    ? Math.round(distanceMeters(userLocation, selectedTask.gps))
+    : null;
+  const userAtlasPoint = userLocation ? projectCoordinatesToAtlas(userLocation) : null;
   const actionLabel = selectedGroupIsComplete
     ? completionActionLabel ?? c.completed
     : selectedIsActive
@@ -356,6 +388,25 @@ export const ExploreAtlas = ({
     if (!selectedGroup) return;
     if (selectedIsActive) onOpenDetails();
     else onChoose(selectedGroup.tasks.map((task) => task.id));
+  };
+
+  const handleLocate = async () => {
+    if (locating) return;
+    setLocating(true);
+    setLocationMessage(null);
+    try {
+      const position = await getCurrentPosition();
+      setUserLocation({
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+      });
+    } catch (error) {
+      const denied = error instanceof GeolocationRequestError && error.code === 1;
+      setLocationMessage(denied ? c.locationDenied : c.locationUnavailable);
+    } finally {
+      setLocating(false);
+    }
   };
 
   return (
@@ -381,6 +432,17 @@ export const ExploreAtlas = ({
         </header>
 
         <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trên bản đồ' : 'Atlas discoveries'}>
+          {userAtlasPoint ? (
+            <span
+              className="explore-atlas__user-pin"
+              style={{ left: `${userAtlasPoint.x}%`, top: `${userAtlasPoint.y}%` }}
+              aria-label={c.youAreHere}
+              role="img"
+            >
+              <i aria-hidden="true"><Crosshair /></i>
+              <b>{language === 'vi' ? 'Bạn' : 'You'}</b>
+            </span>
+          ) : null}
           {atlasGroups.map((group, index) => {
             const selected = selectedGroup?.id === group.id;
             const isActive = invitationOpen && groupContainsTask(group, activeTaskId);
@@ -440,6 +502,22 @@ export const ExploreAtlas = ({
                 {selectedGroupCount > 1 && selectedIsActive ? <small>{selectedGroupCount} {c.invitationsHere}</small> : null}
               </p>
             ) : <p>{language === 'vi' ? 'Chạm vào một điểm trên sa hình.' : 'Tap a place on the atlas.'}</p>}
+            <div className="explore-atlas__nearby-meta">
+              <button type="button" onClick={() => { void handleLocate(); }} disabled={locating}>
+                <LocateFixed aria-hidden="true" />
+                {locating ? c.locating : c.locate}
+              </button>
+              {selectedDistance !== null ? (
+                <span>
+                  <Navigation aria-hidden="true" />
+                  {c.distanceToPlace.replace('{{distance}}', formatDistance(selectedDistance, language))}
+                </span>
+              ) : null}
+              {userLocation?.accuracy ? (
+                <span>{c.accuracy.replace('{{distance}}', formatDistance(userLocation.accuracy, language))}</span>
+              ) : null}
+              {locationMessage ? <small role="status">{locationMessage}</small> : null}
+            </div>
           </div>
           <button ref={detailsTriggerRef} type="button" onClick={handlePrimaryAction} disabled={actionDisabled}>
             <span>{actionLabel}</span><ChevronRight aria-hidden="true" />
