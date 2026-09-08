@@ -432,6 +432,22 @@ export const ExploreAtlas = ({
         </header>
 
         <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trên bản đồ' : 'Atlas discoveries'}>
+          <div className="explore-atlas__location-control" aria-live="polite">
+            <button type="button" onClick={() => { void handleLocate(); }} disabled={locating}>
+              <LocateFixed aria-hidden="true" />
+              {locating ? c.locating : c.locate}
+            </button>
+            {selectedDistance !== null ? (
+              <span>
+                <Navigation aria-hidden="true" />
+                {c.distanceToPlace.replace('{{distance}}', formatDistance(selectedDistance, language))}
+              </span>
+            ) : null}
+            {userLocation?.accuracy ? (
+              <span>{c.accuracy.replace('{{distance}}', formatDistance(userLocation.accuracy, language))}</span>
+            ) : null}
+            {locationMessage ? <small role="status">{locationMessage}</small> : null}
+          </div>
           {userAtlasPoint ? (
             <span
               className="explore-atlas__user-pin"
@@ -502,22 +518,6 @@ export const ExploreAtlas = ({
                 {selectedGroupCount > 1 && selectedIsActive ? <small>{selectedGroupCount} {c.invitationsHere}</small> : null}
               </p>
             ) : <p>{language === 'vi' ? 'Chạm vào một điểm trên sa hình.' : 'Tap a place on the atlas.'}</p>}
-            <div className="explore-atlas__nearby-meta">
-              <button type="button" onClick={() => { void handleLocate(); }} disabled={locating}>
-                <LocateFixed aria-hidden="true" />
-                {locating ? c.locating : c.locate}
-              </button>
-              {selectedDistance !== null ? (
-                <span>
-                  <Navigation aria-hidden="true" />
-                  {c.distanceToPlace.replace('{{distance}}', formatDistance(selectedDistance, language))}
-                </span>
-              ) : null}
-              {userLocation?.accuracy ? (
-                <span>{c.accuracy.replace('{{distance}}', formatDistance(userLocation.accuracy, language))}</span>
-              ) : null}
-              {locationMessage ? <small role="status">{locationMessage}</small> : null}
-            </div>
           </div>
           <button ref={detailsTriggerRef} type="button" onClick={handlePrimaryAction} disabled={actionDisabled}>
             <span>{actionLabel}</span><ChevronRight aria-hidden="true" />
