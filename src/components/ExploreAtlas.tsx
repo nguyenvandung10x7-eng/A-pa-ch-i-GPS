@@ -243,6 +243,7 @@ export const ExploreAtlas = ({
 }: ExploreAtlasProps) => {
   const c = copy[language];
   const sheetRef = useRef<HTMLElement | null>(null);
+  const detailsTriggerRef = useRef<HTMLButtonElement | null>(null);
   const closeRef = useRef(onCloseDetails);
   const placeGroups = useMemo(() => getPlaceGroups(tasks), [tasks]);
   const cityGroups = useMemo(() => placeGroups.filter((group) => isWithinCityAtlas(group.anchorTask)), [placeGroups]);
@@ -275,6 +276,7 @@ export const ExploreAtlas = ({
     const previousOverflow = document.body.style.overflow;
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const sheet = sheetRef.current;
+    const fallbackFocusTarget = detailsTriggerRef.current;
     document.body.style.overflow = 'hidden';
     const getFocusableElements = () => sheet ? [...sheet.querySelectorAll<HTMLElement>(
       'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -314,7 +316,8 @@ export const ExploreAtlas = ({
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', onKeyDown);
-      if (previouslyFocused?.isConnected) previouslyFocused.focus();
+      const focusTarget = previouslyFocused?.isConnected ? previouslyFocused : fallbackFocusTarget;
+      focusTarget?.focus();
     };
   }, [detailsOpen]);
 
@@ -438,7 +441,7 @@ export const ExploreAtlas = ({
               </p>
             ) : <p>{language === 'vi' ? 'Chạm vào một điểm trên sa hình.' : 'Tap a place on the atlas.'}</p>}
           </div>
-          <button type="button" onClick={handlePrimaryAction} disabled={actionDisabled}>
+          <button ref={detailsTriggerRef} type="button" onClick={handlePrimaryAction} disabled={actionDisabled}>
             <span>{actionLabel}</span><ChevronRight aria-hidden="true" />
           </button>
           <div className="explore-atlas__progress" aria-label={`${completedCount} / ${progressTotal}`}>
