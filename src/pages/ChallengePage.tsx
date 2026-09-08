@@ -474,11 +474,14 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
         setGpsStatus('verified');
         setMessage(t('challenge.arrivalConfirmed', { meters: result.gps?.meters ?? 0 }));
-        if (result.completed && isLevelOneTaskId(task.id) && !hasUnlockedAllChallenges(progress.completedTaskIds)) {
+        const unlockedLevelTwo = result.completed && isLevelOneTaskId(task.id) && !hasUnlockedAllChallenges(progress.completedTaskIds);
+        if (unlockedLevelTwo) {
+          setDetailsOpen(false);
+          setCompletionPanelRunId(null);
           setShowLevelUnlock(true);
         }
         if (result.completed && completedRunId) {
-          setCompletionPanelRunId(completedRunId);
+          if (!unlockedLevelTwo) setCompletionPanelRunId(completedRunId);
           if (user) {
             void recordGuildChallengeEvent({
               userId: user.id,
@@ -599,7 +602,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         completionActionLabel={isScopedCompleted ? scopeCompletionPrimaryLabel : undefined}
         onCompletionAction={isScopedCompleted ? () => { void navigate('/book'); } : undefined}
         homeContent={levelHomeContent}
-        levelLabel={isLevelTwo ? 'LEVEL 2' : 'LEVEL 1'}
+        levelLabel={isLevelTwo ? undefined : 'LEVEL 1'}
         introAside={isLevelTwo ? <ChallengeLeaderboardPreview language={language} compact /> : undefined}
       >
       <Card
@@ -825,8 +828,12 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
       {showLevelUnlock ? (
         <div className="challenge-level-unlocked" role="status" aria-live="polite">
-          <strong>LEVEL 2 UNLOCKED</strong>
-          <span>{language === 'vi' ? 'Bạn đã chứng minh đủ rồi. Phần còn lại mở hết.' : 'You have proved enough. Everything else is now open.'}</span>
+          <strong>{t('challenge.levelUnlockedKicker')}</strong>
+          <h2>{t('challenge.levelUnlockedTitle')}</h2>
+          <span>{t('challenge.levelUnlockedDescription')}</span>
+          <button type="button" onClick={() => setShowLevelUnlock(false)}>
+            {t('challenge.levelUnlockedAction')}
+          </button>
         </div>
       ) : null}
     </>
