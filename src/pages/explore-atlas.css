@@ -215,11 +215,6 @@
 .explore-atlas__stats > span + span svg { background: #e6644f; color: white; }
 .explore-atlas__stats b { color: #362417; font-size: clamp(.7rem, 2.6vw, .88rem); font-weight: 950; }
 
-.explore-atlas__map-layer {
-  position: absolute;
-  inset: 0;
-}
-
 .explore-atlas__pins { position: absolute; z-index: 3; inset: 0; }
 
 .explore-atlas__pin {
