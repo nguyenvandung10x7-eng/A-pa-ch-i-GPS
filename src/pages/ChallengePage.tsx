@@ -543,6 +543,11 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     : progress.activeRun?.status === 'completed'
       ? t('challenge.completedStatus')
       : '';
+  const gpsStatusTone = ['outsideTargetRadius', 'inaccurateLocation', 'permissionDenied', 'unavailable'].includes(gpsStatus)
+    ? 'is-alert'
+    : gpsStatus === 'verified'
+      ? 'is-success'
+      : '';
   const taskExternalUrl = task && isValidExternalChallengeUrl(task.externalUrl) ? task.externalUrl : null;
   const taskLocationIntro = task?.locationIntro ? localize(task.locationIntro, language).trim() : '';
   const taskExperienceNote = task?.experienceNote ? localize(task.experienceNote, language).trim() : '';
@@ -770,8 +775,8 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
                     <ChevronDown aria-hidden="true" />
                   </summary>
                   <div>
-                    <p className="challenge-editorial__status-message" aria-live="polite">{message}</p>
-                    <p className="challenge-editorial__gps-line">
+                    <p className={`challenge-editorial__status-message ${gpsStatusTone}`} aria-live="polite">{message}</p>
+                    <p className={`challenge-editorial__gps-line ${gpsStatusTone}`}>
                       <ShieldCheck aria-hidden="true" />
                       <span>{gpsStatus !== 'idle' ? t('challenge.status.' + gpsStatus) : t('challenge.arrivalBoundary')}</span>
                     </p>
