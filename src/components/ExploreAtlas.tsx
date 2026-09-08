@@ -435,125 +435,127 @@ export const ExploreAtlas = ({
           </div>
         </header>
 
-        <div className="explore-atlas__location-control" aria-live="polite">
-          <button type="button" onClick={() => { void handleLocate(); }} disabled={locating}>
-            <LocateFixed aria-hidden="true" />
-            {locating ? c.locating : c.locate}
-          </button>
-          {selectedDistance !== null ? (
-            <span className={selectedDistanceIsOutsideRadius ? 'is-outside-radius' : 'is-within-radius'}>
-              <Navigation aria-hidden="true" />
-              {c.distanceToPlace.replace('{{distance}}', formatDistance(selectedDistance, language))}
+        <div className="explore-atlas__map-layer">
+          <div className="explore-atlas__location-control" aria-live="polite">
+            <button type="button" onClick={() => { void handleLocate(); }} disabled={locating}>
+              <LocateFixed aria-hidden="true" />
+              {locating ? c.locating : c.locate}
+            </button>
+            {selectedDistance !== null ? (
+              <span className={selectedDistanceIsOutsideRadius ? 'is-outside-radius' : 'is-within-radius'}>
+                <Navigation aria-hidden="true" />
+                {c.distanceToPlace.replace('{{distance}}', formatDistance(selectedDistance, language))}
+              </span>
+            ) : null}
+            {userLocation?.accuracy ? (
+              <span>{c.accuracy.replace('{{distance}}', formatDistance(userLocation.accuracy, language))}</span>
+            ) : null}
+            {locationMessage ? <small role="status">{locationMessage}</small> : null}
+          </div>
+          {userAtlasPoint ? (
+            <span
+              className="explore-atlas__user-pin"
+              style={{ left: `${userAtlasPoint.x}%`, top: `${userAtlasPoint.y}%` }}
+              aria-label={c.youAreHere}
+              role="img"
+            >
+              <i aria-hidden="true"><Crosshair /></i>
+              <b>{language === 'vi' ? 'Bạn' : 'You'}</b>
             </span>
           ) : null}
-          {userLocation?.accuracy ? (
-            <span>{c.accuracy.replace('{{distance}}', formatDistance(userLocation.accuracy, language))}</span>
+          {userAtlasPoint && selectedAtlasPoint ? (
+            <svg
+              className={`explore-atlas__route-line ${selectedDistanceIsOutsideRadius ? 'is-outside-radius' : 'is-within-radius'}`}
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <line
+                className="explore-atlas__route-line-shadow"
+                x1={userAtlasPoint.x}
+                y1={userAtlasPoint.y}
+                x2={selectedAtlasPoint.x}
+                y2={selectedAtlasPoint.y}
+              />
+              <line
+                className="explore-atlas__route-line-beam"
+                x1={userAtlasPoint.x}
+                y1={userAtlasPoint.y}
+                x2={selectedAtlasPoint.x}
+                y2={selectedAtlasPoint.y}
+              />
+            </svg>
           ) : null}
-          {locationMessage ? <small role="status">{locationMessage}</small> : null}
-        </div>
-        {userAtlasPoint ? (
-          <span
-            className="explore-atlas__user-pin"
-            style={{ left: `${userAtlasPoint.x}%`, top: `${userAtlasPoint.y}%` }}
-            aria-label={c.youAreHere}
-            role="img"
-          >
-            <i aria-hidden="true"><Crosshair /></i>
-            <b>{language === 'vi' ? 'Bạn' : 'You'}</b>
-          </span>
-        ) : null}
-        {userAtlasPoint && selectedAtlasPoint ? (
-          <svg
-            className={`explore-atlas__route-line ${selectedDistanceIsOutsideRadius ? 'is-outside-radius' : 'is-within-radius'}`}
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <line
-              className="explore-atlas__route-line-shadow"
-              x1={userAtlasPoint.x}
-              y1={userAtlasPoint.y}
-              x2={selectedAtlasPoint.x}
-              y2={selectedAtlasPoint.y}
-            />
-            <line
-              className="explore-atlas__route-line-beam"
-              x1={userAtlasPoint.x}
-              y1={userAtlasPoint.y}
-              x2={selectedAtlasPoint.x}
-              y2={selectedAtlasPoint.y}
-            />
-          </svg>
-        ) : null}
 
-        <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trên bản đồ' : 'Atlas discoveries'}>
-          {atlasGroups.map((group, index) => {
-            const selected = selectedGroup?.id === group.id;
-            const isActive = invitationOpen && groupContainsTask(group, activeTaskId);
-            const imageTask = isActive ? activeTask ?? groupRepresentativeTask(group) : groupRepresentativeTask(group);
-            const groupCompletedCount = group.tasks.filter((task) => completedTaskIdSet.has(task.id)).length;
-            const groupIsComplete = groupCompletedCount === group.tasks.length;
-            const atlasPoint = getGroupAtlasPlacement(group);
-            const labelPlacement = atlasPoint.labelPlacement ?? CITY_PIN_LABEL_PLACEMENTS[group.anchorTask.id] ?? (atlasPoint.x > 64 ? 'left' : 'right');
-            return (
-              <button
-                key={group.id}
-                type="button"
-                className={`explore-atlas__pin is-depth-${atlasPoint.depth} is-label-${labelPlacement} ${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''} ${groupIsComplete ? 'is-complete' : ''}`}
-                style={{ left: `${atlasPoint.x}%`, top: `${atlasPoint.y}%`, '--pin-color': PIN_COLORS[index % PIN_COLORS.length] } as CSSProperties}
-                onClick={() => selectGroup(group.id)}
-                aria-pressed={selected}
-                aria-label={groupPlaceName(group, language)}
-              >
-                <span className="explore-atlas__pin-drop">
-                  <span className="explore-atlas__pin-photo">
-                    {imageTask.image && !failedImageIds.has(imageTask.id)
-                      ? <img src={imageTask.image} alt="" onError={() => markImageFailed(imageTask.id)} />
-                      : <MapPin aria-hidden="true" />}
+          <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trên bản đồ' : 'Atlas discoveries'}>
+            {atlasGroups.map((group, index) => {
+              const selected = selectedGroup?.id === group.id;
+              const isActive = invitationOpen && groupContainsTask(group, activeTaskId);
+              const imageTask = isActive ? activeTask ?? groupRepresentativeTask(group) : groupRepresentativeTask(group);
+              const groupCompletedCount = group.tasks.filter((task) => completedTaskIdSet.has(task.id)).length;
+              const groupIsComplete = groupCompletedCount === group.tasks.length;
+              const atlasPoint = getGroupAtlasPlacement(group);
+              const labelPlacement = atlasPoint.labelPlacement ?? CITY_PIN_LABEL_PLACEMENTS[group.anchorTask.id] ?? (atlasPoint.x > 64 ? 'left' : 'right');
+              return (
+                <button
+                  key={group.id}
+                  type="button"
+                  className={`explore-atlas__pin is-depth-${atlasPoint.depth} is-label-${labelPlacement} ${selected ? 'is-selected' : ''} ${isActive ? 'is-active' : ''} ${groupIsComplete ? 'is-complete' : ''}`}
+                  style={{ left: `${atlasPoint.x}%`, top: `${atlasPoint.y}%`, '--pin-color': PIN_COLORS[index % PIN_COLORS.length] } as CSSProperties}
+                  onClick={() => selectGroup(group.id)}
+                  aria-pressed={selected}
+                  aria-label={groupPlaceName(group, language)}
+                >
+                  <span className="explore-atlas__pin-drop">
+                    <span className="explore-atlas__pin-photo">
+                      {imageTask.image && !failedImageIds.has(imageTask.id)
+                        ? <img src={imageTask.image} alt="" onError={() => markImageFailed(imageTask.id)} />
+                        : <MapPin aria-hidden="true" />}
+                    </span>
                   </span>
-                </span>
-                <strong>{groupPlaceName(group, language)}</strong>
-                {groupIsComplete
-                  ? <b className="explore-atlas__pin-status" aria-label={c.completed}><Check aria-hidden="true" /></b>
-                  : group.tasks.length > 1 ? <b className="explore-atlas__pin-count">{groupCompletedCount > 0 ? `${groupCompletedCount}/${group.tasks.length}` : group.tasks.length}</b> : null}
-              </button>
-            );
-          })}
-        </section>
+                  <strong>{groupPlaceName(group, language)}</strong>
+                  {groupIsComplete
+                    ? <b className="explore-atlas__pin-status" aria-label={c.completed}><Check aria-hidden="true" /></b>
+                    : group.tasks.length > 1 ? <b className="explore-atlas__pin-count">{groupCompletedCount > 0 ? `${groupCompletedCount}/${group.tasks.length}` : group.tasks.length}</b> : null}
+                </button>
+              );
+            })}
+          </section>
 
-        <div className="explore-atlas__compass" aria-hidden="true">
-          <i>N</i><i>E</i><i>S</i><i>W</i><Navigation />
+          <div className="explore-atlas__compass" aria-hidden="true">
+            <i>N</i><i>E</i><i>S</i><i>W</i><Navigation />
+          </div>
+
+          <p className="explore-atlas__map-note"><Info aria-hidden="true" />{c.atlasDisclaimer}</p>
+
+          <section className="explore-atlas__nearby" aria-live="polite">
+            <div className="explore-atlas__nearby-image">
+              {selectedTask?.image && !failedImageIds.has(selectedTask.id)
+                ? <img src={selectedTask.image} alt="" onError={() => markImageFailed(selectedTask.id)} />
+                : <Sparkles aria-hidden="true" />}
+            </div>
+            <div className="explore-atlas__nearby-copy">
+              <span><MapPin aria-hidden="true" />{selectedIsActive ? c.active : selectedGroupIsComplete ? c.completed : c.available}</span>
+              <h1>{selectedGroup ? groupPlaceName(selectedGroup, language) : (language === 'vi' ? 'Một nơi ở Điện Biên' : 'A place in Dien Bien')}</h1>
+              {selectedTask ? (
+                <p className="explore-atlas__nearby-invitation">
+                  {selectedGroupCount > 1 && !selectedIsActive
+                    ? language === 'vi'
+                      ? `Một trong ${selectedGroupRemainingCount} lời mời còn lại sẽ mở ra.`
+                      : `One of ${selectedGroupRemainingCount} remaining invitations will open.`
+                    : selectedInvitation}
+                  {selectedGroupCount > 1 && selectedIsActive ? <small>{selectedGroupCount} {c.invitationsHere}</small> : null}
+                </p>
+              ) : <p>{language === 'vi' ? 'Chạm vào một điểm trên sa hình.' : 'Tap a place on the atlas.'}</p>}
+            </div>
+            <button ref={detailsTriggerRef} type="button" onClick={handlePrimaryAction} disabled={actionDisabled}>
+              <span>{actionLabel}</span><ChevronRight aria-hidden="true" />
+            </button>
+            <div className="explore-atlas__progress" aria-label={`${completedCount} / ${progressTotal}`}>
+              <i style={{ width: `${progressTotal ? Math.min(100, Math.round((completedCount / progressTotal) * 100)) : 0}%` }} />
+            </div>
+          </section>
         </div>
-
-        <p className="explore-atlas__map-note"><Info aria-hidden="true" />{c.atlasDisclaimer}</p>
-
-        <section className="explore-atlas__nearby" aria-live="polite">
-          <div className="explore-atlas__nearby-image">
-            {selectedTask?.image && !failedImageIds.has(selectedTask.id)
-              ? <img src={selectedTask.image} alt="" onError={() => markImageFailed(selectedTask.id)} />
-              : <Sparkles aria-hidden="true" />}
-          </div>
-          <div className="explore-atlas__nearby-copy">
-            <span><MapPin aria-hidden="true" />{selectedIsActive ? c.active : selectedGroupIsComplete ? c.completed : c.available}</span>
-            <h1>{selectedGroup ? groupPlaceName(selectedGroup, language) : (language === 'vi' ? 'Một nơi ở Điện Biên' : 'A place in Dien Bien')}</h1>
-            {selectedTask ? (
-              <p className="explore-atlas__nearby-invitation">
-                {selectedGroupCount > 1 && !selectedIsActive
-                  ? language === 'vi'
-                    ? `Một trong ${selectedGroupRemainingCount} lời mời còn lại sẽ mở ra.`
-                    : `One of ${selectedGroupRemainingCount} remaining invitations will open.`
-                  : selectedInvitation}
-                {selectedGroupCount > 1 && selectedIsActive ? <small>{selectedGroupCount} {c.invitationsHere}</small> : null}
-              </p>
-            ) : <p>{language === 'vi' ? 'Chạm vào một điểm trên sa hình.' : 'Tap a place on the atlas.'}</p>}
-          </div>
-          <button ref={detailsTriggerRef} type="button" onClick={handlePrimaryAction} disabled={actionDisabled}>
-            <span>{actionLabel}</span><ChevronRight aria-hidden="true" />
-          </button>
-          <div className="explore-atlas__progress" aria-label={`${completedCount} / ${progressTotal}`}>
-            <i style={{ width: `${progressTotal ? Math.min(100, Math.round((completedCount / progressTotal) * 100)) : 0}%` }} />
-          </div>
-        </section>
       </main>
 
       {detailsOpen ? (
