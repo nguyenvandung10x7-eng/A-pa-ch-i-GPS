@@ -369,6 +369,10 @@ export const ExploreAtlas = ({
     ? Math.round(distanceMeters(userLocation, selectedTask.gps))
     : null;
   const userAtlasPoint = userLocation ? projectCoordinatesToAtlas(userLocation) : null;
+  const selectedAtlasPoint = selectedGroup ? getGroupAtlasPlacement(selectedGroup) : null;
+  const selectedDistanceIsOutsideRadius = Boolean(
+    selectedDistance !== null && selectedTask && selectedDistance > selectedTask.gps.radius,
+  );
   const actionLabel = selectedGroupIsComplete
     ? completionActionLabel ?? c.completed
     : selectedIsActive
@@ -437,7 +441,7 @@ export const ExploreAtlas = ({
             {locating ? c.locating : c.locate}
           </button>
           {selectedDistance !== null ? (
-            <span>
+            <span className={selectedDistanceIsOutsideRadius ? 'is-outside-radius' : 'is-within-radius'}>
               <Navigation aria-hidden="true" />
               {c.distanceToPlace.replace('{{distance}}', formatDistance(selectedDistance, language))}
             </span>
@@ -457,6 +461,29 @@ export const ExploreAtlas = ({
             <i aria-hidden="true"><Crosshair /></i>
             <b>{language === 'vi' ? 'Bạn' : 'You'}</b>
           </span>
+        ) : null}
+        {userAtlasPoint && selectedAtlasPoint ? (
+          <svg
+            className={`explore-atlas__route-line ${selectedDistanceIsOutsideRadius ? 'is-outside-radius' : 'is-within-radius'}`}
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <line
+              className="explore-atlas__route-line-shadow"
+              x1={userAtlasPoint.x}
+              y1={userAtlasPoint.y}
+              x2={selectedAtlasPoint.x}
+              y2={selectedAtlasPoint.y}
+            />
+            <line
+              className="explore-atlas__route-line-beam"
+              x1={userAtlasPoint.x}
+              y1={userAtlasPoint.y}
+              x2={selectedAtlasPoint.x}
+              y2={selectedAtlasPoint.y}
+            />
+          </svg>
         ) : null}
 
         <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trên bản đồ' : 'Atlas discoveries'}>
