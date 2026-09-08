@@ -431,34 +431,35 @@ export const ExploreAtlas = ({
           </div>
         </header>
 
-        <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trên bản đồ' : 'Atlas discoveries'}>
-          <div className="explore-atlas__location-control" aria-live="polite">
-            <button type="button" onClick={() => { void handleLocate(); }} disabled={locating}>
-              <LocateFixed aria-hidden="true" />
-              {locating ? c.locating : c.locate}
-            </button>
-            {selectedDistance !== null ? (
-              <span>
-                <Navigation aria-hidden="true" />
-                {c.distanceToPlace.replace('{{distance}}', formatDistance(selectedDistance, language))}
-              </span>
-            ) : null}
-            {userLocation?.accuracy ? (
-              <span>{c.accuracy.replace('{{distance}}', formatDistance(userLocation.accuracy, language))}</span>
-            ) : null}
-            {locationMessage ? <small role="status">{locationMessage}</small> : null}
-          </div>
-          {userAtlasPoint ? (
-            <span
-              className="explore-atlas__user-pin"
-              style={{ left: `${userAtlasPoint.x}%`, top: `${userAtlasPoint.y}%` }}
-              aria-label={c.youAreHere}
-              role="img"
-            >
-              <i aria-hidden="true"><Crosshair /></i>
-              <b>{language === 'vi' ? 'Bạn' : 'You'}</b>
+        <div className="explore-atlas__location-control" aria-live="polite">
+          <button type="button" onClick={() => { void handleLocate(); }} disabled={locating}>
+            <LocateFixed aria-hidden="true" />
+            {locating ? c.locating : c.locate}
+          </button>
+          {selectedDistance !== null ? (
+            <span>
+              <Navigation aria-hidden="true" />
+              {c.distanceToPlace.replace('{{distance}}', formatDistance(selectedDistance, language))}
             </span>
           ) : null}
+          {userLocation?.accuracy ? (
+            <span>{c.accuracy.replace('{{distance}}', formatDistance(userLocation.accuracy, language))}</span>
+          ) : null}
+          {locationMessage ? <small role="status">{locationMessage}</small> : null}
+        </div>
+        {userAtlasPoint ? (
+          <span
+            className="explore-atlas__user-pin"
+            style={{ left: `${userAtlasPoint.x}%`, top: `${userAtlasPoint.y}%` }}
+            aria-label={c.youAreHere}
+            role="img"
+          >
+            <i aria-hidden="true"><Crosshair /></i>
+            <b>{language === 'vi' ? 'Bạn' : 'You'}</b>
+          </span>
+        ) : null}
+
+        <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trên bản đồ' : 'Atlas discoveries'}>
           {atlasGroups.map((group, index) => {
             const selected = selectedGroup?.id === group.id;
             const isActive = invitationOpen && groupContainsTask(group, activeTaskId);
