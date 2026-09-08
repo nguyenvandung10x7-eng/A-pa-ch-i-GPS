@@ -449,6 +449,70 @@
   50% { box-shadow: 0 0 0 .42rem rgba(47, 107, 240, .16), 0 .45rem .9rem rgba(22, 39, 87, .3); }
 }
 
+.explore-atlas__location-control {
+  position: absolute;
+  z-index: 6;
+  right: .65rem;
+  bottom: calc(14.2rem + env(safe-area-inset-bottom));
+  left: .65rem;
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: .24rem;
+  pointer-events: auto;
+}
+
+.explore-atlas__location-control > span,
+.explore-atlas__location-control > button,
+.explore-atlas__location-control > small {
+  display: inline-flex;
+  max-width: 100%;
+  min-height: 2.2rem;
+  align-items: center;
+  gap: .2rem;
+  border: 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 250, 240, .94);
+  color: #735a40;
+  padding: .16rem .52rem;
+  font-family: inherit;
+  font-size: clamp(.58rem, 2.15vw, .72rem);
+  font-weight: 850;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 .28rem .72rem rgba(44, 35, 22, .16), inset 0 1px rgba(255, 255, 255, .86);
+  backdrop-filter: blur(10px);
+}
+
+.explore-atlas__location-control > button {
+  flex: none;
+  background: rgba(36, 87, 184, .9);
+  color: white;
+  cursor: pointer;
+}
+
+.explore-atlas__location-control > button:disabled {
+  cursor: wait;
+  opacity: .68;
+}
+
+.explore-atlas__location-control > button:focus-visible {
+  outline: .16rem solid #2f6a3a;
+  outline-offset: .08rem;
+}
+
+.explore-atlas__location-control > span { min-width: 0; flex: 1 1 auto; }
+.explore-atlas__location-control svg { width: .82rem; height: .82rem; flex: none; color: currentColor; stroke-width: 2.5; }
+.explore-atlas__location-control > span + span { flex: none; background: rgba(255, 250, 240, .9); color: #76501f; }
+
+.explore-atlas__location-control > small {
+  flex: 1 1 100%;
+  background: rgba(255, 250, 240, .92);
+  color: #8d402f;
+}
+
 .explore-atlas__west-route {
   position: absolute;
   z-index: 5;
@@ -635,64 +699,6 @@
 }
 
 .explore-atlas__nearby-copy p svg { width: .9rem; height: .9rem; flex: none; }
-
-.explore-atlas__nearby-meta {
-  display: flex;
-  min-width: 0;
-  flex-wrap: wrap;
-  gap: .24rem;
-  margin-top: .34rem;
-  overflow: visible;
-}
-
-.explore-atlas__nearby-meta > span,
-.explore-atlas__nearby-meta > button,
-.explore-atlas__nearby-meta > small {
-  display: inline-flex;
-  max-width: 100%;
-  align-items: center;
-  gap: .2rem;
-  border: 0;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(82, 111, 67, .08);
-  color: #735a40;
-  padding: .16rem .34rem;
-  font-size: clamp(.47rem, 1.85vw, .62rem);
-  font-weight: 800;
-  font-family: inherit;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.explore-atlas__nearby-meta > button {
-  flex: none;
-  background: rgba(36, 87, 184, .12);
-  color: #1f4eae;
-  cursor: pointer;
-}
-
-.explore-atlas__nearby-meta > button:disabled {
-  cursor: wait;
-  opacity: .62;
-}
-
-.explore-atlas__nearby-meta > button:focus-visible {
-  outline: .16rem solid #2f6a3a;
-  outline-offset: .08rem;
-}
-
-.explore-atlas__nearby-meta > span { min-width: 0; flex: 1 1 auto; }
-.explore-atlas__nearby-meta svg { width: .72rem; height: .72rem; flex: none; color: #557348; stroke-width: 2.35; }
-.explore-atlas__nearby-meta > button svg { color: currentColor; }
-.explore-atlas__nearby-meta > span + span { flex: none; background: rgba(236, 178, 45, .14); color: #76501f; }
-.explore-atlas__nearby-meta > span + span svg { color: #b47717; }
-.explore-atlas__nearby-meta > small {
-  flex: 1 1 100%;
-  background: rgba(170, 85, 70, .1);
-  color: #8d402f;
-}
 
 .explore-atlas__nearby > button {
   grid-area: action;
