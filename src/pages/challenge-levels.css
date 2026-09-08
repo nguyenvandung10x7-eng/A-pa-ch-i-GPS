@@ -264,6 +264,9 @@ body.challenge-cool-gate-active .editorial-shell__surface-nav {
 
 .explore-atlas.is-level-menu > .explore-atlas__intro,
 .explore-atlas.is-level-menu > .explore-atlas__pins,
+.explore-atlas.is-level-menu > .explore-atlas__user-pin,
+.explore-atlas.is-level-menu > .explore-atlas__route-line,
+.explore-atlas.is-level-menu > .explore-atlas__location-control,
 .explore-atlas.is-level-menu > .explore-atlas__compass,
 .explore-atlas.is-level-menu > .explore-atlas__map-note,
 .explore-atlas.is-level-menu > .explore-atlas__nearby {
@@ -304,6 +307,7 @@ body.challenge-level-menu-active .editorial-shell__explore-tools button:hover {
 }
 
 .challenge-level-one__intro,
+.challenge-level-one__map-peek,
 .challenge-level-one__choices,
 .challenge-level-one__locked,
 .challenge-leaderboard-panel,
@@ -455,9 +459,169 @@ body.challenge-level-menu-active .editorial-shell__explore-tools button:hover {
 
 .challenge-level-one__choices,
 .challenge-level-one__locked,
+.challenge-level-one__map-peek,
 .challenge-leaderboard-panel {
   margin-top: .58rem;
   padding: .82rem;
+}
+
+.challenge-level-one__map-peek {
+  display: grid;
+  grid-template-columns: minmax(5.6rem, 7rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .72rem;
+  overflow: hidden;
+}
+
+.challenge-level-one__map-peek-visual {
+  position: relative;
+  min-height: 5.7rem;
+  overflow: hidden;
+  border: 1px solid rgba(231, 174, 61, .2);
+  border-radius: .82rem;
+  background:
+    radial-gradient(circle at 72% 26%, rgba(255, 218, 113, .22), transparent 1.7rem),
+    linear-gradient(135deg, rgba(52, 91, 57, .42), rgba(14, 23, 17, .96)),
+    url('/images/game-ui/dien-bien-city-atlas-v5.webp') center 34% / 190% auto no-repeat;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04);
+}
+
+.challenge-level-one__map-peek-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 0 49%, rgba(255, 255, 255, .06) 49% 51%, transparent 51%),
+    linear-gradient(0deg, transparent 0 49%, rgba(255, 255, 255, .06) 49% 51%, transparent 51%);
+  background-size: 1.75rem 1.75rem;
+  opacity: .38;
+}
+
+.challenge-level-one__map-peek-route {
+  position: absolute;
+  z-index: 1;
+  top: 3.52rem;
+  left: 1.6rem;
+  width: 4.9rem;
+  border-top: .2rem dashed rgba(239, 181, 65, .8);
+  transform: rotate(-18deg);
+  filter: drop-shadow(0 0 .25rem rgba(239, 181, 65, .42));
+}
+
+.challenge-level-one__map-peek-user,
+.challenge-level-one__map-peek-pin {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  border: .12rem solid rgba(255, 255, 255, .9);
+  box-shadow: 0 .38rem .8rem rgba(0, 0, 0, .32);
+}
+
+.challenge-level-one__map-peek-user {
+  left: 1.05rem;
+  bottom: 1.05rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: #2f6bf0;
+  color: white;
+}
+
+.challenge-level-one__map-peek-user svg {
+  width: .92rem;
+  height: .92rem;
+  stroke-width: 3;
+}
+
+.challenge-level-one__map-peek-pin {
+  right: .9rem;
+  top: .76rem;
+  width: 2.65rem;
+  height: 2.65rem;
+  overflow: hidden;
+  border-radius: 50% 50% 50% 0;
+  background: #e7ae3d;
+  color: #2a1b0d;
+  transform: rotate(-45deg);
+}
+
+.challenge-level-one__map-peek-pin img,
+.challenge-level-one__map-peek-pin svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: rotate(45deg) scale(1.12);
+}
+
+.challenge-level-one__map-peek-pin svg {
+  padding: .62rem;
+}
+
+.challenge-level-one__map-peek-copy {
+  min-width: 0;
+}
+
+.challenge-level-one__map-peek-copy small {
+  display: inline-flex;
+  align-items: center;
+  gap: .28rem;
+  color: #e2b95d;
+  font-size: .5rem;
+  font-weight: 900;
+  letter-spacing: .13em;
+}
+
+.challenge-level-one__map-peek-copy small svg {
+  width: .78rem;
+  height: .78rem;
+  stroke-width: 2.4;
+}
+
+.challenge-level-one__map-peek-copy h2 {
+  margin: .16rem 0 0;
+  color: var(--mission-ink);
+  font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
+  font-size: .98rem;
+  font-weight: 920;
+  line-height: 1.12;
+  letter-spacing: -.03em;
+}
+
+.challenge-level-one__map-peek-copy p {
+  margin: .28rem 0 0;
+  color: #aaa798;
+  font-size: .68rem;
+  line-height: 1.4;
+}
+
+.challenge-level-one__map-peek > button {
+  display: inline-flex;
+  min-height: 2.55rem;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  border: 1px solid rgba(231, 174, 61, .34);
+  border-radius: 999px;
+  background: rgba(231, 174, 61, .12);
+  color: #f2c66c;
+  padding: .5rem .74rem;
+  font: inherit;
+  font-size: .66rem;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.challenge-level-one__map-peek > button:disabled {
+  cursor: default;
+  opacity: .55;
+}
+
+.challenge-level-one__map-peek > button svg {
+  width: .82rem;
+  height: .82rem;
+  stroke-width: 2.7;
 }
 
 .challenge-level-one__choices > header h2,
@@ -532,6 +696,7 @@ body.challenge-level-menu-active .editorial-shell__explore-tools button:hover {
 
 .challenge-level-one__choice:focus-visible,
 .challenge-level-one__accept:focus-visible,
+.challenge-level-one__map-peek > button:focus-visible,
 .challenge-locked-experience button:focus-visible,
 .challenge-leaderboard-panel button:focus-visible,
 .challenge-leaderboard-peek:focus-visible {
@@ -929,10 +1094,23 @@ body.challenge-level-menu-active .editorial-shell__explore-tools button:hover {
 @media (hover: hover) and (pointer: fine) {
   .challenge-cool-gate__accept:hover { background: #f6c75f; transform: translateY(-1px); }
   .challenge-cool-gate__decline:hover { border-color: rgba(239, 181, 65, .3); color: #d0cdc3; }
+  .challenge-level-one__map-peek > button:hover { border-color: rgba(231, 174, 61, .55); background: rgba(231, 174, 61, .18); }
   .challenge-level-one__choice:not(:disabled):hover { transform: translateY(-.16rem); border-color: rgba(231, 174, 61, .54); background: #20271f; }
   .challenge-level-one__choice:not(:disabled):hover .challenge-level-one__choice-image > img { transform: scale(1.025); filter: saturate(.9) contrast(1.07); }
   .challenge-level-one__accept:hover,
   .challenge-locked-experience button:hover { background: #f0ba4c; }
+}
+
+@media (max-width: 430px) {
+  .challenge-level-one__map-peek {
+    grid-template-columns: minmax(5.4rem, 6.25rem) minmax(0, 1fr);
+    gap: .58rem;
+  }
+
+  .challenge-level-one__map-peek > button {
+    grid-column: 1 / -1;
+    min-height: 2.45rem;
+  }
 }
 
 @media (max-width: 350px) {
@@ -945,9 +1123,15 @@ body.challenge-level-menu-active .editorial-shell__explore-tools button:hover {
   body.challenge-level-menu-active .editorial-shell__explore-tools button { min-height: 2rem; padding-inline: .44rem; }
   .challenge-level-one { padding-inline: .5rem; }
   .challenge-level-one__intro,
+  .challenge-level-one__map-peek,
   .challenge-level-one__choices,
   .challenge-level-one__locked,
   .challenge-leaderboard-panel { border-radius: .84rem; }
+  .challenge-level-one__map-peek { grid-template-columns: 5.15rem minmax(0, 1fr); gap: .52rem; padding: .64rem; }
+  .challenge-level-one__map-peek-visual { min-height: 5.05rem; }
+  .challenge-level-one__map-peek-copy h2 { font-size: .86rem; }
+  .challenge-level-one__map-peek-copy p { font-size: .62rem; }
+  .challenge-level-one__map-peek > button { grid-column: 1 / -1; min-height: 2.4rem; }
   .challenge-level-one__eyebrow { letter-spacing: .09em; }
   .challenge-level-one__choice { grid-template-rows: 5rem minmax(5.7rem, 1fr); }
   .challenge-level-one__choice-copy { padding: .52rem; }

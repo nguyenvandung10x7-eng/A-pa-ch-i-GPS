@@ -572,6 +572,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       isMutating={isMutating}
       language={language}
       onChoose={(taskId) => { void chooseExperience([taskId]); }}
+      onOpenMap={() => { void navigate('/map'); }}
     />
   ) : undefined;
   const atlasTasks = eligibleTasks.length > 0 ? eligibleTasks : levelOneEntryTasks;

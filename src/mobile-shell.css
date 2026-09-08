@@ -735,6 +735,248 @@ body.public-shell-active::after {
 .task-map-region-tabs button.is-active strong { background: #4f824b; color: white; }
 .task-map-region-tabs button:focus-visible { outline: .18rem solid #f1b932; outline-offset: .08rem; }
 
+.task-map-location-panel {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .42rem;
+  margin-bottom: .62rem;
+  border: 1px solid rgba(74, 111, 58, .14);
+  border-radius: 1rem;
+  background: rgba(255, 250, 240, .84);
+  padding: .45rem;
+  box-shadow: 0 .36rem .85rem rgba(54, 68, 43, .12), inset 0 1px rgba(255, 255, 255, .72);
+  backdrop-filter: blur(12px);
+}
+
+.task-map-location-panel > button,
+.task-map-location-panel__readout,
+.task-map-location-panel__distance,
+.task-map-location-panel > small {
+  display: inline-flex;
+  max-width: 100%;
+  min-height: 2.35rem;
+  min-width: 0;
+  align-items: center;
+  gap: .32rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  color: #4f6f48;
+  padding: .32rem .68rem;
+  font-size: .72rem;
+  font-weight: 850;
+  line-height: 1.2;
+  box-shadow: inset 0 0 0 1px rgba(74, 111, 58, .08);
+}
+
+.task-map-location-panel > button {
+  flex: none;
+  border: 0;
+  background: #2f6bf0;
+  color: white;
+  cursor: pointer;
+}
+
+.task-map-location-panel > button:disabled {
+  cursor: wait;
+  opacity: .68;
+}
+
+.task-map-location-panel svg {
+  width: .88rem;
+  height: .88rem;
+  flex: none;
+  stroke-width: 2.6;
+}
+
+.task-map-location-panel__readout {
+  flex: 1 1 14rem;
+  justify-content: flex-start;
+}
+
+.task-map-location-panel__readout > span {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: .24rem;
+  color: #68805f;
+  font-size: .58rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.task-map-location-panel__readout strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #243e24;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-map-location-panel__distance {
+  flex: 1 1 12rem;
+  color: #176b3c;
+}
+
+.task-map-location-panel__distance.is-outside-radius {
+  background: rgba(255, 240, 238, .96);
+  color: #b81717;
+  box-shadow: inset 0 0 0 1px rgba(184, 23, 23, .13);
+}
+
+.task-map-location-panel__distance.is-within-radius {
+  background: rgba(235, 252, 241, .96);
+  color: #176b3c;
+  box-shadow: inset 0 0 0 1px rgba(31, 136, 76, .13);
+}
+
+.task-map-location-panel__distance b {
+  margin-left: auto;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .62);
+  padding: .16rem .42rem;
+  font-size: .56rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.task-map-location-panel > small {
+  flex: 1 1 100%;
+  min-height: 2rem;
+  color: #80533f;
+}
+
+.task-map-location-panel > button:focus-visible {
+  outline: .18rem solid #f1b932;
+  outline-offset: .08rem;
+}
+
+.task-map-photo-marker-icon,
+.task-map-user-marker-icon {
+  border: 0;
+  background: transparent;
+}
+
+.task-map-photo-marker {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  filter: drop-shadow(0 .38rem .42rem rgba(39, 31, 20, .32));
+}
+
+.task-map-photo-marker__image {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  overflow: hidden;
+  place-items: center;
+  border: .18rem solid rgba(255, 255, 255, .94);
+  border-radius: 50% 50% 50% 0;
+  background: #e7ae3d;
+  transform: rotate(-45deg);
+  box-shadow: inset 0 0 0 .1rem rgba(231, 174, 61, .85), 0 0 0 .18rem rgba(231, 174, 61, .28);
+}
+
+.task-map-photo-marker__image img {
+  width: 116%;
+  height: 116%;
+  object-fit: cover;
+  transform: rotate(45deg);
+}
+
+.task-map-photo-marker__count {
+  position: absolute;
+  top: -.12rem;
+  right: -.08rem;
+  display: grid;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  place-items: center;
+  border: .12rem solid #fffaf0;
+  border-radius: 999px;
+  background: #d9523f;
+  color: white;
+  padding-inline: .18rem;
+  font-size: .58rem;
+  font-weight: 950;
+}
+
+.task-map-photo-marker-icon.is-selected .task-map-photo-marker__image {
+  width: 3.55rem;
+  height: 3.55rem;
+  box-shadow: inset 0 0 0 .1rem rgba(231, 174, 61, .9), 0 0 0 .28rem rgba(231, 174, 61, .35), 0 0 1rem rgba(231, 174, 61, .42);
+}
+
+.task-map-user-marker {
+  position: relative;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+}
+
+.task-map-user-marker span {
+  display: block;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: .16rem solid white;
+  border-radius: 999px;
+  background: #2f6bf0;
+  box-shadow: 0 0 0 .42rem rgba(47, 107, 240, .22), 0 .35rem .75rem rgba(15, 37, 92, .3);
+}
+
+.task-map-user-marker b {
+  position: absolute;
+  inset: .12rem;
+  border: .12rem solid rgba(47, 107, 240, .36);
+  border-radius: 999px;
+  animation: task-map-user-pulse 2.2s ease-in-out infinite;
+}
+
+.task-map-route-line {
+  animation: task-map-route-flow 1.15s linear infinite;
+  filter: drop-shadow(0 0 .32rem rgba(47, 107, 240, .52));
+}
+
+@keyframes task-map-route-flow {
+  to { stroke-dashoffset: -18; }
+}
+
+@keyframes task-map-user-pulse {
+  50% { transform: scale(1.2); opacity: .42; }
+}
+
+@media (max-width: 430px) {
+  .task-map-location-panel {
+    gap: .34rem;
+    padding: .38rem;
+  }
+
+  .task-map-location-panel > button,
+  .task-map-location-panel__readout,
+  .task-map-location-panel__distance,
+  .task-map-location-panel > small {
+    width: 100%;
+    min-height: 2.25rem;
+    padding-inline: .58rem;
+    font-size: .68rem;
+  }
+
+  .task-map-location-panel__readout {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .16rem;
+  }
+}
+
 .game-map-page__empty {
   max-width: 68rem;
   margin: 0 auto;
