@@ -445,6 +445,46 @@
   box-shadow: 0 .2rem .45rem rgba(31, 35, 48, .16);
 }
 
+.explore-atlas__route-line {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.explore-atlas__route-line line {
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+}
+
+.explore-atlas__route-line-shadow {
+  stroke: rgba(32, 26, 18, .28);
+  stroke-width: 7;
+}
+
+.explore-atlas__route-line-beam {
+  stroke: #2f6bf0;
+  stroke-width: 3.4;
+  stroke-dasharray: 1.8 4.8;
+  filter: drop-shadow(0 0 .32rem rgba(47, 107, 240, .74));
+  animation: atlas-route-flow 1.15s linear infinite;
+}
+
+.explore-atlas__route-line.is-outside-radius .explore-atlas__route-line-beam {
+  stroke: #d82727;
+  filter: drop-shadow(0 0 .36rem rgba(216, 39, 39, .82));
+}
+
+.explore-atlas__route-line.is-within-radius .explore-atlas__route-line-beam {
+  stroke: #1c9d53;
+  filter: drop-shadow(0 0 .34rem rgba(28, 157, 83, .74));
+}
+
+@keyframes atlas-route-flow {
+  to { stroke-dashoffset: -6.6; }
+}
+
 @keyframes atlas-user-pulse {
   50% { box-shadow: 0 0 0 .42rem rgba(47, 107, 240, .16), 0 .45rem .9rem rgba(22, 39, 87, .3); }
 }
@@ -506,6 +546,18 @@
 .explore-atlas__location-control > span { min-width: 0; flex: 1 1 auto; }
 .explore-atlas__location-control svg { width: .82rem; height: .82rem; flex: none; color: currentColor; stroke-width: 2.5; }
 .explore-atlas__location-control > span + span { flex: none; background: rgba(255, 250, 240, .9); color: #76501f; }
+
+.explore-atlas__location-control > span.is-outside-radius {
+  background: rgba(255, 240, 238, .98);
+  color: #b81717;
+  box-shadow: 0 .28rem .72rem rgba(120, 24, 18, .2), inset 0 0 0 1px rgba(184, 23, 23, .16), inset 0 1px rgba(255, 255, 255, .86);
+}
+
+.explore-atlas__location-control > span.is-within-radius {
+  background: rgba(235, 252, 241, .96);
+  color: #176b3c;
+  box-shadow: 0 .28rem .72rem rgba(24, 91, 52, .16), inset 0 0 0 1px rgba(31, 136, 76, .14), inset 0 1px rgba(255, 255, 255, .86);
+}
 
 .explore-atlas__location-control > small {
   flex: 1 1 100%;
@@ -841,6 +893,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .explore-atlas__pin,
+  .explore-atlas__route-line-beam,
+  .explore-atlas__user-pin i,
   .explore-task-sheet { animation: none; transition: none; }
 }
 
@@ -1449,6 +1503,14 @@
   line-height: 1.45;
 }
 
+.challenge-editorial__status-message.is-alert {
+  color: #b81717;
+}
+
+.challenge-editorial__status-message.is-success {
+  color: #176b3c;
+}
+
 .challenge-editorial__gps-line {
   display: flex;
   align-items: flex-start;
@@ -1457,6 +1519,14 @@
   color: #58705c;
   font-size: .76rem;
   line-height: 1.45;
+}
+
+.challenge-editorial__gps-line.is-alert {
+  color: #b81717;
+}
+
+.challenge-editorial__gps-line.is-success {
+  color: #176b3c;
 }
 
 .challenge-editorial__gps-line svg {
