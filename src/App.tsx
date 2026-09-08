@@ -149,7 +149,7 @@ export default function App() {
       <Route path="/experiences" element={<Navigate to="/challenge" replace />} />
       <Route path="/discover" element={<ProductSurfaceFrame surface="challenge"><DiscoverPage language={language} t={t} /></ProductSurfaceFrame>} />
       <Route path="/leaderboard" element={<ProductSurfaceFrame surface="challenge"><LeaderboardPage language={language} t={t} /></ProductSurfaceFrame>} />
-      <Route path="/guild" element={<ProductSurfaceFrame surface="challenge"><GuildPage language={language} t={t} /></ProductSurfaceFrame>} />
+      <Route path="/guild" element={<ProductSurfaceFrame surface="challenge"><GuildPage tasks={tasks} language={language} t={t} /></ProductSurfaceFrame>} />
       <Route path="/submit-tiktok" element={<ProductSurfaceFrame surface="challenge"><TikTokSubmissionPage clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>} />
     </Routes>
   );

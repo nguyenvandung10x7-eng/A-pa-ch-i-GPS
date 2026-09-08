@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { BookOpen, CheckCircle2, Footprints, Leaf, LogIn, RefreshCw, Send, Users, Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { useAuth } from '../contexts/AuthContext';
+import { hasUnlockedAllChallenges } from '../services/challengeLevels';
+import { loadOrCreateProgress } from '../services/gameplay';
 import {
   GuildError,
   type GuildLeaderboardEntry,
@@ -19,7 +22,7 @@ import {
   syncCompletedChallengeRuns,
 } from '../services/guilds';
 import { loadHistory } from '../services/history';
-import type { LanguageCode } from '../types/task';
+import type { ChallengeTask, LanguageCode } from '../types/task';
 
 const guildIcon = (slug: GuildSlug) => {
   if (slug === 'history') return BookOpen;
@@ -46,9 +49,11 @@ const getInitialSlug = (membership: GuildMembership | null, options: GuildLeader
 );
 
 export const GuildPage = ({
+  tasks,
   language,
   t,
 }: {
+  tasks: ChallengeTask[];
   language: LanguageCode;
   t: (key: string, values?: Record<string, string | number>) => string;
 }) => {
@@ -68,6 +73,11 @@ export const GuildPage = ({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [syncWarning, setSyncWarning] = useState(false);
+  const activeTasks = useMemo(() => tasks.filter((task) => task.enabled), [tasks]);
+  const hasCompletedLevelOne = useMemo(
+    () => hasUnlockedAllChallenges(loadOrCreateProgress(activeTasks).completedTaskIds),
+    [activeTasks],
+  );
 
   const refresh = useCallback(async () => {
     setError(null);
@@ -138,6 +148,7 @@ export const GuildPage = ({
     () => membership ? leaderboard.find((guild) => guild.slug === membership.guildSlug) : selectedGuild,
     [leaderboard, membership, selectedGuild],
   );
+  const canEnterGuild = Boolean(membership) || hasCompletedLevelOne;
 
   const handleJoin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -294,7 +305,23 @@ export const GuildPage = ({
         <p className="mt-4 text-sm text-[var(--forest-700)]">{t('guild.scoreNote')}</p>
       </Card>
 
-      {!user ? (
+      {!canEnterGuild ? (
+        <Card className="border-[rgba(141,64,47,0.18)] bg-[rgba(255,247,229,0.72)]">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="section-kicker">{t('guild.lockedKicker')}</p>
+              <h2 className="text-xl font-black text-[var(--forest-950)]">{t('guild.lockedTitle')}</h2>
+              <p className="mt-1 max-w-2xl text-[var(--forest-800)]">{t('guild.lockedDescription')}</p>
+            </div>
+            <Link
+              to="/challenge"
+              className="wood-panel inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-full px-5 py-3 text-center text-[1.03rem] font-black text-amber-950 shadow-[0_14px_26px_rgba(91,67,38,0.18)] transition duration-200 hover:-translate-y-px hover:brightness-[1.02] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(220,179,85,0.32)]"
+            >
+              {t('guild.lockedAction')}
+            </Link>
+          </div>
+        </Card>
+      ) : !user ? (
         <Card className="border-[rgba(141,64,47,0.18)] bg-[rgba(255,247,229,0.72)]">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>

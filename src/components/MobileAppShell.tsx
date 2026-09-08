@@ -502,6 +502,9 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
           <NavLink to="/map" className={({ isActive }) => isActive ? 'is-active' : ''}>
             <Map className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Bản đồ' : 'Map'}</span>
           </NavLink>
+          <NavLink to="/guild" className={({ isActive }) => isActive ? 'is-active' : ''}>
+            <Users className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Hội' : 'Guilds'}</span>
+          </NavLink>
           <button
             type="button"
             className={onBookSurface || bookMenuOpen ? 'is-active' : ''}
