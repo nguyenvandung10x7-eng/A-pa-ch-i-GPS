@@ -1,23 +1,10 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { divIcon, icon } from 'leaflet';
+import { divIcon } from 'leaflet';
 import { Circle, MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from 'react-leaflet';
 import { Crosshair, LocateFixed, Navigation } from 'lucide-react';
-import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
-import markerIcon2xUrl from 'leaflet/dist/images/marker-icon-2x.png';
-import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
 import { distanceMeters, GeolocationRequestError, getCurrentPosition } from '../utils/geo';
-
-const placeMarkerIcon = icon({
-  iconUrl: markerIconUrl,
-  iconRetinaUrl: markerIcon2xUrl,
-  shadowUrl: markerShadowUrl,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
 
 const userMarkerIcon = divIcon({
   className: 'task-map-user-marker-icon',
@@ -65,15 +52,6 @@ type TaskPlace = {
 
 type MapRegion = 'city' | 'west';
 
-const escapeHtmlAttribute = (value: string) => (
-  value
-    .replaceAll('&', '&amp;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-);
-
 const formatDistance = (meters: number, language: LanguageCode) => {
   if (meters < 1000) return `${Math.max(1, Math.round(meters))} m`;
   return `${(meters / 1000).toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US', {
@@ -90,25 +68,27 @@ const placeTitle = (place: TaskPlace, language: LanguageCode) => {
     : localize(firstTask.title, language);
 };
 
-const createPlacePhotoIcon = (place: TaskPlace, selected: boolean) => {
-  const image = place.tasks.find((task) => task.image)?.image;
-  if (!image) return placeMarkerIcon;
-
+const createPlaceIcon = (place: TaskPlace, selected: boolean) => {
   const countBadge = place.tasks.length > 1
-    ? `<span class="task-map-photo-marker__count">${place.tasks.length}</span>`
+    ? `<span class="task-map-place-marker__count">${place.tasks.length}</span>`
     : '';
 
   return divIcon({
-    className: `task-map-photo-marker-icon ${selected ? 'is-selected' : ''}`,
+    className: `task-map-place-marker-icon ${selected ? 'is-selected' : ''}`,
     html: [
-      '<span class="task-map-photo-marker">',
-      `<span class="task-map-photo-marker__image"><img src="${escapeHtmlAttribute(image)}" alt=""></span>`,
+      '<span class="task-map-place-marker">',
+      '<span class="task-map-place-marker__pin" aria-hidden="true">',
+      '<svg viewBox="0 0 24 24" focusable="false">',
+      '<path d="M12 21s7-6.24 7-11a7 7 0 0 0-14 0c0 4.76 7 11 7 11Z" />',
+      '<circle cx="12" cy="10" r="2.55" />',
+      '</svg>',
+      '</span>',
       countBadge,
       '</span>',
     ].join(''),
-    iconSize: selected ? [50, 58] : [44, 52],
-    iconAnchor: selected ? [25, 54] : [22, 48],
-    popupAnchor: [0, selected ? -54 : -48],
+    iconSize: selected ? [40, 46] : [34, 40],
+    iconAnchor: selected ? [20, 42] : [17, 36],
+    popupAnchor: [0, selected ? -40 : -34],
   });
 };
 
@@ -285,6 +265,7 @@ export const TaskMap = ({
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; accuracy?: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
+  const locatingRef = useRef(false);
   const places = useMemo(
     () => groupByLocation
       ? getDistinctTaskPlaces(tasks)
@@ -324,24 +305,61 @@ export const TaskMap = ({
   const outsideRadius = Boolean(selectedDistance !== null && selectedPlace && selectedDistance > selectedPlace.radius);
   const selectedPlaceLabel = selectedPlace ? placeTitle(selectedPlace, language) : mapTitle;
 
-  const handleLocate = async () => {
-    if (locating) return;
+  const applyUserPosition = useCallback((position: GeolocationPosition) => {
+    setUserLocation({
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+    });
+    setLocationMessage(null);
+  }, []);
+
+  const getLocationErrorMessage = useCallback((error: unknown) => {
+    const denied = error instanceof GeolocationRequestError && error.code === 1;
+    return denied ? c.denied : c.unavailable;
+  }, [c.denied, c.unavailable]);
+
+  const handleLocate = useCallback(async () => {
+    if (locatingRef.current) return;
+    locatingRef.current = true;
     setLocating(true);
     setLocationMessage(null);
     try {
       const position = await getCurrentPosition();
-      setUserLocation({
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-      });
+      applyUserPosition(position);
     } catch (error) {
-      const denied = error instanceof GeolocationRequestError && error.code === 1;
-      setLocationMessage(denied ? c.denied : c.unavailable);
+      setLocationMessage(getLocationErrorMessage(error));
     } finally {
+      locatingRef.current = false;
       setLocating(false);
     }
-  };
+  }, [applyUserPosition, getLocationErrorMessage]);
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      return undefined;
+    }
+
+    let hasReceivedPosition = false;
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        hasReceivedPosition = true;
+        applyUserPosition(position);
+        setLocating(false);
+      },
+      (error) => {
+        setLocating(false);
+        if (!hasReceivedPosition) {
+          setLocationMessage(getLocationErrorMessage(new GeolocationRequestError(error.code, error.message)));
+        }
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 },
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [applyUserPosition, getLocationErrorMessage]);
 
   if (!first) {
     return (
@@ -426,7 +444,7 @@ export const TaskMap = ({
               <Fragment key={`${place.key}-${language}-${selected ? 'selected' : 'idle'}`}>
                 <Marker
                   position={[place.lat, place.lng]}
-                  icon={createPlacePhotoIcon(place, selected)}
+                  icon={createPlaceIcon(place, selected)}
                   alt={placeLabel}
                   title={placeLabel}
                   zIndexOffset={selected ? 500 : 0}

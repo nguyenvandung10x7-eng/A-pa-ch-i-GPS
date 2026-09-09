@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Check, ChevronRight, Compass, Crosshair, Info, LocateFixed, MapPin, Navigation, Sparkles, X } from 'lucide-react';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
@@ -171,14 +171,21 @@ const formatDistance = (meters: number, language: LanguageCode) => {
   })} km`;
 };
 
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
 const interpolate = (start: number, end: number, ratio: number) => start + Math.max(0, Math.min(1, ratio)) * (end - start);
 
-const projectCoordinatesToAtlas = (coordinates: Pick<ChallengeTask['gps'], 'lat' | 'lng'>) => {
+const projectCoordinatesToAtlas = (
+  coordinates: Pick<ChallengeTask['gps'], 'lat' | 'lng'>,
+  options: { clampToFrame?: boolean } = {},
+) => {
   const longitudeRatio = (coordinates.lng - CITY_ATLAS_BOUNDS.west) / (CITY_ATLAS_BOUNDS.east - CITY_ATLAS_BOUNDS.west);
   const latitudeRatio = (CITY_ATLAS_BOUNDS.north - coordinates.lat) / (CITY_ATLAS_BOUNDS.north - CITY_ATLAS_BOUNDS.south);
+  const xRatio = options.clampToFrame ? clamp(longitudeRatio, 0, 1) : longitudeRatio;
+  const yRatio = options.clampToFrame ? clamp(latitudeRatio, 0, 1) : latitudeRatio;
   return {
-    x: interpolate(CITY_ATLAS_FRAME.left, CITY_ATLAS_FRAME.right, longitudeRatio),
-    y: interpolate(CITY_ATLAS_FRAME.top, CITY_ATLAS_FRAME.bottom, latitudeRatio),
+    x: interpolate(CITY_ATLAS_FRAME.left, CITY_ATLAS_FRAME.right, xRatio),
+    y: interpolate(CITY_ATLAS_FRAME.top, CITY_ATLAS_FRAME.bottom, yRatio),
   };
 };
 
@@ -285,6 +292,7 @@ export const ExploreAtlas = ({
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; accuracy?: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
+  const locatingRef = useRef(false);
 
   const markImageFailed = (taskId: string) => {
     setFailedImageIds((current) => {
@@ -368,7 +376,7 @@ export const ExploreAtlas = ({
   const selectedDistance = userLocation && selectedTask
     ? Math.round(distanceMeters(userLocation, selectedTask.gps))
     : null;
-  const userAtlasPoint = userLocation ? projectCoordinatesToAtlas(userLocation) : null;
+  const userAtlasPoint = userLocation ? projectCoordinatesToAtlas(userLocation, { clampToFrame: true }) : null;
   const selectedAtlasPoint = selectedGroup ? getGroupAtlasPlacement(selectedGroup) : null;
   const selectedDistanceIsOutsideRadius = Boolean(
     selectedDistance !== null && selectedTask && selectedDistance > selectedTask.gps.radius,
@@ -394,24 +402,61 @@ export const ExploreAtlas = ({
     else onChoose(selectedGroup.tasks.map((task) => task.id));
   };
 
-  const handleLocate = async () => {
-    if (locating) return;
+  const applyUserPosition = useCallback((position: GeolocationPosition) => {
+    setUserLocation({
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+    });
+    setLocationMessage(null);
+  }, []);
+
+  const getLocationErrorMessage = useCallback((error: unknown) => {
+    const denied = error instanceof GeolocationRequestError && error.code === 1;
+    return denied ? c.locationDenied : c.locationUnavailable;
+  }, [c.locationDenied, c.locationUnavailable]);
+
+  const handleLocate = useCallback(async () => {
+    if (locatingRef.current) return;
+    locatingRef.current = true;
     setLocating(true);
     setLocationMessage(null);
     try {
       const position = await getCurrentPosition();
-      setUserLocation({
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-      });
+      applyUserPosition(position);
     } catch (error) {
-      const denied = error instanceof GeolocationRequestError && error.code === 1;
-      setLocationMessage(denied ? c.locationDenied : c.locationUnavailable);
+      setLocationMessage(getLocationErrorMessage(error));
     } finally {
+      locatingRef.current = false;
       setLocating(false);
     }
-  };
+  }, [applyUserPosition, getLocationErrorMessage]);
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      return undefined;
+    }
+
+    let hasReceivedPosition = false;
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        hasReceivedPosition = true;
+        applyUserPosition(position);
+        setLocating(false);
+      },
+      (error) => {
+        setLocating(false);
+        if (!hasReceivedPosition) {
+          setLocationMessage(getLocationErrorMessage(new GeolocationRequestError(error.code, error.message)));
+        }
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 },
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [applyUserPosition, getLocationErrorMessage]);
 
   return (
     <>
@@ -490,7 +535,6 @@ export const ExploreAtlas = ({
           {atlasGroups.map((group, index) => {
             const selected = selectedGroup?.id === group.id;
             const isActive = invitationOpen && groupContainsTask(group, activeTaskId);
-            const imageTask = isActive ? activeTask ?? groupRepresentativeTask(group) : groupRepresentativeTask(group);
             const groupCompletedCount = group.tasks.filter((task) => completedTaskIdSet.has(task.id)).length;
             const groupIsComplete = groupCompletedCount === group.tasks.length;
             const atlasPoint = getGroupAtlasPlacement(group);
@@ -506,10 +550,8 @@ export const ExploreAtlas = ({
                 aria-label={groupPlaceName(group, language)}
               >
                 <span className="explore-atlas__pin-drop">
-                  <span className="explore-atlas__pin-photo">
-                    {imageTask.image && !failedImageIds.has(imageTask.id)
-                      ? <img src={imageTask.image} alt="" onError={() => markImageFailed(imageTask.id)} />
-                      : <MapPin aria-hidden="true" />}
+                  <span className="explore-atlas__pin-icon">
+                    <MapPin aria-hidden="true" />
                   </span>
                 </span>
                 <strong>{groupPlaceName(group, language)}</strong>

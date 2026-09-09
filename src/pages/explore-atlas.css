@@ -285,7 +285,7 @@
   box-shadow: inset 0 0 0 .08rem var(--pin-color), 0 .18rem .34rem rgba(48, 37, 22, .2);
 }
 
-.explore-atlas__pin-photo {
+.explore-atlas__pin-icon {
   display: grid;
   width: 100%;
   overflow: hidden;
@@ -297,8 +297,7 @@
   color: var(--pin-color);
 }
 
-.explore-atlas__pin-photo img { width: 100%; height: 100%; object-fit: cover; }
-.explore-atlas__pin-photo svg { width: 52%; height: 52%; fill: color-mix(in srgb, var(--pin-color) 18%, transparent); stroke-width: 2.5; }
+.explore-atlas__pin-icon svg { width: 56%; height: 56%; fill: color-mix(in srgb, var(--pin-color) 18%, transparent); stroke-width: 2.5; }
 
 .explore-atlas__pin > strong {
   position: absolute;
