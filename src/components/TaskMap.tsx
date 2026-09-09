@@ -106,9 +106,9 @@ const createPlacePhotoIcon = (place: TaskPlace, selected: boolean) => {
       countBadge,
       '</span>',
     ].join(''),
-    iconSize: selected ? [62, 72] : [54, 64],
-    iconAnchor: selected ? [31, 68] : [27, 60],
-    popupAnchor: [0, selected ? -62 : -54],
+    iconSize: selected ? [50, 58] : [44, 52],
+    iconAnchor: selected ? [25, 54] : [22, 48],
+    popupAnchor: [0, selected ? -54 : -48],
   });
 };
 

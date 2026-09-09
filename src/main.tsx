@@ -7,7 +7,6 @@ import './i18n/reactI18next';
 import './index.css';
 import './book-soundtrack.css';
 import './typography-v2.css';
-import './retro-desktop.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

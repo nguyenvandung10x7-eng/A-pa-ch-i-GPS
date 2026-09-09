@@ -868,51 +868,62 @@ body.public-shell-active::after {
   display: grid;
   width: 100%;
   height: 100%;
-  place-items: center;
-  filter: drop-shadow(0 .38rem .42rem rgba(39, 31, 20, .32));
+  align-content: start;
+  justify-items: center;
+  filter: drop-shadow(0 .22rem .32rem rgba(39, 31, 20, .24));
+}
+
+.task-map-photo-marker::after {
+  display: block;
+  width: .58rem;
+  height: .58rem;
+  margin-top: -.12rem;
+  border: .12rem solid rgba(255, 255, 255, .94);
+  border-radius: 999px;
+  background: #e7ae3d;
+  box-shadow: 0 .16rem .28rem rgba(39, 31, 20, .18);
+  content: '';
 }
 
 .task-map-photo-marker__image {
   display: grid;
-  width: 3rem;
-  height: 3rem;
+  width: 2.3rem;
+  height: 2.3rem;
   overflow: hidden;
   place-items: center;
-  border: .18rem solid rgba(255, 255, 255, .94);
-  border-radius: 50% 50% 50% 0;
+  border: .14rem solid rgba(255, 255, 255, .96);
+  border-radius: 999px;
   background: #e7ae3d;
-  transform: rotate(-45deg);
-  box-shadow: inset 0 0 0 .1rem rgba(231, 174, 61, .85), 0 0 0 .18rem rgba(231, 174, 61, .28);
+  box-shadow: inset 0 0 0 .08rem rgba(231, 174, 61, .82), 0 0 0 .12rem rgba(231, 174, 61, .22);
 }
 
 .task-map-photo-marker__image img {
-  width: 116%;
-  height: 116%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  transform: rotate(45deg);
 }
 
 .task-map-photo-marker__count {
   position: absolute;
-  top: -.12rem;
-  right: -.08rem;
+  top: -.08rem;
+  right: .08rem;
   display: grid;
-  min-width: 1.35rem;
-  height: 1.35rem;
+  min-width: 1.05rem;
+  height: 1.05rem;
   place-items: center;
-  border: .12rem solid #fffaf0;
+  border: .1rem solid #fffaf0;
   border-radius: 999px;
   background: #d9523f;
   color: white;
-  padding-inline: .18rem;
-  font-size: .58rem;
+  padding-inline: .14rem;
+  font-size: .48rem;
   font-weight: 950;
 }
 
 .task-map-photo-marker-icon.is-selected .task-map-photo-marker__image {
-  width: 3.55rem;
-  height: 3.55rem;
-  box-shadow: inset 0 0 0 .1rem rgba(231, 174, 61, .9), 0 0 0 .28rem rgba(231, 174, 61, .35), 0 0 1rem rgba(231, 174, 61, .42);
+  width: 2.68rem;
+  height: 2.68rem;
+  box-shadow: inset 0 0 0 .08rem rgba(231, 174, 61, .9), 0 0 0 .18rem rgba(231, 174, 61, .32), 0 0 .75rem rgba(231, 174, 61, .36);
 }
 
 .task-map-user-marker {

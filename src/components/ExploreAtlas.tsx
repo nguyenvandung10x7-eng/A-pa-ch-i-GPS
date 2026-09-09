@@ -141,19 +141,19 @@ const GROUP_LABEL_PRIORITY = [
 ] as const;
 
 const CITY_VISUAL_PLACEMENTS: Partial<Record<string, AtlasPinPlacement>> = {
-  'ca-phe-ke-nenh-cat-banh': { x: 87.8, y: 33.8, depth: 'midground', labelPlacement: 'left' },
-  'ruong-bac-thang-ta-leng-mthen': { x: 87.8, y: 33.8, depth: 'midground', labelPlacement: 'left' },
-  'thac-ke-nenh-mthen': { x: 87.8, y: 33.8, depth: 'midground', labelPlacement: 'left' },
-  'nhin-xuong-long-chao-cua-chung-ta': { x: 74.4, y: 31.2, depth: 'midground', labelPlacement: 'left' },
-  'tim-cay-xoai-co-thu': { x: 80.8, y: 42.2, depth: 'midground', labelPlacement: 'left' },
+  'nhin-xuong-long-chao-cua-chung-ta': { x: 72.8, y: 30.4, depth: 'midground', labelPlacement: 'left' },
+  'thac-ke-nenh-mthen': { x: 84.4, y: 32.2, depth: 'midground', labelPlacement: 'top' },
+  'ca-phe-ke-nenh-cat-banh': { x: 88.2, y: 35.7, depth: 'midground', labelPlacement: 'left' },
+  'ruong-bac-thang-ta-leng-mthen': { x: 91.2, y: 39.5, depth: 'midground', labelPlacement: 'left' },
+  'tim-cay-xoai-co-thu': { x: 78.6, y: 43.8, depth: 'midground', labelPlacement: 'left' },
 };
 
 const WEST_VISUAL_PLACEMENTS: Partial<Record<string, AtlasPinPlacement>> = {
-  'ban-a-pa-chai-tang-banh-trung-thu': { x: 35.8, y: 14.7, depth: 'background', labelPlacement: 'right' },
-  'cot-co-a-pa-chai-mthen': { x: 35.8, y: 14.7, depth: 'background', labelPlacement: 'right' },
-  'cot-co-a-pa-chai-trai-ban-lanh-lung': { x: 35.8, y: 14.7, depth: 'background', labelPlacement: 'right' },
-  'cau-ta-ko-khu-tang-banh-trung-thu': { x: 49.2, y: 17.1, depth: 'background', labelPlacement: 'bottom' },
-  'cho-muong-nhe-tang-banh-trung-thu': { x: 63.4, y: 19.5, depth: 'background', labelPlacement: 'left' },
+  'ban-a-pa-chai-tang-banh-trung-thu': { x: 34.7, y: 13.8, depth: 'background', labelPlacement: 'right' },
+  'cot-co-a-pa-chai-mthen': { x: 37.1, y: 15.1, depth: 'background', labelPlacement: 'right' },
+  'cot-co-a-pa-chai-trai-ban-lanh-lung': { x: 35.7, y: 16.6, depth: 'background', labelPlacement: 'right' },
+  'cau-ta-ko-khu-tang-banh-trung-thu': { x: 49.4, y: 17.5, depth: 'background', labelPlacement: 'bottom' },
+  'cho-muong-nhe-tang-banh-trung-thu': { x: 63.2, y: 20.3, depth: 'background', labelPlacement: 'left' },
 };
 
 const isWithinCityAtlas = (task: ChallengeTask) => (
