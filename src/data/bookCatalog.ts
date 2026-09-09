@@ -6,6 +6,7 @@ import {
 import { BOOK_MUSIC_TRACKS } from './music';
 import { withLiteraryChapterCopy } from './bookLiteraryCopy';
 import { withLiteraryPageCopy } from './bookLiteraryPageCopy';
+import { withLongformEditorialPageCopy } from './bookLongformEditorial';
 import { withLivingDeadEditorialChapterCopy, withLivingDeadEditorialPageCopy } from './bookLivingDeadEditorial';
 import { withRebellionEditorialChapterCopy, withRebellionEditorialPageCopy } from './bookRebellionEditorial';
 import type { BookChapter, BookExperience, BookPage } from '../types/book';
@@ -173,7 +174,9 @@ const withUploadedPageAssets = (page: BookPage): BookPage =>
 const withAllEditorialPageCopy = (page: BookPage): BookPage =>
   withRebellionEditorialPageCopy(
     withLivingDeadEditorialPageCopy(
-      withLiteraryPageCopy(page),
+      withLongformEditorialPageCopy(
+        withLiteraryPageCopy(page),
+      ),
     ),
   );
 
