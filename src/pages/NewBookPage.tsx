@@ -11,6 +11,7 @@ import { bookLocationMapUrl } from '../services/bookNearMe';
 import { markBookPageRead, toggleSavedBookPage } from '../services/bookState';
 import { createExactTaskExperienceMode } from '../services/experienceFilters';
 import { GAMEPLAY_MUSIC_ACTION_EVENT } from '../services/gameplayMusicEvents';
+import { HISTORY_CHAPTER_ID } from '../services/journey';
 import type { BookExperience, BookLocalizedText, BookPage, ContentBlock } from '../types/book';
 import type { LanguageCode } from '../types/task';
 import './book-rebuild.css';
@@ -269,7 +270,7 @@ export const NewBookPage = ({ language }: BookPageProps) => {
   if (!chapter) return <div className="book-v2-empty">{c.noPages}</div>;
 
   const pages = getChapterPages(chapter.id);
-  const chapters = getPublishedChapters();
+  const chapters = getPublishedChapters().filter((candidate) => candidate.id !== HISTORY_CHAPTER_ID);
   const chapterIndex = chapters.findIndex((candidate) => candidate.id === chapter.id);
   const nextChapter = chapterIndex >= 0 ? chapters[chapterIndex + 1] : undefined;
   const firstIllustration = pages[0] ? getBookPageIllustration(pages[0].id) : undefined;

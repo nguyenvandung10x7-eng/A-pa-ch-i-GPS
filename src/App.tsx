@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactElement } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactElement } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { Loader2, LogIn } from 'lucide-react';
 import { Layout } from './components/Layout';
@@ -10,29 +10,36 @@ import { useAdminStatus } from './hooks/useAdminStatus';
 import { useTasks } from './hooks/useTasks';
 import { useTranslation } from './hooks/useTranslation';
 import { AdminPage } from './pages/AdminPage';
-import { NewBookPage } from './pages/NewBookPage';
 import { BookPageRoute } from './pages/BookPageRoute';
 import { BookUtilityPage } from './pages/BookUtilityPage';
-import { ChallengePage } from './pages/ChallengePage';
 import { CreditsPage } from './pages/CreditsPage';
-import { DiscoverPage } from './pages/DiscoverPage';
-import { GameMapPage } from './pages/GameMapPage';
 import { LegalSafetyPage } from './pages/LegalSafetyPage';
-import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ModerationPage } from './pages/ModerationPage';
-import { OpeningPage } from './pages/OpeningPage';
 import { SavedBookPage } from './pages/SavedBookPage';
 import { TikTokSubmissionPage } from './pages/TikTokSubmissionPage';
 import { CHALLENGE_CLEAR_VERSION_KEY, getChallengeClearVersion } from './services/tasks';
+import { JourneyPage } from './pages/JourneyPage';
+import { JourneyGuard } from './components/JourneyGuard';
+import { OpenBookPage } from './pages/OpenBookPage';
+import { HISTORY_CHAPTER_ID } from './services/journey';
+import './journey.css';
+
+const NewBookPage = lazy(() => import('./pages/NewBookPage').then((module) => ({ default: module.NewBookPage })));
+const ChallengePage = lazy(() => import('./pages/ChallengePage').then((module) => ({ default: module.ChallengePage })));
+const GameMapPage = lazy(() => import('./pages/GameMapPage').then((module) => ({ default: module.GameMapPage })));
+
+const SIGNATURE_EXPERIENCE_IDS = new Set([
+  'nhin-xuong-long-chao-cua-chung-ta',
+  'tim-cay-xoai-co-thu',
+  'thac-ke-nenh-mthen',
+  'de-xe-may-ngoai-troi-qua-dem',
+]);
 
 const parseClearVersion = (value: string | null): number => {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < 0) return 0;
   return parsed;
 };
-
-const isBookPath = (pathname: string): boolean =>
-  pathname === '/book' || pathname.startsWith('/book/');
 
 const normalizeRoutePath = (pathname: string): string => {
   const normalized = pathname.toLowerCase().replace(/\/+$/, '');
@@ -90,7 +97,6 @@ export default function App() {
   const [clearVersion, setClearVersion] = useState(() => getChallengeClearVersion());
   const location = useLocation();
   const navigationType = useNavigationType();
-  const previousPathRef = useRef(location.pathname);
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -111,11 +117,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const previousPath = previousPathRef.current;
-    previousPathRef.current = location.pathname;
-
     if (navigationType === 'POP') return;
-    if (!isBookPath(previousPath) && !isBookPath(location.pathname)) return;
 
     const frameId = window.requestAnimationFrame(() => {
       const targetId = location.hash.startsWith('#') ? location.hash.slice(1) : '';
@@ -130,39 +132,49 @@ export default function App() {
     return () => window.cancelAnimationFrame(frameId);
   }, [location.hash, location.pathname, navigationType]);
 
+  const guard = (children: ReactElement) => <JourneyGuard language={language}>{children}</JourneyGuard>;
   const publicRoutes = (
+    <Suspense fallback={<p className="journey-page" role="status">{language === 'vi' ? 'Đang mở câu chuyện…' : 'Opening the story…'}</p>}>
     <Routes>
-      <Route path="/" element={<OpeningPage language={language} setLanguage={setLanguage} t={t} />} />
-      <Route path="/book" element={<NewBookPage language={language} />} />
-      <Route path="/book/chapter/:chapterId" element={<NewBookPage language={language} />} />
-      <Route path="/book/page/:pageId" element={<BookPageRoute />} />
+      <Route path="/" element={<JourneyPage language={language} tasks={tasks} />} />
+      <Route path="/journey/1954" element={<JourneyPage language={language} tasks={tasks} />} />
+      <Route path="/journey/culture" element={<JourneyGuard language={language} cultureOnly><JourneyPage language={language} tasks={tasks} culture /></JourneyGuard>} />
+      <Route path="/book" element={guard(<OpenBookPage language={language} />)} />
+      <Route path={`/book/chapter/${HISTORY_CHAPTER_ID}`} element={<Navigate to="/journey/1954" replace />} />
+      <Route path="/book/page/1954-duoi-mot-thanh-pho-dang-song" element={<Navigate to="/journey/1954" replace />} />
+      <Route path="/book/chapter/:chapterId" element={guard(<NewBookPage language={language} />)} />
+      <Route path="/book/page/:pageId" element={guard(<BookPageRoute />)} />
       <Route path="/recent" element={<Navigate to="/book" replace />} />
-      <Route path="/saved" element={<SavedBookPage language={language} />} />
-      <Route path="/nearby" element={<BookUtilityPage language={language} mode="near-me" />} />
+      <Route path="/saved" element={guard(<SavedBookPage language={language} />)} />
+      <Route path="/nearby" element={guard(<BookUtilityPage language={language} mode="near-me" />)} />
       <Route path="/credits" element={<CreditsPage language={language} />} />
-      <Route path="/challenge" element={<ChallengePage tasks={tasks} clearVersion={clearVersion} language={language} t={t} />} />
-      <Route path="/map" element={<GameMapPage tasks={tasks} language={language} t={t} />} />
+      <Route path="/challenge" element={guard(<ChallengePage tasks={tasks.filter((task) => SIGNATURE_EXPERIENCE_IDS.has(task.id))} clearVersion={clearVersion} language={language} t={t} />)} />
+      <Route path="/map" element={guard(<GameMapPage tasks={tasks.filter((task) => SIGNATURE_EXPERIENCE_IDS.has(task.id))} language={language} t={t} />)} />
       <Route path="/near-me" element={<Navigate to="/nearby" replace />} />
       <Route path="/history" element={<Navigate to="/book" replace />} />
       <Route path="/experiences" element={<Navigate to="/challenge" replace />} />
-      <Route path="/discover" element={<ProductSurfaceFrame surface="challenge"><DiscoverPage language={language} t={t} /></ProductSurfaceFrame>} />
-      <Route path="/leaderboard" element={<ProductSurfaceFrame surface="challenge"><LeaderboardPage language={language} t={t} /></ProductSurfaceFrame>} />
-      <Route path="/submit-tiktok" element={<ProductSurfaceFrame surface="challenge"><TikTokSubmissionPage clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>} />
+      <Route path="/discover" element={<Navigate to="/challenge" replace />} />
+      <Route path="/leaderboard" element={<Navigate to="/challenge" replace />} />
+      <Route path="/submit-tiktok" element={guard(<ProductSurfaceFrame surface="challenge"><TikTokSubmissionPage clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>)} />
+      <Route path="/guilds" element={<Navigate to="/" replace />} />
+      <Route path="/guild" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   );
 
   const normalizedPathname = normalizeRoutePath(location.pathname);
   const staffOrLegalRoute = ['/admin', '/moderation', '/privacy', '/legal'].includes(normalizedPathname);
 
-  return (
-    <Layout
-      language={language}
-      setLanguage={setLanguage}
-      t={t}
-      isAdmin={isAdmin}
-      checkingAdmin={checkingAdmin}
-    >
-      {staffOrLegalRoute ? (
+  if (staffOrLegalRoute) {
+    return (
+      <Layout
+        language={language}
+        setLanguage={setLanguage}
+        t={t}
+        isAdmin={isAdmin}
+        checkingAdmin={checkingAdmin}
+      >
         <Routes>
           <Route path="/privacy" element={<LegalSafetyPage t={t} />} />
           <Route path="/legal" element={<LegalSafetyPage t={t} />} />
@@ -177,16 +189,18 @@ export default function App() {
           )} />
           <Route path="/admin" element={<AuthenticatedRoute t={t} redirectPath="/admin"><AdminPage tasks={tasks} setTasks={setTasks} t={t} /></AuthenticatedRoute>} />
         </Routes>
-      ) : (
-        <MobileAppShell
-          language={language}
-          setLanguage={setLanguage}
-          isAdmin={isAdmin}
-          checkingAdmin={checkingAdmin}
-        >
-          {publicRoutes}
-        </MobileAppShell>
-      )}
-    </Layout>
+      </Layout>
+    );
+  }
+
+  return (
+    <MobileAppShell
+      language={language}
+      setLanguage={setLanguage}
+      isAdmin={isAdmin}
+      checkingAdmin={checkingAdmin}
+    >
+      {publicRoutes}
+    </MobileAppShell>
   );
 }

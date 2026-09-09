@@ -52,7 +52,21 @@ const TASK_PATCHES: Record<string, TaskPatch> = {
     enabled: true,
   },
   'thac-ke-nenh-mthen': {
+    title: {
+      vi: 'Thác Kê Nênh – Đứng yên nghe nước',
+      en: 'Kê Nênh Waterfall – Stand Still and Listen',
+    },
+    description: {
+      vi: 'Đến điểm quan sát an toàn gần thác Kê Nênh. Cất điện thoại trong một phút và chỉ nghe: tiếng nước gần, tiếng rừng xa, rồi những âm thanh nhỏ hơn nằm giữa hai lớp ấy. Không cần tạo dáng hay quay video.',
+      en: 'Reach a safe viewpoint near Kê Nênh Waterfall. Put your phone away for one minute and listen: nearby water, distant forest, then the quieter sounds between those layers. No posing or video is required.',
+    },
+    category: 'reflection',
+    difficulty: 'medium',
     enabled: true,
+    experienceNote: {
+      vi: 'Đứng tại khu vực quan sát an toàn, tránh đá trơn và dòng nước mạnh. Ứng dụng chỉ xác nhận GPS; một phút lắng nghe là lời mời dành cho bạn.',
+      en: 'Stay at a safe viewpoint, away from slippery rocks and strong water. The app only verifies GPS; the minute of listening is an invitation for you.',
+    },
   },
   'doi-a1-chuyen-tau-thoi-gian-1954': {
     enabled: true,
