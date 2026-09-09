@@ -1,0 +1,22 @@
+{
+  "asset": "public/images/guilds/walk-absurd-postcard.webp",
+  "status_basis": "project-generated-guild-illustration",
+  "checked_on": "2026-09-09",
+  "source": {
+    "generator": "OpenAI image generation",
+    "reference_asset": null,
+    "generated_png_sha256": "6d1bc9f4e05c4e7777272cf98553066e8c9c7f80be09b4b829622f03c5f385b5",
+    "generated_dimensions": "1536x1024",
+    "generated_bytes": 2643886
+  },
+  "derivative": {
+    "dimensions": "1536x1024",
+    "sha256": "868c63acc8f03fa0914ad0db4bc7feb6b3ac1453c2d57e013bb36e42bcdb7297",
+    "bytes": 247810,
+    "changes": "Generated PNG re-encoded as 1536x1024 lossy WebP without crop or visual content edits.",
+    "command": "ffmpeg -i GENERATED.png -vf scale=1536:-2:flags=lanczos -c:v libwebp -lossless 0 -compression_level 6 -q:v 84 -an OUTPUT.webp",
+    "tool": "ffmpeg"
+  },
+  "prompt_summary": "Absurd nostalgic Guild postcard for Book of Dien Bien walking: plastic sandals and an enamel cup wandering down a small sunlit lane with old houses, flowers, hills, and ordinary-road humor.",
+  "representation_note": "Purpose-built Guild illustration. It is not documentary photography or exact location evidence."
+}

@@ -57,6 +57,19 @@ export const ASSET_CREDITS: AssetCredit[] = [
     },
   },
   {
+    id: 'guild-absurd-postcards',
+    usage: {
+      vi: 'Bốn postcard minh họa cho Team Lịch sử, Team Thiên nhiên, Team Đi dạo và Team Nổi loạn',
+      en: 'Four Guild postcards for History Team, Nature Team, Walking Team, and Rebellion Team',
+    },
+    author: 'Generated for Book of Dien Bien',
+    status: 'cleared',
+    note: {
+      vi: 'Tranh được tạo riêng bằng OpenAI image generation để tạo cảm giác phi lý, vui và có hơi thở Book cho phần Hội. Đây là minh họa cảm xúc, không phải ảnh tư liệu, ảnh xác minh địa điểm hay ghi nhận một sự kiện có thật.',
+      en: 'Created specifically with OpenAI image generation to give the Guild surface an absurd, playful, Book-like feeling. These are mood illustrations, not documentary photography, location verification, or records of real events.',
+    },
+  },
+  {
     id: 'quan-com-hung-ha-thuoc-lao-free',
     usage: {
       vi: 'Ảnh thử thách tại Quán cơm Hưng Hà',

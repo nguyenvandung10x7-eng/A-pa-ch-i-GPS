@@ -6,11 +6,7 @@ import {
 import { BOOK_MUSIC_TRACKS } from './music';
 import { withLiteraryChapterCopy } from './bookLiteraryCopy';
 import { withLiteraryPageCopy } from './bookLiteraryPageCopy';
-import { withLongformEditorialPageCopy } from './bookLongformEditorial';
-import { withNatureEditorialChapterCopy, withNatureEditorialPageCopy } from './bookNatureEditorial';
-import { withFirstLoveEditorialChapterCopy, withFirstLoveEditorialPageCopy } from './bookFirstLoveEditorial';
 import { withLivingDeadEditorialChapterCopy, withLivingDeadEditorialPageCopy } from './bookLivingDeadEditorial';
-import { withGoWestEditorialChapterCopy, withGoWestEditorialPageCopy } from './bookGoWestEditorial';
 import { withRebellionEditorialChapterCopy, withRebellionEditorialPageCopy } from './bookRebellionEditorial';
 import type { BookChapter, BookExperience, BookPage } from '../types/book';
 
@@ -176,29 +172,15 @@ const withUploadedPageAssets = (page: BookPage): BookPage =>
 
 const withAllEditorialPageCopy = (page: BookPage): BookPage =>
   withRebellionEditorialPageCopy(
-    withGoWestEditorialPageCopy(
-      withLivingDeadEditorialPageCopy(
-        withFirstLoveEditorialPageCopy(
-          withNatureEditorialPageCopy(
-            withLongformEditorialPageCopy(
-              withLiteraryPageCopy(page),
-            ),
-          ),
-        ),
-      ),
+    withLivingDeadEditorialPageCopy(
+      withLiteraryPageCopy(page),
     ),
   );
 
 const withAllEditorialChapterCopy = (chapter: BookChapter): BookChapter =>
   withRebellionEditorialChapterCopy(
-    withGoWestEditorialChapterCopy(
-      withLivingDeadEditorialChapterCopy(
-        withFirstLoveEditorialChapterCopy(
-          withNatureEditorialChapterCopy(
-            withLiteraryChapterCopy(chapter),
-          ),
-        ),
-      ),
+    withLivingDeadEditorialChapterCopy(
+      withLiteraryChapterCopy(chapter),
     ),
   );
 

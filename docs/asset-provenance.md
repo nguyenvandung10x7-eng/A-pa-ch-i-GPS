@@ -1,6 +1,6 @@
 # Public asset provenance ledger
 
-This ledger is the release source of truth for visual assets used by the public BOOK / FIELD experience.
+This ledger is the release source of truth for visual assets used by the public BOOK / FIELD / GUILD experience.
 
 ## Status rules
 
@@ -19,7 +19,9 @@ These rules are the completeness mechanism; the tables below are only human-read
 
 **BOOK:** every non-empty visual path reachable from the final published Book experience is also in scope and **UNVERIFIED by default** unless explicitly `CLEARED` or `BLOCKED`. This includes chapter `coverImage`, page `coverImage`, page-level `gallery` media, `image` content-block `image.src`, every media item in `gallery` content blocks, and any separate chapter/page artwork map used by the public renderer such as `NewBookPage.tsx` `chapterArtwork`. The rule applies after the normal Book catalog/content overlays are applied, so a newly imported/published Book visual cannot become public merely because it was omitted from a hand-written table.
 
-For either surface, an asset being present in `public/`, referenced by source code, or visible in a preview does not establish clearance.
+**GUILD:** every non-empty visual path reachable from the public Guild UI is also in scope and **UNVERIFIED by default** unless explicitly `CLEARED` or `BLOCKED`. This includes generated guild postcards, future uploaded guild emblems, or any presentation image used for guild selection, guild rankings, current-guild panels, or public guild content.
+
+For any surface, an asset being present in `public/`, referenced by source code, or visible in a preview does not establish clearance.
 
 `public/images/tasks/SOURCES.md` is candidate source-discovery evidence only. It is **not** a clearance record. The earlier machine-selected `_selected_sources.json` candidate file was removed because it contained stale and materially incorrect matches for several identifiers and was not used at runtime. A task asset must not move to `CLEARED` merely because `SOURCES.md` names a source URL or author.
 
@@ -29,6 +31,10 @@ Before using `SOURCES.md` as provenance evidence, reconcile the shipped binary t
 
 | Asset | Status | Evidence | Required attribution / restrictions |
 | --- | --- | --- | --- |
+| `public/images/guilds/history-absurd-postcard.webp` | CLEARED | `public/images/guilds/provenance/history-absurd-postcard.json`; generated PNG SHA-256 `871647d8372a0c997c823089417ad7cd68b2cb5a61263a6403eac39a8f8b0c5e`; shipped WebP SHA-256 `1a824fc13b0545070fed7fe5437ea420805e349d5c3a4b37cab996eb61296134`. | OpenAI image generation; purpose-built Guild illustration. Not documentary photography, archival imagery, or exact location evidence. |
+| `public/images/guilds/nature-absurd-postcard.webp` | CLEARED | `public/images/guilds/provenance/nature-absurd-postcard.json`; generated PNG SHA-256 `bae235697d65a916f51f31c421d7981433eac17811d6a67a96d459b984de062d`; shipped WebP SHA-256 `de4d482f2cb5499d9d65a648c468881c7bfd14d291fb16c75d5bce50e310f685`. | OpenAI image generation; purpose-built Guild illustration. Not documentary photography or exact location evidence. |
+| `public/images/guilds/walk-absurd-postcard.webp` | CLEARED | `public/images/guilds/provenance/walk-absurd-postcard.json`; generated PNG SHA-256 `6d1bc9f4e05c4e7777272cf98553066e8c9c7f80be09b4b829622f03c5f385b5`; shipped WebP SHA-256 `868c63acc8f03fa0914ad0db4bc7feb6b3ac1453c2d57e013bb36e42bcdb7297`. | OpenAI image generation; purpose-built Guild illustration. Not documentary photography or exact location evidence. |
+| `public/images/guilds/rebellion-absurd-postcard.webp` | CLEARED | `public/images/guilds/provenance/rebellion-absurd-postcard.json`; generated PNG SHA-256 `4291b135a944a68a072b35ada6d219a1c2acb18072719a7a0bf5e5d44f309f7b`; shipped WebP SHA-256 `077bb361629af691851dd822044d365d5706ba6bee1123a59d43e015ee41122f`. | OpenAI image generation; purpose-built Guild illustration. Not documentary photography, a record of a real event, or exact location evidence. |
 | `public/images/tasks/canh-dong-muong-thanh-cat-banh.webp` | CLEARED | `public/images/tasks/provenance/canh-dong-muong-thanh-cat-banh.json`; exact derivative SHA-256 `eaa40cf565c0b36be96a17651f74370169aa6030bc059840ce4f12c080e74bcb` regenerated from exact Commons original SHA-256 `557b13cbe82e630b041802a70cb372c01b06f8f72992e41298c974ba6a54a575`. | Adam Jones; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Share-alike applies to this derivative. |
 | `public/images/tasks/cho-noong-bua-trai-ban.webp` | CLEARED | `public/images/tasks/provenance/cho-noong-bua-trai-ban.json`; exact derivative SHA-256 `896a08a76d799fbec62eadcf6499ad23e17f75fce21a448de16009664a363afa` regenerated from the Commons API-resolved canonical original SHA-256 `de13be5adf356660524c06f8b063d852bd1bf2d019a0d61dddd92d6319dee05c`. | Adam Jones from Kelowna, BC, Canada; CC BY-SA 2.0; link the licence and indicate that the image was resized/re-encoded. Attribution and share-alike requirements apply to this derivative. |
 | `public/images/tasks/cho-muong-nhe-tang-banh-trung-thu.webp` | CLEARED | `public/images/tasks/provenance/cho-muong-nhe-tang-banh-trung-thu.json`; exact shipped binary reuses the already-cleared derivative SHA-256 `896a08a76d799fbec62eadcf6499ad23e17f75fce21a448de16009664a363afa` from the Commons API-resolved canonical original SHA-256 `de13be5adf356660524c06f8b063d852bd1bf2d019a0d61dddd92d6319dee05c`. `SOURCES.md` records a different unreconciled Dratharr / Mường Nhé Nature Reserve candidate that is intentionally not used for this release. The shipped source is representative Dien Bien Phu market imagery, not an exact verified photograph of Chợ Mường Nhé. | Adam Jones from Kelowna, BC, Canada; CC BY-SA 2.0; preserve attribution, licence link, explicit 1920 px resize/lossy-WebP modification notice and share-alike terms. Rights clearance does not assert exact-location identity. |

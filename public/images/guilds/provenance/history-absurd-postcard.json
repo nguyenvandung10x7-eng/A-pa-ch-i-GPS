@@ -1,0 +1,22 @@
+{
+  "asset": "public/images/guilds/history-absurd-postcard.webp",
+  "status_basis": "project-generated-guild-illustration",
+  "checked_on": "2026-09-09",
+  "source": {
+    "generator": "OpenAI image generation",
+    "reference_asset": null,
+    "generated_png_sha256": "871647d8372a0c997c823089417ad7cd68b2cb5a61263a6403eac39a8f8b0c5e",
+    "generated_dimensions": "1536x1024",
+    "generated_bytes": 2365154
+  },
+  "derivative": {
+    "dimensions": "1536x1024",
+    "sha256": "1a824fc13b0545070fed7fe5437ea420805e349d5c3a4b37cab996eb61296134",
+    "bytes": 201252,
+    "changes": "Generated PNG re-encoded as 1536x1024 lossy WebP without crop or visual content edits.",
+    "command": "ffmpeg -i GENERATED.png -vf scale=1536:-2:flags=lanczos -c:v libwebp -lossless 0 -compression_level 6 -q:v 84 -an OUTPUT.webp",
+    "tool": "ffmpeg"
+  },
+  "prompt_summary": "Absurd warm cinematic Guild postcard for Book of Dien Bien history: miniature valley map, old books, an old radio, glowing memory slides, and a strange tiny guide figure among archive-like objects.",
+  "representation_note": "Purpose-built Guild illustration. It is not documentary photography, an archival image, or exact location evidence."
+}

@@ -31,6 +31,76 @@ const guildIcon = (slug: GuildSlug) => {
   return Zap;
 };
 
+type GuildPresentation = {
+  imageSrc: string;
+  imageAlt: Record<LanguageCode, string>;
+  chapterHint: Record<LanguageCode, string>;
+  story: Record<LanguageCode, string>;
+};
+
+const GUILD_PRESENTATION = {
+  history: {
+    imageSrc: '/images/guilds/history-absurd-postcard.webp',
+    imageAlt: {
+      vi: 'Postcard phi lý của Team Lịch sử với mô hình thung lũng, bản đồ, radio cũ và những lát ký ức phát sáng.',
+      en: 'An absurd postcard for History Team with a valley model, maps, an old radio, and glowing slices of memory.',
+    },
+    chapterHint: {
+      vi: 'Nhặt từ đồi A1, bảo tàng và những cái tên không muốn bị phủ bụi.',
+      en: 'Collected from Hill A1, museum rooms, and names that should not gather dust.',
+    },
+    story: {
+      vi: 'Hội của người đi chậm qua bảo tàng, đồi cũ và những cái tên còn ở lại. Không cần trang nghiêm quá; chỉ cần nhặt một mảnh ký ức rồi kể cho đàng hoàng.',
+      en: 'For people who walk slowly through museum rooms, old hills, and names that remain. It does not need to be solemn all the time; just pick up one piece of memory and tell it properly.',
+    },
+  },
+  nature: {
+    imageSrc: '/images/guilds/nature-absurd-postcard.webp',
+    imageAlt: {
+      vi: 'Postcard phi lý của Team Thiên nhiên với một chiếc lá chở đôi giày qua ruộng bậc thang và dòng nước.',
+      en: 'An absurd postcard for Nature Team with a leaf carrying shoes through terraces and running water.',
+    },
+    chapterHint: {
+      vi: 'Nhặt từ vườn bà nội, cánh đồng sau gặt và những đường rừng phía Tây.',
+      en: 'Collected from grandmother gardens, post-harvest fields, and westward forest roads.',
+    },
+    story: {
+      vi: 'Hội của vườn sau nhà, sông sau mưa, con đường lầy và mùi lá. Đi để nghe đất trời nói nhỏ, rồi góp vào cuốn chung một điều rất bé mà sáng.',
+      en: 'For gardens behind houses, rivers after rain, muddy paths, and the smell of leaves. Walk until the land speaks softly, then add one small bright thing to the shared book.',
+    },
+  },
+  walk: {
+    imageSrc: '/images/guilds/walk-absurd-postcard.webp',
+    imageAlt: {
+      vi: 'Postcard phi lý của Team Đi dạo với dép nhựa và chiếc ca men đang đi trên một con ngõ nhỏ.',
+      en: 'An absurd postcard for Walking Team with plastic sandals and an enamel cup walking down a small lane.',
+    },
+    chapterHint: {
+      vi: 'Nhặt từ phố cũ, quán chè và mùa hè kiếm tiền chơi game.',
+      en: 'Collected from old streets, sweet soup shops, and summers earning game money.',
+    },
+    story: {
+      vi: 'Hội của dép lê, phố cũ, quán chè và những cuộc đi không nhất thiết có đích. Thấy gì hay thì ghi lại; vui nhất là một đoạn đường tưởng bình thường bỗng có chuyện.',
+      en: 'For slippers, old streets, sweet shops, and walks that do not need a destination. Notice what is good and write it down; the best part is when an ordinary road suddenly has a story.',
+    },
+  },
+  rebellion: {
+    imageSrc: '/images/guilds/rebellion-absurd-postcard.webp',
+    imageAlt: {
+      vi: 'Postcard phi lý của Team Nổi loạn với xe máy ngủ dưới đèn phố và mặt trăng băng cassette.',
+      en: 'An absurd postcard for Rebellion Team with a motorbike sleeping under street lights and a cassette moon.',
+    },
+    chapterHint: {
+      vi: 'Nhặt từ đêm thành phố, những cú rẽ ngang và phép thử nhỏ.',
+      en: 'Collected from city nights, sideways turns, and a small test.',
+    },
+    story: {
+      vi: 'Hội của những cú rẽ ngang sau khi trời tối: muốn khác đi một chút, nhưng vẫn tử tế. Nổi loạn ở đây là dám bước khỏi thói quen rồi quay lại kể thật.',
+      en: 'For sideways turns after dark: wanting to be a little different while staying decent. Rebellion here means stepping out of habit, then coming back to tell it honestly.',
+    },
+  },
+} satisfies Record<GuildSlug, GuildPresentation>;
+
 const formatDate = (value: string, language: LanguageCode) => new Date(value).toLocaleDateString(
   language === 'vi' ? 'vi-VN' : 'en-US',
   { day: 'numeric', month: 'short', year: 'numeric' },
@@ -41,7 +111,15 @@ const getGuildName = (guild: GuildLeaderboardEntry, language: LanguageCode) => (
 );
 
 const getGuildDescription = (guild: GuildLeaderboardEntry, language: LanguageCode) => (
-  language === 'vi' ? guild.descriptionVi : guild.descriptionEn
+  GUILD_PRESENTATION[guild.slug].story[language] ?? (language === 'vi' ? guild.descriptionVi : guild.descriptionEn)
+);
+
+const getGuildChapterHint = (slug: GuildSlug, language: LanguageCode) => (
+  GUILD_PRESENTATION[slug].chapterHint[language]
+);
+
+const getGuildImageAlt = (slug: GuildSlug, language: LanguageCode) => (
+  GUILD_PRESENTATION[slug].imageAlt[language]
 );
 
 const getInitialSlug = (membership: GuildMembership | null, options: GuildLeaderboardEntry[]): GuildSlug => (
@@ -149,6 +227,8 @@ export const GuildPage = ({
     [leaderboard, membership, selectedGuild],
   );
   const canEnterGuild = Boolean(membership) || hasCompletedLevelOne;
+  const currentGuildSlug = membership?.guildSlug ?? currentGuild?.slug ?? selectedSlug;
+  const currentPresentation = GUILD_PRESENTATION[currentGuildSlug];
 
   const handleJoin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -271,31 +351,46 @@ export const GuildPage = ({
               <article
                 key={guild.slug}
                 className={[
-                  'rounded-[1.5rem] border p-4 shadow-[0_12px_24px_rgba(38,52,31,0.08)]',
+                  'overflow-hidden rounded-[1.5rem] border shadow-[0_12px_24px_rgba(38,52,31,0.08)]',
                   isCurrent
                     ? 'border-[rgba(141,64,47,0.32)] bg-[rgba(255,247,229,0.82)]'
                     : 'border-[rgba(61,84,52,0.12)] bg-[rgba(255,255,255,0.54)]',
                 ].join(' ')}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span className="wood-panel flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[var(--earth-900)]" aria-hidden="true">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--earth-800)]">
-                        {t('guild.rank', { rank: guild.rank })}
-                      </p>
-                      <h3 className="truncate text-xl font-black text-[var(--forest-950)]">{getGuildName(guild, language)}</h3>
-                    </div>
+                <div className="relative aspect-[16/8] overflow-hidden bg-[var(--forest-950)]">
+                  <img
+                    src={GUILD_PRESENTATION[guild.slug].imageSrc}
+                    alt={getGuildImageAlt(guild.slug, language)}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(6,14,10,0.74)] to-transparent p-3">
+                    <p className="line-clamp-2 text-xs font-black uppercase tracking-[0.16em] text-[var(--fabric-100)]">
+                      {getGuildChapterHint(guild.slug, language)}
+                    </p>
                   </div>
-                  <strong className="shrink-0 text-2xl font-black text-[var(--forest-950)]">{guild.totalPoints}</strong>
                 </div>
-                <p className="mt-3 text-sm text-[var(--forest-800)]">{getGuildDescription(guild, language)}</p>
-                <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold text-[var(--forest-700)]">
-                  <span>{t('guild.members', { count: guild.memberCount })}</span>
-                  <span>{t('guild.contributors', { count: guild.contributorCount })}</span>
-                  <span>{t('guild.pointsLabel')}</span>
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span className="wood-panel flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[var(--earth-900)]" aria-hidden="true">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--earth-800)]">
+                          {t('guild.rank', { rank: guild.rank })}
+                        </p>
+                        <h3 className="truncate text-xl font-black text-[var(--forest-950)]">{getGuildName(guild, language)}</h3>
+                      </div>
+                    </div>
+                    <strong className="shrink-0 text-2xl font-black text-[var(--forest-950)]">{guild.totalPoints}</strong>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-[var(--forest-800)]">{getGuildDescription(guild, language)}</p>
+                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold text-[var(--forest-700)]">
+                    <span>{t('guild.members', { count: guild.memberCount })}</span>
+                    <span>{t('guild.contributors', { count: guild.contributorCount })}</span>
+                    <span>{t('guild.pointsLabel')}</span>
+                  </div>
                 </div>
               </article>
             );
@@ -352,26 +447,39 @@ export const GuildPage = ({
                   <label
                     key={guild.slug}
                     className={[
-                      'flex min-h-[7rem] cursor-pointer items-start gap-3 rounded-[1.4rem] border p-4 transition',
+                      'grid cursor-pointer overflow-hidden rounded-[1.4rem] border transition',
                       selected
                         ? 'border-[rgba(141,64,47,0.42)] bg-[rgba(255,247,229,0.82)] shadow-[0_12px_24px_rgba(112,79,39,0.1)]'
                         : 'border-[rgba(61,84,52,0.14)] bg-[rgba(255,255,255,0.5)] hover:bg-[rgba(255,255,255,0.74)]',
                     ].join(' ')}
                   >
-                    <input
-                      type="radio"
-                      name="guild"
-                      value={guild.slug}
-                      checked={selected}
-                      onChange={() => setSelectedSlug(guild.slug)}
-                      className="mt-1 h-5 w-5 accent-[var(--brocade-red)]"
-                    />
-                    <span className="min-w-0">
-                      <span className="flex items-center gap-2 font-black text-[var(--forest-950)]">
-                        <Icon className="h-5 w-5 text-[var(--earth-800)]" aria-hidden="true" />
-                        {getGuildName(guild, language)}
+                    <span className="relative block aspect-[16/7] overflow-hidden bg-[var(--forest-950)]">
+                      <img
+                        src={GUILD_PRESENTATION[guild.slug].imageSrc}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                      <span className="absolute left-3 top-3 wood-panel flex h-10 w-10 items-center justify-center rounded-full text-[var(--earth-900)]" aria-hidden="true">
+                        <Icon className="h-5 w-5" />
                       </span>
-                      <span className="mt-1 block text-sm text-[var(--forest-800)]">{getGuildDescription(guild, language)}</span>
+                    </span>
+                    <span className="flex min-h-[8.5rem] items-start gap-3 p-4">
+                      <input
+                        type="radio"
+                        name="guild"
+                        value={guild.slug}
+                        checked={selected}
+                        onChange={() => setSelectedSlug(guild.slug)}
+                        className="mt-1 h-5 w-5 accent-[var(--brocade-red)]"
+                      />
+                      <span className="min-w-0">
+                        <span className="flex items-center gap-2 font-black text-[var(--forest-950)]">
+                          {getGuildName(guild, language)}
+                        </span>
+                        <span className="mt-1 block text-sm font-semibold text-[var(--earth-800)]">{getGuildChapterHint(guild.slug, language)}</span>
+                        <span className="mt-2 block text-sm leading-6 text-[var(--forest-800)]">{getGuildDescription(guild, language)}</span>
+                      </span>
                     </span>
                   </label>
                 );
@@ -405,20 +513,35 @@ export const GuildPage = ({
       ) : (
         <>
           <Card className="overflow-hidden p-0">
-            <div className="grid gap-5 bg-[linear-gradient(135deg,rgba(38,70,42,0.96),rgba(80,103,62,0.92))] p-5 text-[var(--fabric-100)] sm:p-7">
-              <div className="flex flex-wrap items-start justify-between gap-5">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-[rgba(246,239,221,0.72)]">{t('guild.yourGuild')}</p>
-                  <h2 className="mt-2 text-3xl font-black">{currentGuild ? getGuildName(currentGuild, language) : membership.guildSlug}</h2>
-                  <p className="mt-2 max-w-2xl text-[rgba(246,239,221,0.86)]">{currentGuild ? getGuildDescription(currentGuild, language) : ''}</p>
+            <div className="grid gap-5 bg-[linear-gradient(135deg,rgba(38,70,42,0.96),rgba(80,103,62,0.92))] p-5 text-[var(--fabric-100)] sm:p-7 lg:grid-cols-[1fr_0.9fr]">
+              <div className="grid gap-5">
+                <div className="flex flex-wrap items-start justify-between gap-5">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.22em] text-[rgba(246,239,221,0.72)]">{t('guild.yourGuild')}</p>
+                    <h2 className="mt-2 text-3xl font-black">{currentGuild ? getGuildName(currentGuild, language) : membership.guildSlug}</h2>
+                    <p className="mt-2 max-w-2xl text-[rgba(246,239,221,0.86)]">{currentGuild ? getGuildDescription(currentGuild, language) : ''}</p>
+                    <p className="mt-3 max-w-2xl text-sm font-black uppercase tracking-[0.16em] text-[rgba(246,239,221,0.68)]">
+                      {getGuildChapterHint(currentGuildSlug, language)}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.4rem] border border-[rgba(246,239,221,0.2)] bg-[rgba(0,0,0,0.14)] px-5 py-4 text-right">
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-[rgba(246,239,221,0.72)]">{t('guild.nicknameLabel')}</p>
+                    <p className="mt-1 text-xl font-black">{membership.nickname}</p>
+                    <p className="mt-2 text-sm text-[rgba(246,239,221,0.8)]">{t('guild.pointsTotal', { points: membership.totalPoints })}</p>
+                  </div>
                 </div>
-                <div className="rounded-[1.4rem] border border-[rgba(246,239,221,0.2)] bg-[rgba(0,0,0,0.14)] px-5 py-4 text-right">
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-[rgba(246,239,221,0.72)]">{t('guild.nicknameLabel')}</p>
-                  <p className="mt-1 text-xl font-black">{membership.nickname}</p>
-                  <p className="mt-2 text-sm text-[rgba(246,239,221,0.8)]">{t('guild.pointsTotal', { points: membership.totalPoints })}</p>
+                {syncWarning ? <p className="rounded-[1rem] bg-[rgba(255,247,229,0.14)] px-3 py-2 text-sm text-[rgba(246,239,221,0.9)]">{t('guild.syncPending')}</p> : null}
+              </div>
+              <div className="relative min-h-[15rem] overflow-hidden rounded-[1.4rem] border border-[rgba(246,239,221,0.18)] bg-[rgba(0,0,0,0.2)] shadow-[0_18px_36px_rgba(0,0,0,0.22)]">
+                <img
+                  src={currentPresentation.imageSrc}
+                  alt={getGuildImageAlt(currentGuildSlug, language)}
+                  className="h-full min-h-[15rem] w-full object-cover"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(6,14,10,0.78)] to-transparent p-4">
+                  <p className="text-sm font-black uppercase tracking-[0.16em] text-[rgba(246,239,221,0.9)]">{currentPresentation.chapterHint[language]}</p>
                 </div>
               </div>
-              {syncWarning ? <p className="rounded-[1rem] bg-[rgba(255,247,229,0.14)] px-3 py-2 text-sm text-[rgba(246,239,221,0.9)]">{t('guild.syncPending')}</p> : null}
             </div>
           </Card>
 
