@@ -3,6 +3,7 @@ import { ArrowRight, Bike, CheckCircle2, ChevronDown, Compass, Cookie, Film, Hea
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { useAuth } from '../contexts/AuthContext';
 import { ChallengeLeaderboardPreview } from '../components/ChallengeLeaderboardPreview';
 import { ChallengeLevelOneMenu } from '../components/ChallengeLevelOneMenu';
 import { ChallengeLockedExperience } from '../components/ChallengeLockedExperience';
@@ -15,13 +16,14 @@ import {
   reassignActiveRunForScope,
 } from '../services/gameplay';
 import { ChallengeStorageLockUnavailableError } from '../services/challengeStorageLock';
+import { GuildError, recordGuildChallengeEvent } from '../services/guilds';
 import {
   getLevelOneTasks,
   getLockedChallengeTasks,
   hasUnlockedAllChallenges,
+  isLegacyLevelOneTaskId,
   isLevelOneTaskId,
 } from '../services/challengeLevels';
-import { CHALLENGE_GATE_RESET_EVENT } from '../services/challengeGateEvents';
 import { getEligibleTasksForExperience, getScopedExperienceModeFromSearch } from '../services/experienceFilters';
 import {
   GAMEPLAY_MUSIC_ADVANCE_EVENT,
@@ -108,13 +110,36 @@ const isValidExternalChallengeUrl = (value?: string): value is string => {
   }
 };
 
+const CHALLENGE_GATE_ACCEPTED_KEY = 'book-of-dien-bien:challenge-gate-accepted:v1';
+let challengeGateAcceptedInMemory = false;
+
+const loadChallengeGateAccepted = (): boolean => {
+  if (challengeGateAcceptedInMemory) return true;
+  try {
+    challengeGateAcceptedInMemory = window.localStorage.getItem(CHALLENGE_GATE_ACCEPTED_KEY) === 'accepted';
+  } catch {
+    // Keep the acknowledgement for this page lifetime when storage is unavailable.
+  }
+  return challengeGateAcceptedInMemory;
+};
+
+const rememberChallengeGateAccepted = () => {
+  challengeGateAcceptedInMemory = true;
+  try {
+    window.localStorage.setItem(CHALLENGE_GATE_ACCEPTED_KEY, 'accepted');
+  } catch {
+    // The in-memory fallback still prevents an immediate repeat prompt.
+  }
+};
+
 export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: ChallengeTask[]; clearVersion: number; language: LanguageCode; t: (key: string, values?: Record<string, string | number>) => string }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const activeTasks = useMemo(() => tasks.filter((task) => task.enabled), [tasks]);
   const scopedExperienceMode = useMemo(() => getScopedExperienceModeFromSearch(location.search), [location.search]);
   const [progress, setProgress] = useState(() => loadOrCreateProgress(activeTasks));
-  const [challengeGateAccepted, setChallengeGateAccepted] = useState(false);
+  const [challengeGateAccepted, setChallengeGateAccepted] = useState(loadChallengeGateAccepted);
   const [showLevelUnlock, setShowLevelUnlock] = useState(false);
   const [message, setMessage] = useState(() => t('challenge.ready'));
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
@@ -130,25 +155,40 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const scopeMutatingTokenRef = useRef<number | null>(null);
   const latestScopeContextRef = useRef<string>('');
   const previousResetStateRef = useRef<{ activeTasks: ChallengeTask[]; clearVersion: number } | null>(null);
+  const levelUnlockRef = useRef<HTMLDivElement | null>(null);
   const isLevelTwo = hasUnlockedAllChallenges(progress.completedTaskIds);
+  const challengeGateVisible = !challengeGateAccepted && !isLevelTwo;
   const levelOneTasks = useMemo(() => getLevelOneTasks(activeTasks), [activeTasks]);
-  const lockedTasks = useMemo(() => getLockedChallengeTasks(activeTasks), [activeTasks]);
+  const activeRunTask = findRunTask(activeTasks, progress.activeRun?.taskId);
+  const levelOneEntryTasks = useMemo(() => (
+    !isLevelTwo && activeRunTask && isLegacyLevelOneTaskId(activeRunTask.id)
+      ? [activeRunTask]
+      : levelOneTasks
+  ), [activeRunTask, isLevelTwo, levelOneTasks]);
+  const levelOneEntryTaskIds = useMemo(
+    () => new Set(levelOneEntryTasks.map((candidate) => candidate.id)),
+    [levelOneEntryTasks],
+  );
+  const lockedTasks = useMemo(
+    () => getLockedChallengeTasks(activeTasks, [...levelOneEntryTaskIds]),
+    [activeTasks, levelOneEntryTaskIds],
+  );
   const scopedCatalogTasks = useMemo(
     () => scopedExperienceMode ? getEligibleTasksForExperience(activeTasks, scopedExperienceMode) : activeTasks,
     [activeTasks, scopedExperienceMode],
   );
   const eligibleTasks = useMemo(() => {
-    const accessScope = isLevelTwo ? activeTasks : levelOneTasks;
+    const accessScope = isLevelTwo ? activeTasks : levelOneEntryTasks;
     if (!scopedExperienceMode) return accessScope;
     const accessibleTaskIds = new Set(accessScope.map((candidate) => candidate.id));
     return scopedCatalogTasks.filter((candidate) => accessibleTaskIds.has(candidate.id));
-  }, [activeTasks, isLevelTwo, levelOneTasks, scopedCatalogTasks, scopedExperienceMode]);
+  }, [activeTasks, isLevelTwo, levelOneEntryTasks, scopedCatalogTasks, scopedExperienceMode]);
   const isScopedMode = scopedExperienceMode !== null;
   const isScopedLocked = Boolean(
     isScopedMode
     && !isLevelTwo
     && scopedCatalogTasks.length > 0
-    && scopedCatalogTasks.every((candidate) => !isLevelOneTaskId(candidate.id)),
+    && scopedCatalogTasks.every((candidate) => !levelOneEntryTaskIds.has(candidate.id)),
   );
   const task = findRunTask(eligibleTasks, progress.activeRun?.taskId);
   const eligibleTaskIdSet = useMemo(() => new Set(eligibleTasks.map((candidate) => candidate.id)), [eligibleTasks]);
@@ -189,15 +229,53 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   }, [activeTasks, clearVersion, t]);
 
   useEffect(() => {
-    const resetGate = () => setChallengeGateAccepted(false);
-    window.addEventListener(CHALLENGE_GATE_RESET_EVENT, resetGate);
-    return () => window.removeEventListener(CHALLENGE_GATE_RESET_EVENT, resetGate);
-  }, []);
-
-  useEffect(() => {
     if (!showLevelUnlock) return;
+    if (completionPanelRunId) return undefined;
     const timeoutId = window.setTimeout(() => setShowLevelUnlock(false), 3600);
     return () => window.clearTimeout(timeoutId);
+  }, [completionPanelRunId, showLevelUnlock]);
+
+  useEffect(() => {
+    if (!showLevelUnlock) return undefined;
+
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusTimer = window.setTimeout(() => {
+      levelUnlockRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    }, 0);
+    const getFocusableElements = () => levelUnlockRef.current ? [...levelUnlockRef.current.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )].filter((element) => element.getClientRects().length > 0 && element.getAttribute('aria-hidden') !== 'true') : [];
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setShowLevelUnlock(false);
+        setCompletionPanelRunId(null);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const focusable = getFocusableElements();
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const focused = document.activeElement;
+      if (!(focused instanceof Node) || !levelUnlockRef.current?.contains(focused)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && focused === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && focused === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('keydown', onKeyDown);
+      previouslyFocused?.focus();
+    };
   }, [showLevelUnlock]);
 
   useLayoutEffect(() => {
@@ -210,9 +288,9 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   }, [showLevelHome]);
 
   useLayoutEffect(() => {
-    document.body.classList.toggle('challenge-cool-gate-active', !challengeGateAccepted);
+    document.body.classList.toggle('challenge-cool-gate-active', challengeGateVisible);
     return () => document.body.classList.remove('challenge-cool-gate-active');
-  }, [challengeGateAccepted]);
+  }, [challengeGateVisible]);
 
   useEffect(() => {
     const cancelInFlightScopeReassign = () => {
@@ -441,11 +519,30 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
         setGpsStatus('verified');
         setMessage(t('challenge.arrivalConfirmed', { meters: result.gps?.meters ?? 0 }));
-        if (result.completed && isLevelOneTaskId(task.id) && !hasUnlockedAllChallenges(progress.completedTaskIds)) {
+        const unlockedLevelTwo = result.completed && isLevelOneTaskId(task.id) && !hasUnlockedAllChallenges(progress.completedTaskIds);
+        if (unlockedLevelTwo) {
+          setDetailsOpen(false);
           setShowLevelUnlock(true);
         }
         if (result.completed && completedRunId) {
           setCompletionPanelRunId(completedRunId);
+          if (user) {
+            void recordGuildChallengeEvent({
+              userId: user.id,
+              clientEventId: completedRunId,
+              challengeId: task.id,
+            })
+              .then((contribution) => {
+                if (contribution?.accepted && !contribution.duplicate) {
+                  setMessage(t('challenge.guildContribution', { points: contribution.points }));
+                }
+              })
+              .catch((syncError) => {
+                if (!(syncError instanceof GuildError) || syncError.code !== 'MEMBERSHIP_REQUIRED') {
+                  console.warn('Unable to sync Guild contribution', syncError);
+                }
+              });
+          }
         }
         if (!result.progress.activeRun) {
           setMessage(t('challenge.allDone'));
@@ -475,8 +572,14 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const handleNavigateToTikTokSubmission = () => {
     if (!completionPanelRunId) return;
     const destination = `/submit-tiktok?runId=${encodeURIComponent(completionPanelRunId)}`;
+    setShowLevelUnlock(false);
     setCompletionPanelRunId(null);
     void navigate(destination);
+  };
+
+  const handleDismissLevelUnlock = () => {
+    setShowLevelUnlock(false);
+    setCompletionPanelRunId(null);
   };
 
   const leaveCompletedExperience = () => {
@@ -489,6 +592,11 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     ? t('challenge.invitationOpen')
     : progress.activeRun?.status === 'completed'
       ? t('challenge.completedStatus')
+      : '';
+  const gpsStatusTone = ['outsideTargetRadius', 'inaccurateLocation', 'permissionDenied', 'unavailable'].includes(gpsStatus)
+    ? 'is-alert'
+    : gpsStatus === 'verified'
+      ? 'is-success'
       : '';
   const taskExternalUrl = task && isValidExternalChallengeUrl(task.externalUrl) ? task.externalUrl : null;
   const taskLocationIntro = task?.locationIntro ? localize(task.locationIntro, language).trim() : '';
@@ -507,22 +615,26 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     <ChallengeLockedExperience language={language} onReturn={() => { void navigate('/challenge'); }} />
   ) : showLevelOneMenu ? (
     <ChallengeLevelOneMenu
-      tasks={isScopedMode ? eligibleTasks : levelOneTasks}
+      tasks={isScopedMode ? eligibleTasks : levelOneEntryTasks}
       lockedTasks={lockedTasks}
       completedTaskIds={progress.completedTaskIds}
       activeTaskId={task?.id}
       isMutating={isMutating}
       language={language}
       onChoose={(taskId) => { void chooseExperience([taskId]); }}
+      onOpenMap={() => { void navigate('/map'); }}
     />
   ) : undefined;
-  const atlasTasks = eligibleTasks.length > 0 ? eligibleTasks : levelOneTasks;
+  const atlasTasks = eligibleTasks.length > 0 ? eligibleTasks : levelOneEntryTasks;
 
-  if (!challengeGateAccepted) {
+  if (challengeGateVisible) {
     return (
       <ChallengeCoolGate
         language={language}
-        onAccept={() => setChallengeGateAccepted(true)}
+        onAccept={() => {
+          rememberChallengeGateAccepted();
+          setChallengeGateAccepted(true);
+        }}
         onDecline={() => { void navigate('/book'); }}
       />
     );
@@ -546,7 +658,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         completionActionLabel={isScopedCompleted ? scopeCompletionPrimaryLabel : undefined}
         onCompletionAction={isScopedCompleted ? () => { void navigate('/book'); } : undefined}
         homeContent={levelHomeContent}
-        levelLabel={isLevelTwo ? 'LEVEL 2' : 'LEVEL 1'}
+        levelLabel={isLevelTwo ? undefined : 'LEVEL 1'}
         introAside={isLevelTwo ? <ChallengeLeaderboardPreview language={language} compact /> : undefined}
       >
       <Card
@@ -714,8 +826,8 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
                     <ChevronDown aria-hidden="true" />
                   </summary>
                   <div>
-                    <p className="challenge-editorial__status-message" aria-live="polite">{message}</p>
-                    <p className="challenge-editorial__gps-line">
+                    <p className={`challenge-editorial__status-message ${gpsStatusTone}`} aria-live="polite">{message}</p>
+                    <p className={`challenge-editorial__gps-line ${gpsStatusTone}`}>
                       <ShieldCheck aria-hidden="true" />
                       <span>{gpsStatus !== 'idle' ? t('challenge.status.' + gpsStatus) : t('challenge.arrivalBoundary')}</span>
                     </p>
@@ -771,9 +883,30 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       </ExploreAtlas>
 
       {showLevelUnlock ? (
-        <div className="challenge-level-unlocked" role="status" aria-live="polite">
-          <strong>LEVEL 2 UNLOCKED</strong>
-          <span>{language === 'vi' ? 'Bạn đã chứng minh đủ rồi. Phần còn lại mở hết.' : 'You have proved enough. Everything else is now open.'}</span>
+        <div
+          ref={levelUnlockRef}
+          className={`challenge-level-unlocked ${completionPanelRunId ? 'has-completion-handoff' : ''}`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="challenge-level-unlocked-title"
+          aria-describedby={completionPanelRunId ? 'challenge-level-unlocked-description challenge-level-unlocked-handoff' : 'challenge-level-unlocked-description'}
+        >
+          <strong>{t('challenge.levelUnlockedKicker')}</strong>
+          <h2 id="challenge-level-unlocked-title">{t('challenge.levelUnlockedTitle')}</h2>
+          <span id="challenge-level-unlocked-description">{t('challenge.levelUnlockedDescription')}</span>
+          {completionPanelRunId ? (
+            <p id="challenge-level-unlocked-handoff" className="challenge-level-unlocked__handoff">
+              {t('challenge.completionHandoff.description')}
+            </p>
+          ) : null}
+          <button type="button" onClick={handleDismissLevelUnlock}>
+            {t('challenge.levelUnlockedAction')}
+          </button>
+          {completionPanelRunId ? (
+            <button type="button" className="challenge-level-unlocked__submit" onClick={handleNavigateToTikTokSubmission}>
+              {t('challenge.completionHandoff.submitAction')}
+            </button>
+          ) : null}
         </div>
       ) : null}
     </>

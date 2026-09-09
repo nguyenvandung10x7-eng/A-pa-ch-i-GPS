@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { BookOpen, Bookmark, ChevronRight, ChevronUp, Compass, Languages, LogIn, LogOut, Map, MapPin, Music2, Pause, Play, Settings2, ShieldCheck, UserRound, X } from 'lucide-react';
+import { BookOpen, Bookmark, ChevronRight, ChevronUp, Compass, Languages, LogIn, LogOut, Map, MapPin, Music2, Pause, Play, Settings2, ShieldCheck, UserRound, Users, X } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { BookChapterDrawer } from './BookChapterDrawer';
@@ -10,7 +10,6 @@ import {
   readBookSoundEnabled,
   type BookAudioStartDetail,
 } from '../services/bookAudioEvents';
-import { requestChallengeGateReset } from '../services/challengeGateEvents';
 import { getChapter, getPage } from '../services/bookContent';
 import type { LanguageCode } from '../types/task';
 import '../mobile-shell.css';
@@ -22,8 +21,10 @@ const labels = {
     signIn: 'Đăng nhập',
     saved: 'Dấu trang',
     nearby: 'Gần tôi',
+    guild: 'Hội',
     admin: 'Quản trị',
     moderation: 'Kiểm duyệt',
+    guildModeration: 'Duyệt nội dung Hội',
     language: 'Ngôn ngữ',
     privacy: 'Quyền riêng tư',
     legal: 'Pháp lý',
@@ -43,8 +44,10 @@ const labels = {
     signIn: 'Sign in',
     saved: 'Bookmarks',
     nearby: 'Near me',
+    guild: 'Guilds',
     admin: 'Administration',
     moderation: 'Moderation',
+    guildModeration: 'Guild content',
     language: 'Language',
     privacy: 'Privacy',
     legal: 'Legal',
@@ -85,6 +88,7 @@ const isFieldSurface = (pathname: string) => (
   || pathname === '/map'
   || pathname === '/discover'
   || pathname === '/leaderboard'
+  || pathname === '/guild'
   || pathname === '/submit-tiktok'
 );
 
@@ -492,14 +496,14 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
           <NavLink
             to="/challenge"
             className={({ isActive }) => isActive ? 'is-active' : ''}
-            onClick={() => {
-              if (onExploreSurface) requestChallengeGateReset();
-            }}
           >
             <Compass className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
           </NavLink>
           <NavLink to="/map" className={({ isActive }) => isActive ? 'is-active' : ''}>
             <Map className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Bản đồ' : 'Map'}</span>
+          </NavLink>
+          <NavLink to="/guild" className={({ isActive }) => isActive ? 'is-active' : ''}>
+            <Users className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Hội' : 'Guilds'}</span>
           </NavLink>
           <button
             type="button"
@@ -540,11 +544,15 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
             <div className="editorial-account-sheet__links">
               <Link to="/saved" onClick={() => closeAccountDialog(false)}><Bookmark /><span>{copy.saved}</span><ChevronRight /></Link>
               <Link to="/nearby" onClick={() => closeAccountDialog(false)}><MapPin /><span>{copy.nearby}</span><ChevronRight /></Link>
+              <Link to="/guild" onClick={() => closeAccountDialog(false)}><Users /><span>{copy.guild}</span><ChevronRight /></Link>
               {user ? (
                 <Link to="/admin" onClick={() => closeAccountDialog(false)}><Settings2 /><span>{copy.admin}</span><ChevronRight /></Link>
               ) : null}
               {user && !checkingAdmin && isAdmin ? (
-                <Link to="/moderation" onClick={() => closeAccountDialog(false)}><ShieldCheck /><span>{copy.moderation}</span><ChevronRight /></Link>
+                <>
+                  <Link to="/moderation" onClick={() => closeAccountDialog(false)}><ShieldCheck /><span>{copy.moderation}</span><ChevronRight /></Link>
+                  <Link to="/moderation/guilds" onClick={() => closeAccountDialog(false)}><Users /><span>{copy.guildModeration}</span><ChevronRight /></Link>
+                </>
               ) : null}
               {onBookSurface ? (
                 <button type="button" onClick={toggleBookSound}>

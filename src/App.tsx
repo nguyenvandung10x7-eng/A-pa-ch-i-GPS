@@ -17,6 +17,8 @@ import { ChallengePage } from './pages/ChallengePage';
 import { CreditsPage } from './pages/CreditsPage';
 import { DiscoverPage } from './pages/DiscoverPage';
 import { GameMapPage } from './pages/GameMapPage';
+import { GuildModerationPage } from './pages/GuildModerationPage';
+import { GuildPage } from './pages/GuildPage';
 import { LegalSafetyPage } from './pages/LegalSafetyPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ModerationPage } from './pages/ModerationPage';
@@ -86,7 +88,7 @@ const AuthenticatedRoute = ({
 export default function App() {
   const { language, setLanguage, t } = useTranslation();
   const { tasks, setTasks } = useTasks();
-  const { isAdmin, checkingAdmin, adminCheckFailed } = useAdminStatus();
+  const { isAdmin, checkingAdmin, adminCheckFailed, retryAdminCheck } = useAdminStatus();
   const [clearVersion, setClearVersion] = useState(() => getChallengeClearVersion());
   const location = useLocation();
   const navigationType = useNavigationType();
@@ -147,12 +149,16 @@ export default function App() {
       <Route path="/experiences" element={<Navigate to="/challenge" replace />} />
       <Route path="/discover" element={<ProductSurfaceFrame surface="challenge"><DiscoverPage language={language} t={t} /></ProductSurfaceFrame>} />
       <Route path="/leaderboard" element={<ProductSurfaceFrame surface="challenge"><LeaderboardPage language={language} t={t} /></ProductSurfaceFrame>} />
+      <Route path="/guild" element={<ProductSurfaceFrame surface="challenge"><GuildPage tasks={tasks} language={language} t={t} /></ProductSurfaceFrame>} />
       <Route path="/submit-tiktok" element={<ProductSurfaceFrame surface="challenge"><TikTokSubmissionPage clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>} />
     </Routes>
   );
 
   const normalizedPathname = normalizeRoutePath(location.pathname);
-  const staffOrLegalRoute = ['/admin', '/moderation', '/privacy', '/legal'].includes(normalizedPathname);
+  const staffOrLegalRoute = normalizedPathname === '/admin'
+    || normalizedPathname.startsWith('/moderation')
+    || normalizedPathname === '/privacy'
+    || normalizedPathname === '/legal';
 
   return (
     <Layout
@@ -166,6 +172,16 @@ export default function App() {
         <Routes>
           <Route path="/privacy" element={<LegalSafetyPage t={t} />} />
           <Route path="/legal" element={<LegalSafetyPage t={t} />} />
+          <Route path="/moderation/guilds" element={(
+            <GuildModerationPage
+              language={language}
+              t={t}
+              isAdmin={isAdmin}
+              checkingAdmin={checkingAdmin}
+              adminCheckFailed={adminCheckFailed}
+              onRetryAdminCheck={retryAdminCheck}
+            />
+          )} />
           <Route path="/moderation" element={(
             <ModerationPage
               language={language}
@@ -173,6 +189,7 @@ export default function App() {
               isAdmin={isAdmin}
               checkingAdmin={checkingAdmin}
               adminCheckFailed={adminCheckFailed}
+              onRetryAdminCheck={retryAdminCheck}
             />
           )} />
           <Route path="/admin" element={<AuthenticatedRoute t={t} redirectPath="/admin"><AdminPage tasks={tasks} setTasks={setTasks} t={t} /></AuthenticatedRoute>} />

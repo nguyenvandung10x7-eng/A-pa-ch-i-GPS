@@ -1,0 +1,22 @@
+{
+  "asset": "public/images/guilds/nature-absurd-postcard.webp",
+  "status_basis": "project-generated-guild-illustration",
+  "checked_on": "2026-09-09",
+  "source": {
+    "generator": "OpenAI image generation",
+    "reference_asset": null,
+    "generated_png_sha256": "bae235697d65a916f51f31c421d7981433eac17811d6a67a96d459b984de062d",
+    "generated_dimensions": "1536x1024",
+    "generated_bytes": 2870040
+  },
+  "derivative": {
+    "dimensions": "1536x1024",
+    "sha256": "de4d482f2cb5499d9d65a648c468881c7bfd14d291fb16c75d5bce50e310f685",
+    "bytes": 292236,
+    "changes": "Generated PNG re-encoded as 1536x1024 lossy WebP without crop or visual content edits.",
+    "command": "ffmpeg -i GENERATED.png -vf scale=1536:-2:flags=lanczos -c:v libwebp -lossless 0 -compression_level 6 -q:v 84 -an OUTPUT.webp",
+    "tool": "ffmpeg"
+  },
+  "prompt_summary": "Absurd lush Guild postcard for Book of Dien Bien nature: a leaf boat carrying muddy boots through terraced fields, river light, blossom details, misty hills, and a playful impossible waterfall.",
+  "representation_note": "Purpose-built Guild illustration. It is not documentary photography or exact location evidence."
+}

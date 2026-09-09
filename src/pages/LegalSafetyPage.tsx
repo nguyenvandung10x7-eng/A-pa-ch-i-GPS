@@ -38,6 +38,7 @@ export const LegalSafetyPage = ({ t }: { t: (key: string) => string }) => {
               <li>GPS chỉ được dùng cho cơ chế gameplay, không được xem là bằng chứng hiện diện vật lý.</li>
               <li>Liên kết TikTok được kiểm duyệt trước khi hiển thị công khai.</li>
               <li>Liên kết TikTok đã được phê duyệt và thông tin hồ sơ công khai có thể được hiển thị công khai.</li>
+              <li>Hội có thể hiển thị công khai biệt danh, điểm đóng góp và những mảnh ghi chép đã được duyệt.</li>
               <li>Bài gửi pending và rejected không hiển thị công khai.</li>
               <li>Dữ liệu được lưu trữ bằng Supabase và có thể được xử lý bởi nhà cung cấp dịch vụ.</li>
               <li>Bạn có thể yêu cầu truy cập, chỉnh sửa hoặc xóa dữ liệu cá nhân qua email: apachaigps@gmail.com.</li>
@@ -54,6 +55,7 @@ export const LegalSafetyPage = ({ t }: { t: (key: string) => string }) => {
               <li>GPS is used only for gameplay and is not treated as proof of physical presence.</li>
               <li>TikTok links are reviewed before public display.</li>
               <li>Approved TikTok links and public profile information may be shown publicly.</li>
+              <li>A Guild may publicly show your nickname, contribution score, and approved notes.</li>
               <li>Pending and rejected submissions are not publicly displayed.</li>
               <li>Data is stored using Supabase and may be processed by service providers.</li>
               <li>Users may request access, correction, or deletion of personal data by contacting: apachaigps@gmail.com.</li>
@@ -94,6 +96,7 @@ export const LegalSafetyPage = ({ t }: { t: (key: string) => string }) => {
               <li>{t('legal.privacy.dataCategories.tiktok')}</li>
               <li>{t('legal.privacy.dataCategories.votes')}</li>
               <li>{t('legal.privacy.dataCategories.moderation')}</li>
+              <li>{t('legal.privacy.dataCategories.guild')}</li>
             </ul>
           </article>
 

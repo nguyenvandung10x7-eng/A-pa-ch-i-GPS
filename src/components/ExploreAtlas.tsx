@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Check, ChevronRight, Compass, Info, MapPin, Navigation, Sparkles, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { Check, ChevronRight, Compass, Info, LocateFixed, MapPin, Navigation, Sparkles, X } from 'lucide-react';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
+import { distanceMeters, GeolocationRequestError, getCurrentPosition } from '../utils/geo';
 import '../pages/explore-atlas.css';
 
 type ExploreAtlasProps = {
@@ -45,6 +46,13 @@ const copy = {
     details: 'Chi tiết địa điểm',
     completed: 'Đã đi qua',
     invitationsHere: 'lời mời tại đây',
+    locate: 'Vị trí của tôi',
+    locating: 'Đang định vị…',
+    youAreHere: 'Bạn đang ở đây',
+    distanceToPlace: 'Cách điểm này {{distance}}',
+    accuracy: 'sai số khoảng {{distance}}',
+    locationDenied: 'Trình duyệt chưa cho phép lấy vị trí.',
+    locationUnavailable: 'Chưa lấy được vị trí lúc này.',
     atlasDisclaimer: 'Sa hình và vị trí chỉ để minh họa · Không dùng để tìm đường',
   },
   en: {
@@ -60,6 +68,13 @@ const copy = {
     details: 'Place details',
     completed: 'Visited',
     invitationsHere: 'invitations here',
+    locate: 'My location',
+    locating: 'Locating…',
+    youAreHere: 'You are here',
+    distanceToPlace: '{{distance}} from this place',
+    accuracy: 'accuracy about {{distance}}',
+    locationDenied: 'Location permission is not enabled for this browser.',
+    locationUnavailable: 'Your location could not be found right now.',
     atlasDisclaimer: 'Atlas and positions are illustrative only · Not for navigation',
   },
 } as const;
@@ -73,9 +88,9 @@ const CITY_ATLAS_BOUNDS = {
   east: 103.071,
 } as const;
 
-// Keep the GPS layer inside the part of the illustrated atlas that remains
-// readable above the destination card. The artwork is intentionally a
-// diorama; these values, rather than painted landmarks, place task pins.
+// Keep task pins inside the part of the illustrated atlas that remains readable
+// above the destination card. The artwork is intentionally a diorama; these
+// values, rather than painted landmarks, place task pins.
 const CITY_ATLAS_FRAME = {
   left: 10,
   right: 90,
@@ -126,19 +141,19 @@ const GROUP_LABEL_PRIORITY = [
 ] as const;
 
 const CITY_VISUAL_PLACEMENTS: Partial<Record<string, AtlasPinPlacement>> = {
-  'ca-phe-ke-nenh-cat-banh': { x: 87.8, y: 33.8, depth: 'midground', labelPlacement: 'left' },
-  'ruong-bac-thang-ta-leng-mthen': { x: 87.8, y: 33.8, depth: 'midground', labelPlacement: 'left' },
-  'thac-ke-nenh-mthen': { x: 87.8, y: 33.8, depth: 'midground', labelPlacement: 'left' },
-  'nhin-xuong-long-chao-cua-chung-ta': { x: 74.4, y: 31.2, depth: 'midground', labelPlacement: 'left' },
-  'tim-cay-xoai-co-thu': { x: 80.8, y: 42.2, depth: 'midground', labelPlacement: 'left' },
+  'nhin-xuong-long-chao-cua-chung-ta': { x: 72.8, y: 30.4, depth: 'midground', labelPlacement: 'left' },
+  'thac-ke-nenh-mthen': { x: 84.4, y: 32.2, depth: 'midground', labelPlacement: 'top' },
+  'ca-phe-ke-nenh-cat-banh': { x: 88.2, y: 35.7, depth: 'midground', labelPlacement: 'left' },
+  'ruong-bac-thang-ta-leng-mthen': { x: 91.2, y: 39.5, depth: 'midground', labelPlacement: 'left' },
+  'tim-cay-xoai-co-thu': { x: 78.6, y: 43.8, depth: 'midground', labelPlacement: 'left' },
 };
 
 const WEST_VISUAL_PLACEMENTS: Partial<Record<string, AtlasPinPlacement>> = {
-  'ban-a-pa-chai-tang-banh-trung-thu': { x: 35.8, y: 14.7, depth: 'background', labelPlacement: 'right' },
-  'cot-co-a-pa-chai-mthen': { x: 35.8, y: 14.7, depth: 'background', labelPlacement: 'right' },
-  'cot-co-a-pa-chai-trai-ban-lanh-lung': { x: 35.8, y: 14.7, depth: 'background', labelPlacement: 'right' },
-  'cau-ta-ko-khu-tang-banh-trung-thu': { x: 49.2, y: 17.1, depth: 'background', labelPlacement: 'bottom' },
-  'cho-muong-nhe-tang-banh-trung-thu': { x: 63.4, y: 19.5, depth: 'background', labelPlacement: 'left' },
+  'ban-a-pa-chai-tang-banh-trung-thu': { x: 34.7, y: 13.8, depth: 'background', labelPlacement: 'right' },
+  'cot-co-a-pa-chai-mthen': { x: 37.1, y: 15.1, depth: 'background', labelPlacement: 'right' },
+  'cot-co-a-pa-chai-trai-ban-lanh-lung': { x: 35.7, y: 16.6, depth: 'background', labelPlacement: 'right' },
+  'cau-ta-ko-khu-tang-banh-trung-thu': { x: 49.4, y: 17.5, depth: 'background', labelPlacement: 'bottom' },
+  'cho-muong-nhe-tang-banh-trung-thu': { x: 63.2, y: 20.3, depth: 'background', labelPlacement: 'left' },
 };
 
 const isWithinCityAtlas = (task: ChallengeTask) => (
@@ -148,16 +163,33 @@ const isWithinCityAtlas = (task: ChallengeTask) => (
   && task.gps.lng <= CITY_ATLAS_BOUNDS.east
 );
 
-const projectTaskToAtlas = (task: ChallengeTask) => {
-  const longitudeRatio = (task.gps.lng - CITY_ATLAS_BOUNDS.west) / (CITY_ATLAS_BOUNDS.east - CITY_ATLAS_BOUNDS.west);
-  const latitudeRatio = (CITY_ATLAS_BOUNDS.north - task.gps.lat) / (CITY_ATLAS_BOUNDS.north - CITY_ATLAS_BOUNDS.south);
+const formatDistance = (meters: number, language: LanguageCode) => {
+  if (meters < 1000) return `${Math.max(1, Math.round(meters))} m`;
+  return `${(meters / 1000).toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US', {
+    minimumFractionDigits: meters < 10000 ? 1 : 0,
+    maximumFractionDigits: meters < 10000 ? 1 : 0,
+  })} km`;
+};
+
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+const interpolate = (start: number, end: number, ratio: number) => start + Math.max(0, Math.min(1, ratio)) * (end - start);
+
+const projectCoordinatesToAtlas = (
+  coordinates: Pick<ChallengeTask['gps'], 'lat' | 'lng'>,
+  options: { clampToFrame?: boolean } = {},
+) => {
+  const longitudeRatio = (coordinates.lng - CITY_ATLAS_BOUNDS.west) / (CITY_ATLAS_BOUNDS.east - CITY_ATLAS_BOUNDS.west);
+  const latitudeRatio = (CITY_ATLAS_BOUNDS.north - coordinates.lat) / (CITY_ATLAS_BOUNDS.north - CITY_ATLAS_BOUNDS.south);
+  const xRatio = options.clampToFrame ? clamp(longitudeRatio, 0, 1) : longitudeRatio;
+  const yRatio = options.clampToFrame ? clamp(latitudeRatio, 0, 1) : latitudeRatio;
   return {
-    x: CITY_ATLAS_FRAME.left
-      + Math.max(0, Math.min(1, longitudeRatio)) * (CITY_ATLAS_FRAME.right - CITY_ATLAS_FRAME.left),
-    y: CITY_ATLAS_FRAME.top
-      + Math.max(0, Math.min(1, latitudeRatio)) * (CITY_ATLAS_FRAME.bottom - CITY_ATLAS_FRAME.top),
+    x: interpolate(CITY_ATLAS_FRAME.left, CITY_ATLAS_FRAME.right, xRatio),
+    y: interpolate(CITY_ATLAS_FRAME.top, CITY_ATLAS_FRAME.bottom, yRatio),
   };
 };
+
+const projectTaskToAtlas = (task: ChallengeTask) => projectCoordinatesToAtlas(task.gps);
 
 const getPlaceGroups = (tasks: ChallengeTask[]) => {
   const groups = new Map<string, AtlasPlaceGroup>();
@@ -243,6 +275,7 @@ export const ExploreAtlas = ({
 }: ExploreAtlasProps) => {
   const c = copy[language];
   const sheetRef = useRef<HTMLElement | null>(null);
+  const detailsTriggerRef = useRef<HTMLButtonElement | null>(null);
   const closeRef = useRef(onCloseDetails);
   const placeGroups = useMemo(() => getPlaceGroups(tasks), [tasks]);
   const cityGroups = useMemo(() => placeGroups.filter((group) => isWithinCityAtlas(group.anchorTask)), [placeGroups]);
@@ -256,6 +289,10 @@ export const ExploreAtlas = ({
   const completedTaskIdSet = useMemo(() => new Set(completedTaskIds), [completedTaskIds]);
   const [manualSelection, setManualSelection] = useState<{ activeTaskId: string; groupId: string } | null>(null);
   const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set());
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; accuracy?: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationMessage, setLocationMessage] = useState<string | null>(null);
+  const locatingRef = useRef(false);
 
   const markImageFailed = (taskId: string) => {
     setFailedImageIds((current) => {
@@ -275,8 +312,13 @@ export const ExploreAtlas = ({
     const previousOverflow = document.body.style.overflow;
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const sheet = sheetRef.current;
+    const fallbackFocusTarget = detailsTriggerRef.current;
     document.body.style.overflow = 'hidden';
-    sheet?.focus();
+    const getFocusableElements = () => sheet ? [...sheet.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )].filter((element) => element.getClientRects().length > 0 && element.getAttribute('aria-hidden') !== 'true') : [];
+    const initialFocusable = getFocusableElements();
+    (initialFocusable[0] ?? sheet)?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -285,9 +327,7 @@ export const ExploreAtlas = ({
         return;
       }
       if (event.key !== 'Tab' || !sheet) return;
-      const focusable = [...sheet.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )].filter((element) => element.offsetParent !== null && element.getAttribute('aria-hidden') !== 'true');
+      const focusable = getFocusableElements();
       if (!focusable.length) {
         event.preventDefault();
         sheet.focus();
@@ -296,10 +336,13 @@ export const ExploreAtlas = ({
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       const focused = document.activeElement;
-      if (event.shiftKey && (focused === first || !sheet.contains(focused))) {
+      if (!(focused instanceof Node) || focused === sheet || !sheet.contains(focused)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && focused === first) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && (focused === last || !sheet.contains(focused))) {
+      } else if (!event.shiftKey && focused === last) {
         event.preventDefault();
         first.focus();
       }
@@ -309,7 +352,8 @@ export const ExploreAtlas = ({
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', onKeyDown);
-      previouslyFocused?.focus();
+      const focusTarget = previouslyFocused?.isConnected ? previouslyFocused : fallbackFocusTarget;
+      focusTarget?.focus();
     };
   }, [detailsOpen]);
 
@@ -329,6 +373,12 @@ export const ExploreAtlas = ({
   const selectedGroupRemainingCount = selectedGroupCount - selectedGroupCompletedCount;
   const selectedGroupIsComplete = selectedGroupCount > 0 && selectedGroupCompletedCount === selectedGroupCount;
   const selectedInvitation = selectedTask ? invitationName(selectedTask, language) : '';
+  const selectedDistance = userLocation && selectedTask
+    ? Math.round(distanceMeters(userLocation, selectedTask.gps))
+    : null;
+  const selectedDistanceIsOutsideRadius = Boolean(
+    selectedDistance !== null && selectedTask && selectedDistance > selectedTask.gps.radius,
+  );
   const actionLabel = selectedGroupIsComplete
     ? completionActionLabel ?? c.completed
     : selectedIsActive
@@ -349,6 +399,62 @@ export const ExploreAtlas = ({
     if (selectedIsActive) onOpenDetails();
     else onChoose(selectedGroup.tasks.map((task) => task.id));
   };
+
+  const applyUserPosition = useCallback((position: GeolocationPosition) => {
+    setUserLocation({
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+    });
+    setLocationMessage(null);
+  }, []);
+
+  const getLocationErrorMessage = useCallback((error: unknown) => {
+    const denied = error instanceof GeolocationRequestError && error.code === 1;
+    return denied ? c.locationDenied : c.locationUnavailable;
+  }, [c.locationDenied, c.locationUnavailable]);
+
+  const handleLocate = useCallback(async () => {
+    if (locatingRef.current) return;
+    locatingRef.current = true;
+    setLocating(true);
+    setLocationMessage(null);
+    try {
+      const position = await getCurrentPosition();
+      applyUserPosition(position);
+    } catch (error) {
+      setLocationMessage(getLocationErrorMessage(error));
+    } finally {
+      locatingRef.current = false;
+      setLocating(false);
+    }
+  }, [applyUserPosition, getLocationErrorMessage]);
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      return undefined;
+    }
+
+    let hasReceivedPosition = false;
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        hasReceivedPosition = true;
+        applyUserPosition(position);
+        setLocating(false);
+      },
+      (error) => {
+        setLocating(false);
+        if (!hasReceivedPosition) {
+          setLocationMessage(getLocationErrorMessage(new GeolocationRequestError(error.code, error.message)));
+        }
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 },
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [applyUserPosition, getLocationErrorMessage]);
 
   return (
     <>
@@ -372,11 +478,27 @@ export const ExploreAtlas = ({
           </div>
         </header>
 
+        <div className="explore-atlas__location-control" aria-live="polite">
+          <button type="button" onClick={() => { void handleLocate(); }} disabled={locating}>
+            <LocateFixed aria-hidden="true" />
+            {locating ? c.locating : c.locate}
+          </button>
+          {selectedDistance !== null ? (
+            <span className={selectedDistanceIsOutsideRadius ? 'is-outside-radius' : 'is-within-radius'}>
+              <Navigation aria-hidden="true" />
+              {c.distanceToPlace.replace('{{distance}}', formatDistance(selectedDistance, language))}
+            </span>
+          ) : null}
+          {userLocation?.accuracy ? (
+            <span>{c.accuracy.replace('{{distance}}', formatDistance(userLocation.accuracy, language))}</span>
+          ) : null}
+          {locationMessage ? <small role="status">{locationMessage}</small> : null}
+        </div>
+
         <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trên bản đồ' : 'Atlas discoveries'}>
           {atlasGroups.map((group, index) => {
             const selected = selectedGroup?.id === group.id;
             const isActive = invitationOpen && groupContainsTask(group, activeTaskId);
-            const imageTask = isActive ? activeTask ?? groupRepresentativeTask(group) : groupRepresentativeTask(group);
             const groupCompletedCount = group.tasks.filter((task) => completedTaskIdSet.has(task.id)).length;
             const groupIsComplete = groupCompletedCount === group.tasks.length;
             const atlasPoint = getGroupAtlasPlacement(group);
@@ -392,10 +514,8 @@ export const ExploreAtlas = ({
                 aria-label={groupPlaceName(group, language)}
               >
                 <span className="explore-atlas__pin-drop">
-                  <span className="explore-atlas__pin-photo">
-                    {imageTask.image && !failedImageIds.has(imageTask.id)
-                      ? <img src={imageTask.image} alt="" onError={() => markImageFailed(imageTask.id)} />
-                      : <MapPin aria-hidden="true" />}
+                  <span className="explore-atlas__pin-icon">
+                    <MapPin aria-hidden="true" />
                   </span>
                 </span>
                 <strong>{groupPlaceName(group, language)}</strong>
@@ -433,7 +553,7 @@ export const ExploreAtlas = ({
               </p>
             ) : <p>{language === 'vi' ? 'Chạm vào một điểm trên sa hình.' : 'Tap a place on the atlas.'}</p>}
           </div>
-          <button type="button" onClick={handlePrimaryAction} disabled={actionDisabled}>
+          <button ref={detailsTriggerRef} type="button" onClick={handlePrimaryAction} disabled={actionDisabled}>
             <span>{actionLabel}</span><ChevronRight aria-hidden="true" />
           </button>
           <div className="explore-atlas__progress" aria-label={`${completedCount} / ${progressTotal}`}>

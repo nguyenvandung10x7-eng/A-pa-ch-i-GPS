@@ -65,6 +65,13 @@ export const CHALLENGE_NAVIGATION_ITEMS: ReadonlyArray<ProductNavigationItem> = 
     kind: 'utility',
   },
   {
+    id: 'guild',
+    path: '/guild',
+    labelKey: 'nav.guild',
+    surface: 'challenge',
+    kind: 'utility',
+  },
+  {
     id: 'history',
     path: '/history',
     labelKey: 'nav.history',

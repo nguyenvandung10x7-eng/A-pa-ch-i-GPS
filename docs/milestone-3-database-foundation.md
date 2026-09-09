@@ -14,6 +14,15 @@ Run these migrations manually in the Supabase SQL Editor in order:
 10. Note that client submissions must omit protected/default columns such as `id`, `star_value`, `status`, `created_at`, and `updated_at`; those values should rely on database defaults or trusted operations.
 11. Note that `tiktok_video_id` is expected to be supplied during insert and is not updated through the client-facing update policy.
 12. Note that submitted TikTok URLs are immutable after submission; if a URL is incorrect, the user must create a new submission.
+13. After the moderation migration, run [supabase/migrations/20260905120000_add_guilds_mvp.sql](../supabase/migrations/20260905120000_add_guilds_mvp.sql) to create the four Guilds, memberships, server-catalogued contribution events, Guild notes, RLS policies, and Guild moderation RPCs.
+14. Immediately run [supabase/migrations/20260907032258_harden_rpc_execute_privileges.sql](../supabase/migrations/20260907032258_harden_rpc_execute_privileges.sql) to remove Supabase's default anonymous execute grants from member, moderation, and trigger functions. The Guild leaderboard and Guild roster remain intentionally public.
+15. Run [supabase/migrations/20260907083510_minimize_public_guild_roster.sql](../supabase/migrations/20260907083510_minimize_public_guild_roster.sql) so the public roster returns only rank, nickname, and contribution points; exact membership timestamps remain private and are used only as an internal tie-breaker.
+16. Run [supabase/migrations/20260907084028_sync_guild_score_catalog.sql](../supabase/migrations/20260907084028_sync_guild_score_catalog.sql) to add the five Challenge tasks supplied by the runtime catalog import.
+17. Run [supabase/migrations/20260908022600_harden_guild_scoring_and_posts.sql](../supabase/migrations/20260908022600_harden_guild_scoring_and_posts.sql) to align scoring with the 14 enabled runtime Challenges, enforce one score award per player and Challenge, and serialize each player's pending-post limit check.
+18. Verify that the seeded Guild rows are exactly `history`, `nature`, `walk`, and `rebellion`, then test the public Guild leaderboard before enabling the feature for players.
+19. Note that Guild score events are idempotent by authenticated user and Challenge. The client run ID remains unique, while the existing GPS check remains browser-side in this MVP and is not a server-side anti-cheat proof.
+
+Score classification for this release: the 14 tasks enabled by the runtime catalog are also the 14 enabled entries in the server-owned `guild_score_catalog`; the 12 retired task IDs remain disabled for referential integrity. BOOK/FIELD editorial pages and guide links do not create Guild points by themselves. A score event is attempted only for an authenticated player's completed, GPS-verified Challenge run; the server catalog supplies the awarded points.
 
 These migrations are intentionally not applied automatically by the app.
 

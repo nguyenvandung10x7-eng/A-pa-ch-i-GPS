@@ -21,7 +21,12 @@ export const LeaderboardDrawer = ({ language, onClose }: LeaderboardDrawerProps)
     const previousOverflow = document.body.style.overflow;
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     document.body.style.overflow = 'hidden';
-    dialogRef.current?.focus();
+    const dialog = dialogRef.current;
+    const getFocusableElements = () => dialog ? [...dialog.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )].filter((element) => element.getClientRects().length > 0 && element.getAttribute('aria-hidden') !== 'true') : [];
+    const initialFocusable = getFocusableElements();
+    (initialFocusable[0] ?? dialog)?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -31,11 +36,8 @@ export const LeaderboardDrawer = ({ language, onClose }: LeaderboardDrawerProps)
       }
 
       if (event.key !== 'Tab') return;
-      const dialog = dialogRef.current;
       if (!dialog) return;
-      const focusable = [...dialog.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )].filter((element) => element.offsetParent !== null && element.getAttribute('aria-hidden') !== 'true');
+      const focusable = getFocusableElements();
 
       if (!focusable.length) {
         event.preventDefault();
@@ -46,10 +48,13 @@ export const LeaderboardDrawer = ({ language, onClose }: LeaderboardDrawerProps)
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       const active = document.activeElement;
-      if (event.shiftKey && (active === first || !dialog.contains(active))) {
+      if (!(active instanceof Node) || active === dialog || !dialog.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && active === first) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && (active === last || !dialog.contains(active))) {
+      } else if (!event.shiftKey && active === last) {
         event.preventDefault();
         first.focus();
       }
@@ -59,7 +64,7 @@ export const LeaderboardDrawer = ({ language, onClose }: LeaderboardDrawerProps)
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', onKeyDown);
-      previouslyFocused?.focus();
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
     };
   }, []);
 
