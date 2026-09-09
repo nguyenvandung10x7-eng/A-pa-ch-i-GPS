@@ -155,6 +155,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const scopeMutatingTokenRef = useRef<number | null>(null);
   const latestScopeContextRef = useRef<string>('');
   const previousResetStateRef = useRef<{ activeTasks: ChallengeTask[]; clearVersion: number } | null>(null);
+  const levelUnlockRef = useRef<HTMLDivElement | null>(null);
   const isLevelTwo = hasUnlockedAllChallenges(progress.completedTaskIds);
   const challengeGateVisible = !challengeGateAccepted && !isLevelTwo;
   const levelOneTasks = useMemo(() => getLevelOneTasks(activeTasks), [activeTasks]);
@@ -229,8 +230,52 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
 
   useEffect(() => {
     if (!showLevelUnlock) return;
+    if (completionPanelRunId) return undefined;
     const timeoutId = window.setTimeout(() => setShowLevelUnlock(false), 3600);
     return () => window.clearTimeout(timeoutId);
+  }, [completionPanelRunId, showLevelUnlock]);
+
+  useEffect(() => {
+    if (!showLevelUnlock) return undefined;
+
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusTimer = window.setTimeout(() => {
+      levelUnlockRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    }, 0);
+    const getFocusableElements = () => levelUnlockRef.current ? [...levelUnlockRef.current.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )].filter((element) => element.getClientRects().length > 0 && element.getAttribute('aria-hidden') !== 'true') : [];
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setShowLevelUnlock(false);
+        setCompletionPanelRunId(null);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const focusable = getFocusableElements();
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const focused = document.activeElement;
+      if (!(focused instanceof Node) || !levelUnlockRef.current?.contains(focused)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && focused === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && focused === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('keydown', onKeyDown);
+      previouslyFocused?.focus();
+    };
   }, [showLevelUnlock]);
 
   useLayoutEffect(() => {
@@ -477,11 +522,10 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         const unlockedLevelTwo = result.completed && isLevelOneTaskId(task.id) && !hasUnlockedAllChallenges(progress.completedTaskIds);
         if (unlockedLevelTwo) {
           setDetailsOpen(false);
-          setCompletionPanelRunId(null);
           setShowLevelUnlock(true);
         }
         if (result.completed && completedRunId) {
-          if (!unlockedLevelTwo) setCompletionPanelRunId(completedRunId);
+          setCompletionPanelRunId(completedRunId);
           if (user) {
             void recordGuildChallengeEvent({
               userId: user.id,
@@ -528,8 +572,14 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const handleNavigateToTikTokSubmission = () => {
     if (!completionPanelRunId) return;
     const destination = `/submit-tiktok?runId=${encodeURIComponent(completionPanelRunId)}`;
+    setShowLevelUnlock(false);
     setCompletionPanelRunId(null);
     void navigate(destination);
+  };
+
+  const handleDismissLevelUnlock = () => {
+    setShowLevelUnlock(false);
+    setCompletionPanelRunId(null);
   };
 
   const leaveCompletedExperience = () => {
@@ -833,13 +883,30 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
       </ExploreAtlas>
 
       {showLevelUnlock ? (
-        <div className="challenge-level-unlocked" role="status" aria-live="polite">
+        <div
+          ref={levelUnlockRef}
+          className={`challenge-level-unlocked ${completionPanelRunId ? 'has-completion-handoff' : ''}`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="challenge-level-unlocked-title"
+          aria-describedby={completionPanelRunId ? 'challenge-level-unlocked-description challenge-level-unlocked-handoff' : 'challenge-level-unlocked-description'}
+        >
           <strong>{t('challenge.levelUnlockedKicker')}</strong>
-          <h2>{t('challenge.levelUnlockedTitle')}</h2>
-          <span>{t('challenge.levelUnlockedDescription')}</span>
-          <button type="button" onClick={() => setShowLevelUnlock(false)}>
+          <h2 id="challenge-level-unlocked-title">{t('challenge.levelUnlockedTitle')}</h2>
+          <span id="challenge-level-unlocked-description">{t('challenge.levelUnlockedDescription')}</span>
+          {completionPanelRunId ? (
+            <p id="challenge-level-unlocked-handoff" className="challenge-level-unlocked__handoff">
+              {t('challenge.completionHandoff.description')}
+            </p>
+          ) : null}
+          <button type="button" onClick={handleDismissLevelUnlock}>
             {t('challenge.levelUnlockedAction')}
           </button>
+          {completionPanelRunId ? (
+            <button type="button" className="challenge-level-unlocked__submit" onClick={handleNavigateToTikTokSubmission}>
+              {t('challenge.completionHandoff.submitAction')}
+            </button>
+          ) : null}
         </div>
       ) : null}
     </>

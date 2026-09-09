@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Check, ChevronRight, Compass, Crosshair, Info, LocateFixed, MapPin, Navigation, Sparkles, X } from 'lucide-react';
+import { Check, ChevronRight, Compass, Info, LocateFixed, MapPin, Navigation, Sparkles, X } from 'lucide-react';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
 import { distanceMeters, GeolocationRequestError, getCurrentPosition } from '../utils/geo';
@@ -88,9 +88,9 @@ const CITY_ATLAS_BOUNDS = {
   east: 103.071,
 } as const;
 
-// Keep the GPS layer inside the part of the illustrated atlas that remains
-// readable above the destination card. The artwork is intentionally a
-// diorama; these values, rather than painted landmarks, place task pins.
+// Keep task pins inside the part of the illustrated atlas that remains readable
+// above the destination card. The artwork is intentionally a diorama; these
+// values, rather than painted landmarks, place task pins.
 const CITY_ATLAS_FRAME = {
   left: 10,
   right: 90,
@@ -376,8 +376,6 @@ export const ExploreAtlas = ({
   const selectedDistance = userLocation && selectedTask
     ? Math.round(distanceMeters(userLocation, selectedTask.gps))
     : null;
-  const userAtlasPoint = userLocation ? projectCoordinatesToAtlas(userLocation, { clampToFrame: true }) : null;
-  const selectedAtlasPoint = selectedGroup ? getGroupAtlasPlacement(selectedGroup) : null;
   const selectedDistanceIsOutsideRadius = Boolean(
     selectedDistance !== null && selectedTask && selectedDistance > selectedTask.gps.radius,
   );
@@ -496,40 +494,6 @@ export const ExploreAtlas = ({
           ) : null}
           {locationMessage ? <small role="status">{locationMessage}</small> : null}
         </div>
-        {userAtlasPoint ? (
-          <span
-            className="explore-atlas__user-pin"
-            style={{ left: `${userAtlasPoint.x}%`, top: `${userAtlasPoint.y}%` }}
-            aria-label={c.youAreHere}
-            role="img"
-          >
-            <i aria-hidden="true"><Crosshair /></i>
-            <b>{language === 'vi' ? 'Bạn' : 'You'}</b>
-          </span>
-        ) : null}
-        {userAtlasPoint && selectedAtlasPoint ? (
-          <svg
-            className={`explore-atlas__route-line ${selectedDistanceIsOutsideRadius ? 'is-outside-radius' : 'is-within-radius'}`}
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <line
-              className="explore-atlas__route-line-shadow"
-              x1={userAtlasPoint.x}
-              y1={userAtlasPoint.y}
-              x2={selectedAtlasPoint.x}
-              y2={selectedAtlasPoint.y}
-            />
-            <line
-              className="explore-atlas__route-line-beam"
-              x1={userAtlasPoint.x}
-              y1={userAtlasPoint.y}
-              x2={selectedAtlasPoint.x}
-              y2={selectedAtlasPoint.y}
-            />
-          </svg>
-        ) : null}
 
         <section className="explore-atlas__pins" aria-label={language === 'vi' ? 'Các khám phá trên bản đồ' : 'Atlas discoveries'}>
           {atlasGroups.map((group, index) => {
