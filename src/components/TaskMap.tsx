@@ -33,6 +33,7 @@ const taskMapCopy = {
     denied: 'Trình duyệt chưa cho phép lấy vị trí.',
     unavailable: 'Chưa lấy được vị trí lúc này.',
     selected: 'Điểm đang chọn',
+    locationHint: 'Bật vị trí để thấy bạn đang ở đâu và còn cách điểm GPS bao xa.',
     distance: 'Cách bạn {{distance}}',
     accuracy: 'Sai số {{distance}}',
     outside: 'Ngoài bán kính',
@@ -45,6 +46,7 @@ const taskMapCopy = {
     denied: 'Location permission is not enabled for this browser.',
     unavailable: 'Your location could not be found right now.',
     selected: 'Selected point',
+    locationHint: 'Turn on location to see where you are and how far this GPS point is.',
     distance: '{{distance}} away',
     accuracy: 'Accuracy {{distance}}',
     outside: 'Outside radius',
@@ -409,6 +411,7 @@ export const TaskMap = ({
         {userLocation?.accuracy ? (
           <small>{c.accuracy.replace('{{distance}}', formatDistance(userLocation.accuracy, language))}</small>
         ) : null}
+        {selectedDistance === null && !locationMessage ? <small>{c.locationHint}</small> : null}
         {locationMessage ? <small role="status">{locationMessage}</small> : null}
       </div>
       <div className="relative z-0 min-h-[360px] rounded-[1.7rem]">
