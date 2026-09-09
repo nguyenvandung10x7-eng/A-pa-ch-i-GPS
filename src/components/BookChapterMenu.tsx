@@ -1,13 +1,13 @@
 import { Bookmark, BookOpen, Check, ChevronRight, MapPin, X } from 'lucide-react';
 import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { getBookPageIllustration } from '../data/bookIllustrations';
 import { BOOK_MUSIC_TRACKS } from '../data/music';
 import { useBookState } from '../hooks/useBookState';
 import { requestBookAudioStart } from '../services/bookAudioEvents';
 import { getChapterPages, getPublishedChapters } from '../services/bookContent';
 import type { BookChapter, BookLocalizedText } from '../types/book';
 import type { LanguageCode } from '../types/task';
+import { BookKidDoodle } from './BookKidDoodle';
 
 type BookChapterMenuProps = {
   language: LanguageCode;
@@ -87,7 +87,6 @@ export const BookChapterMenu = ({ language, onNavigate, onClose, compact = false
           const pages = getChapterPages(chapter.id);
           const readCount = pages.filter((page) => bookState.readPageIds.includes(page.id)).length;
           const complete = pages.length > 0 && readCount === pages.length;
-          const illustration = pages[0] ? getBookPageIllustration(pages[0].id) : undefined;
           const progress = pages.length > 0 ? Math.round((readCount / pages.length) * 100) : 0;
 
           return (
@@ -100,8 +99,8 @@ export const BookChapterMenu = ({ language, onNavigate, onClose, compact = false
                 onNavigate?.();
               }}
             >
-              <div className="game-book-menu__thumb">
-                {illustration ? <img src={illustration} alt="" loading="lazy" decoding="async" /> : <BookOpen />}
+              <div className="game-book-menu__thumb" data-chapter-number={chapter.number}>
+                <BookKidDoodle chapterNumber={chapter.number} compact />
               </div>
               <div className="game-book-menu__chapter-copy">
                 <strong><span>{String(chapter.number).padStart(2, '0')}</span>{localized(chapter.title, language)}</strong>

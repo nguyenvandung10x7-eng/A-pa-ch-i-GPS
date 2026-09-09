@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, ExternalLink, MapPin, M
 import { useEffect, useRef, type KeyboardEvent, type MouseEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { BookChapterMenu } from '../components/BookChapterMenu';
+import { BookKidDoodle } from '../components/BookKidDoodle';
 import { getBookPageIllustration } from '../data/bookIllustrations';
 import { BOOK_MUSIC_TRACKS } from '../data/music';
 import { useBookState } from '../hooks/useBookState';
@@ -182,12 +183,14 @@ const StorySection = ({
   total,
   language,
   saved,
+  chapterNumber,
 }: {
   page: BookPage;
   index: number;
   total: number;
   language: LanguageCode;
   saved: boolean;
+  chapterNumber: string;
 }) => {
   const ref = useRef<HTMLElement | null>(null);
   const c = copy[language];
@@ -230,6 +233,7 @@ const StorySection = ({
       {illustration && index > 0 ? (
         <figure className="book-longform-story__art">
           <img src={illustration} alt={localized(page.title, language)} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
+          <BookKidDoodle chapterNumber={chapterNumber} compact />
         </figure>
       ) : null}
 
@@ -276,14 +280,17 @@ export const NewBookPage = ({ language }: BookPageProps) => {
   const experiences = getChapterExperiences(chapter.id);
 
   return (
-    <main className="book-longform">
+    <main className="book-longform" data-chapter-number={chapter.number}>
       <div className="book-longform__nav">
         <Link to="/book"><ArrowLeft aria-hidden="true" /><span>{c.back}</span></Link>
         <span>{c.chapter} {chapter.number}</span>
       </div>
 
-      <header className="book-longform__hero">
+      <header className="book-longform__hero" data-chapter-number={chapter.number}>
         {firstIllustration ? <img src={firstIllustration} alt="" aria-hidden="true" /> : null}
+        <figure className="book-longform__hero-doodle">
+          <BookKidDoodle chapterNumber={chapter.number} />
+        </figure>
         <div className="book-longform__hero-veil" />
         <div className="book-longform__hero-copy">
           <p>{String(chapter.number).padStart(2, '0')} / {chapters.length}</p>
@@ -302,6 +309,7 @@ export const NewBookPage = ({ language }: BookPageProps) => {
             total={pages.length}
             language={language}
             saved={savedState.pageIds.includes(page.id)}
+            chapterNumber={chapter.number}
           />
         )) : <p className="book-v2-muted">{c.noPages}</p>}
       </section>
