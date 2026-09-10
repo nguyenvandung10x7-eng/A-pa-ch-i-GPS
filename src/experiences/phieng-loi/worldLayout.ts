@@ -111,9 +111,6 @@ export const OCOP_WORLD_ITEMS = [
 ];
 
 export const WORLD_OCCLUDERS = [
-  { id: 'left-houses', x: 0, y: 105, width: 412, height: 333, depthY: 438 },
-  { id: 'middle-houses', x: 355, y: 150, width: 512, height: 306, depthY: 456 },
-  { id: 'right-houses', x: 1_430, y: 190, width: 250, height: 365, depthY: 555 },
   { id: 'bridge-front', x: 1_214, y: 608, width: 252, height: 48, depthY: 632 },
   { id: 'lower-left-foliage', x: 0, y: 670, width: 620, height: 250, depthY: 834 },
   { id: 'lower-rocks', x: 810, y: 760, width: 870, height: 160, depthY: 860 },

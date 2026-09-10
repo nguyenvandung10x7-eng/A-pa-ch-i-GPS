@@ -75,7 +75,8 @@ staff tools are preserved. Book is not a quest log and does not mutate game stat
   poses come from companion atlases, and the environment comes from one versioned
   world plate. Asset slots are centralized in `visualAssets.ts`.
 - Authored route corridors in `worldLayout.ts` keep actors on the painted road,
-  garden paths and wooden bridge, with foreground crops providing basic occlusion.
+  garden paths and wooden bridge, with conservative foreground crops providing
+  bridge/foliage/rock occlusion.
 - Motion and presentation effects honor reduced motion.
 - Page hide, blur, and visibility changes clear input and pause safely.
 - Leaving the route cancels animation frames, removes listeners, stops the voice

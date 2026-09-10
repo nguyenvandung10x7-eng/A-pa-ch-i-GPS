@@ -28,8 +28,11 @@ copied.
   camera and feet locked to the same frame without rerendering the page tree.
 - CSS provides contact shadows, idle motion and presentation effects; movement is
   an actual frame sequence rather than a static cutout being bobbed up and down.
-- Background crops at authored depths let roofs, rails, foliage and rocks pass in
-  front of characters without duplicating gameplay state.
+- Background crops at authored depths let the bridge rail, lower foliage and
+  foreground rocks pass in front of characters without duplicating gameplay
+  state. House silhouettes stay in the base plate until true-alpha foreground
+  exports exist; rectangular house crops are not accepted because they can erase
+  actors standing in open ground.
 - Canvas primitive drawing is not a runtime fallback.
 - Missing art must receive a named asset slot; it must not silently fall back to a
   rectangle, ellipse, stick figure or icon.
@@ -85,7 +88,7 @@ small and disappears when inactive.
 
 ## Next art tasks
 
-The current world is a single plate with cropped depth occluders. A later art-only
+The current world is a single plate with conservative cropped depth occluders. A later art-only
 pass may replace those crops with authored transparent far-mountain,
 village-ground and foreground-foliage layers for stronger parallax without
 changing simulation coordinates. Idle/talk cycles for the supporting cast, OCOP

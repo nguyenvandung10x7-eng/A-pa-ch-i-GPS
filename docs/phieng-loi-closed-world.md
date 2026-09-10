@@ -125,8 +125,9 @@ Only documented, project-cleared recordings may be marked ready.
 - The player, HeeSun and HANU are constrained to authored road/courtyard/garden
   corridors. Water, roofs, crops and rocks are blocked; the wooden crossing has a
   distinct terrain type; legacy off-route saves recover to the nearest valid path.
-- Foreground background crops provide basic roof, bridge, foliage and rock
-  occlusion while preserving a single world coordinate system.
+- Conservative foreground crops provide bridge, foliage and rock occlusion while
+  preserving a single world coordinate system. Houses need true-alpha foreground
+  exports before they can safely occlude actors.
 - Landscape/coarse-pointer rotation guard and entirely touch-playable controls.
 - Visibility and blur clear sticky movement; pause/Book suspend audio.
 - Unmount cancels animation, removes listeners, stops the voice element, and closes
