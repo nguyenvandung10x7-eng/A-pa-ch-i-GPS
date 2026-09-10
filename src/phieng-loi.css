@@ -986,6 +986,7 @@
 
 .phieng-visual__distant,
 .phieng-visual__sunwash,
+.phieng-visual__karaoke-lights,
 .phieng-visual__foreground {
   position: absolute;
   inset: 0;
@@ -1066,6 +1067,17 @@
   width: 46px;
 }
 
+.phieng-visual__actor.is-chief::before {
+  left: -21px;
+  width: 42px;
+}
+
+.phieng-visual__actor.is-vuongme::before {
+  left: -24px;
+  width: 48px;
+  background: rgba(22, 26, 24, .32);
+}
+
 .phieng-visual__actor.is-chicken::before {
   top: -2px;
   left: -7px;
@@ -1085,6 +1097,10 @@
 .phieng-visual__actor.is-stream-group::before {
   left: -52px;
   width: 104px;
+}
+
+.phieng-visual__actor.is-stream-group::before {
+  display: none;
 }
 
 .phieng-visual__occluder {
@@ -1124,6 +1140,28 @@
     radial-gradient(circle at 74% 8%, rgba(255, 243, 178, .2), transparent 31%),
     linear-gradient(180deg, rgba(255, 233, 163, .05), transparent 44%);
   mix-blend-mode: screen;
+}
+
+.phieng-visual__karaoke-lights {
+  z-index: 8;
+  background:
+    radial-gradient(circle at 18% 74%, rgba(255, 61, 150, .44), transparent 19%),
+    radial-gradient(circle at 52% 84%, rgba(255, 214, 80, .38), transparent 17%),
+    radial-gradient(circle at 78% 68%, rgba(62, 211, 255, .46), transparent 21%),
+    linear-gradient(112deg, transparent 18%, rgba(255, 247, 190, .2) 34%, transparent 47%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: translate3d(-4%, 0, 0) scale(1.08);
+  transition: opacity .18s ease-out;
+}
+
+.phieng-visual.is-karaoke .phieng-visual__karaoke-lights {
+  animation: phieng-karaoke-sweep 1.15s ease-in-out infinite alternate;
+  opacity: .58;
+}
+
+.phieng-visual.is-karaoke .phieng-visual__actor[data-motion="karaoke"] .phieng-visual__sprite {
+  filter: drop-shadow(0 0 5px rgba(255, 221, 115, .62));
 }
 
 .phieng-visual__foreground {
@@ -1374,6 +1412,11 @@
   to { opacity: 0; transform: translate(-50%, -50%) scale(4.8); }
 }
 
+@keyframes phieng-karaoke-sweep {
+  from { transform: translate3d(-5%, 0, 0) scale(1.08) rotate(-1deg); }
+  to { transform: translate3d(5%, -1%, 0) scale(1.12) rotate(1deg); }
+}
+
 @media (max-width: 760px) {
   .phieng-game__hud {
     inset: .34rem .38rem auto;
@@ -1406,7 +1449,8 @@
 @media (prefers-reduced-motion: reduce) {
   .phieng-visual__world,
   .phieng-visual__actor,
-  .phieng-visual__sprite {
+  .phieng-visual__sprite,
+  .phieng-visual__karaoke-lights {
     animation: none !important;
     transition: none !important;
   }

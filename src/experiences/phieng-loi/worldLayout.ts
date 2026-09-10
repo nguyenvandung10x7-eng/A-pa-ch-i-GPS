@@ -19,6 +19,7 @@ export const PHIENG_LOI_LANDMARKS = {
   chickenYard: { x: 492, y: 590 },
   stream: { x: 1_188, y: 580 },
   streamGroup: { x: 1_166, y: 566 },
+  vuongMeStage: { x: 940, y: 510 },
   gate: { x: 1_008, y: 542 },
   domino: { x: 1_525, y: 554 },
   exit: { x: 1_646, y: 515 },

@@ -46,10 +46,14 @@ All runtime URLs live in `visualAssets.ts`.
 | `village-world-v1.webp` | full plate | Mountains, stilt houses, fields, road, stream, fences, waterwheel and environmental depth. |
 | `heesun-atlas-v1.webp` | 3×2 | Idle, smile, point, bựa, chase and triumphant poses. |
 | `hanu-atlas-v1.webp` | 3×2 | Phone idle, phone walk, call, confused, distracted and accidental-chaos poses. |
-| `support-atlas-v1.webp` | 4×2 | Player idle, chicken, dog, buffalo, chief, feast group and stream group. |
+| `support-atlas-v1.webp` | 4×2 | Player idle, chicken, dog and buffalo placeholders. |
 | `heesun-run-v2.webp` | 4×2 | Eight-frame HeeSun chase cycle. |
 | `hanu-walk-v2.webp` | 4×2 | Eight-frame HANU phone-walk cycle. |
 | `player-run-v2.webp` | 4×2 | Eight-frame player run cycle. |
+| `chief-talk-v2.webp` | 4×2 | Trưởng bản idle, talk and reaction cycle. |
+| `feast-loop-v2.webp` | 4×2 | Five-man roadside-table toast and laugh cycle. |
+| `stream-loop-v2.webp` | 4×2 | Four-adult stream-community idle and reaction cycle. |
+| `vuongme-dance-v1.webp` | 4×2 | VươngMe karaoke/dance cycle, staged as a rare visual response to PHÀ ƠI. |
 | `heesun-menu-v1.webp` | cutout | Waiting-menu left character. |
 | `hanu-menu-v1.webp` | cutout | Waiting-menu right character. |
 
@@ -86,12 +90,20 @@ must not introduce commercial IP.
 Messages use a single comic-paper bubble. Temporary encounter/status data is kept
 small and disappears when inactive.
 
+## Supporting cast checkpoint
+
+Trưởng bản, the roadside-table group and the adult stream group no longer reuse
+single support-atlas poses. Each has a dedicated eight-frame transparent cutout
+cycle. VươngMe is a dedicated animated visual guest: every fifth existing PHÀ ƠI
+call can stage his short karaoke entrance without adding a new quest, save field or
+event state machine. This keeps the current gameplay harness intact while testing
+the shared animation/compositing language.
+
 ## Next art tasks
 
 The current world is a single plate with conservative cropped depth occluders. A later art-only
 pass may replace those crops with authored transparent far-mountain,
 village-ground and foreground-foliage layers for stronger parallax without
-changing simulation coordinates. Idle/talk cycles for the supporting cast, OCOP
-props, gate/domino reactions and capture tableaux are still semantic poses,
-world-plate art, presentation effects or text and are the next asset slots to
-illustrate.
+changing simulation coordinates. OCOP props, gate/domino reactions, animals and
+capture tableaux are still semantic poses, world-plate art, presentation effects
+or text and are the next asset slots to illustrate.

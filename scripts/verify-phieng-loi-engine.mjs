@@ -47,7 +47,11 @@ const quietHeeSun = (game) => {
 
 assert.equal(VIEW_WIDTH / VIEW_HEIGHT, 16 / 9, 'the asset viewport should preserve 16:9 framing');
 assert.equal(new Set(Object.values(PHIENG_LOI_VISUAL_ASSETS)).size, Object.values(PHIENG_LOI_VISUAL_ASSETS).length, 'visual asset slots must be unique');
-Object.values(PHIENG_LOI_VISUAL_ASSETS).forEach((path) => assert.match(path, /^\/images\/phieng-loi\/.+\.webp$/));
+Object.values(PHIENG_LOI_VISUAL_ASSETS).forEach((path) => {
+  assert.match(path, /^\/images\/phieng-loi\/.+\.webp$/);
+  const bytes = readFileSync(new URL(`../public${path}`, import.meta.url));
+  assert.ok(bytes.byteLength > 1_000, `${path} must resolve to a non-empty production asset`);
+});
 const engineSource = readFileSync(new URL('../src/experiences/phieng-loi/gameEngine.ts', import.meta.url), 'utf8');
 const pageSource = readFileSync(new URL('../src/pages/PhiengLoiGamePage.tsx', import.meta.url), 'utf8');
 assert.doesNotMatch(engineSource, /CanvasRenderingContext2D|\.fillRect\(|\.beginPath\(/, 'game logic must not contain final-art drawing primitives');

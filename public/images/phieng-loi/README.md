@@ -11,6 +11,10 @@ project owner; the raw references are intentionally not committed.
 - `heesun-run-v2.webp`: 1536×1024 transparent 4×2 running cycle.
 - `hanu-walk-v2.webp`: 1536×1024 transparent 4×2 phone-walk cycle.
 - `player-run-v2.webp`: 1776×888 transparent 4×2 running cycle.
+- `chief-talk-v2.webp`: 1776×888 transparent 4×2 Trưởng bản talk/reaction cycle.
+- `feast-loop-v2.webp`: 1776×888 transparent 4×2 roadside-table toast/laugh cycle.
+- `stream-loop-v2.webp`: 1776×888 transparent 4×2 adult stream-community cycle.
+- `vuongme-dance-v1.webp`: 1776×888 transparent 4×2 VươngMe karaoke/dance cycle.
 - `heesun-menu-v1.webp`, `hanu-menu-v1.webp`: transparent menu cutouts.
 
 Runtime mapping and preload behavior live in
