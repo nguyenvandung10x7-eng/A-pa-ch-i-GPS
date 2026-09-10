@@ -10,6 +10,10 @@ The remake is isolated to the lazy-loaded Phiêng Lơi route. The Experiences Hu
 1954, GPS challenges, Book, authentication, admin surfaces and Supabase contracts
 remain unchanged.
 
+The opening copy and minimap label this explicitly as a memory map. It must not
+present the relative positions or travel times between landmarks as geographic
+fact; real-world navigation remains the responsibility of the GPS experience.
+
 ## Core loop
 
 1. Choose any direction with a 360-degree movement stick.
