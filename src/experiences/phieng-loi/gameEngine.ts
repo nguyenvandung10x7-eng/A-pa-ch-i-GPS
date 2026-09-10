@@ -1,12 +1,15 @@
 export const VIEW_WIDTH = 480;
 export const VIEW_HEIGHT = 270;
+export const RENDER_WIDTH = 960;
+export const RENDER_HEIGHT = 540;
+const RENDER_SCALE = RENDER_WIDTH / VIEW_WIDTH;
 export const WORLD_WIDTH = 1_680;
 export const WORLD_HEIGHT = 920;
 
 const PLAYER_START_X = 92;
 const PLAYER_START_Y = 486;
 const PLAYER_SPEED = 67;
-const CAMERA_VERTICAL_ANCHOR = 0.58;
+const CAMERA_VERTICAL_ANCHOR = 0.7;
 const SAVE_VERSION = 1;
 
 export type GameQuality = 'low' | 'high';
@@ -48,6 +51,8 @@ type PlayerState = {
 type HeeSunState = {
   x: number;
   y: number;
+  vx: number;
+  vy: number;
   mode: HeeSunMode;
   modeUntil: number;
   met: boolean;
@@ -276,6 +281,8 @@ const defaultGame = (quality: GameQuality, reducedMotion: boolean): GameState =>
   heesun: {
     x: 365,
     y: 456,
+    vx: 0,
+    vy: 0,
     mode: 'waiting',
     modeUntil: 0,
     met: false,
@@ -352,6 +359,8 @@ export const createGame = (quality: GameQuality, reducedMotion: boolean, save?: 
   game.feast.relocateAt = game.feast.pendingRelocate ? game.elapsed + 1.1 : 0;
   game.heesun.x = save.heesun.x;
   game.heesun.y = save.heesun.y;
+  game.heesun.vx = 0;
+  game.heesun.vy = 0;
   game.heesun.mode = save.heesun.mode === 'intro' || save.heesun.mode === 'ambush' ? 'waiting' : save.heesun.mode;
   game.heesun.met = save.heesun.met;
   game.heesun.caught = save.heesun.caught;
@@ -556,6 +565,8 @@ const resetAfterCapture = (game: GameState, events: GameEvent[]) => {
   game.heesun.caught += 1;
   game.heesun.x = game.feast.x - 30;
   game.heesun.y = game.feast.y + 20;
+  game.heesun.vx = 0;
+  game.heesun.vy = 0;
   game.heesun.mode = 'drinking';
   game.heesun.modeUntil = game.elapsed + 13;
   game.heesun.nextAmbushAt = game.elapsed + 42;
@@ -833,6 +844,53 @@ const updateHaNu = (game: GameState, dt: number, events: GameEvent[]) => {
   }
 };
 
+const moveHeeSunTowards = (
+  game: GameState,
+  targetX: number,
+  targetY: number,
+  speed: number,
+  dt: number,
+  turnResponse: number,
+) => {
+  let navigationX = targetX;
+  let navigationY = targetY;
+  const heeSunSide = Math.sign(game.heesun.x - riverCenterX(game.heesun.y));
+  const targetSide = Math.sign(targetX - riverCenterX(targetY));
+  if (heeSunSide !== 0 && targetSide !== 0 && heeSunSide !== targetSide && !isBridgeY(game.heesun.y)) {
+    const bridgeY = [438, 695].sort((first, second) => (
+      distance(game.heesun.x, game.heesun.y, riverCenterX(first), first)
+      + distance(targetX, targetY, riverCenterX(first), first)
+      - distance(game.heesun.x, game.heesun.y, riverCenterX(second), second)
+      - distance(targetX, targetY, riverCenterX(second), second)
+    ))[0];
+    navigationX = riverCenterX(bridgeY);
+    navigationY = bridgeY;
+  }
+
+  const baseAngle = Math.atan2(navigationY - game.heesun.y, navigationX - game.heesun.x);
+  const probe = 25;
+  const options = [0, 0.42, -0.42, 0.82, -0.82, 1.25, -1.25];
+  const steeringAngle = options
+    .map((offset) => baseAngle + offset)
+    .find((angle) => !isBlocked(
+      game,
+      game.heesun.x + Math.cos(angle) * probe,
+      game.heesun.y + Math.sin(angle) * probe,
+    )) ?? baseAngle;
+  const desiredVx = Math.cos(steeringAngle) * speed;
+  const desiredVy = Math.sin(steeringAngle) * speed;
+  const response = 1 - Math.exp(-dt * turnResponse);
+  game.heesun.vx += (desiredVx - game.heesun.vx) * response;
+  game.heesun.vy += (desiredVy - game.heesun.vy) * response;
+
+  const nextX = game.heesun.x + game.heesun.vx * dt;
+  if (!isBlocked(game, nextX, game.heesun.y)) game.heesun.x = nextX;
+  else game.heesun.vx *= -0.24;
+  const nextY = game.heesun.y + game.heesun.vy * dt;
+  if (!isBlocked(game, game.heesun.x, nextY)) game.heesun.y = nextY;
+  else game.heesun.vy *= -0.24;
+};
+
 const updateHeeSun = (game: GameState, dt: number, events: GameEvent[]) => {
   if (!game.heesun.met && game.scene.kind === 'none' && distance(game.player.x, game.player.y, game.heesun.x, game.heesun.y) < 82) startHeeSunIntro(game);
   if (game.heesun.mode === 'drinking' && game.elapsed >= game.heesun.modeUntil) game.heesun.mode = 'waiting';
@@ -857,19 +915,24 @@ const updateHeeSun = (game: GameState, dt: number, events: GameEvent[]) => {
     const panic = game.chicken.panicUntil > game.elapsed;
     const targetX = panic ? 1_520 : game.hanu.x;
     const targetY = panic ? 455 : game.hanu.y;
-    const angle = Math.atan2(targetY - game.heesun.y, targetX - game.heesun.x);
-    game.heesun.x += Math.cos(angle) * 49 * dt;
-    game.heesun.y += Math.sin(angle) * 49 * dt;
+    moveHeeSunTowards(game, targetX, targetY, 49, dt, 3.1);
     if (game.elapsed >= game.heesun.modeUntil) game.heesun.mode = 'chasing';
     return;
   }
-  if (game.heesun.mode !== 'chasing' || game.scene.kind === 'stream' || game.scene.kind === 'capture') return;
-  const angle = Math.atan2(game.player.y - game.heesun.y, game.player.x - game.heesun.x);
+  if (game.heesun.mode !== 'chasing' || game.scene.kind === 'stream' || game.scene.kind === 'capture') {
+    game.heesun.vx *= Math.max(0, 1 - dt * 6);
+    game.heesun.vy *= Math.max(0, 1 - dt * 6);
+    return;
+  }
+  const captureRadius = 17 * Math.max(1, game.heesun.scale * 0.8);
+  if (distance(game.player.x, game.player.y, game.heesun.x, game.heesun.y) < captureRadius) {
+    startCapture(game, events);
+    return;
+  }
   const boost = game.heesun.speedBoostUntil > game.elapsed ? 1.3 : 1;
   const speed = (game.absurdityLevel >= 3 ? 58 : 53) * boost;
-  game.heesun.x += Math.cos(angle) * speed * dt;
-  game.heesun.y += Math.sin(angle) * speed * dt;
-  if (distance(game.player.x, game.player.y, game.heesun.x, game.heesun.y) < 17 * Math.max(1, game.heesun.scale * 0.8)) startCapture(game, events);
+  moveHeeSunTowards(game, game.player.x, game.player.y, speed, dt, 3.45);
+  if (distance(game.player.x, game.player.y, game.heesun.x, game.heesun.y) < captureRadius) startCapture(game, events);
 };
 
 const updateParticles = (game: GameState, dt: number) => {
@@ -975,59 +1038,204 @@ const inView = (game: GameState, x: number, y: number, margin = 90) => (
   && y < game.cameraY + VIEW_HEIGHT + margin
 );
 
+const TAU = Math.PI * 2;
+const ART_INK = '#26342d';
+
+const fillAndStroke = (
+  context: CanvasRenderingContext2D,
+  fill: string | CanvasGradient,
+  stroke = ART_INK,
+  lineWidth = 1.15,
+) => {
+  context.fillStyle = fill;
+  context.fill();
+  context.strokeStyle = stroke;
+  context.lineWidth = lineWidth;
+  context.stroke();
+};
+
+const drawSoftShadow = (
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radiusX: number,
+  radiusY: number,
+  alpha = 0.24,
+) => {
+  context.save();
+  context.translate(x, y);
+  context.scale(1, radiusY / radiusX);
+  const shadow = context.createRadialGradient(0, 0, 0, 0, 0, radiusX);
+  shadow.addColorStop(0, `rgba(24, 40, 31, ${alpha})`);
+  shadow.addColorStop(1, 'rgba(24, 40, 31, 0)');
+  context.fillStyle = shadow;
+  context.beginPath();
+  context.arc(0, 0, radiusX, 0, TAU);
+  context.fill();
+  context.restore();
+};
+
+const drawGrassTuft = (context: CanvasRenderingContext2D, x: number, y: number, sway: number, color: string) => {
+  context.strokeStyle = color;
+  context.lineWidth = 0.8;
+  context.lineCap = 'round';
+  context.beginPath();
+  context.moveTo(x, y + 2);
+  context.quadraticCurveTo(x - 1.5 + sway, y - 1.5, x - 2.5 + sway, y - 3.5);
+  context.moveTo(x, y + 2);
+  context.quadraticCurveTo(x + sway * 0.4, y - 2, x + sway, y - 4.8);
+  context.moveTo(x, y + 2);
+  context.quadraticCurveTo(x + 1.5 + sway, y - 1, x + 3.2 + sway, y - 2.8);
+  context.stroke();
+};
+
+const drawLeaf = (
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radiusX: number,
+  radiusY: number,
+  angle: number,
+  color: string,
+) => {
+  context.save();
+  context.translate(x, y);
+  context.rotate(angle);
+  context.beginPath();
+  context.moveTo(-radiusX, 0);
+  context.quadraticCurveTo(0, -radiusY, radiusX, 0);
+  context.quadraticCurveTo(0, radiusY, -radiusX, 0);
+  context.closePath();
+  context.fillStyle = color;
+  context.fill();
+  context.restore();
+};
+
+const drawRock = (context: CanvasRenderingContext2D, x: number, y: number, scale: number, wet = false) => {
+  context.save();
+  context.translate(x, y);
+  context.scale(scale, scale);
+  context.beginPath();
+  context.moveTo(-8, 2);
+  context.quadraticCurveTo(-7, -5, -2, -7);
+  context.quadraticCurveTo(5, -8, 9, -2);
+  context.quadraticCurveTo(8, 4, 3, 6);
+  context.quadraticCurveTo(-4, 7, -8, 2);
+  context.closePath();
+  const fill = context.createLinearGradient(0, -8, 0, 7);
+  fill.addColorStop(0, wet ? '#78948c' : '#8b8b73');
+  fill.addColorStop(1, wet ? '#405e59' : '#596454');
+  fillAndStroke(context, fill, '#31453e', 1);
+  context.strokeStyle = wet ? 'rgba(225, 244, 222, .58)' : 'rgba(225, 218, 172, .35)';
+  context.lineWidth = 1;
+  context.beginPath();
+  context.moveTo(-4, -3);
+  context.quadraticCurveTo(0, -5, 5, -2);
+  context.stroke();
+  context.restore();
+};
+
+const drawLimb = (
+  context: CanvasRenderingContext2D,
+  points: [number, number, number, number, number, number],
+  color: string,
+  width: number,
+) => {
+  const [x1, y1, cx, cy, x2, y2] = points;
+  context.lineCap = 'round';
+  context.lineJoin = 'round';
+  context.strokeStyle = ART_INK;
+  context.lineWidth = width + 2.2;
+  context.beginPath();
+  context.moveTo(x1, y1);
+  context.quadraticCurveTo(cx, cy, x2, y2);
+  context.stroke();
+  context.strokeStyle = color;
+  context.lineWidth = width;
+  context.stroke();
+};
+
 const drawGround = (context: CanvasRenderingContext2D, game: GameState) => {
-  context.fillStyle = '#748c54';
-  context.fillRect(game.cameraX - 2, game.cameraY - 2, VIEW_WIDTH + 4, VIEW_HEIGHT + 4);
-  const startX = Math.floor(game.cameraX / 16) * 16;
-  const startY = Math.floor(game.cameraY / 16) * 16;
-  for (let y = startY; y < game.cameraY + VIEW_HEIGHT + 16; y += 16) {
-    for (let x = startX; x < game.cameraX + VIEW_WIDTH + 16; x += 16) {
-      const value = hash2(x / 16, y / 16);
-      context.fillStyle = value > 0.72 ? '#7f985b' : value < 0.19 ? '#647c4d' : '#748c54';
-      context.fillRect(x, y, 16, 16);
-      if (game.quality === 'high' && value > 0.62) {
-        context.fillStyle = value > 0.86 ? '#d1bd63' : '#496d43';
-        context.fillRect(x + 5 + Math.floor(value * 5), y + 5, 1, 3);
+  const top = game.cameraY - 4;
+  const ground = context.createLinearGradient(0, top, 0, top + VIEW_HEIGHT + 8);
+  ground.addColorStop(0, '#91a966');
+  ground.addColorStop(0.52, '#789652');
+  ground.addColorStop(1, '#668747');
+  context.fillStyle = ground;
+  context.fillRect(game.cameraX - 4, top, VIEW_WIDTH + 8, VIEW_HEIGHT + 8);
+
+  const startX = Math.floor(game.cameraX / 42) * 42;
+  const startY = Math.floor(game.cameraY / 34) * 34;
+  for (let y = startY; y < game.cameraY + VIEW_HEIGHT + 38; y += 34) {
+    for (let x = startX; x < game.cameraX + VIEW_WIDTH + 46; x += 42) {
+      const value = hash2(x / 17, y / 13);
+      const px = x + value * 18;
+      const py = y + hash2(y / 7, x / 19) * 15;
+      context.save();
+      context.globalAlpha = 0.16 + value * 0.1;
+      context.fillStyle = value > 0.52 ? '#b0bf73' : '#456e43';
+      context.beginPath();
+      context.ellipse(px, py, 11 + value * 8, 4 + value * 3, value * 2.4, 0, TAU);
+      context.fill();
+      context.restore();
+      if (game.quality === 'high' && value > 0.36) {
+        const sway = Math.sin(game.worldTime * 1.15 + px * 0.045) * 0.8;
+        drawGrassTuft(context, px + 3, py + 1, sway, value > 0.76 ? '#d7c76e' : '#426f43');
       }
     }
   }
 };
 
 const drawMountains = (context: CanvasRenderingContext2D) => {
-  context.fillStyle = '#344f43';
+  const haze = context.createLinearGradient(0, 22, 0, 198);
+  haze.addColorStop(0, '#b9c8a3');
+  haze.addColorStop(1, '#668063');
+  context.fillStyle = haze;
   context.beginPath();
-  context.moveTo(0, 145);
-  context.lineTo(100, 80);
-  context.lineTo(205, 132);
-  context.lineTo(350, 48);
-  context.lineTo(470, 118);
-  context.lineTo(640, 35);
-  context.lineTo(790, 126);
-  context.lineTo(935, 64);
-  context.lineTo(1_090, 133);
-  context.lineTo(1_260, 42);
-  context.lineTo(1_430, 116);
-  context.lineTo(WORLD_WIDTH, 56);
+  context.moveTo(0, 153);
+  context.bezierCurveTo(58, 139, 79, 79, 126, 87);
+  context.bezierCurveTo(181, 95, 199, 145, 246, 137);
+  context.bezierCurveTo(306, 126, 316, 50, 376, 55);
+  context.bezierCurveTo(437, 60, 459, 126, 520, 117);
+  context.bezierCurveTo(585, 107, 609, 39, 675, 45);
+  context.bezierCurveTo(744, 52, 761, 133, 836, 127);
+  context.bezierCurveTo(906, 120, 921, 67, 982, 71);
+  context.bezierCurveTo(1_045, 75, 1_079, 145, 1_147, 133);
+  context.bezierCurveTo(1_220, 120, 1_247, 46, 1_311, 51);
+  context.bezierCurveTo(1_382, 57, 1_407, 129, 1_468, 119);
+  context.bezierCurveTo(1_540, 107, 1_584, 57, WORLD_WIDTH, 62);
   context.lineTo(WORLD_WIDTH, 180);
   context.lineTo(0, 180);
   context.closePath();
   context.fill();
-  context.fillStyle = '#516b4d';
+  const ridge = context.createLinearGradient(0, 94, 0, 204);
+  ridge.addColorStop(0, '#56755a');
+  ridge.addColorStop(1, '#385e49');
+  context.fillStyle = ridge;
   context.beginPath();
-  context.moveTo(0, 158);
-  context.lineTo(145, 116);
-  context.lineTo(285, 154);
-  context.lineTo(460, 102);
-  context.lineTo(630, 161);
-  context.lineTo(790, 113);
-  context.lineTo(1_015, 162);
-  context.lineTo(1_225, 104);
-  context.lineTo(1_455, 164);
-  context.lineTo(WORLD_WIDTH, 120);
+  context.moveTo(0, 167);
+  context.bezierCurveTo(75, 158, 105, 113, 164, 122);
+  context.bezierCurveTo(224, 132, 255, 164, 316, 151);
+  context.bezierCurveTo(378, 138, 423, 102, 480, 112);
+  context.bezierCurveTo(548, 124, 571, 166, 638, 158);
+  context.bezierCurveTo(703, 149, 741, 111, 804, 119);
+  context.bezierCurveTo(883, 129, 929, 169, 1_014, 158);
+  context.bezierCurveTo(1_096, 148, 1_154, 105, 1_225, 113);
+  context.bezierCurveTo(1_315, 123, 1_361, 169, 1_450, 158);
+  context.bezierCurveTo(1_533, 148, 1_600, 117, WORLD_WIDTH, 126);
   context.lineTo(WORLD_WIDTH, 195);
   context.lineTo(0, 195);
   context.closePath();
   context.fill();
+
+  context.strokeStyle = 'rgba(224, 230, 196, .28)';
+  context.lineWidth = 2;
+  for (let x = 75; x < WORLD_WIDTH; x += 170) {
+    context.beginPath();
+    context.moveTo(x, 147);
+    context.quadraticCurveTo(x + 34, 128, x + 69, 146);
+    context.stroke();
+  }
 };
 
 const drawRoads = (context: CanvasRenderingContext2D) => {
@@ -1039,117 +1247,247 @@ const drawRoads = (context: CanvasRenderingContext2D) => {
   ];
   context.lineCap = 'round';
   context.lineJoin = 'round';
-  paths.forEach((points) => {
+  paths.forEach((points, pathIndex) => {
     context.beginPath();
     points.forEach(([x, y], index) => index === 0 ? context.moveTo(x, y) : context.lineTo(x, y));
-    context.strokeStyle = '#55694b';
-    context.lineWidth = 24;
+    context.strokeStyle = 'rgba(42, 61, 43, .32)';
+    context.lineWidth = 30;
     context.stroke();
-    context.strokeStyle = '#a99063';
-    context.lineWidth = 18;
+    context.strokeStyle = '#9a8054';
+    context.lineWidth = 23;
     context.stroke();
-    context.strokeStyle = '#c5aa72';
-    context.lineWidth = 11;
+    const dust = context.createLinearGradient(0, 395, 0, 720);
+    dust.addColorStop(0, '#d2b477');
+    dust.addColorStop(1, '#b18b59');
+    context.strokeStyle = dust;
+    context.lineWidth = 17;
     context.stroke();
-    context.strokeStyle = 'rgba(246, 215, 148, .36)';
-    context.lineWidth = 2;
+    context.strokeStyle = 'rgba(250, 224, 160, .48)';
+    context.lineWidth = 1.2;
     context.stroke();
+
+    for (let index = 1; index < points.length; index += 1) {
+      const [ax, ay] = points[index - 1];
+      const [bx, by] = points[index];
+      for (let step = 0.15; step < 1; step += 0.23) {
+        const seed = hash2(pathIndex * 37 + index, step * 91);
+        const x = ax + (bx - ax) * step + (seed - 0.5) * 9;
+        const y = ay + (by - ay) * step + (hash2(seed * 19, index) - 0.5) * 7;
+        context.fillStyle = seed > 0.5 ? 'rgba(90, 68, 43, .32)' : 'rgba(255, 231, 172, .35)';
+        context.beginPath();
+        context.ellipse(x, y, 1.2 + seed, 0.55 + seed * 0.4, seed * 4, 0, TAU);
+        context.fill();
+      }
+    }
   });
 };
 
 const drawFields = (context: CanvasRenderingContext2D, game: GameState) => {
-  context.fillStyle = '#735739';
-  context.fillRect(390, 560, 265, 250);
-  context.fillStyle = '#947344';
-  for (let y = 575; y < 805; y += 25) context.fillRect(395, y, 255, 7);
+  context.save();
+  context.beginPath();
+  context.moveTo(384, 566);
+  context.quadraticCurveTo(510, 538, 661, 566);
+  context.lineTo(655, 812);
+  context.quadraticCurveTo(520, 830, 386, 802);
+  context.closePath();
+  const cornSoil = context.createLinearGradient(390, 555, 650, 810);
+  cornSoil.addColorStop(0, '#9a7748');
+  cornSoil.addColorStop(1, '#655036');
+  fillAndStroke(context, cornSoil, '#4d5f3e', 2.2);
   for (let y = 580; y < 800; y += 25) {
+    context.strokeStyle = 'rgba(211, 164, 89, .52)';
+    context.lineWidth = 4.5;
+    context.beginPath();
+    context.moveTo(397, y + 3);
+    context.quadraticCurveTo(520, y - 8, 647, y + 2);
+    context.stroke();
     for (let x = 407; x < 645; x += 18) {
-      const sway = Math.round(Math.sin(game.worldTime * 1.6 + x * 0.04 + y) * 1);
-      context.fillStyle = '#3f7241';
-      context.fillRect(x + sway, y - 9, 2, 10);
-      context.fillStyle = '#d2aa43';
-      context.fillRect(x + 2 + sway, y - 7, 2, 5);
+      const sway = Math.sin(game.worldTime * 1.15 + x * 0.04 + y) * 1.1;
+      context.strokeStyle = '#355f3b';
+      context.lineWidth = 1.4;
+      context.beginPath();
+      context.moveTo(x, y + 3);
+      context.quadraticCurveTo(x + sway, y - 7, x + sway * 1.4, y - 13);
+      context.stroke();
+      drawLeaf(context, x - 2 + sway, y - 7, 4.2, 1.55, -0.55, '#4d7b45');
+      drawLeaf(context, x + 2 + sway, y - 10, 4, 1.45, 0.65, '#638c4c');
+      context.fillStyle = '#d2a93f';
+      context.beginPath();
+      context.ellipse(x + sway * 1.2, y - 7, 1.25, 3.1, -0.15, 0, TAU);
+      context.fill();
     }
   }
-  context.fillStyle = '#6c7f45';
+  context.restore();
+
+  const terrace = context.createRadialGradient(940, 196, 25, 940, 210, 270);
+  terrace.addColorStop(0, '#a9b76c');
+  terrace.addColorStop(1, '#60794a');
+  context.fillStyle = terrace;
   context.beginPath();
-  context.ellipse(940, 195, 260, 145, 0, 0, Math.PI * 2);
+  context.ellipse(940, 195, 260, 145, -0.03, 0, TAU);
   context.fill();
-  const colors = ['#99a857', '#b7b85c', '#cbb65c', '#879a50'];
+  const colors = ['#a7b866', '#c1bf6d', '#d0b960', '#7e9b55'];
   for (let index = 0; index < 8; index += 1) {
-    context.strokeStyle = colors[index % colors.length];
-    context.lineWidth = 8;
+    const breeze = Math.sin(game.worldTime * 0.42 + index) * 1.1;
+    context.strokeStyle = 'rgba(48, 70, 42, .35)';
+    context.lineWidth = 11;
     context.beginPath();
-    context.ellipse(940, 205 + index * 10, 238 - index * 24, 106 - index * 8, 0, Math.PI, Math.PI * 2);
+    context.ellipse(940, 207 + index * 10, 242 - index * 24, 109 - index * 8, 0, Math.PI, TAU);
+    context.stroke();
+    context.strokeStyle = colors[index % colors.length];
+    context.lineWidth = 7.2;
+    context.beginPath();
+    context.ellipse(940 + breeze, 204 + index * 10, 238 - index * 24, 106 - index * 8, 0, Math.PI, TAU);
     context.stroke();
   }
-  context.fillStyle = '#806b43';
-  context.fillRect(1_260, 480, 250, 210);
+
+  context.beginPath();
+  context.moveTo(1_250, 486);
+  context.quadraticCurveTo(1_380, 458, 1_518, 486);
+  context.lineTo(1_510, 694);
+  context.quadraticCurveTo(1_380, 714, 1_255, 684);
+  context.closePath();
+  const orchard = context.createLinearGradient(1_260, 480, 1_490, 690);
+  orchard.addColorStop(0, '#8c754b');
+  orchard.addColorStop(1, '#6f5b3d');
+  fillAndStroke(context, orchard, '#4b6140', 2);
   for (let row = 0; row < 6; row += 1) {
     for (let column = 0; column < 8; column += 1) {
       const x = 1_278 + column * 29 + (row % 2) * 7;
       const y = 500 + row * 31;
-      context.fillStyle = '#315a3b';
-      context.fillRect(x - 7, y - 8, 14, 13);
-      context.fillStyle = '#557a46';
-      context.fillRect(x - 10, y - 4, 20, 6);
-      context.fillStyle = '#ddc06f';
-      context.fillRect(x - 4, y - 5, 2, 2);
-      context.fillRect(x + 5, y, 2, 2);
+      const sway = Math.sin(game.worldTime * 0.8 + row * 2 + column) * 0.9;
+      context.strokeStyle = '#4a4f35';
+      context.lineWidth = 1.3;
+      context.beginPath();
+      context.moveTo(x, y + 6);
+      context.quadraticCurveTo(x + sway, y, x + sway, y - 7);
+      context.stroke();
+      context.fillStyle = row % 2 ? '#3f6d43' : '#315d3e';
+      context.beginPath();
+      context.ellipse(x - 4 + sway, y - 7, 7, 4.5, -0.3, 0, TAU);
+      context.ellipse(x + 4 + sway, y - 7, 7, 4.5, 0.3, 0, TAU);
+      context.fill();
+      context.fillStyle = '#ddb85e';
+      context.beginPath();
+      context.arc(x - 3 + sway, y - 8, 1.15, 0, TAU);
+      context.arc(x + 4 + sway, y - 5, 1.1, 0, TAU);
+      context.fill();
     }
   }
 };
 
 const drawRiver = (context: CanvasRenderingContext2D, game: GameState) => {
-  context.beginPath();
-  for (let y = 120; y <= WORLD_HEIGHT + 40; y += 28) {
-    const x = riverCenterX(y);
-    if (y === 120) context.moveTo(x, y);
-    else context.lineTo(x, y);
-  }
+  const traceRiver = () => {
+    context.beginPath();
+    for (let y = 120; y <= WORLD_HEIGHT + 40; y += 28) {
+      const x = riverCenterX(y);
+      if (y === 120) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    }
+  };
   context.lineCap = 'round';
-  context.strokeStyle = '#3d656a';
-  context.lineWidth = 80;
+  traceRiver();
+  context.strokeStyle = 'rgba(35, 61, 45, .38)';
+  context.lineWidth = 94;
   context.stroke();
-  context.strokeStyle = '#69a1a3';
-  context.lineWidth = 65;
+  traceRiver();
+  context.strokeStyle = '#55745f';
+  context.lineWidth = 86;
   context.stroke();
-  context.strokeStyle = '#8ac1b9';
-  context.lineWidth = 43;
+  traceRiver();
+  const water = context.createLinearGradient(1_060, 0, 1_150, 0);
+  water.addColorStop(0, '#3f7c83');
+  water.addColorStop(0.45, '#76adb0');
+  water.addColorStop(0.72, '#90c2b6');
+  water.addColorStop(1, '#4e8586');
+  context.strokeStyle = water;
+  context.lineWidth = 70;
   context.stroke();
+  traceRiver();
+  context.strokeStyle = 'rgba(184, 222, 202, .25)';
+  context.lineWidth = 53;
+  context.stroke();
+
   const slowTime = game.powerUntil.coffee > game.elapsed ? game.worldTime * 0.22 : game.worldTime;
-  const startY = Math.floor(game.cameraY / 22) * 22;
-  for (let y = startY; y < game.cameraY + VIEW_HEIGHT + 30; y += 22) {
+  const startY = Math.floor(game.cameraY / 18) * 18;
+  for (let y = startY; y < game.cameraY + VIEW_HEIGHT + 30; y += 18) {
     const x = riverCenterX(y);
-    const wave = Math.sin(slowTime * 1.8 + y * 0.07) * 6;
-    context.fillStyle = 'rgba(224, 244, 221, .6)';
-    context.fillRect(x - 17 + wave, y, 12, 1);
-    context.fillRect(x + 5 - wave * 0.5, y + 9, 15, 1);
+    const wave = Math.sin(slowTime * 1.8 + y * 0.07) * 7;
+    context.strokeStyle = 'rgba(231, 247, 222, .62)';
+    context.lineWidth = 1.15;
+    context.beginPath();
+    context.moveTo(x - 25 + wave, y);
+    context.quadraticCurveTo(x - 17 + wave, y - 2, x - 9 + wave, y);
+    context.moveTo(x + 3 - wave * 0.5, y + 8);
+    context.quadraticCurveTo(x + 12 - wave * 0.5, y + 10, x + 23 - wave * 0.5, y + 7);
+    context.stroke();
   }
+
+  const rocks = [
+    [1_071, 568, 0.7], [1_128, 592, 0.9], [1_080, 621, 0.55], [1_136, 750, 0.72],
+    [1_075, 785, 1.05], [1_132, 817, 0.6], [1_087, 342, 0.72], [1_126, 365, 0.52],
+  ] as const;
+  rocks.forEach(([x, y, scale]) => {
+    if (inView(game, x, y, 30)) drawRock(context, x, y, scale, true);
+  });
 };
 
 const drawBridge = (context: CanvasRenderingContext2D, y: number) => {
   const x = riverCenterX(y);
-  context.fillStyle = '#55402f';
-  context.fillRect(x - 49, y - 14, 98, 28);
-  context.fillStyle = '#ae7f4a';
-  for (let offset = -44; offset <= 38; offset += 9) context.fillRect(x + offset, y - 12, 7, 24);
-  context.fillStyle = '#e0b66e';
-  context.fillRect(x - 49, y - 13, 98, 2);
-  context.fillRect(x - 49, y + 11, 98, 2);
+  drawSoftShadow(context, x + 3, y + 12, 52, 7, 0.28);
+  context.strokeStyle = '#4c3629';
+  context.lineWidth = 5;
+  context.lineCap = 'round';
+  context.beginPath();
+  context.moveTo(x - 51, y - 13);
+  context.quadraticCurveTo(x, y - 17, x + 51, y - 12);
+  context.moveTo(x - 51, y + 13);
+  context.quadraticCurveTo(x, y + 17, x + 51, y + 12);
+  context.stroke();
+  for (let offset = -45; offset <= 42; offset += 9) {
+    const tilt = Math.sin(offset * 0.17) * 1.6;
+    context.beginPath();
+    context.moveTo(x + offset - 3, y - 12 + tilt);
+    context.lineTo(x + offset + 4, y - 11 - tilt);
+    context.lineTo(x + offset + 4, y + 12 + tilt);
+    context.lineTo(x + offset - 3, y + 11 - tilt);
+    context.closePath();
+    const plank = context.createLinearGradient(0, y - 12, 0, y + 13);
+    plank.addColorStop(0, '#c89455');
+    plank.addColorStop(1, '#8b5d3b');
+    fillAndStroke(context, plank, '#57402f', 0.7);
+  }
 };
 
 const drawTree = (context: CanvasRenderingContext2D, x: number, y: number, variant: number) => {
-  context.fillStyle = 'rgba(31, 47, 34, .25)';
-  context.fillRect(x - 8, y + 4, 21, 5);
-  context.fillStyle = '#58422d';
-  context.fillRect(x - 2, y - 11, 4, 20);
-  context.fillStyle = variant % 2 ? '#315e3d' : '#3e6942';
-  context.fillRect(x - 11, y - 25, 23, 16);
-  context.fillRect(x - 7, y - 32, 15, 11);
-  context.fillStyle = variant % 2 ? '#5b864a' : '#759451';
-  context.fillRect(x - 8, y - 28, 9, 5);
-  context.fillRect(x + 3, y - 20, 7, 5);
+  const wide = variant % 2 === 0;
+  drawSoftShadow(context, x + 4, y + 5, wide ? 17 : 14, 4.5, 0.22);
+  context.strokeStyle = '#4c3828';
+  context.lineWidth = wide ? 5 : 4;
+  context.lineCap = 'round';
+  context.beginPath();
+  context.moveTo(x, y + 5);
+  context.quadraticCurveTo(x - 1, y - 14, x + (wide ? 2 : -2), y - 24);
+  context.moveTo(x, y - 12);
+  context.quadraticCurveTo(x - 8, y - 18, x - 9, y - 23);
+  context.moveTo(x + 1, y - 16);
+  context.quadraticCurveTo(x + 8, y - 20, x + 10, y - 27);
+  context.stroke();
+  const dark = wide ? '#315f42' : '#28533c';
+  const light = wide ? '#6e944f' : '#5e884b';
+  [
+    [-9, -25, 11, 8], [2, -30, 13, 9], [11, -23, 10, 8], [-1, -18, 15, 9],
+  ].forEach(([dx, dy, rx, ry], index) => {
+    context.fillStyle = index === 1 || index === 3 ? light : dark;
+    context.beginPath();
+    context.ellipse(x + dx, y + dy, rx, ry, (index - 1) * 0.18, 0, TAU);
+    context.fill();
+    context.strokeStyle = '#264b38';
+    context.lineWidth = 0.8;
+    context.stroke();
+  });
+  drawLeaf(context, x - 11, y - 30, 4.5, 1.8, -0.5, '#94a95b');
+  drawLeaf(context, x + 8, y - 32, 4.3, 1.7, 0.35, '#8ea458');
 };
 
 const drawScenery = (context: CanvasRenderingContext2D, game: GameState) => {
@@ -1162,13 +1500,86 @@ const drawScenery = (context: CanvasRenderingContext2D, game: GameState) => {
       if (clearRoad || river || building || chance < 0.82 || !inView(game, x, y, 45)) continue;
       if (chance > 0.91) drawTree(context, x, y, Math.floor(chance * 10));
       else {
-        context.fillStyle = chance > 0.86 ? '#d7c55e' : '#e19a79';
-        context.fillRect(x, y - 2, 2, 2);
-        context.fillStyle = '#4e7444';
-        context.fillRect(x, y, 1, 3);
+        context.strokeStyle = '#486c42';
+        context.lineWidth = 0.75;
+        context.beginPath();
+        context.moveTo(x, y + 2);
+        context.quadraticCurveTo(x - 1, y - 1, x + 0.5, y - 4);
+        context.stroke();
+        context.fillStyle = chance > 0.86 ? '#e1c960' : '#dc8f72';
+        context.beginPath();
+        context.arc(x - 1.2, y - 4.3, 1.4, 0, TAU);
+        context.arc(x + 1.4, y - 3.8, 1.25, 0, TAU);
+        context.fill();
       }
     }
   }
+};
+
+const drawBananaPlant = (context: CanvasRenderingContext2D, x: number, y: number, time: number, scale = 1) => {
+  const sway = Math.sin(time * 0.72 + x * 0.02) * 0.08;
+  context.save();
+  context.translate(x, y);
+  context.scale(scale, scale);
+  drawSoftShadow(context, 3, 4, 14, 4, 0.22);
+  context.strokeStyle = '#6b693b';
+  context.lineWidth = 2.2;
+  context.lineCap = 'round';
+  context.beginPath();
+  context.moveTo(0, 4);
+  context.quadraticCurveTo(-1, -10, 1, -23);
+  context.stroke();
+  const leaves: ReadonlyArray<readonly [number, number, number, string]> = [
+    [-8, -25, -0.75, '#477a45'], [8, -27, 0.7, '#5d8d4b'], [-10, -17, -2.7, '#67944d'],
+    [10, -17, 2.68, '#3e7042'], [1, -31, -1.45, '#779e52'],
+  ];
+  leaves.forEach(([leafX, leafY, angle, color], index) => {
+    drawLeaf(context, leafX + Math.sin(sway + index) * 1.2, leafY, 10.5, 3.2, angle + sway, color);
+  });
+  context.fillStyle = '#d3b54f';
+  context.beginPath();
+  context.ellipse(4, -15, 2.4, 4.5, 0.25, 0, TAU);
+  context.fill();
+  context.restore();
+};
+
+const drawFence = (context: CanvasRenderingContext2D, x: number, y: number, length: number) => {
+  context.strokeStyle = '#725238';
+  context.lineCap = 'round';
+  context.lineJoin = 'round';
+  context.lineWidth = 2.4;
+  context.beginPath();
+  for (let offset = 0; offset <= length; offset += 13) {
+    const lean = Math.sin(offset * 0.6) * 1.5;
+    context.moveTo(x + offset, y + 3);
+    context.lineTo(x + offset + lean, y - 17 - (offset % 3));
+  }
+  context.moveTo(x - 2, y - 11);
+  context.quadraticCurveTo(x + length / 2, y - 15, x + length + 2, y - 10);
+  context.moveTo(x - 1, y - 3);
+  context.quadraticCurveTo(x + length / 2, y - 7, x + length + 1, y - 2);
+  context.stroke();
+};
+
+const drawVillageDetails = (context: CanvasRenderingContext2D, game: GameState) => {
+  const bananas = [
+    [157, 552, 0.9], [181, 555, 0.72], [420, 392, 0.78], [1_452, 442, 0.88], [1_518, 730, 1],
+  ] as const;
+  bananas.forEach(([x, y, scale]) => {
+    if (inView(game, x, y, 50)) drawBananaPlant(context, x, y, game.worldTime, scale);
+  });
+  const fences = [
+    [118, 558, 92], [629, 386, 104], [1_407, 456, 82], [1_263, 721, 96],
+  ] as const;
+  fences.forEach(([x, y, length]) => {
+    if (inView(game, x + length / 2, y, 40)) drawFence(context, x, y, length);
+  });
+  const stones = [
+    [243, 551, 0.62], [610, 529, 0.48], [704, 615, 0.7], [1_404, 364, 0.55], [1_536, 544, 0.82],
+  ] as const;
+  stones.forEach(([x, y, scale]) => {
+    if (inView(game, x, y, 30)) drawRock(context, x, y, scale);
+  });
 };
 
 const drawStiltHouse = (
@@ -1178,89 +1589,240 @@ const drawStiltHouse = (
   time: number,
 ) => {
   const { x, y, width } = house;
-  context.fillStyle = 'rgba(35, 42, 31, .28)';
-  context.fillRect(x - 8, y + 66, width + 20, 14);
-  context.fillStyle = '#57422d';
-  context.fillRect(x + 15, y + 44, 5, 36);
-  context.fillRect(x + width - 20, y + 44, 5, 36);
-  context.fillStyle = index % 2 ? '#9c6b45' : '#b0804e';
-  context.fillRect(x + 5, y + 21, width - 10, 40);
-  context.fillStyle = '#d3ad70';
-  for (let line = x + 11; line < x + width - 9; line += 13) context.fillRect(line, y + 23, 2, 34);
-  context.fillStyle = '#263d35';
-  context.fillRect(x + width * 0.58, y + 34, 20, 27);
-  context.fillStyle = '#302d28';
+  const roofTop = y - 24;
+  const floorY = y + 61;
+  drawSoftShadow(context, x + width / 2 + 6, y + 78, width * 0.62, 15, 0.3);
+
+  context.strokeStyle = '#49372b';
+  context.lineWidth = 4.5;
+  context.lineCap = 'round';
+  [18, width * 0.38, width * 0.68, width - 17].forEach((offset, postIndex) => {
+    context.beginPath();
+    context.moveTo(x + offset, floorY - 3);
+    context.lineTo(x + offset + (postIndex % 2 ? 2 : -1), y + 91);
+    context.stroke();
+  });
+
+  const wall = context.createLinearGradient(x, y + 18, x + width, y + 64);
+  wall.addColorStop(0, index % 2 ? '#bd8a56' : '#c99b62');
+  wall.addColorStop(0.52, '#a67549');
+  wall.addColorStop(1, '#80583c');
   context.beginPath();
-  context.moveTo(x - 15, y + 22);
-  context.lineTo(x + width / 2, y - 16);
-  context.lineTo(x + width + 15, y + 22);
+  context.moveTo(x + 4, y + 18);
+  context.quadraticCurveTo(x + width / 2, y + 14, x + width - 4, y + 19);
+  context.lineTo(x + width - 7, floorY);
+  context.quadraticCurveTo(x + width / 2, floorY + 3, x + 6, floorY);
   context.closePath();
-  context.fill();
-  context.fillStyle = index % 2 ? '#6f7e50' : '#855143';
+  fillAndStroke(context, wall, '#45352b', 1.7);
+
+  context.strokeStyle = 'rgba(244, 204, 125, .38)';
+  context.lineWidth = 1;
+  for (let line = x + 12; line < x + width - 9; line += 11.5) {
+    context.beginPath();
+    context.moveTo(line, y + 22);
+    context.quadraticCurveTo(line - 1.2, y + 42, line + 0.6, floorY - 3);
+    context.stroke();
+  }
+
+  const doorX = x + width * 0.61;
   context.beginPath();
-  context.moveTo(x - 9, y + 19);
-  context.lineTo(x + width / 2, y - 10);
-  context.lineTo(x + width + 9, y + 19);
-  context.closePath();
+  context.roundRect(doorX, y + 30, width * 0.17, 31, [3, 3, 0, 0]);
+  fillAndStroke(context, '#314038', '#3c332d', 1.2);
+  context.fillStyle = '#e6b965';
+  context.beginPath();
+  context.arc(doorX + width * 0.135, y + 46, 1.15, 0, TAU);
   context.fill();
-  context.fillStyle = '#654a32';
-  context.fillRect(x + width - 31, y + 57, 4, 28);
-  context.fillRect(x + width - 6, y + 57, 4, 28);
-  for (let step = 0; step < 4; step += 1) context.fillRect(x + width - 31, y + 61 + step * 6, 29, 2);
-  const smoke = Math.sin(time * 1.2 + index) * 3;
-  context.fillStyle = 'rgba(229, 224, 195, .45)';
-  context.fillRect(x + 26 + smoke, y - 18, 5, 8);
-  context.fillRect(x + 23 - smoke * 0.4, y - 28, 7, 7);
+
+  const roof = context.createLinearGradient(0, roofTop, 0, y + 25);
+  roof.addColorStop(0, index % 2 ? '#655244' : '#563f3a');
+  roof.addColorStop(0.64, index % 2 ? '#746342' : '#7d4f42');
+  roof.addColorStop(1, '#3d382f');
+  context.beginPath();
+  context.moveTo(x - 17, y + 21);
+  context.quadraticCurveTo(x + width * 0.23, y - 9, x + width / 2, roofTop);
+  context.quadraticCurveTo(x + width * 0.77, y - 7, x + width + 18, y + 22);
+  context.quadraticCurveTo(x + width + 4, y + 27, x + width / 2, y + 20);
+  context.quadraticCurveTo(x - 5, y + 27, x - 17, y + 21);
+  context.closePath();
+  fillAndStroke(context, roof, '#332f2c', 2.2);
+  context.strokeStyle = 'rgba(221, 187, 117, .26)';
+  context.lineWidth = 1;
+  for (let rib = 0.1; rib < 0.95; rib += 0.1) {
+    const ribX = x - 11 + (width + 22) * rib;
+    context.beginPath();
+    context.moveTo(x + width / 2, roofTop + 2);
+    context.quadraticCurveTo(ribX, y + 4, ribX, y + 21);
+    context.stroke();
+  }
+
+  context.strokeStyle = '#5e422f';
+  context.lineWidth = 2.5;
+  context.beginPath();
+  context.moveTo(x - 3, floorY + 1);
+  context.quadraticCurveTo(x + width / 2, floorY + 6, x + width + 2, floorY + 1);
+  context.stroke();
+  for (let rail = x + 6; rail < x + width * 0.48; rail += 10) {
+    context.beginPath();
+    context.moveTo(rail, floorY - 1);
+    context.lineTo(rail, floorY - 13);
+    context.stroke();
+  }
+  context.beginPath();
+  context.moveTo(x + 4, floorY - 12);
+  context.lineTo(x + width * 0.49, floorY - 12);
+  context.stroke();
+
+  const stairX = x + width - 28;
+  context.strokeStyle = '#5a3f2d';
+  context.lineWidth = 3;
+  context.beginPath();
+  context.moveTo(stairX, floorY - 1);
+  context.lineTo(stairX - 7, y + 92);
+  context.moveTo(stairX + 22, floorY - 1);
+  context.lineTo(stairX + 15, y + 92);
+  context.stroke();
+  context.lineWidth = 2;
+  for (let step = 0; step < 5; step += 1) {
+    const stepY = floorY + 4 + step * 6;
+    context.beginPath();
+    context.moveTo(stairX - 1 - step * 1.1, stepY);
+    context.lineTo(stairX + 21 - step * 1.1, stepY);
+    context.stroke();
+  }
+
+  context.fillStyle = '#7f5436';
+  context.beginPath();
+  context.ellipse(x + 30, y + 82, 7, 9, -0.1, 0, TAU);
+  context.ellipse(x + 45, y + 84, 5.5, 7, 0.12, 0, TAU);
+  context.fill();
+  context.strokeStyle = '#40342c';
+  context.lineWidth = 1;
+  context.stroke();
+
+  const smoke = Math.sin(time * 0.85 + index) * 3;
+  for (let puff = 0; puff < 3; puff += 1) {
+    context.fillStyle = `rgba(231, 226, 204, ${0.27 - puff * 0.055})`;
+    context.beginPath();
+    context.ellipse(x + 28 + smoke * (puff + 1) * 0.5, roofTop - 8 - puff * 10, 4 + puff * 1.6, 6 + puff * 1.8, 0, 0, TAU);
+    context.fill();
+  }
 };
 
 const drawWaterwheel = (context: CanvasRenderingContext2D, game: GameState) => {
   const x = 1_073;
   const y = 668;
   const time = game.powerUntil.coffee > game.elapsed ? game.worldTime * 0.22 : game.worldTime;
+  drawSoftShadow(context, x + 6, y + 26, 34, 8, 0.28);
   context.save();
   context.translate(x, y);
-  context.strokeStyle = '#68492f';
-  context.lineWidth = 3;
+  context.strokeStyle = '#4c3427';
+  context.lineWidth = 5.5;
   context.beginPath();
   context.arc(0, 0, 30, 0, Math.PI * 2);
+  context.stroke();
+  context.strokeStyle = '#bb8950';
+  context.lineWidth = 2.8;
+  context.beginPath();
+  context.arc(0, 0, 30, 0, TAU);
   context.stroke();
   context.rotate(time * 0.45);
   for (let spoke = 0; spoke < 12; spoke += 1) {
     context.rotate(Math.PI / 6);
-    context.fillStyle = '#c09356';
-    context.fillRect(-2, -29, 4, 29);
-    context.fillStyle = '#745039';
-    context.fillRect(-5, -33, 10, 5);
+    context.strokeStyle = '#8a603d';
+    context.lineWidth = 2.3;
+    context.beginPath();
+    context.moveTo(0, -2);
+    context.lineTo(0, -29);
+    context.stroke();
+    context.beginPath();
+    context.roundRect(-5, -34, 10, 6, 1.5);
+    fillAndStroke(context, '#c79758', '#563d2d', 0.8);
   }
   context.fillStyle = '#533a29';
-  context.fillRect(-4, -4, 8, 8);
+  context.beginPath();
+  context.arc(0, 0, 5, 0, TAU);
+  context.fill();
   context.restore();
+  const splash = Math.sin(time * 3.5) * 2;
+  context.strokeStyle = 'rgba(223, 244, 225, .66)';
+  context.lineWidth = 1.2;
+  context.beginPath();
+  context.arc(x - 3 + splash, y + 30, 8, Math.PI * 1.1, Math.PI * 1.85);
+  context.arc(x + 14 - splash, y + 27, 6, Math.PI * 1.15, Math.PI * 1.8);
+  context.stroke();
 };
 
 const drawFeast = (context: CanvasRenderingContext2D, game: GameState) => {
   const { x, y } = game.feast;
-  context.fillStyle = 'rgba(34, 39, 29, .3)';
-  context.fillRect(x - 40, y + 15, 80, 17);
-  context.fillStyle = '#b54b3d';
-  context.fillRect(x - 28, y - 7, 56, 36);
-  context.fillStyle = '#e3c45d';
-  for (let stripe = -23; stripe < 26; stripe += 9) context.fillRect(x + stripe, y - 5, 3, 32);
-  context.fillStyle = '#f1dda0';
-  context.fillRect(x - 10, y + 2, 20, 9);
-  context.fillStyle = '#70934d';
-  context.fillRect(x - 6, y + 5, 5, 3);
-  context.fillStyle = '#a64f3b';
-  context.fillRect(x + 2, y + 5, 5, 3);
+  drawSoftShadow(context, x + 3, y + 24, 48, 12, 0.3);
+  context.save();
+  context.translate(x, y);
+  context.beginPath();
+  context.moveTo(-31, -8);
+  context.quadraticCurveTo(0, -14, 31, -7);
+  context.lineTo(34, 26);
+  context.quadraticCurveTo(1, 33, -34, 26);
+  context.closePath();
+  const mat = context.createLinearGradient(-30, -8, 30, 28);
+  mat.addColorStop(0, '#c95343');
+  mat.addColorStop(1, '#8c3540');
+  fillAndStroke(context, mat, '#52352f', 1.2);
+  context.save();
+  context.clip();
+  context.strokeStyle = '#e5c85d';
+  context.lineWidth = 2.2;
+  for (let stripe = -36; stripe < 42; stripe += 9) {
+    context.beginPath();
+    context.moveTo(stripe, -13);
+    context.lineTo(stripe + 6, 34);
+    context.stroke();
+  }
+  context.restore();
+  context.fillStyle = '#efe0a6';
+  context.beginPath();
+  context.ellipse(0, 7, 10, 5.7, 0.05, 0, TAU);
+  context.fill();
+  context.strokeStyle = '#654b35';
+  context.lineWidth = 0.8;
+  context.stroke();
+  ['#70934d', '#a64f3b', '#dab355'].forEach((color, index) => {
+    context.fillStyle = color;
+    context.beginPath();
+    context.arc(-4 + index * 4, 7 + (index % 2) * 1.5, 2.2, 0, TAU);
+    context.fill();
+  });
+  for (let cup = -1; cup <= 1; cup += 1) {
+    context.fillStyle = '#f3e7b8';
+    context.beginPath();
+    context.ellipse(cup * 11, 18, 2.6, 1.5, 0, 0, TAU);
+    context.fill();
+  }
+  context.restore();
+
   const people = [[-37, 0, '#7c483f'], [37, 0, '#315d62'], [-25, 34, '#6e714a'], [25, 34, '#9f603d']] as const;
   people.forEach(([dx, dy, color], index) => {
-    const wave = game.callPulseUntil > game.elapsed ? Math.sin(game.elapsed * 14 + index) * 2 : 0;
-    context.fillStyle = '#c58a60';
-    context.fillRect(x + dx - 2, y + dy - 10 + wave, 5, 5);
-    context.fillStyle = color;
-    context.fillRect(x + dx - 5, y + dy - 5 + wave, 10, 11);
-    context.fillStyle = '#362f2b';
-    context.fillRect(x + dx - 7, y + dy + 5, 5, 3);
-    context.fillRect(x + dx + 3, y + dy + 5, 5, 3);
+    const wave = game.callPulseUntil > game.elapsed ? Math.sin(game.elapsed * 14 + index) * 2.2 : 0;
+    const facing = dx < 0 ? 1 : -1;
+    context.save();
+    context.translate(x + dx, y + dy + wave);
+    drawSoftShadow(context, 0, 7, 9, 3, 0.22);
+    context.beginPath();
+    context.ellipse(0, -2, 6.5, 8.5, facing * 0.18, 0, TAU);
+    fillAndStroke(context, color, ART_INK, 1.1);
+    context.fillStyle = '#c78e66';
+    context.beginPath();
+    context.ellipse(facing * 1.4, -12, 4.2, 4.8, facing * -0.12, 0, TAU);
+    context.fill();
+    context.strokeStyle = ART_INK;
+    context.lineWidth = 1;
+    context.stroke();
+    context.strokeStyle = '#332c2a';
+    context.lineWidth = 2.2;
+    context.beginPath();
+    context.arc(facing * 1.4, -13.2, 4.1, Math.PI, TAU);
+    context.stroke();
+    drawLimb(context, [facing * 3, -4, facing * 8, 0, facing * 10, 3], '#c78e66', 2.3);
+    context.restore();
   });
 };
 
@@ -1268,53 +1830,129 @@ const drawChief = (context: CanvasRenderingContext2D, game: GameState) => {
   const x = 700;
   const y = 247;
   const speaking = game.leaderStartedAt !== 0;
-  const bob = speaking ? Math.round(Math.sin(game.worldTime * 4)) : 0;
-  context.fillStyle = 'rgba(31, 43, 33, .28)';
-  context.fillRect(x - 8, y + 8, 18, 5);
-  context.fillStyle = '#2c2927';
-  context.fillRect(x - 4, y - 21 + bob, 9, 7);
-  context.fillStyle = '#c58a61';
-  context.fillRect(x - 3, y - 14 + bob, 7, 6);
-  context.fillStyle = '#5c3130';
-  context.fillRect(x - 7, y - 8 + bob, 15, 16);
-  context.fillStyle = '#d4ba70';
-  context.fillRect(x - 8, y - 24 + bob, 17, 4);
+  const bob = speaking ? Math.sin(game.worldTime * 4) * 0.8 : 0;
+  drawSoftShadow(context, x + 1, y + 9, 12, 3.8, 0.25);
+  context.save();
+  context.translate(x, y + bob);
+  context.strokeStyle = '#34372f';
+  context.lineWidth = 3.4;
+  context.lineCap = 'round';
+  context.beginPath();
+  context.moveTo(-3.5, 2);
+  context.lineTo(-4.5, 10);
+  context.moveTo(3.2, 2);
+  context.lineTo(4.8, 10);
+  context.stroke();
+  context.beginPath();
+  context.moveTo(-8, -10);
+  context.quadraticCurveTo(-9, -2, -6, 4);
+  context.quadraticCurveTo(0, 7, 7, 4);
+  context.quadraticCurveTo(10, -3, 7, -10);
+  context.closePath();
+  fillAndStroke(context, '#713f3c', ART_INK, 1.2);
+  context.fillStyle = '#cf966d';
+  context.beginPath();
+  context.ellipse(0, -16, 5.2, 5.9, -0.08, 0, TAU);
+  context.fill();
+  context.strokeStyle = ART_INK;
+  context.lineWidth = 1.1;
+  context.stroke();
+  context.strokeStyle = '#2d2928';
+  context.lineWidth = 2.4;
+  context.beginPath();
+  context.arc(0, -17.7, 5.2, Math.PI * 1.02, Math.PI * 1.93);
+  context.stroke();
+  context.fillStyle = '#d9bc68';
+  context.beginPath();
+  context.ellipse(0, -22.2, 8.5, 2.2, 0.02, 0, TAU);
+  context.fill();
+  context.strokeStyle = '#69502f';
+  context.lineWidth = 0.9;
+  context.stroke();
+  context.fillStyle = '#29312d';
+  context.beginPath();
+  context.arc(-1.7, -16, 0.65, 0, TAU);
+  context.arc(2.1, -15.7, 0.65, 0, TAU);
+  context.fill();
+  if (speaking) drawLimb(context, [6, -6, 12, -11, 13, -17], '#cf966d', 2.5);
+  context.restore();
   if (speaking) {
-    context.fillStyle = 'rgba(25, 42, 34, .9)';
-    context.fillRect(x - 28, y - 43, 57, 14);
+    context.beginPath();
+    context.roundRect(x - 31, y - 45, 62, 15, 5);
+    fillAndStroke(context, 'rgba(36, 54, 43, .94)', '#d0b25d', 0.9);
     context.fillStyle = '#f4dda0';
-    context.font = '700 6px monospace';
+    context.font = '800 6px "Be Vietnam Pro", sans-serif';
     context.textAlign = 'center';
     context.fillText('THỨ NHẤT…', x, y - 34);
   }
 };
 
-const drawStreamGroup = (context: CanvasRenderingContext2D) => {
+const drawStreamGroup = (context: CanvasRenderingContext2D, game: GameState) => {
   const people = [
-    { x: 1_183, y: 682, dress: '#8d3f55', sash: '#e7c15b' },
-    { x: 1_207, y: 695, dress: '#315e68', sash: '#e85b62' },
-    { x: 1_232, y: 680, dress: '#4f7148', sash: '#f0c95e' },
+    { x: 1_178, y: 682, dress: '#8d3f55', sash: '#e7c15b', pose: 'wash' },
+    { x: 1_205, y: 699, dress: '#315e68', sash: '#e85b62', pose: 'water' },
+    { x: 1_232, y: 680, dress: '#4f7148', sash: '#f0c95e', pose: 'talk' },
+    { x: 1_253, y: 708, dress: '#795173', sash: '#74b7a2', pose: 'wring' },
   ];
   people.forEach((person, index) => {
-    context.fillStyle = '#292728';
-    context.fillRect(person.x - 4, person.y - 23, 9, 8);
-    context.fillStyle = '#c68d69';
-    context.fillRect(person.x - 3, person.y - 15, 7, 6);
-    context.fillStyle = person.dress;
-    context.fillRect(person.x - 7, person.y - 9, 15, 17);
-    context.fillStyle = person.sash;
-    context.fillRect(person.x - 7, person.y - 3, 15, 3);
-    context.fillStyle = '#263b3d';
-    context.fillRect(person.x - 6, person.y + 8, 5, 11);
-    context.fillRect(person.x + 2, person.y + 8, 5, 11);
-    if (index === 1) {
-      context.fillStyle = '#d9bd7a';
-      context.fillRect(person.x + 8, person.y - 2, 5, 4);
+    const laugh = game.streamStartedAt > 0 ? Math.sin(game.worldTime * 4 + index * 1.7) * 1.2 : 0;
+    context.save();
+    context.translate(person.x, person.y + laugh);
+    drawSoftShadow(context, 0, 10, 10, 3.2, 0.18);
+    context.beginPath();
+    context.moveTo(-6, -9);
+    context.quadraticCurveTo(-9, 1, -6, 10);
+    context.quadraticCurveTo(0, 13, 7, 9);
+    context.quadraticCurveTo(9, 0, 6, -9);
+    context.closePath();
+    fillAndStroke(context, person.dress, ART_INK, 1.1);
+    context.strokeStyle = person.sash;
+    context.lineWidth = 2.2;
+    context.beginPath();
+    context.moveTo(-6.5, 0);
+    context.quadraticCurveTo(0, 1.2, 7, 0);
+    context.stroke();
+    context.fillStyle = '#c98f6b';
+    context.beginPath();
+    context.ellipse(0, -15, 4.6, 5.2, index % 2 ? 0.12 : -0.1, 0, TAU);
+    context.fill();
+    context.strokeStyle = ART_INK;
+    context.lineWidth = 1;
+    context.stroke();
+    context.strokeStyle = '#292829';
+    context.lineWidth = 2.8;
+    context.beginPath();
+    context.arc(0, -16.5, 4.4, Math.PI, TAU);
+    context.stroke();
+    if (person.pose === 'wash') {
+      drawLimb(context, [-5, -5, -11, 1, -9, 7], '#c98f6b', 2.1);
+      drawLimb(context, [5, -5, 10, 1, 8, 7], '#c98f6b', 2.1);
+      context.fillStyle = '#e2d29d';
+      context.beginPath();
+      context.ellipse(0, 8, 8, 2.5, 0, 0, TAU);
+      context.fill();
+    } else if (person.pose === 'wring') {
+      drawLimb(context, [-5, -5, -9, -1, -2, 2], '#c98f6b', 2.1);
+      drawLimb(context, [5, -5, 9, -1, 2, 2], '#c98f6b', 2.1);
+      context.strokeStyle = '#e9c47d';
+      context.lineWidth = 2.2;
+      context.beginPath();
+      context.moveTo(-3, 2);
+      context.quadraticCurveTo(0, 5, 3, 2);
+      context.stroke();
+    } else if (person.pose === 'talk') {
+      drawLimb(context, [5, -5, 11, -10, 10, -15], '#c98f6b', 2.1);
     }
+    context.restore();
   });
-  context.fillStyle = '#3d6a49';
-  context.fillRect(1_164, 698, 31, 17);
-  context.fillRect(1_222, 696, 35, 20);
+  [
+    [1_164, 699, 20, 10, -0.25], [1_227, 696, 22, 11, 0.18], [1_250, 716, 18, 8, -0.1],
+  ].forEach(([x, y, rx, ry, angle]) => {
+    context.fillStyle = '#37684a';
+    context.beginPath();
+    context.ellipse(x, y, rx, ry, angle, 0, TAU);
+    context.fill();
+  });
 };
 
 const drawFish = (context: CanvasRenderingContext2D, game: GameState) => {
@@ -1326,73 +1964,156 @@ const drawFish = (context: CanvasRenderingContext2D, game: GameState) => {
     const lane = index % 9;
     const fishX = 1_142 + ((time * (5 + index % 4) + index * 19) % 127);
     const fishY = 696 + lane * 6 + Math.sin(time * 1.4 + index) * 2;
+    context.save();
+    context.translate(fishX, fishY);
     context.fillStyle = index % 3 === 0 ? '#f0d68f' : index % 3 === 1 ? '#d97c5a' : '#f1ecbd';
-    context.fillRect(fishX, fishY, 5, 2);
-    context.fillRect(fishX - 2, fishY - 1, 2, 4);
+    context.beginPath();
+    context.ellipse(0, 0, 3.3, 1.25, 0, 0, TAU);
+    context.moveTo(-3, 0);
+    context.lineTo(-5.4, -2);
+    context.lineTo(-5.1, 2);
+    context.closePath();
+    context.fill();
+    context.fillStyle = '#2d514e';
+    context.beginPath();
+    context.arc(1.7, -0.25, 0.45, 0, TAU);
+    context.fill();
+    context.restore();
   }
 };
 
 const drawChicken = (context: CanvasRenderingContext2D, x: number, y: number, color: string) => {
-  context.fillStyle = color;
-  context.fillRect(x - 4, y - 6, 8, 6);
-  context.fillStyle = '#f1d8a0';
-  context.fillRect(x + 3, y - 8, 4, 4);
-  context.fillStyle = '#d9a43d';
-  context.fillRect(x + 7, y - 6, 3, 1);
-  context.fillStyle = '#3c342d';
-  context.fillRect(x - 2, y, 1, 3);
-  context.fillRect(x + 3, y, 1, 3);
+  context.save();
+  context.translate(x, y);
+  context.strokeStyle = '#4a382d';
+  context.lineWidth = 0.85;
+  context.beginPath();
+  context.moveTo(-2, 0);
+  context.lineTo(-2.6, 3);
+  context.moveTo(2.5, 0);
+  context.lineTo(3.2, 3);
+  context.stroke();
+  context.beginPath();
+  context.ellipse(0, -4, 5.4, 4.2, -0.08, 0, TAU);
+  fillAndStroke(context, color, '#513b2e', 0.8);
+  context.fillStyle = '#f0d7a0';
+  context.beginPath();
+  context.ellipse(4.2, -7, 3, 3.3, 0.18, 0, TAU);
+  context.fill();
+  context.strokeStyle = '#513b2e';
+  context.stroke();
+  context.fillStyle = '#dda43c';
+  context.beginPath();
+  context.moveTo(6.5, -7.2);
+  context.lineTo(9.5, -6.1);
+  context.lineTo(6.5, -5.7);
+  context.closePath();
+  context.fill();
+  context.fillStyle = '#bd493c';
+  context.beginPath();
+  context.arc(3.2, -10, 1.2, 0, TAU);
+  context.arc(5.1, -9.7, 1.1, 0, TAU);
+  context.fill();
+  context.fillStyle = '#2c302b';
+  context.beginPath();
+  context.arc(5.1, -7.8, 0.5, 0, TAU);
+  context.fill();
+  context.restore();
 };
 
 const drawDog = (context: CanvasRenderingContext2D, game: GameState) => {
   const x = 330;
   const y = 534;
   const heardCall = game.callPulseUntil > game.elapsed && distance(game.player.x, game.player.y, x, y) < 300;
-  const wag = Math.round(Math.sin(game.worldTime * (heardCall ? 15 : 5)) * 3);
-  context.fillStyle = 'rgba(30, 39, 31, .28)';
-  context.fillRect(x - 12, y + 2, 28, 5);
-  context.fillStyle = '#704a32';
-  context.fillRect(x - 8, y - 8, 18, 10);
-  context.fillRect(x + 7, y - 13, 9, 10);
-  context.fillStyle = '#3c3028';
-  context.fillRect(x + 9, y - 16, 3, 5);
-  context.fillRect(x + 14, y - 15, 3, 5);
-  context.fillRect(x + 14, y - 9, 4, 2);
-  context.fillStyle = '#81583a';
-  context.fillRect(x - 12, y - 8 - wag, 5, 3);
-  context.fillStyle = '#49352a';
-  context.fillRect(x - 6, y, 3, 7);
-  context.fillRect(x + 6, y, 3, 7);
+  const wag = Math.sin(game.worldTime * (heardCall ? 15 : 5)) * 0.65;
+  drawSoftShadow(context, x + 1, y + 4, 17, 4.5, 0.25);
+  context.save();
+  context.translate(x, y);
+  context.strokeStyle = '#563a2c';
+  context.lineWidth = 3.1;
+  context.lineCap = 'round';
+  context.beginPath();
+  context.moveTo(-9, -5);
+  context.quadraticCurveTo(-15, -12 - wag * 4, -17, -8 - wag * 6);
+  context.stroke();
+  context.beginPath();
+  context.ellipse(0, -5, 11, 7, 0.03, 0, TAU);
+  fillAndStroke(context, '#775036', '#49362d', 1.1);
+  context.beginPath();
+  context.ellipse(9, -10, 6.2, 6.8, 0.2, 0, TAU);
+  fillAndStroke(context, '#7f583a', '#49362d', 1);
+  context.fillStyle = '#423129';
+  context.beginPath();
+  context.moveTo(5, -15);
+  context.lineTo(4, -22);
+  context.lineTo(9, -16);
+  context.moveTo(11, -16);
+  context.lineTo(15, -21);
+  context.lineTo(15, -13);
+  context.fill();
+  context.fillStyle = '#222b28';
+  context.beginPath();
+  context.arc(11, -11, 0.65, 0, TAU);
+  context.arc(15, -8, 1, 0, TAU);
+  context.fill();
+  drawLimb(context, [-5, -2, -6, 3, -6, 7], '#5e4332', 2.1);
+  drawLimb(context, [5, -1, 6, 3, 7, 7], '#5e4332', 2.1);
   if (heardCall) {
-    context.fillStyle = '#f1d992';
-    context.fillRect(x + 19, y - 18, 2, 5);
-    context.fillRect(x + 23, y - 20, 2, 7);
+    context.strokeStyle = '#f1d992';
+    context.lineWidth = 1.4;
+    context.beginPath();
+    context.moveTo(18, -15);
+    context.lineTo(22, -19);
+    context.moveTo(20, -11);
+    context.lineTo(25, -12);
+    context.stroke();
   }
+  context.restore();
 };
 
 const drawBuffalo = (context: CanvasRenderingContext2D, game: GameState) => {
   const x = 888;
   const y = 585;
-  const chew = Math.round(Math.sin(game.worldTime * 2.2));
-  context.fillStyle = 'rgba(30, 39, 31, .3)';
-  context.fillRect(x - 28, y + 6, 62, 8);
-  context.fillStyle = '#4a4941';
-  context.fillRect(x - 25, y - 19, 45, 25);
-  context.fillRect(x + 14, y - 16, 20, 18);
-  context.fillStyle = '#383a37';
-  context.fillRect(x - 20, y + 2, 6, 16);
-  context.fillRect(x + 8, y + 2, 6, 16);
-  context.fillRect(x + 23, y - 2, 6, 15);
-  context.fillStyle = '#d7c492';
-  context.fillRect(x + 25, y - 22, 14, 3);
-  context.fillRect(x + 31, y - 25, 9, 3);
-  context.fillRect(x + 12, y - 22, 11, 3);
-  context.fillRect(x + 9, y - 25, 8, 3);
-  context.fillStyle = '#232928';
-  context.fillRect(x + 27, y - 12, 2, 2);
-  context.fillRect(x + 34, y - 8 + chew, 4, 2);
-  context.fillStyle = '#303330';
-  context.fillRect(x - 30, y - 19, 6, 3);
+  const chew = Math.sin(game.worldTime * 2.2) * 1.2;
+  drawSoftShadow(context, x + 3, y + 9, 38, 7, 0.3);
+  context.save();
+  context.translate(x, y);
+  context.beginPath();
+  context.moveTo(-28, -10);
+  context.quadraticCurveTo(-20, -26, 6, -24);
+  context.quadraticCurveTo(24, -22, 25, -7);
+  context.quadraticCurveTo(23, 5, 5, 7);
+  context.quadraticCurveTo(-17, 8, -27, -2);
+  context.closePath();
+  const hide = context.createLinearGradient(-20, -24, 18, 8);
+  hide.addColorStop(0, '#5b5a50');
+  hide.addColorStop(1, '#373f3a');
+  fillAndStroke(context, hide, '#28332f', 1.5);
+  context.beginPath();
+  context.ellipse(25, -10, 12, 10, 0.14, 0, TAU);
+  fillAndStroke(context, '#4b4c45', '#28332f', 1.3);
+  [-17, 7, 20].forEach((leg, index) => drawLimb(context, [leg, 1, leg + (index - 1), 8, leg + (index - 1), 15], '#363c38', 3.8));
+  context.strokeStyle = '#d9c693';
+  context.lineWidth = 2.7;
+  context.lineCap = 'round';
+  context.beginPath();
+  context.moveTo(19, -17);
+  context.quadraticCurveTo(11, -25, 8, -29);
+  context.moveTo(29, -18);
+  context.quadraticCurveTo(39, -24, 42, -29);
+  context.stroke();
+  context.fillStyle = '#202826';
+  context.beginPath();
+  context.arc(29, -12, 0.85, 0, TAU);
+  context.ellipse(35, -7 + chew, 2.4, 1.2, 0.1, 0, TAU);
+  context.fill();
+  context.strokeStyle = '#303632';
+  context.lineWidth = 1.8;
+  context.beginPath();
+  context.moveTo(-27, -14);
+  context.quadraticCurveTo(-34, -19, -35, -12);
+  context.stroke();
+  context.restore();
 };
 
 const drawChickens = (context: CanvasRenderingContext2D, game: GameState) => {
@@ -1411,59 +2132,199 @@ const drawChickens = (context: CanvasRenderingContext2D, game: GameState) => {
 const drawHaNu = (context: CanvasRenderingContext2D, game: GameState) => {
   const { x, y } = game.hanu;
   const slow = game.powerUntil.coffee > game.elapsed ? 0.22 : 1;
-  const bob = Math.round(Math.abs(Math.sin(game.worldTime * 5 * slow)) * -2);
+  const gait = game.worldTime * 5 * slow;
+  const bob = Math.abs(Math.sin(gait)) * -1.8;
+  const step = Math.sin(gait) * 2.2;
   context.save();
-  context.translate(Math.round(x), Math.round(y + bob));
-  context.fillStyle = 'rgba(27, 39, 31, .3)';
-  context.fillRect(-10, 8, 22, 5);
-  context.fillStyle = '#343a36';
-  context.fillRect(-7, 0, 5, 10);
-  context.fillRect(3, 0, 5, 10);
-  context.fillStyle = '#315f68';
-  context.fillRect(-10, -14, 20, 17);
-  context.fillRect(-8, -18, 16, 7);
-  context.fillStyle = '#c68e68';
-  context.fillRect(-5, -26, 11, 9);
-  context.fillStyle = '#2d2929';
-  context.fillRect(-6, -29, 12, 5);
-  context.fillStyle = '#c68e68';
-  context.fillRect(7, -18, 4, 13);
-  context.fillStyle = '#80e0a2';
-  context.fillRect(8, -25, 4, 9);
-  context.fillStyle = '#14211f';
-  context.fillRect(9, -23, 2, 5);
+  context.translate(x, y + bob);
+  context.rotate(-0.035 + Math.sin(gait * 0.5) * 0.015);
+  drawSoftShadow(context, 1, 10, 14, 4.5, 0.3);
+
+  drawLimb(context, [-5, 1, -6.5, 6, -7 - step * 0.35, 11], '#37423b', 4.2);
+  drawLimb(context, [5, 1, 6.5, 6, 7 + step * 0.35, 11], '#37423b', 4.2);
+  context.strokeStyle = '#d9c7a0';
+  context.lineWidth = 2.4;
+  context.beginPath();
+  context.moveTo(-10 - step * 0.35, 11.5);
+  context.lineTo(-4 - step * 0.35, 11.5);
+  context.moveTo(4 + step * 0.35, 11.5);
+  context.lineTo(10 + step * 0.35, 11.5);
+  context.stroke();
+
+  context.beginPath();
+  context.moveTo(-10, -14);
+  context.quadraticCurveTo(-13, -6, -10, 2);
+  context.quadraticCurveTo(0, 7, 10, 2);
+  context.quadraticCurveTo(13, -7, 9, -14);
+  context.quadraticCurveTo(4, -18, 0, -15);
+  context.quadraticCurveTo(-4, -18, -10, -14);
+  context.closePath();
+  fillAndStroke(context, '#f0ead9', '#2d3833', 1.35);
+  context.strokeStyle = '#c7bda9';
+  context.lineWidth = 1;
+  context.beginPath();
+  context.moveTo(-4.5, -15);
+  context.quadraticCurveTo(0, -10, 4.5, -15);
+  context.stroke();
+  context.beginPath();
+  context.moveTo(-10.5, -1);
+  context.quadraticCurveTo(0, 3, 10.5, -1);
+  context.lineTo(9, 5);
+  context.quadraticCurveTo(0, 8, -9, 5);
+  context.closePath();
+  fillAndStroke(context, '#4b6260', ART_INK, 1);
+
+  context.fillStyle = '#c9906b';
+  context.beginPath();
+  context.ellipse(-0.4, -22, 6.7, 7.5, 0.13, 0, TAU);
+  context.fill();
+  context.strokeStyle = ART_INK;
+  context.lineWidth = 1.25;
+  context.stroke();
+  context.fillStyle = '#302c2c';
+  context.beginPath();
+  context.moveTo(-6.5, -23.5);
+  context.quadraticCurveTo(-4, -31, 2, -30);
+  context.quadraticCurveTo(7, -29, 6.1, -23);
+  context.quadraticCurveTo(2, -26, -1, -25);
+  context.quadraticCurveTo(-3, -23, -6.5, -23.5);
+  context.fill();
+  context.fillStyle = '#2b302e';
+  context.beginPath();
+  context.ellipse(-2.3, -21.4, 0.8, 1.05, 0, 0, TAU);
+  context.ellipse(2.1, -20.7, 0.8, 1.05, 0, 0, TAU);
+  context.fill();
+  context.strokeStyle = '#6e4939';
+  context.lineWidth = 0.8;
+  context.beginPath();
+  context.arc(0.4, -17.8, 2.2, 0.18, Math.PI - 0.2);
+  context.stroke();
+
+  drawLimb(context, [8, -11, 12, -9, 12.5, -4], '#c9906b', 3.1);
+  drawLimb(context, [-8, -11, -11, -4, -7, 1], '#c9906b', 3.1);
+  context.save();
+  context.translate(13, -8);
+  context.rotate(0.12);
+  context.beginPath();
+  context.roundRect(-3.1, -8, 6.2, 11, 1.4);
+  fillAndStroke(context, '#78c6a7', '#172421', 1.1);
+  context.fillStyle = '#18312d';
+  context.beginPath();
+  context.roundRect(-1.9, -6.4, 3.8, 6.5, 0.6);
+  context.fill();
+  context.fillStyle = 'rgba(239, 255, 222, .75)';
+  context.beginPath();
+  context.arc(0.8, -5.1, 0.55, 0, TAU);
+  context.fill();
+  context.restore();
   context.restore();
 };
 
 const drawHeeSun = (context: CanvasRenderingContext2D, game: GameState) => {
   const { x, y, scale, mode } = game.heesun;
   const chasing = mode === 'chasing' || mode === 'distracted';
-  const bob = chasing ? Math.round(Math.abs(Math.sin(game.worldTime * 9)) * -3) : Math.round(Math.sin(game.worldTime * 2));
+  const run = game.worldTime * (chasing ? 8.4 : 2.1);
+  const bob = chasing ? Math.abs(Math.sin(run)) * -3.1 : Math.sin(run) * 0.7;
+  const squash = chasing ? 1 + Math.sin(run * 2) * 0.035 : 1 + Math.sin(run) * 0.012;
+  const reach = chasing ? 8 + Math.abs(Math.sin(run * 0.5)) * 6 : 0;
   context.save();
-  context.translate(Math.round(x), Math.round(y + bob));
-  context.scale(scale, scale);
-  context.fillStyle = 'rgba(29, 36, 29, .34)';
-  context.fillRect(-13, 9, 28, 6);
-  context.fillStyle = '#333630';
-  context.fillRect(-10, 0, 6, 12);
-  context.fillRect(5, 0, 6, 12);
-  context.fillStyle = '#983f38';
-  context.fillRect(-14, -17, 28, 20);
-  context.fillStyle = '#d8b667';
-  for (let stripe = -10; stripe <= 10; stripe += 7) context.fillRect(stripe, -17, 2, 20);
-  context.fillStyle = '#c88e67';
-  context.fillRect(-7, -29, 15, 12);
-  context.fillStyle = '#302828';
-  context.fillRect(-8, -32, 16, 5);
-  context.fillStyle = '#2c2626';
-  context.fillRect(-4, -23, 2, 2);
-  context.fillRect(4, -23, 2, 2);
-  context.fillRect(-2, -19, 7, 2);
-  if (chasing) {
-    context.fillStyle = '#c88e67';
-    context.fillRect(-18, -13, 5, 15);
-    context.fillRect(13, -13, 5, 15);
+  context.translate(x, y + bob);
+  context.scale(scale * squash, scale / squash);
+  context.rotate(chasing ? Math.sin(run) * 0.055 : 0);
+  drawSoftShadow(context, 1, 12, 19, 5.5, 0.34);
+
+  const stride = chasing ? Math.sin(run) * 3.6 : 0;
+  drawLimb(context, [-7, 1, -9, 7, -9 - stride, 13], '#333b35', 5);
+  drawLimb(context, [7, 1, 9, 7, 9 + stride, 13], '#333b35', 5);
+  context.strokeStyle = '#d5b57a';
+  context.lineWidth = 2.8;
+  context.beginPath();
+  context.moveTo(-14 - stride, 13.5);
+  context.lineTo(-5 - stride, 13.5);
+  context.moveTo(5 + stride, 13.5);
+  context.lineTo(14 + stride, 13.5);
+  context.stroke();
+
+  context.beginPath();
+  context.moveTo(-15, -20);
+  context.bezierCurveTo(-23, -13, -22, 1, -13, 6);
+  context.bezierCurveTo(-6, 11, 8, 11, 16, 5);
+  context.bezierCurveTo(24, -3, 22, -15, 14, -21);
+  context.quadraticCurveTo(0, -27, -15, -20);
+  context.closePath();
+  const shirt = context.createLinearGradient(-17, -20, 18, 7);
+  shirt.addColorStop(0, '#b64e3c');
+  shirt.addColorStop(1, '#7d3435');
+  fillAndStroke(context, shirt, '#362e2b', 1.65);
+  context.save();
+  context.clip();
+  context.strokeStyle = '#e2bc59';
+  context.lineWidth = 2.4;
+  for (let stripe = -14; stripe <= 14; stripe += 7) {
+    context.beginPath();
+    context.moveTo(stripe, -23);
+    context.quadraticCurveTo(stripe + 2, -7, stripe, 9);
+    context.stroke();
   }
+  context.restore();
+
+  const armY = -14;
+  if (chasing) {
+    drawLimb(context, [-14, armY, -23 - reach * 0.45, -8, -27 - reach, -3], '#cb916a', 4.2);
+    drawLimb(context, [14, armY, 23 + reach * 0.45, -10, 27 + reach, -5], '#cb916a', 4.2);
+    context.fillStyle = '#cb916a';
+    context.beginPath();
+    context.arc(-28 - reach, -3, 3.5, 0, TAU);
+    context.arc(28 + reach, -5, 3.5, 0, TAU);
+    context.fill();
+    context.strokeStyle = ART_INK;
+    context.lineWidth = 1;
+    context.stroke();
+  } else {
+    drawLimb(context, [-14, armY, -19, -5, -14, 2], '#cb916a', 4);
+    drawLimb(context, [14, armY, 19, -5, 14, 2], '#cb916a', 4);
+  }
+
+  context.fillStyle = '#cf956e';
+  context.beginPath();
+  context.ellipse(0, -30.5, 9.5, 10.2, 0.02, 0, TAU);
+  context.fill();
+  context.strokeStyle = ART_INK;
+  context.lineWidth = 1.5;
+  context.stroke();
+
+  context.fillStyle = '#2c2828';
+  context.beginPath();
+  context.ellipse(0, -38, 9.4, 5.2, 0, Math.PI, TAU);
+  context.fill();
+  const curls = [
+    [-7.4, -37.4], [-4.3, -40.2], [-0.7, -41], [3.1, -40.5], [6.6, -38.2],
+    [-6, -35.3], [-2.2, -37.2], [1.7, -37.4], [5.2, -35.4],
+  ] as const;
+  curls.forEach(([curlX, curlY], index) => {
+    context.fillStyle = index % 2 ? '#342d2d' : '#241f20';
+    context.beginPath();
+    context.arc(curlX, curlY, 2.15, 0, TAU);
+    context.fill();
+    context.strokeStyle = '#171718';
+    context.lineWidth = 0.55;
+    context.stroke();
+  });
+
+  context.fillStyle = '#252a28';
+  context.beginPath();
+  context.ellipse(-3.4, -30.6, 1.05, 1.3, -0.2, 0, TAU);
+  context.ellipse(3.6, -30.3, 1.05, 1.3, 0.2, 0, TAU);
+  context.fill();
+  context.strokeStyle = '#733e36';
+  context.lineWidth = 1;
+  context.beginPath();
+  context.arc(0.3, -25.8, chasing ? 4.7 : 4.1, 0.1, Math.PI - 0.08);
+  context.stroke();
+  context.fillStyle = '#fff2cc';
+  context.beginPath();
+  context.ellipse(0.3, -24.8, chasing ? 3.9 : 3.1, chasing ? 1.8 : 1.25, 0, 0, TAU);
+  context.fill();
   context.restore();
 };
 
@@ -1471,30 +2332,68 @@ const drawPlayer = (context: CanvasRenderingContext2D, game: GameState) => {
   const { player } = game;
   const scale = game.powerUntil.squash > game.elapsed ? 1.42 : 1;
   const moving = Math.hypot(player.vx, player.vy) > 5;
-  const bob = moving ? Math.round(Math.abs(Math.sin(player.walk)) * -2) : 0;
-  const step = moving ? Math.round(Math.sin(player.walk) * 2) : 0;
+  const bob = moving ? Math.abs(Math.sin(player.walk)) * -1.7 : Math.sin(game.worldTime * 1.8) * 0.25;
+  const step = moving ? Math.sin(player.walk) * 2.2 : 0;
+  const side = Math.abs(player.facingX) > 0.35 ? Math.sign(player.facingX) : 0;
   context.save();
-  context.translate(Math.round(player.x), Math.round(player.y + bob));
+  context.translate(player.x, player.y + bob);
   context.scale(scale, scale);
-  context.fillStyle = 'rgba(28, 40, 31, .32)';
-  context.fillRect(-8, 6, 18, 5);
-  context.fillStyle = '#38473f';
-  context.fillRect(-5, 0, 4, 9 + step);
-  context.fillRect(2, 0, 4, 9 - step);
+  context.rotate(moving ? Math.sin(player.walk) * 0.025 : 0);
+  drawSoftShadow(context, 1, 9, 12, 4, 0.29);
+  drawLimb(context, [-3.6, 1, -4.5, 5, -5 - step, 10], '#394a42', 3.4);
+  drawLimb(context, [3.6, 1, 4.5, 5, 5 + step, 10], '#394a42', 3.4);
+  context.strokeStyle = '#d8c69b';
+  context.lineWidth = 2.2;
+  context.beginPath();
+  context.moveTo(-8 - step, 10.4);
+  context.lineTo(-3 - step, 10.4);
+  context.moveTo(3 + step, 10.4);
+  context.lineTo(8 + step, 10.4);
+  context.stroke();
+  context.beginPath();
+  context.moveTo(-7, -10);
+  context.quadraticCurveTo(-10, -2, -7, 3);
+  context.quadraticCurveTo(0, 7, 7, 3);
+  context.quadraticCurveTo(10, -3, 7, -10);
+  context.closePath();
+  fillAndStroke(context, '#d8c38c', ART_INK, 1.2);
+  context.strokeStyle = '#425950';
+  context.lineWidth = 3.4;
+  context.lineCap = 'round';
+  context.beginPath();
+  context.moveTo(-6.5, -7);
+  context.quadraticCurveTo(-10, -1, -8, 4);
+  context.moveTo(6.5, -7);
+  context.quadraticCurveTo(10, -1, 8, 4);
+  context.stroke();
   context.fillStyle = '#d0a078';
-  context.fillRect(-5, -16, 10, 9);
+  context.beginPath();
+  context.ellipse(side * 0.8, -16.2, 5.3, 6.1, side * 0.08, 0, TAU);
+  context.fill();
+  context.strokeStyle = ART_INK;
+  context.lineWidth = 1.1;
+  context.stroke();
   context.fillStyle = '#332f2d';
-  context.fillRect(-5, -19, 10, 4);
-  context.fillStyle = '#d9c48b';
-  context.fillRect(-6, -8, 12, 11);
-  context.fillStyle = '#425950';
-  context.fillRect(-8, -7, 4, 10);
-  context.fillRect(5, -7, 4, 10);
-  context.fillStyle = '#5d6f42';
-  context.fillRect(-7, -23, 14, 4);
-  context.fillRect(-5, -26, 10, 4);
+  context.beginPath();
+  context.arc(side * 0.8, -18, 5.2, Math.PI * 1.03, Math.PI * 1.96);
+  context.fill();
+  context.fillStyle = '#62744a';
+  context.beginPath();
+  context.ellipse(0, -22.1, 8.2, 2.6, -0.05, 0, TAU);
+  context.ellipse(0, -24.4, 5.2, 3.2, 0, Math.PI, TAU);
+  context.fill();
+  context.strokeStyle = '#374435';
+  context.lineWidth = 0.9;
+  context.stroke();
   context.fillStyle = '#d9bd67';
-  context.fillRect(-1, -25, 3, 2);
+  context.beginPath();
+  context.arc(1, -24.1, 1.05, 0, TAU);
+  context.fill();
+  context.fillStyle = '#26302d';
+  context.beginPath();
+  context.arc(-1.6 + side, -16.1, 0.65, 0, TAU);
+  context.arc(2.2 + side, -16, 0.65, 0, TAU);
+  context.fill();
   context.restore();
 };
 
@@ -1504,30 +2403,68 @@ const drawOcop = (context: CanvasRenderingContext2D, game: GameState) => {
     const bob = Math.sin(game.worldTime * 2 + item.x) * 2;
     context.save();
     context.translate(item.x, item.y + bob);
-    context.fillStyle = 'rgba(25, 40, 31, .24)';
-    context.fillRect(-11, 7, 23, 5);
+    drawSoftShadow(context, 1, 8, 13, 3.5, 0.24);
     if (item.kind === 'squash') {
-      context.fillStyle = '#8fbe55';
-      context.fillRect(-9, -4, 18, 12);
-      context.fillStyle = '#d8e98c';
-      context.fillRect(-5, -6, 10, 3);
-      context.fillStyle = '#3b6b3d';
-      context.fillRect(-1, -9, 3, 4);
+      context.beginPath();
+      context.ellipse(0, 0, 11, 7.5, -0.12, 0, TAU);
+      const squash = context.createLinearGradient(-9, -5, 9, 5);
+      squash.addColorStop(0, '#b7d86a');
+      squash.addColorStop(1, '#6c9c48');
+      fillAndStroke(context, squash, '#315b38', 1.1);
+      context.strokeStyle = 'rgba(231, 244, 165, .65)';
+      context.lineWidth = 1.2;
+      context.beginPath();
+      context.arc(-1, -1, 7, Math.PI * 1.1, Math.PI * 1.75);
+      context.stroke();
+      context.strokeStyle = '#3b6b3d';
+      context.lineWidth = 1.7;
+      context.beginPath();
+      context.moveTo(-1, -7);
+      context.quadraticCurveTo(1, -10, 4, -10);
+      context.stroke();
     } else if (item.kind === 'coffee') {
-      context.fillStyle = '#f0d49a';
-      context.fillRect(-8, -5, 14, 12);
+      context.beginPath();
+      context.roundRect(-9, -6, 15, 13, [2, 2, 5, 5]);
+      fillAndStroke(context, '#eee0b8', '#5e4838', 1.1);
+      context.strokeStyle = '#6c3d2e';
+      context.lineWidth = 2;
+      context.beginPath();
+      context.arc(6, 0, 4.3, -Math.PI / 2, Math.PI / 2);
+      context.stroke();
       context.fillStyle = '#5c352c';
-      context.fillRect(6, -2, 4, 6);
-      context.fillStyle = '#bb563d';
-      context.fillRect(-3, -9, 3, 3);
-      context.fillRect(2, -10, 3, 3);
+      context.beginPath();
+      context.ellipse(-1.5, -4.5, 5.2, 1.4, 0, 0, TAU);
+      context.fill();
+      context.fillStyle = '#c25842';
+      [-4, 1.5].forEach((berryX, index) => {
+        context.beginPath();
+        context.arc(berryX, -9 - index, 2, 0, TAU);
+        context.fill();
+      });
+      context.strokeStyle = 'rgba(242, 235, 203, .65)';
+      context.lineWidth = 1;
+      context.beginPath();
+      context.moveTo(-3, -11);
+      context.quadraticCurveTo(-5, -12, -3, -16);
+      context.moveTo(1, -11);
+      context.quadraticCurveTo(3, -14, 1, -17);
+      context.stroke();
     } else {
-      context.fillStyle = '#d8b86f';
-      context.fillRect(-8, -5, 7, 9);
-      context.fillRect(2, -7, 8, 11);
-      context.fillStyle = '#775334';
-      context.fillRect(-5, -3, 2, 5);
-      context.fillRect(5, -5, 2, 6);
+      [[-4.5, 0, -0.25], [4, -1.5, 0.24]].forEach(([nutX, nutY, angle]) => {
+        context.save();
+        context.translate(nutX, nutY);
+        context.rotate(angle);
+        context.beginPath();
+        context.ellipse(0, 0, 4.6, 6.1, 0, 0, TAU);
+        fillAndStroke(context, '#d8b86f', '#674b32', 1);
+        context.strokeStyle = '#8a6138';
+        context.lineWidth = 0.9;
+        context.beginPath();
+        context.moveTo(0, -4.6);
+        context.quadraticCurveTo(-1.2, 0, 0, 4.7);
+        context.stroke();
+        context.restore();
+      });
     }
     context.restore();
   });
@@ -1536,16 +2473,31 @@ const drawOcop = (context: CanvasRenderingContext2D, game: GameState) => {
 const drawGate = (context: CanvasRenderingContext2D, game: GameState) => {
   const x = 805;
   const y = 447;
-  context.fillStyle = '#5a412d';
-  context.fillRect(x - 36, y - 20, 5, 43);
-  context.fillRect(x + 31, y - 20, 5, 43);
+  drawSoftShadow(context, x, y + 21, 40, 5, 0.22);
+  context.strokeStyle = '#5a412d';
+  context.lineWidth = 5;
+  context.lineCap = 'round';
+  context.beginPath();
+  context.moveTo(x - 34, y - 20);
+  context.lineTo(x - 34, y + 23);
+  context.moveTo(x + 34, y - 20);
+  context.lineTo(x + 34, y + 23);
+  context.stroke();
   context.save();
   context.translate(x - 31, y - 16);
   if (game.gateOpen) context.rotate(-0.9);
-  context.fillStyle = '#a17443';
-  context.fillRect(0, 0, 62, 5);
-  context.fillRect(0, 14, 62, 5);
-  for (let bar = 0; bar <= 56; bar += 14) context.fillRect(bar, 0, 4, 23);
+  context.strokeStyle = '#9d7043';
+  context.lineWidth = 4;
+  context.beginPath();
+  context.moveTo(0, 2);
+  context.quadraticCurveTo(31, -1, 62, 2);
+  context.moveTo(0, 17);
+  context.quadraticCurveTo(31, 14, 62, 17);
+  for (let bar = 0; bar <= 56; bar += 14) {
+    context.moveTo(bar, -1);
+    context.lineTo(bar + 1.5, 22);
+  }
+  context.stroke();
   context.restore();
 };
 
@@ -1556,10 +2508,15 @@ const drawDomino = (context: CanvasRenderingContext2D, game: GameState) => {
     context.save();
     context.translate(1_275 + index * 18, 408 + index * 2);
     context.rotate(progress * 1.2);
-    context.fillStyle = index % 2 ? '#825239' : '#9c6841';
-    context.fillRect(-7, -12, 14, 18);
-    context.fillStyle = '#d2a35c';
-    context.fillRect(-6, -9, 12, 2);
+    context.beginPath();
+    context.roundRect(-7, -12, 14, 18, 2);
+    fillAndStroke(context, index % 2 ? '#825239' : '#9c6841', '#4e392d', 1);
+    context.strokeStyle = '#d2a35c';
+    context.lineWidth = 1.2;
+    context.beginPath();
+    context.moveTo(-5, -8);
+    context.quadraticCurveTo(0, -10, 5, -8);
+    context.stroke();
     context.restore();
   }
 };
@@ -1567,19 +2524,25 @@ const drawDomino = (context: CanvasRenderingContext2D, game: GameState) => {
 const drawExit = (context: CanvasRenderingContext2D, game: GameState) => {
   const x = WORLD_WIDTH - 62;
   const y = 452;
-  context.fillStyle = '#5b422e';
-  context.fillRect(x, y - 35, 4, 52);
-  context.fillStyle = '#e3c878';
-  context.fillRect(x - 33, y - 39, 68, 22);
+  context.strokeStyle = '#5b422e';
+  context.lineWidth = 4.5;
+  context.beginPath();
+  context.moveTo(x, y - 36);
+  context.lineTo(x, y + 18);
+  context.stroke();
+  context.beginPath();
+  context.roundRect(x - 35, y - 42, 70, 24, [4, 2, 5, 3]);
+  fillAndStroke(context, '#e3c878', '#5b422e', 1.4);
   context.fillStyle = '#2c493e';
-  context.font = '900 8px monospace';
+  context.font = '900 8px "Be Vietnam Pro", sans-serif';
   context.textAlign = 'center';
   context.fillText('LỐI RA →', x + 1, y - 25);
   if (game.absurdityLevel >= 2) {
-    context.fillStyle = '#e3c878';
-    context.fillRect(x - 16, y - 66, 34, 16);
+    context.beginPath();
+    context.roundRect(x - 18, y - 68, 38, 17, 3);
+    fillAndStroke(context, '#e3c878', '#5b422e', 1.1);
     context.fillStyle = '#2c493e';
-    context.font = '800 6px monospace';
+    context.font = '800 6px "Be Vietnam Pro", sans-serif';
     context.fillText('CHẮC VẬY', x + 1, y - 56);
   }
 };
@@ -1592,16 +2555,31 @@ const drawWrongVillagers = (context: CanvasRenderingContext2D, game: GameState) 
     { x: 1_146, y: 590, color: '#8d5a3d' },
   ];
   positions.slice(0, game.absurdityLevel).forEach((person, index) => {
-    const bob = Math.round(Math.sin(game.worldTime * 2 + index));
-    context.fillStyle = '#2f2929';
-    context.fillRect(person.x - 3, person.y - 19 + bob, 7, 7);
+    const bob = Math.sin(game.worldTime * 2 + index) * 0.7;
+    context.save();
+    context.translate(person.x, person.y + bob);
+    drawSoftShadow(context, 0, 7, 9, 3, 0.2);
+    drawLimb(context, [-3, 2, -4, 6, -4, 10], '#343a36', 2.6);
+    drawLimb(context, [3, 2, 4, 6, 4, 10], '#343a36', 2.6);
+    context.beginPath();
+    context.moveTo(-5.5, -8);
+    context.quadraticCurveTo(-8, -1, -5, 4);
+    context.quadraticCurveTo(0, 7, 5.5, 4);
+    context.quadraticCurveTo(8, -2, 5, -8);
+    context.closePath();
+    fillAndStroke(context, person.color, ART_INK, 1);
     context.fillStyle = '#c68c66';
-    context.fillRect(person.x - 2, person.y - 12 + bob, 5, 5);
-    context.fillStyle = person.color;
-    context.fillRect(person.x - 5, person.y - 7 + bob, 11, 13);
-    context.fillStyle = '#343a36';
-    context.fillRect(person.x - 4, person.y + 5 + bob, 3, 8);
-    context.fillRect(person.x + 2, person.y + 5 + bob, 3, 8);
+    context.beginPath();
+    context.ellipse(0, -13, 4, 4.7, index % 2 ? 0.15 : -0.1, 0, TAU);
+    context.fill();
+    context.strokeStyle = ART_INK;
+    context.lineWidth = 0.9;
+    context.stroke();
+    context.fillStyle = '#2f2929';
+    context.beginPath();
+    context.arc(0, -14.5, 4, Math.PI, TAU);
+    context.fill();
+    context.restore();
   });
 };
 
@@ -1610,10 +2588,22 @@ const drawParticles = (context: CanvasRenderingContext2D, game: GameState) => {
     context.globalAlpha = clamp(particle.life / particle.maxLife, 0, 1);
     context.fillStyle = particle.color;
     if (particle.kind === 'note') {
-      context.fillRect(Math.round(particle.x), Math.round(particle.y), 2, 4);
-      context.fillRect(Math.round(particle.x) + 2, Math.round(particle.y), 2, 1);
+      context.strokeStyle = particle.color;
+      context.lineWidth = 1.2;
+      context.beginPath();
+      context.moveTo(particle.x, particle.y + 3);
+      context.lineTo(particle.x, particle.y - 2);
+      context.quadraticCurveTo(particle.x + 3, particle.y - 3, particle.x + 3.5, particle.y - 1);
+      context.stroke();
+      context.beginPath();
+      context.arc(particle.x - 1, particle.y + 3, 1.5, 0, TAU);
+      context.fill();
+    } else if (particle.kind === 'leaf') {
+      drawLeaf(context, particle.x, particle.y, particle.size + 1.8, Math.max(0.8, particle.size * 0.55), particle.vx * 0.03, particle.color);
     } else {
-      context.fillRect(Math.round(particle.x), Math.round(particle.y), particle.size + (particle.kind === 'leaf' ? 2 : 0), particle.size);
+      context.beginPath();
+      context.ellipse(particle.x, particle.y, particle.size * 0.85, particle.size * 0.55, particle.vx * 0.02, 0, TAU);
+      context.fill();
     }
   });
   context.globalAlpha = 1;
@@ -1635,58 +2625,113 @@ const drawCallWave = (context: CanvasRenderingContext2D, game: GameState) => {
   context.stroke();
 };
 
+const drawAtmosphere = (context: CanvasRenderingContext2D, game: GameState) => {
+  context.save();
+  const light = context.createRadialGradient(VIEW_WIDTH * 0.76, -12, 8, VIEW_WIDTH * 0.72, 24, 245);
+  light.addColorStop(0, 'rgba(255, 236, 169, .2)');
+  light.addColorStop(0.48, 'rgba(255, 221, 139, .055)');
+  light.addColorStop(1, 'rgba(255, 221, 139, 0)');
+  context.fillStyle = light;
+  context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+
+  if (game.quality === 'high') {
+    context.globalAlpha = 0.055;
+    for (let index = 0; index < 46; index += 1) {
+      const x = hash2(index, 19) * VIEW_WIDTH;
+      const y = hash2(7, index * 1.7) * VIEW_HEIGHT;
+      context.fillStyle = index % 3 ? '#fff1bd' : '#294d3c';
+      context.beginPath();
+      context.arc(x, y, 0.35 + hash2(index, 3) * 0.45, 0, TAU);
+      context.fill();
+    }
+  }
+
+  const breeze = game.reducedMotion ? 0 : Math.sin(game.worldTime * 0.7) * 2.2;
+  context.strokeStyle = 'rgba(35, 63, 42, .68)';
+  context.lineWidth = 3.4;
+  context.lineCap = 'round';
+  context.beginPath();
+  context.moveTo(-8, 40);
+  context.quadraticCurveTo(25 + breeze, 22, 58 + breeze, -8);
+  context.moveTo(VIEW_WIDTH + 7, VIEW_HEIGHT - 35);
+  context.quadraticCurveTo(VIEW_WIDTH - 21 - breeze, VIEW_HEIGHT - 18, VIEW_WIDTH - 48 - breeze, VIEW_HEIGHT + 8);
+  context.stroke();
+  ([
+    [8, 31, -0.55, '#315e3f'], [22, 24, -0.3, '#477846'], [38, 12, -0.65, '#6b944e'],
+    [VIEW_WIDTH - 8, VIEW_HEIGHT - 28, 2.7, '#315e3f'], [VIEW_WIDTH - 25, VIEW_HEIGHT - 17, 2.9, '#557f48'],
+  ] as const).forEach(([x, y, angle, color]) => drawLeaf(context, x, y, 10, 3.7, angle, color));
+
+  const vignette = context.createRadialGradient(VIEW_WIDTH / 2, VIEW_HEIGHT * 0.47, VIEW_HEIGHT * 0.2, VIEW_WIDTH / 2, VIEW_HEIGHT * 0.48, VIEW_WIDTH * 0.63);
+  vignette.addColorStop(0, 'rgba(20, 39, 31, 0)');
+  vignette.addColorStop(0.73, 'rgba(20, 39, 31, .03)');
+  vignette.addColorStop(1, 'rgba(13, 30, 24, .2)');
+  context.fillStyle = vignette;
+  context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+  context.restore();
+};
+
 const drawCaptureScene = (context: CanvasRenderingContext2D, game: GameState) => {
   const age = game.elapsed - game.scene.startedAt;
-  context.fillStyle = age >= 4.35 ? '#151d1c' : '#3a4038';
+  const night = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
+  night.addColorStop(0, age >= 4.35 ? '#111817' : '#3c4b42');
+  night.addColorStop(1, age >= 4.35 ? '#171e1c' : '#72805a');
+  context.fillStyle = night;
   context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
   if (age < 1.45 || age >= 4.35) return;
-  context.fillStyle = '#6d8053';
-  context.fillRect(0, 122, VIEW_WIDTH, 148);
-  context.fillStyle = '#273d35';
+  const earth = context.createLinearGradient(0, 120, 0, VIEW_HEIGHT);
+  earth.addColorStop(0, '#77875d');
+  earth.addColorStop(1, '#4d6846');
+  context.fillStyle = earth;
+  context.fillRect(0, 121, VIEW_WIDTH, 149);
+  context.fillStyle = '#2f4d40';
   context.beginPath();
-  context.moveTo(0, 133);
-  context.lineTo(80, 70);
-  context.lineTo(150, 125);
-  context.lineTo(250, 54);
-  context.lineTo(350, 128);
-  context.lineTo(435, 72);
-  context.lineTo(VIEW_WIDTH, 118);
+  context.moveTo(0, 139);
+  context.bezierCurveTo(48, 130, 71, 72, 112, 79);
+  context.bezierCurveTo(158, 87, 175, 132, 218, 122);
+  context.bezierCurveTo(265, 111, 278, 58, 326, 64);
+  context.bezierCurveTo(381, 71, 401, 132, VIEW_WIDTH, 119);
   context.lineTo(VIEW_WIDTH, 152);
   context.lineTo(0, 152);
   context.closePath();
   context.fill();
   const fakeGame = { ...game, feast: { ...game.feast, x: 240, y: 172 } };
   drawFeast(context, fakeGame);
-  context.save();
-  context.translate(206, 201);
-  context.fillStyle = '#38473f';
-  context.fillRect(-6, -5, 12, 10);
-  context.fillStyle = '#d0a078';
-  context.fillRect(-4, -15, 9, 8);
-  context.fillStyle = '#332f2d';
-  context.fillRect(-5, -18, 10, 4);
-  context.fillStyle = '#f2e7b8';
-  context.fillRect(-3, -12, 1, 1);
-  context.fillRect(3, -12, 1, 1);
-  context.restore();
+  const fakePlayer = {
+    ...game,
+    player: { ...game.player, x: 206, y: 201, vx: 0, vy: 0, facingX: 1, facingY: 0 },
+    powerUntil: { ...game.powerUntil, squash: 0 },
+  };
+  drawPlayer(context, fakePlayer);
+  context.strokeStyle = '#2a312e';
+  context.lineWidth = 1.1;
+  context.beginPath();
+  context.moveTo(202, 184);
+  context.lineTo(205, 185);
+  context.moveTo(208, 185);
+  context.lineTo(211, 184);
+  context.stroke();
   const fakeHeeSun = { ...game, heesun: { ...game.heesun, x: 281, y: 199, scale: 1.18, mode: 'drinking' as HeeSunMode } };
   drawHeeSun(context, fakeHeeSun);
-  context.fillStyle = 'rgba(33, 29, 29, .28)';
+  context.fillStyle = 'rgba(33, 29, 29, .24)';
   context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
 };
 
 export const renderGame = (context: CanvasRenderingContext2D, game: GameState) => {
   context.save();
-  context.imageSmoothingEnabled = false;
-  context.clearRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.imageSmoothingEnabled = true;
+  context.clearRect(0, 0, RENDER_WIDTH, RENDER_HEIGHT);
+  context.scale(RENDER_SCALE, RENDER_SCALE);
   if (game.scene.kind === 'capture') {
     drawCaptureScene(context, game);
+    drawAtmosphere(context, game);
     context.restore();
     return;
   }
   const shaking = !game.reducedMotion && game.shakeUntil > game.elapsed;
   const shakeX = shaking ? Math.sin(game.worldTime * 91) * 1.4 : 0;
   const shakeY = shaking ? Math.cos(game.worldTime * 77) * 0.9 : 0;
+  context.save();
   context.translate(-Math.round(game.cameraX) + shakeX, -Math.round(game.cameraY) + shakeY);
   drawGround(context, game);
   drawMountains(context);
@@ -1696,9 +2741,10 @@ export const renderGame = (context: CanvasRenderingContext2D, game: GameState) =
   drawBridge(context, 438);
   drawBridge(context, 695);
   drawScenery(context, game);
+  drawVillageDetails(context, game);
   drawWaterwheel(context, game);
   drawFish(context, game);
-  drawStreamGroup(context);
+  drawStreamGroup(context, game);
   drawGate(context, game);
   drawDomino(context, game);
   drawExit(context, game);
@@ -1726,6 +2772,8 @@ export const renderGame = (context: CanvasRenderingContext2D, game: GameState) =
   drawParticles(context, game);
   context.restore();
 
+  drawAtmosphere(context, game);
+
   const chiefAge = game.leaderStartedAt === 0 ? 0 : game.elapsed - game.leaderStartedAt;
   if (chiefAge > 1.4) {
     const sunset = clamp(chiefAge / 15, 0, 1);
@@ -1742,4 +2790,5 @@ export const renderGame = (context: CanvasRenderingContext2D, game: GameState) =
     context.fillStyle = `rgba(219, 103, 73, ${(0.025 + Math.sin(game.worldTime * 0.7) * 0.008).toFixed(3)})`;
     context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
   }
+  context.restore();
 };

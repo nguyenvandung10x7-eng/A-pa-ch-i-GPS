@@ -50,7 +50,7 @@ export const ExperiencesHubPage = ({ language, setLanguage }: ExperiencesHubPage
       </header>
 
       <section className="phieng-wait__menu">
-        <p>{vi ? 'MỘT TRÒ CHƠI HÀI THẾ GIỚI ĐÓNG' : 'A CLOSED-WORLD COMEDY GAME'}</p>
+        <p>{vi ? 'MỘT BẢN NHỎ · CHUYỆN KHÔNG NHỎ' : 'ONE SMALL VILLAGE · TOO MUCH TROUBLE'}</p>
         <h1 id="phieng-wait-title">PHIÊNG LƠI</h1>
         <span>{vi ? 'Bạn chỉ muốn đi qua bản. Phiêng Lơi có ý kiến khác.' : 'You only want to cross the village. Phiêng Lơi has other ideas.'}</span>
         <nav aria-label={vi ? 'Menu chờ' : 'Waiting menu'}>
@@ -64,7 +64,7 @@ export const ExperiencesHubPage = ({ language, setLanguage }: ExperiencesHubPage
         <small>{vi ? 'Di chuyển · PHÀ ƠI! · tự chịu hậu quả' : 'Move · PHÀ ƠI! · live with the consequences'}</small>
       </section>
 
-      <footer className="phieng-wait__footer"><span>ĐIỆN BIÊN · VIỆT NAM</span><span>v0.1 · CLOSED WORLD</span></footer>
+      <footer className="phieng-wait__footer"><span>ĐIỆN BIÊN · VIỆT NAM</span><span>PHÀ ƠI! · ĐI QUA BẢN</span></footer>
 
       {settingsOpen ? (
         <div className="phieng-wait__settings-layer" role="presentation">

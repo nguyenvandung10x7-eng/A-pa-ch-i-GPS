@@ -13,6 +13,17 @@ travel-time claim. Its visual vocabulary—stilt houses, mountain layers, villag
 road, fields and corn, stream, waterwheel, cooking smoke, chickens, a dog, a
 buffalo, produce, and everyday objects—is rendered by project-owned Canvas code.
 
+## Character-art checkpoint
+
+The current HeeSun, HANU, player, chief, villagers, stream group, and animals are
+original layered Canvas cutouts, not pixel sprites and not traced from a commercial
+IP. HeeSun's concept silhouette locks the short, tight, close-to-scalp curls and
+larger pear-shaped body; HANU locks the smaller build, dark hair, white tank top,
+shorts, and always-visible phone. These are concept-quality placeholders pending
+the owner's promised character reference. A later reference pass must fictionalize
+the people, never ship or trace the real photo, and must replace these draw layers
+in place rather than create another runtime.
+
 ## Core loop and controls
 
 > ĐI → GẶP CHUYỆN NGỚ NGẨN → PHÀ ƠI / CHẠY / ĐỨNG NHÌN → HẬU QUẢ → ĐI TIẾP
@@ -95,15 +106,20 @@ response. Do not mark the audio complete until the supplied recording is added t
 the provenance ledger and the project has explicit usage and redistribution
 rights.
 
-Current non-voice motifs—village ambience, stream, dog, steps, chickens, chase, phone,
-domino, table, OCOP, capture, and exit—are lightweight procedural Web Audio owned
-by this implementation. A later audio pass can replace them only with documented,
-project-cleared assets.
+The existing procedural motifs remain development fallbacks, but the same director
+is now sample-capable: it preloads only manifest cues marked ready, chooses among
+takes, applies gain/pan/distance/pitch/reverb, caps concurrency, and cleans up each
+source. The recording contract and exact filenames live in
+[`phieng-loi-audio-recording-library.md`](phieng-loi-audio-recording-library.md).
+Only documented, project-cleared recordings may be marked ready.
 
 ## Performance and lifecycle
 
-- Fixed 480×270 render target, smoothing disabled, camera-space scenery culling,
-  capped particles, and a low-quality profile for constrained devices.
+- 960×540 backing canvas with a stable 480×270 logical camera, smooth curve-based
+  hand-drawn/cutout art, camera-space scenery culling, capped particles, and a
+  low-quality profile for constrained devices. This is not integer-upscaled pixel
+  art: characters, houses, animals, water, crops, and props are layered paths with
+  elastic transforms, soft shadows, depth sorting, and atmospheric overlays.
 - Landscape/coarse-pointer rotation guard and entirely touch-playable controls.
 - Visibility and blur clear sticky movement; pause/Book suspend audio.
 - Unmount cancels animation, removes listeners, stops the voice element, and closes

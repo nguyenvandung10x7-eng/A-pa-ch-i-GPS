@@ -23,10 +23,11 @@ contracts are unchanged.
 
 ## Phiêng Lơi
 
-The game uses a dependency-free 480×270 Canvas renderer and a small dense village:
-road, stilt houses, fields, produce, stream, waterwheel, village chief, drinking
-table, animals, everyday props, and shortcuts. It has no RPG progression, quest
-log, XP, combat, crafting, or inventory system.
+The game uses a dependency-free 960×540 Canvas renderer and a small dense village:
+road, layered stilt houses, fields, produce, animated stream, waterwheel, village
+chief, drinking table, animals, everyday props, and shortcuts. The presentation is
+smooth hand-drawn/cutout cartoon art with a 3/4 camera—not pixel primitives. It has
+no RPG progression, quest log, XP, combat, crafting, or inventory system.
 
 The loop is deliberately short:
 
@@ -53,7 +54,8 @@ a project-cleared human recording at:
 
 Until that file and its rights record are supplied, the visual/camera/NPC response
 still runs and Settings reports the recording as missing. See
-[`public/audio/phieng-loi/README.md`](public/audio/phieng-loi/README.md).
+[`public/audio/phieng-loi/README.md`](public/audio/phieng-loi/README.md) and the
+complete [`recording library`](docs/phieng-loi-audio-recording-library.md).
 
 ## Book and existing systems
 
@@ -65,8 +67,8 @@ staff tools are preserved. Book is not a quest log and does not mutate game stat
 ## Rendering, lifecycle, and persistence
 
 - The game route stays lazy-loaded; no game-engine dependency is added.
-- Pixel rendering uses smoothing off and culls scattered scenery outside the
-  camera margin.
+- A 480×270 logical camera renders to a smooth 960×540 backing canvas; scenery
+  outside the camera margin is culled.
 - A constrained-device profile reduces particles and honors reduced motion.
 - Page hide, blur, and visibility changes clear input and pause safely.
 - Leaving the route cancels animation frames, removes listeners, stops the voice

@@ -25,8 +25,8 @@ import {
   createUiSnapshot,
   renderGame,
   stepGame,
-  VIEW_HEIGHT,
-  VIEW_WIDTH,
+  RENDER_HEIGHT,
+  RENDER_WIDTH,
   type GameQuality,
   type GameSave,
   type GameState,
@@ -237,7 +237,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     const context = canvasRef.current?.getContext('2d', { alpha: false });
     const game = gameRef.current;
     if (!context) return;
-    context.imageSmoothingEnabled = false;
+    context.imageSmoothingEnabled = true;
     if (status !== 'playing' || bookOpen) {
       renderGame(context, game);
       return;
@@ -372,8 +372,8 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
       <section className="phieng-game__frame" aria-label={vi ? 'Trò chơi Phiêng Lơi' : 'Phiêng Lơi game'}>
         <canvas
           ref={canvasRef}
-          width={VIEW_WIDTH}
-          height={VIEW_HEIGHT}
+          width={RENDER_WIDTH}
+          height={RENDER_HEIGHT}
           aria-label={vi ? 'Bản Phiêng Lơi nhỏ với đường bản, nhà sàn, ruộng và suối' : 'Compact Phiêng Lơi village with paths, stilt houses, fields and a stream'}
         />
 

@@ -8,7 +8,7 @@ defines primary runtime navigation.
 | Route | Current role | Runtime boundary |
 | --- | --- | --- |
 | `/` | Phiêng Lơi waiting menu | Static React/CSS; no Auth/Supabase startup cost. |
-| `/phieng-loi` | Primary game | Lazy mobile-first Canvas 2D game and procedural environment audio. |
+| `/phieng-loi` | Primary game | Lazy mobile-first 960×540 Canvas 2D cutout game with sample-capable/procedural audio. |
 | `/book` | Secondary Book | Existing application shell, Auth/Supabase, Book content and audio. It can also run in a same-origin iframe overlay with its duplicate shell chrome hidden. |
 | `/1954` | Archived direct experience | Existing lazy 1954/WebGL implementation remains callable by URL but is absent from the waiting menu and primary navigation. |
 | `/challenge`, `/map`, `/discover`, `/leaderboard` | Archived direct Explore surfaces | Existing GPS/social implementations remain callable by URL but are absent from primary navigation. |
@@ -35,8 +35,9 @@ Legal, privacy, Auth, admin, and moderation routes remain unchanged.
   Explore, and staff routes.
 - Phiêng Lơi owns one requestAnimationFrame loop. Page visibility, browser blur,
   pause, Book-open, pagehide, and unmount all stop or neutralize input correctly.
-- Unmount closes Web Audio and the human-voice `HTMLAudioElement` and removes every
-  input/visibility/orientation listener.
+- Unmount aborts sample preload, stops active decoded takes, closes Web Audio and
+  the human-voice `HTMLAudioElement`, and removes every input/visibility/orientation
+  listener.
 - The versioned local save keeps player/world state required for Continue; capture
   scenes are never persisted mid-cutscene.
 - Netlify's SPA redirect continues to support direct-route refreshes. No database

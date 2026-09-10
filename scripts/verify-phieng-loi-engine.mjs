@@ -1,11 +1,16 @@
 import assert from 'node:assert/strict';
 import {
+  RENDER_HEIGHT,
+  RENDER_WIDTH,
+  VIEW_HEIGHT,
+  VIEW_WIDTH,
   WORLD_WIDTH,
   createGame,
   createSave,
   createUiSnapshot,
   stepGame,
 } from '../src/experiences/phieng-loi/gameEngine.ts';
+import { PHIENG_LOI_AUDIO_CUES } from '../src/experiences/phieng-loi/audioManifest.ts';
 
 const freshInput = (callQueued = false) => ({
   left: false,
@@ -35,6 +40,16 @@ const quietHeeSun = (game) => {
   game.heesun.mode = 'drinking';
   game.heesun.modeUntil = 99_999;
 };
+
+assert.equal(RENDER_WIDTH, 960, 'the hand-drawn renderer should use a 960px backing canvas');
+assert.equal(RENDER_HEIGHT, 540, 'the hand-drawn renderer should use a 540px backing canvas');
+assert.equal(RENDER_WIDTH / VIEW_WIDTH, RENDER_HEIGHT / VIEW_HEIGHT, 'render scale should preserve 16:9 logical framing');
+assert.equal(new Set(PHIENG_LOI_AUDIO_CUES.map((cue) => cue.id)).size, PHIENG_LOI_AUDIO_CUES.length, 'audio cue ids must be unique');
+PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
+  assert.equal(cue.files.length, cue.takes, `${cue.id} should declare one filename per take`);
+  assert.ok(cue.delivery && cue.processing && cue.trigger, `${cue.id} should remain recording-ready`);
+  assert.ok(cue.durationSeconds[0] > 0 && cue.durationSeconds[1] >= cue.durationSeconds[0]);
+});
 
 {
   const game = createGame('high', false);
@@ -172,6 +187,7 @@ const quietHeeSun = (game) => {
   game.hanu.y = 450;
   tick(game, 0.02);
   assert.equal(game.gateOpen, true, 'HaNu should open the gate');
+  assert.equal('mode' in game.hanu, false, 'HaNu must remain a phone-walk chaos generator, not a second chase state machine');
   game.hanu.x = 1_265;
   game.hanu.y = 400;
   const dominoEvents = tick(game, 0.02);
