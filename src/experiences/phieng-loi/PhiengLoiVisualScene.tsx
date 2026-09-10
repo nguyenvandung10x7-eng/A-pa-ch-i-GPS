@@ -39,9 +39,23 @@ export type PhiengLoiVisualHandle = { render: (game: GameState) => void };
 const CHICKEN_COUNT = 10;
 const VUONGME_CALL_INTERVAL = 5;
 const VUONGME_VISUAL_SECONDS = 8;
+const ACTOR_WIDTH = {
+  player: 46,
+  chief: 53,
+  heesunPose: 49,
+  heesunRun: 38,
+  hanuPose: 47,
+  hanuWalk: 36,
+  feast: 82,
+  streamGroup: 68,
+  vuongMe: 52,
+  chicken: 18,
+  dog: 32,
+  buffalo: 62,
+} as const;
 const CHICKEN_REST = Array.from({ length: CHICKEN_COUNT }, (_, index) => ({
-  x: PHIENG_LOI_LANDMARKS.chickenYard.x - 104 + (index % 5) * 28,
-  y: PHIENG_LOI_LANDMARKS.chickenYard.y + (index % 2) * 18,
+  x: PHIENG_LOI_LANDMARKS.chickenYard.x - 58 + (index % 5) * 18,
+  y: PHIENG_LOI_LANDMARKS.chickenYard.y + (index % 2) * 12,
 }));
 
 const semanticHeeSunFrame = (mode: HeeSunMode, worldTime: number): number => {
@@ -86,6 +100,10 @@ const setSpriteTransform = (node: HTMLDivElement | null, facingX: number, scale:
   if (!node) return;
   node.style.setProperty('--sprite-flip', facingX < 0 ? '-1' : '1');
   node.style.setProperty('--sprite-scale', scale.toFixed(3));
+};
+
+const setSpriteWidth = (node: HTMLDivElement | null, width: number) => {
+  if (node && node.style.width !== `${width}px`) node.style.width = `${width}px`;
 };
 
 const setData = (node: HTMLDivElement | null, key: string, value: string) => {
@@ -141,8 +159,8 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       if (game.callCount > 0 && game.callCount % VUONGME_CALL_INTERVAL === 0) {
         const facing = game.player.facingX < 0 ? -1 : 1;
         vuongMeSpawnRef.current = nearestWalkablePoint({
-          x: game.player.x + facing * 102,
-          y: game.player.y - 16,
+          x: game.player.x + facing * 120,
+          y: game.player.y - 18,
         });
         vuongMeUntilRef.current = game.elapsed + VUONGME_VISUAL_SECONDS;
       }
@@ -156,6 +174,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       ? cycleFrame(chiefAge, karaokeActive ? 7.2 : 5.4, game.reducedMotion)
       : game.reducedMotion || game.worldTime % 4.8 < 4.64 ? 0 : 5;
     setSpriteFrame(chiefSpriteRef.current, 'chiefTalk', chiefFrame);
+    setSpriteWidth(chiefSpriteRef.current, ACTOR_WIDTH.chief);
     setData(chiefRef.current, 'motion', chiefSpeaking ? 'talk' : karaokeActive ? 'karaoke' : 'idle');
 
     const playerMoving = Math.hypot(game.player.vx, game.player.vy) > 5;
@@ -164,6 +183,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
     const playerPowerScale = game.powerUntil.squash > game.elapsed ? 1.3 : 1;
     placeActor(playerRef.current, game.player.x, game.player.y);
     setSpriteFrame(playerSpriteRef.current, playerMoving ? 'playerRun' : 'support', playerMoving ? playerFrame : 0);
+    setSpriteWidth(playerSpriteRef.current, ACTOR_WIDTH.player);
     setSpriteTransform(playerSpriteRef.current, game.player.facingX, playerDepthScale * playerPowerScale);
     setData(playerRef.current, 'motion', playerMoving ? 'run' : 'idle');
     setData(playerRef.current, 'terrain', terrainAt(game.player.x, game.player.y));
@@ -177,6 +197,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       heesunMoving ? 'heesunRun' : 'heesun',
       heesunMoving ? heesunFrame : semanticHeeSunFrame(game.heesun.mode, game.worldTime),
     );
+    setSpriteWidth(heesunSpriteRef.current, heesunMoving ? ACTOR_WIDTH.heesunRun : ACTOR_WIDTH.heesunPose);
     setSpriteTransform(
       heesunSpriteRef.current,
       Math.abs(game.heesun.vx) > 1 ? game.heesun.vx : 1,
@@ -196,18 +217,21 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       dominoActive || hanuTalking ? 'hanu' : 'hanuWalk',
       dominoActive ? 5 : hanuTalking ? 2 : hanuFrame,
     );
+    setSpriteWidth(hanuSpriteRef.current, dominoActive || hanuTalking ? ACTOR_WIDTH.hanuPose : ACTOR_WIDTH.hanuWalk);
     setSpriteTransform(hanuSpriteRef.current, hanuFacing, hanuDepthScale);
     setData(hanuRef.current, 'motion', dominoActive ? 'chaos' : hanuTalking ? 'talk' : 'walk');
 
-    placeActor(feastRef.current, game.feast.x, game.feast.y + 20);
+    placeActor(feastRef.current, game.feast.x, game.feast.y);
     const feastRecentlyCalled = game.feast.encounters > 0 && game.feast.nextTriggerAt - game.elapsed > 2.35;
     const feastRate = karaokeActive ? 7.4 : feastRecentlyCalled ? 4.8 : 1.65;
     setSpriteFrame(feastSpriteRef.current, 'feastLoop', cycleFrame(game.worldTime, feastRate, game.reducedMotion));
+    setSpriteWidth(feastSpriteRef.current, ACTOR_WIDTH.feast);
     setData(feastRef.current, 'motion', karaokeActive ? 'karaoke' : feastRecentlyCalled ? 'toast' : 'idle');
 
     const streamActive = game.streamStartedAt > 0 && game.elapsed - game.streamStartedAt < 5.2;
     const streamRate = karaokeActive ? 6.8 : streamActive ? 4.6 : 1.8;
     setSpriteFrame(streamSpriteRef.current, 'streamLoop', cycleFrame(game.worldTime, streamRate, game.reducedMotion));
+    setSpriteWidth(streamSpriteRef.current, ACTOR_WIDTH.streamGroup);
     setData(streamRef.current, 'motion', karaokeActive ? 'karaoke' : streamActive ? 'react' : 'idle');
 
     if (vuongMeRef.current) {
@@ -222,6 +246,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
           'vuongMeDance',
           cycleFrame(game.worldTime, 7.6, game.reducedMotion),
         );
+        setSpriteWidth(vuongMeSpriteRef.current, ACTOR_WIDTH.vuongMe);
         setSpriteTransform(vuongMeSpriteRef.current, game.player.x < vuongMeSpawnRef.current.x ? -1 : 1, 1);
       }
     }
@@ -260,16 +285,16 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
         aria-hidden="true"
       >
         <div ref={chiefRef} className="phieng-visual__actor is-chief" style={actorStyle(PHIENG_LOI_LANDMARKS.chief.x, PHIENG_LOI_LANDMARKS.chief.y)}>
-          <div ref={chiefSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('chiefTalk', 0), width: 72 }} />
+          <div ref={chiefSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('chiefTalk', 0), width: ACTOR_WIDTH.chief }} />
         </div>
-        <div ref={feastRef} className="phieng-visual__actor is-feast" style={actorStyle(initialGame.feast.x, initialGame.feast.y + 20)}>
-          <div ref={feastSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('feastLoop', 0), width: 150 }} />
+        <div ref={feastRef} className="phieng-visual__actor is-feast" style={actorStyle(initialGame.feast.x, initialGame.feast.y)}>
+          <div ref={feastSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('feastLoop', 0), width: ACTOR_WIDTH.feast }} />
         </div>
         <div ref={streamRef} className="phieng-visual__actor is-stream-group" style={actorStyle(PHIENG_LOI_LANDMARKS.streamGroup.x, PHIENG_LOI_LANDMARKS.streamGroup.y)}>
-          <div ref={streamSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('streamLoop', 0), width: 164 }} />
+          <div ref={streamSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('streamLoop', 0), width: ACTOR_WIDTH.streamGroup }} />
         </div>
-        <StaticActor atlas="support" frame={3} x={926} y={526} width={50} className="is-dog" />
-        <StaticActor atlas="support" frame={4} x={1_552} y={506} width={88} className="is-buffalo" />
+        <StaticActor atlas="support" frame={3} {...PHIENG_LOI_LANDMARKS.dog} width={ACTOR_WIDTH.dog} className="is-dog" />
+        <StaticActor atlas="support" frame={4} {...PHIENG_LOI_LANDMARKS.buffalo} width={ACTOR_WIDTH.buffalo} className="is-buffalo" />
 
         {CHICKEN_REST.map((position, index) => (
           <div
@@ -281,16 +306,16 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
           >
             <div
               className="phieng-visual__sprite"
-              style={{ ...atlasFrameStyle('support', 2), width: 29, '--sprite-flip': index % 2 ? -1 : 1 } as CSSProperties}
+              style={{ ...atlasFrameStyle('support', 2), width: ACTOR_WIDTH.chicken, '--sprite-flip': index % 2 ? -1 : 1 } as CSSProperties}
             />
           </div>
         ))}
 
         <div ref={hanuRef} className="phieng-visual__actor is-hanu" style={actorStyle(initialGame.hanu.x, initialGame.hanu.y)}>
-          <div ref={hanuSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('hanuWalk', 0), width: 78 }} />
+          <div ref={hanuSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('hanuWalk', 0), width: ACTOR_WIDTH.hanuWalk }} />
         </div>
         <div ref={heesunRef} className="phieng-visual__actor is-heesun" style={actorStyle(initialGame.heesun.x, initialGame.heesun.y)}>
-          <div ref={heesunSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('heesun', 0), width: 82 }} />
+          <div ref={heesunSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('heesun', 0), width: ACTOR_WIDTH.heesunPose }} />
         </div>
         <div
           ref={vuongMeRef}
@@ -298,10 +323,10 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
           style={actorStyle(PHIENG_LOI_LANDMARKS.vuongMeStage.x, PHIENG_LOI_LANDMARKS.vuongMeStage.y)}
           hidden
         >
-          <div ref={vuongMeSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('vuongMeDance', 0), width: 76 }} />
+          <div ref={vuongMeSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('vuongMeDance', 0), width: ACTOR_WIDTH.vuongMe }} />
         </div>
         <div ref={playerRef} className="phieng-visual__actor is-player" style={actorStyle(initialGame.player.x, initialGame.player.y)}>
-          <div ref={playerSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('support', 0), width: 58 }} />
+          <div ref={playerSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('support', 0), width: ACTOR_WIDTH.player }} />
         </div>
 
         <div ref={callRef} className="phieng-visual__actor phieng-visual__call-anchor" style={actorStyle(initialGame.player.x, initialGame.player.y - 22)}>

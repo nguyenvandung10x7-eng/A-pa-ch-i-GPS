@@ -20,7 +20,7 @@ copied.
   garden route, bridge, terrain type, landmarks, chase navigation and depth
   occluders.
 - `PhiengLoiVisualScene.tsx` is the only mounted world presentation.
-- The 480×270 values are logical camera units, not a bitmap render resolution.
+- The 640×360 values are logical camera units, not a bitmap render resolution.
 - The compositor uses one scalable world plate, transparent semantic-pose atlases
   and dedicated eight-frame movement atlases.
 - Actor and camera transforms are written directly on every animation frame;
@@ -43,7 +43,7 @@ All runtime URLs live in `visualAssets.ts`.
 
 | Asset | Grid | Use |
 | --- | ---: | --- |
-| `village-world-v1.webp` | full plate | Mountains, stilt houses, fields, road, stream, fences, waterwheel and environmental depth. |
+| `village-world-v2.webp` | full plate | Active spacious village: mountains, stilt houses, fields, broad road network, stream, fences, waterwheel and contextual NPC pockets. |
 | `heesun-atlas-v1.webp` | 3×2 | Idle, smile, point, bựa, chase and triumphant poses. |
 | `hanu-atlas-v1.webp` | 3×2 | Phone idle, phone walk, call, confused, distracted and accidental-chaos poses. |
 | `support-atlas-v1.webp` | 4×2 | Player idle, chicken, dog and buffalo placeholders. |
@@ -64,6 +64,30 @@ update the centralized slot.
 The current background is a painted plate, so `worldLayout.ts` must be updated in
 the same change whenever a road, bridge, stream or major prop moves. Old saves are
 projected onto the nearest valid route instead of placing the player over scenery.
+
+The v2 plate maps to a 2400×1350 logical world: about 2.1× the previous world
+area. The camera moved to 640×360, retaining the 16:9 composition while showing
+actors at a smaller, more natural scale. Version-1 Continue coordinates are scaled
+and then projected to the closest authored route.
+
+## NPC staging and scale
+
+- Single adult actors share one perceived-height band even though their source
+  atlases use different cell proportions. Run and idle sheets therefore have
+  separate display widths; a shared raw CSS width is not a valid size contract.
+- Trưởng bản stays beside the stairs/veranda of the central stilt house.
+- Each mâm nhậu relocation uses a pre-authored table or clearing, never an
+  arbitrary point beside the player.
+- The stream group stays on the social bank pocket; the water and bridge remain
+  traversal boundaries.
+- HANU follows the connected dirt road and wooden crossing. HeeSun starts at the
+  edge of the entry road and chases through the same navigation graph.
+- VươngMe uses the right-side karaoke clearing when staged, while the dog and
+  buffalo sit beside a house and in the terraces respectively.
+
+This follows compact comedy-game staging practice: anchor social NPCs to props,
+keep the critical movement lane readable, cluster reactions locally and use
+silhouette/pose—not oversized sprites—to establish importance.
 
 ## Character locks
 

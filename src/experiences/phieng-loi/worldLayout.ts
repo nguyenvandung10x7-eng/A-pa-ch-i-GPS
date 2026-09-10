@@ -1,6 +1,33 @@
 export type WorldPoint = { x: number; y: number };
 export type TerrainKind = 'dirt' | 'grass' | 'wood';
 
+export const PHIENG_LOI_WORLD = {
+  artWidth: 1_672,
+  artHeight: 941,
+  width: 2_400,
+  height: 1_350,
+  viewWidth: 640,
+  viewHeight: 360,
+} as const;
+
+const WORLD_SCALE_X = PHIENG_LOI_WORLD.width / PHIENG_LOI_WORLD.artWidth;
+const WORLD_SCALE_Y = PHIENG_LOI_WORLD.height / PHIENG_LOI_WORLD.artHeight;
+const WORLD_SCALE = (WORLD_SCALE_X + WORLD_SCALE_Y) / 2;
+
+/** Coordinates below are authored against village-world-v2.webp's native plate. */
+const worldPoint = (x: number, y: number): WorldPoint => ({
+  x: Math.round(x * WORLD_SCALE_X),
+  y: Math.round(y * WORLD_SCALE_Y),
+});
+
+const worldRadius = (radius: number) => Math.round(radius * WORLD_SCALE);
+
+/** Preserves Continue saves made on the 1680×920 v1 world. */
+export const migrateLegacyWorldPoint = (point: WorldPoint): WorldPoint => ({
+  x: point.x * (PHIENG_LOI_WORLD.width / 1_680),
+  y: point.y * (PHIENG_LOI_WORLD.height / 920),
+});
+
 type RouteSegment = {
   from: WorldPoint;
   to: WorldPoint;
@@ -11,98 +38,132 @@ type RouteSegment = {
 type NavigationNode = WorldPoint & { links: number[] };
 
 export const PHIENG_LOI_LANDMARKS = {
-  playerStart: { x: 92, y: 458 },
-  heesunStart: { x: 365, y: 462 },
-  feastStart: { x: 825, y: 456 },
-  feastField: { x: 744, y: 782 },
-  chief: { x: 720, y: 430 },
-  chickenYard: { x: 492, y: 590 },
-  stream: { x: 1_188, y: 580 },
-  streamGroup: { x: 1_166, y: 566 },
-  vuongMeStage: { x: 940, y: 510 },
-  gate: { x: 1_008, y: 542 },
-  domino: { x: 1_525, y: 554 },
-  exit: { x: 1_646, y: 515 },
-  squash: { x: 563, y: 706 },
-  coffee: { x: 930, y: 488 },
-  macadamia: { x: 1_532, y: 552 },
+  playerStart: worldPoint(48, 338),
+  heesunStart: worldPoint(315, 382),
+  feastStart: worldPoint(755, 495),
+  feastSecond: worldPoint(995, 520),
+  feastField: worldPoint(620, 705),
+  chief: worldPoint(775, 395),
+  chickenYard: worldPoint(385, 625),
+  stream: worldPoint(1_080, 560),
+  streamGroup: worldPoint(1_050, 512),
+  bridge: worldPoint(1_290, 648),
+  vuongMeStage: worldPoint(1_490, 550),
+  gate: worldPoint(100, 345),
+  domino: worldPoint(1_540, 590),
+  exit: worldPoint(1_640, 605),
+  squash: worldPoint(380, 535),
+  coffee: worldPoint(835, 500),
+  macadamia: worldPoint(1_515, 580),
+  dog: worldPoint(680, 420),
+  buffalo: worldPoint(1_445, 288),
 } as const satisfies Record<string, WorldPoint>;
 
 /**
- * These corridors are traced against village-world-v1.webp. They are the spatial
- * contract between the painted scene and gameplay: road, courtyard, garden path,
- * and the single wooden stream crossing. A character is never allowed to roam on
- * the decorative roofs, crops, rocks, or water merely because those pixels happen
- * to sit below it.
+ * These corridors are traced against village-world-v2.webp. Social NPCs sit in
+ * authored pockets just off these lanes; moving actors use the road network and
+ * the single wooden crossing instead of walking over houses, crops or water.
  */
+const route = (
+  from: [number, number],
+  to: [number, number],
+  radius: number,
+  terrain: TerrainKind,
+): RouteSegment => ({
+  from: worldPoint(...from),
+  to: worldPoint(...to),
+  radius: worldRadius(radius),
+  terrain,
+});
+
 const ROUTES: RouteSegment[] = [
-  { from: { x: 34, y: 452 }, to: { x: 250, y: 452 }, radius: 54, terrain: 'dirt' },
-  { from: { x: 250, y: 452 }, to: { x: 430, y: 474 }, radius: 52, terrain: 'dirt' },
-  { from: { x: 430, y: 474 }, to: { x: 620, y: 482 }, radius: 48, terrain: 'dirt' },
-  { from: { x: 620, y: 482 }, to: { x: 800, y: 502 }, radius: 48, terrain: 'dirt' },
-  { from: { x: 800, y: 502 }, to: { x: 990, y: 542 }, radius: 52, terrain: 'dirt' },
-  { from: { x: 990, y: 542 }, to: { x: 1_174, y: 580 }, radius: 48, terrain: 'dirt' },
-  { from: { x: 1_174, y: 580 }, to: { x: 1_272, y: 592 }, radius: 39, terrain: 'dirt' },
-  { from: { x: 1_272, y: 592 }, to: { x: 1_404, y: 592 }, radius: 23, terrain: 'wood' },
-  { from: { x: 1_404, y: 592 }, to: { x: 1_548, y: 552 }, radius: 45, terrain: 'dirt' },
-  { from: { x: 1_548, y: 552 }, to: { x: 1_666, y: 510 }, radius: 47, terrain: 'dirt' },
+  route([24, 338], [185, 370], 50, 'dirt'),
+  route([185, 370], [350, 425], 55, 'dirt'),
+  route([350, 425], [520, 495], 58, 'dirt'),
+  route([520, 495], [720, 548], 62, 'dirt'),
+  route([720, 548], [910, 575], 64, 'dirt'),
+  route([910, 575], [1_075, 600], 61, 'dirt'),
+  route([1_075, 600], [1_175, 628], 54, 'dirt'),
+  route([1_175, 628], [1_305, 648], 30, 'wood'),
+  route([1_305, 648], [1_415, 625], 30, 'wood'),
+  route([1_415, 625], [1_640, 605], 55, 'dirt'),
 
-  // Open village courtyard above the main road.
-  { from: { x: 590, y: 472 }, to: { x: 704, y: 428 }, radius: 45, terrain: 'dirt' },
-  { from: { x: 704, y: 428 }, to: { x: 906, y: 452 }, radius: 67, terrain: 'dirt' },
-  { from: { x: 906, y: 452 }, to: { x: 990, y: 542 }, radius: 52, terrain: 'dirt' },
+  // House, chief and village-table pockets branch from—not across—the road.
+  route([520, 495], [640, 425], 44, 'dirt'),
+  route([640, 425], [775, 395], 48, 'dirt'),
+  route([720, 548], [755, 495], 48, 'dirt'),
+  route([755, 495], [835, 500], 42, 'dirt'),
+  route([910, 575], [995, 520], 47, 'dirt'),
 
-  // Narrow garden path visible below the chicken yard.
-  { from: { x: 420, y: 484 }, to: { x: 500, y: 590 }, radius: 35, terrain: 'grass' },
-  { from: { x: 500, y: 590 }, to: { x: 566, y: 716 }, radius: 34, terrain: 'grass' },
-  { from: { x: 566, y: 716 }, to: { x: 724, y: 790 }, radius: 40, terrain: 'dirt' },
-  { from: { x: 724, y: 790 }, to: { x: 904, y: 758 }, radius: 39, terrain: 'dirt' },
+  // Stream-bank and karaoke clearings remain dead ends, keeping NPCs off traffic.
+  route([1_075, 600], [1_040, 525], 43, 'dirt'),
+  route([1_415, 625], [1_490, 550], 46, 'dirt'),
+
+  // Farm path supplies a second real table location and the OCOP garden pocket.
+  route([350, 425], [390, 555], 39, 'grass'),
+  route([390, 555], [500, 650], 43, 'grass'),
+  route([500, 650], [625, 735], 46, 'dirt'),
 ];
 
+const navigationNode = (x: number, y: number, links: number[]): NavigationNode => ({
+  ...worldPoint(x, y),
+  links,
+});
+
 const NAVIGATION: NavigationNode[] = [
-  { x: 60, y: 452, links: [1] },
-  { x: 250, y: 452, links: [0, 2] },
-  { x: 430, y: 474, links: [1, 3, 13] },
-  { x: 620, y: 482, links: [2, 4, 11] },
-  { x: 800, y: 502, links: [3, 5] },
-  { x: 990, y: 542, links: [4, 6, 12] },
-  { x: 1_174, y: 580, links: [5, 7] },
-  { x: 1_272, y: 592, links: [6, 8] },
-  { x: 1_404, y: 592, links: [7, 9] },
-  { x: 1_548, y: 552, links: [8, 10] },
-  { x: 1_652, y: 515, links: [9] },
-  { x: 704, y: 428, links: [3, 12] },
-  { x: 906, y: 452, links: [11, 5] },
-  { x: 500, y: 590, links: [2, 14] },
-  { x: 566, y: 716, links: [13, 15] },
-  { x: 724, y: 790, links: [14, 16] },
-  { x: 904, y: 758, links: [15] },
+  navigationNode(30, 338, [1]),
+  navigationNode(185, 370, [0, 2]),
+  navigationNode(350, 425, [1, 3, 17]),
+  navigationNode(520, 495, [2, 4, 10]),
+  navigationNode(720, 548, [3, 5, 12]),
+  navigationNode(910, 575, [4, 6, 14]),
+  navigationNode(1_075, 600, [5, 7, 15]),
+  navigationNode(1_175, 628, [6, 8]),
+  navigationNode(1_305, 648, [7, 9]),
+  navigationNode(1_415, 625, [8, 16, 20]),
+  navigationNode(640, 425, [3, 11]),
+  navigationNode(775, 395, [10]),
+  navigationNode(755, 495, [4, 13]),
+  navigationNode(835, 500, [12]),
+  navigationNode(995, 520, [5]),
+  navigationNode(1_040, 525, [6]),
+  navigationNode(1_490, 550, [9]),
+  navigationNode(390, 555, [2, 18]),
+  navigationNode(500, 650, [17, 19]),
+  navigationNode(625, 735, [18]),
+  navigationNode(1_640, 605, [9]),
 ];
 
 export const HANU_ROUTE: WorldPoint[] = [
-  { x: 620, y: 482 },
-  { x: 704, y: 428 },
-  { x: 906, y: 452 },
-  { x: 990, y: 542 },
-  { x: 1_174, y: 580 },
-  { x: 1_272, y: 592 },
-  { x: 1_404, y: 592 },
-  { x: 1_525, y: 558 },
-  { x: 1_404, y: 592 },
-  { x: 1_272, y: 592 },
-  { x: 1_174, y: 580 },
-  { x: 990, y: 542 },
-  { x: 800, y: 502 },
-  { x: 620, y: 482 },
-  { x: 500, y: 590 },
-  { x: 430, y: 474 },
+  worldPoint(100, 345),
+  worldPoint(185, 370),
+  worldPoint(350, 425),
+  worldPoint(520, 495),
+  worldPoint(720, 548),
+  worldPoint(910, 575),
+  worldPoint(1_075, 600),
+  worldPoint(1_175, 628),
+  worldPoint(1_305, 648),
+  worldPoint(1_415, 625),
+  worldPoint(1_540, 590),
+  worldPoint(1_640, 605),
+  worldPoint(1_490, 550),
+  worldPoint(1_415, 625),
+  worldPoint(1_305, 648),
+  worldPoint(1_175, 628),
+  worldPoint(1_075, 600),
+  worldPoint(910, 575),
+  worldPoint(720, 548),
+  worldPoint(520, 495),
+  worldPoint(350, 425),
+  worldPoint(185, 370),
 ];
 
 export const HOUSE_CALL_POINTS: WorldPoint[] = [
-  { x: 252, y: 430 },
-  { x: 505, y: 438 },
-  { x: 840, y: 438 },
-  { x: 1_556, y: 514 },
+  worldPoint(340, 390),
+  worldPoint(650, 405),
+  worldPoint(820, 430),
+  worldPoint(1_550, 555),
 ];
 
 export const OCOP_WORLD_ITEMS = [
@@ -112,9 +173,27 @@ export const OCOP_WORLD_ITEMS = [
 ];
 
 export const WORLD_OCCLUDERS = [
-  { id: 'bridge-front', x: 1_214, y: 608, width: 252, height: 48, depthY: 632 },
-  { id: 'lower-left-foliage', x: 0, y: 670, width: 620, height: 250, depthY: 834 },
-  { id: 'lower-rocks', x: 810, y: 760, width: 870, height: 160, depthY: 860 },
+  {
+    id: 'bridge-front',
+    ...worldPoint(1_145, 662),
+    width: worldPoint(280, 0).x,
+    height: worldPoint(0, 25).y,
+    depthY: worldPoint(0, 680).y,
+  },
+  {
+    id: 'lower-left-foliage',
+    ...worldPoint(0, 800),
+    width: worldPoint(350, 0).x,
+    height: PHIENG_LOI_WORLD.height - worldPoint(0, 800).y,
+    depthY: worldPoint(0, 910).y,
+  },
+  {
+    id: 'lower-right-foliage',
+    ...worldPoint(1_490, 805),
+    width: PHIENG_LOI_WORLD.width - worldPoint(1_490, 0).x,
+    height: PHIENG_LOI_WORLD.height - worldPoint(0, 805).y,
+    depthY: worldPoint(0, 915).y,
+  },
 ] as const;
 
 const squaredDistance = (first: WorldPoint, second: WorldPoint) => {

@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 
 export const PHIENG_LOI_VISUAL_ASSETS = {
-  world: '/images/phieng-loi/village-world-v1.webp',
+  world: '/images/phieng-loi/village-world-v2.webp',
   heesunAtlas: '/images/phieng-loi/heesun-atlas-v1.webp',
   hanuAtlas: '/images/phieng-loi/hanu-atlas-v1.webp',
   supportAtlas: '/images/phieng-loi/support-atlas-v1.webp',

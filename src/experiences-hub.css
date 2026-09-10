@@ -19,7 +19,7 @@
 }
 
 .phieng-wait__scene {
-  background: url('/images/phieng-loi/village-world-v1.webp') center 54% / cover no-repeat;
+  background: url('/images/phieng-loi/village-world-v2.webp') center 54% / cover no-repeat;
   filter: saturate(.96) contrast(1.02) brightness(.9);
   transform: scale(1.035);
   animation: phieng-menu-breathe 18s ease-in-out infinite alternate;

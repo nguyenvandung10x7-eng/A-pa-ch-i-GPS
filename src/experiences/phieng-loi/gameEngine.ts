@@ -3,21 +3,24 @@ import {
   HOUSE_CALL_POINTS,
   OCOP_WORLD_ITEMS,
   PHIENG_LOI_LANDMARKS,
+  PHIENG_LOI_WORLD,
   isWalkable,
+  migrateLegacyWorldPoint,
   navigationTarget,
   nearestWalkablePoint,
+  type WorldPoint,
 } from './worldLayout.ts';
 
-export const VIEW_WIDTH = 480;
-export const VIEW_HEIGHT = 270;
-export const WORLD_WIDTH = 1_680;
-export const WORLD_HEIGHT = 920;
+export const VIEW_WIDTH = PHIENG_LOI_WORLD.viewWidth;
+export const VIEW_HEIGHT = PHIENG_LOI_WORLD.viewHeight;
+export const WORLD_WIDTH = PHIENG_LOI_WORLD.width;
+export const WORLD_HEIGHT = PHIENG_LOI_WORLD.height;
 
 const PLAYER_START_X = PHIENG_LOI_LANDMARKS.playerStart.x;
 const PLAYER_START_Y = PHIENG_LOI_LANDMARKS.playerStart.y;
-const PLAYER_SPEED = 67;
+const PLAYER_SPEED = 86;
 const CAMERA_VERTICAL_ANCHOR = 0.7;
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 2;
 
 export type GameQuality = 'low' | 'high';
 export type PowerKind = 'squash' | 'coffee' | 'macadamia';
@@ -318,9 +321,13 @@ const defaultGame = (quality: GameQuality, reducedMotion: boolean): GameState =>
 
 export const createGame = (quality: GameQuality, reducedMotion: boolean, save?: GameSave | null): GameState => {
   const game = defaultGame(quality, reducedMotion);
-  if (!save || save.version !== SAVE_VERSION || save.complete) return game;
+  if (!save || (save.version !== 1 && save.version !== SAVE_VERSION) || save.complete) return game;
 
-  const restoredPlayer = nearestWalkablePoint({
+  const restorePoint = (point: WorldPoint) => nearestWalkablePoint(
+    save.version === 1 ? migrateLegacyWorldPoint(point) : point,
+  );
+
+  const restoredPlayer = restorePoint({
     x: clamp(save.player.x, 32, WORLD_WIDTH - 32),
     y: clamp(save.player.y, 42, WORLD_HEIGHT - 32),
   });
@@ -334,13 +341,13 @@ export const createGame = (quality: GameQuality, reducedMotion: boolean, save?: 
   game.absurdityLevel = absurdityFromScore(game.absurdityScore);
   game.callCount = Math.max(0, save.callCount);
   game.triggered = new Set(save.triggered);
-  const restoredFeast = nearestWalkablePoint({ x: save.feast.x, y: save.feast.y });
+  const restoredFeast = restorePoint({ x: save.feast.x, y: save.feast.y });
   game.feast.x = restoredFeast.x;
   game.feast.y = restoredFeast.y;
   game.feast.encounters = save.feast.encounters;
   game.feast.pendingRelocate = save.feast.pendingRelocate ?? false;
   game.feast.relocateAt = game.feast.pendingRelocate ? game.elapsed + 1.1 : 0;
-  const restoredHeeSun = nearestWalkablePoint({ x: save.heesun.x, y: save.heesun.y });
+  const restoredHeeSun = restorePoint({ x: save.heesun.x, y: save.heesun.y });
   game.heesun.x = restoredHeeSun.x;
   game.heesun.y = restoredHeeSun.y;
   game.heesun.vx = 0;
@@ -351,7 +358,7 @@ export const createGame = (quality: GameQuality, reducedMotion: boolean, save?: 
   game.heesun.scale = save.heesun.scale;
   game.heesun.modeUntil = game.heesun.mode === 'drinking' ? game.elapsed + 8 : 0;
   game.heesun.nextAmbushAt = game.elapsed + 34;
-  const restoredHaNu = nearestWalkablePoint({ x: save.hanu.x, y: save.hanu.y });
+  const restoredHaNu = restorePoint({ x: save.hanu.x, y: save.hanu.y });
   game.hanu.x = restoredHaNu.x;
   game.hanu.y = restoredHaNu.y;
   game.hanu.waypoint = save.hanu.waypoint % HANU_ROUTE.length;
@@ -443,9 +450,10 @@ const chiefClock = (game: GameState) => {
 
 const cinematicCopy = (game: GameState): { vi: string; en: string } | null => {
   if (game.scene.kind === 'capture') {
-    const age = game.elapsed - game.scene.startedAt;
-    if (age < 1.45) return { vi: '3 GIỜ SAU', en: '3 HOURS LATER' };
-    if (age >= 4.35) return { vi: '5 GIỜ SAU', en: '5 HOURS LATER' };
+    return {
+      vi: 'BẠN ĐÃ BỊ HEESUN BẮT ĐI NHẬU',
+      en: 'HEESUN HAS DRAGGED YOU OFF FOR DRINKS',
+    };
   }
   if (game.scene.kind === 'stream' && game.elapsed - game.scene.startedAt < 2.65) {
     return {
@@ -575,12 +583,7 @@ const updateScene = (game: GameState, events: GameEvent[]) => {
     return;
   }
   if (game.scene.kind === 'capture') {
-    if (game.scene.stage === 0 && age >= 1.55) game.scene.stage = 1;
-    if (game.scene.stage === 1 && age >= 2.18) {
-      game.scene.stage = 2;
-      setMessage(game, 'HEESUN', 'HEESUN', 'Làm chén cuối.', 'One last cup.', 'heesun', 2.05);
-    }
-    if (age >= 6.05) resetAfterCapture(game, events);
+    if (age >= 3.15) resetAfterCapture(game, events);
     return;
   }
   if (game.scene.kind === 'stream') {
@@ -725,12 +728,8 @@ const updateFeast = (game: GameState, events: GameEvent[]) => {
     if (farEnough || game.elapsed >= game.feast.relocateAt + 2.2) {
       game.feast.pendingRelocate = false;
       if (game.feast.encounters === 1) {
-        const relocated = nearestWalkablePoint({
-          x: clamp(game.player.x + 300, 620, 1_080),
-          y: game.player.y < 500 ? game.player.y + 92 : game.player.y - 82,
-        });
-        game.feast.x = relocated.x;
-        game.feast.y = relocated.y;
+        game.feast.x = PHIENG_LOI_LANDMARKS.feastSecond.x;
+        game.feast.y = PHIENG_LOI_LANDMARKS.feastSecond.y;
       } else if (game.feast.encounters === 2) {
         game.feast.x = PHIENG_LOI_LANDMARKS.feastField.x;
         game.feast.y = PHIENG_LOI_LANDMARKS.feastField.y;
@@ -781,7 +780,7 @@ const updateHaNu = (game: GameState, dt: number, events: GameEvent[]) => {
   const dy = target.y - game.hanu.y;
   const length = Math.max(0.001, Math.hypot(dx, dy));
   const environmentSlow = game.powerUntil.coffee > game.elapsed ? 0.22 : 1;
-  const speed = 24 * environmentSlow;
+  const speed = 31 * environmentSlow;
   game.hanu.x += (dx / length) * speed * dt;
   game.hanu.y += (dy / length) * speed * dt;
   if (length < 8) game.hanu.waypoint = (game.hanu.waypoint + 1) % HANU_ROUTE.length;
@@ -855,7 +854,7 @@ const moveHeeSunTowards = (
   const navigationY = waypoint.y;
 
   const baseAngle = Math.atan2(navigationY - game.heesun.y, navigationX - game.heesun.x);
-  const probe = 25;
+  const probe = 32;
   const options = [0, 0.42, -0.42, 0.82, -0.82, 1.25, -1.25];
   const steeringAngle = options
     .map((offset) => baseAngle + offset)
@@ -887,12 +886,16 @@ const updateHeeSun = (game: GameState, dt: number, events: GameEvent[]) => {
     && game.heesun.met
     && game.heesun.mode === 'waiting'
     && game.elapsed >= game.heesun.nextAmbushAt
-    && game.player.x > 720
+    && game.player.x > PHIENG_LOI_WORLD.width * 0.42
     && game.scene.kind === 'none'
   ) {
     const ambush = nearestWalkablePoint({
-      x: clamp(game.player.x + 205, 780, WORLD_WIDTH - 130),
-      y: clamp(game.player.y + (game.player.y < 500 ? 92 : -92), 110, WORLD_HEIGHT - 80),
+      x: clamp(game.player.x + 265, PHIENG_LOI_LANDMARKS.feastStart.x, WORLD_WIDTH - 150),
+      y: clamp(
+        game.player.y + (game.player.y < WORLD_HEIGHT * 0.52 ? 120 : -110),
+        VIEW_HEIGHT * 0.45,
+        WORLD_HEIGHT - 90,
+      ),
     });
     game.heesun.x = ambush.x;
     game.heesun.y = ambush.y;
@@ -906,7 +909,7 @@ const updateHeeSun = (game: GameState, dt: number, events: GameEvent[]) => {
     const panic = game.chicken.panicUntil > game.elapsed;
     const targetX = panic ? PHIENG_LOI_LANDMARKS.chickenYard.x : game.hanu.x;
     const targetY = panic ? PHIENG_LOI_LANDMARKS.chickenYard.y : game.hanu.y;
-    moveHeeSunTowards(game, targetX, targetY, 49, dt, 3.1);
+    moveHeeSunTowards(game, targetX, targetY, 63, dt, 3.1);
     if (game.elapsed >= game.heesun.modeUntil) game.heesun.mode = 'chasing';
     return;
   }
@@ -921,7 +924,7 @@ const updateHeeSun = (game: GameState, dt: number, events: GameEvent[]) => {
     return;
   }
   const boost = game.heesun.speedBoostUntil > game.elapsed ? 1.3 : 1;
-  const speed = (game.absurdityLevel >= 3 ? 58 : 53) * boost;
+  const speed = (game.absurdityLevel >= 3 ? 74 : 68) * boost;
   moveHeeSunTowards(game, game.player.x, game.player.y, speed, dt, 3.45);
   if (distance(game.player.x, game.player.y, game.heesun.x, game.heesun.y) < captureRadius) startCapture(game, events);
 };

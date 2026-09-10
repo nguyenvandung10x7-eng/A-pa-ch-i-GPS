@@ -447,7 +447,6 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
             </div>
             <button type="button" className="phieng-game__pha-oi" onPointerDown={queueCall} aria-label={vi ? 'Gọi Phà ơi' : 'Call out Pha oi'}>
               <strong>PHÀ ƠI!</strong>
-              <small>{vi ? 'GỌI / ĂN / CHẠM' : 'CALL / EAT / ACT'}</small>
             </button>
             {showGuide ? <p>{vi ? 'Ngón trái để đi · Ngón phải chỉ cần PHÀ ƠI!' : 'Move with your left thumb · PHÀ ƠI! does the rest'}</p> : null}
           </div>

@@ -11,7 +11,9 @@ import {
 import { PHIENG_LOI_AUDIO_CUES } from '../src/experiences/phieng-loi/audioManifest.ts';
 import { PHIENG_LOI_VISUAL_ASSETS } from '../src/experiences/phieng-loi/visualAssets.ts';
 import {
+  HOUSE_CALL_POINTS,
   PHIENG_LOI_LANDMARKS,
+  PHIENG_LOI_WORLD,
   isWalkable,
   terrainAt,
 } from '../src/experiences/phieng-loi/worldLayout.ts';
@@ -46,6 +48,10 @@ const quietHeeSun = (game) => {
 };
 
 assert.equal(VIEW_WIDTH / VIEW_HEIGHT, 16 / 9, 'the asset viewport should preserve 16:9 framing');
+assert.ok(
+  PHIENG_LOI_WORLD.width * PHIENG_LOI_WORLD.height >= 1_680 * 920 * 2,
+  'the v2 village should provide at least twice the logical world area',
+);
 assert.equal(new Set(Object.values(PHIENG_LOI_VISUAL_ASSETS)).size, Object.values(PHIENG_LOI_VISUAL_ASSETS).length, 'visual asset slots must be unique');
 Object.values(PHIENG_LOI_VISUAL_ASSETS).forEach((path) => {
   assert.match(path, /^\/images\/phieng-loi\/.+\.webp$/);
@@ -56,6 +62,8 @@ const engineSource = readFileSync(new URL('../src/experiences/phieng-loi/gameEng
 const pageSource = readFileSync(new URL('../src/pages/PhiengLoiGamePage.tsx', import.meta.url), 'utf8');
 assert.doesNotMatch(engineSource, /CanvasRenderingContext2D|\.fillRect\(|\.beginPath\(/, 'game logic must not contain final-art drawing primitives');
 assert.doesNotMatch(pageSource, /<canvas|renderGame\(/, 'the gameplay page must mount the asset scene instead of the prototype canvas');
+assert.doesNotMatch(pageSource, /GỌI \/ ĂN \/ CHẠM|CALL \/ EAT \/ ACT/, 'the PHÀ ƠI button must stay visually concise');
+assert.doesNotMatch(engineSource, /3 GIỜ SAU|5 GIỜ SAU|Làm chén cuối/, 'capture should use only the concise HeeSun outcome');
 assert.equal(new Set(PHIENG_LOI_AUDIO_CUES.map((cue) => cue.id)).size, PHIENG_LOI_AUDIO_CUES.length, 'audio cue ids must be unique');
 PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
   assert.equal(cue.files.length, cue.takes, `${cue.id} should declare one filename per take`);
@@ -63,10 +71,29 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
   assert.ok(cue.durationSeconds[0] > 0 && cue.durationSeconds[1] >= cue.durationSeconds[0]);
 });
 
+[
+  'playerStart',
+  'heesunStart',
+  'feastStart',
+  'feastSecond',
+  'feastField',
+  'chief',
+  'stream',
+  'gate',
+  'domino',
+  'exit',
+  'squash',
+  'coffee',
+  'macadamia',
+].forEach((name) => {
+  const point = PHIENG_LOI_LANDMARKS[name];
+  assert.ok(isWalkable(point.x, point.y), `${name} must remain on an authored interaction pocket`);
+});
+
 {
   const game = createGame('high', false);
-  game.player.x = 320;
-  game.player.y = 456;
+  game.player.x = game.heesun.x - 60;
+  game.player.y = game.heesun.y;
   tick(game, 0.05);
   assert.equal(game.scene.kind, 'heesun-intro', 'HeeSun intro should start on proximity');
   const introEvents = tick(game, 4.6);
@@ -78,11 +105,11 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
   const captureEvents = tick(game, 0.02);
   assert.ok(captureEvents.some((event) => event.type === 'capture'), 'contact should start capture cutscene');
   assert.equal(game.scene.kind, 'capture');
-  assert.equal(createUiSnapshot(game).cinematicVi, '3 GIỜ SAU');
-  const resetEvents = tick(game, 6.1);
+  assert.equal(createUiSnapshot(game).cinematicVi, 'BẠN ĐÃ BỊ HEESUN BẮT ĐI NHẬU');
+  const resetEvents = tick(game, 3.2);
   assert.ok(resetEvents.some((event) => event.type === 'reset'), 'capture should reset without Game Over');
   assert.equal(game.heesun.caught, 1);
-  assert.equal(Math.round(game.player.x), 92);
+  assert.equal(Math.round(game.player.x), PHIENG_LOI_LANDMARKS.playerStart.x);
 }
 
 {
@@ -149,8 +176,8 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
 {
   const game = createGame('high', false);
   quietHeeSun(game);
-  game.player.x = 505;
-  game.player.y = 438;
+  game.player.x = HOUSE_CALL_POINTS[1].x;
+  game.player.y = HOUSE_CALL_POINTS[1].y;
   call(game);
   assert.ok(game.triggered.has('house-call-1'));
   call(game);
@@ -209,10 +236,10 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
   tick(game, 0.02);
   assert.equal(game.hanu.saidAtStream, true, 'HaNu should claim to be home while in the stream');
   game.heesun.mode = 'chasing';
-  game.heesun.x = 900;
-  game.heesun.y = 520;
-  game.hanu.x = 900;
-  game.hanu.y = 520;
+  game.heesun.x = PHIENG_LOI_LANDMARKS.feastStart.x;
+  game.heesun.y = PHIENG_LOI_LANDMARKS.feastStart.y;
+  game.hanu.x = PHIENG_LOI_LANDMARKS.feastStart.x;
+  game.hanu.y = PHIENG_LOI_LANDMARKS.feastStart.y;
   game.hanu.lastCollisionAt = -10;
   game.player.x = PHIENG_LOI_LANDMARKS.playerStart.x;
   game.player.y = PHIENG_LOI_LANDMARKS.playerStart.y;
@@ -249,14 +276,26 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
   quietHeeSun(game);
   tick(game, 3, { ...freshInput(), up: true });
   assert.ok(isWalkable(game.player.x, game.player.y), 'player must remain on the painted road corridor');
-  assert.ok(game.player.y > 390, 'the upper road edge must block walking onto the stilt house art');
-  assert.equal(terrainAt(1_330, 592), 'wood', 'the authored stream crossing must report wooden terrain');
-  assert.equal(terrainAt(1_330, 540), 'blocked', 'water beside the bridge must remain blocked');
+  assert.ok(
+    game.player.y > PHIENG_LOI_LANDMARKS.playerStart.y - 90,
+    'the upper road edge must block walking onto the stilt house art',
+  );
+  assert.equal(
+    terrainAt(PHIENG_LOI_LANDMARKS.bridge.x, PHIENG_LOI_LANDMARKS.bridge.y),
+    'wood',
+    'the authored stream crossing must report wooden terrain',
+  );
+  assert.equal(
+    terrainAt(PHIENG_LOI_LANDMARKS.bridge.x, PHIENG_LOI_LANDMARKS.bridge.y - 105),
+    'blocked',
+    'water beside the bridge must remain blocked',
+  );
 
   const saved = createSave(game);
+  saved.version = 1;
   saved.player = { x: 1_330, y: 720, facingX: 1, facingY: 0 };
   const restored = createGame('high', false, saved);
-  assert.ok(isWalkable(restored.player.x, restored.player.y), 'legacy saves outside the new walk mask must be recovered safely');
+  assert.ok(isWalkable(restored.player.x, restored.player.y), 'v1 saves must migrate onto the expanded walk mask safely');
 }
 
 console.log('Phiêng Lơi engine simulation passed: HeeSun, HaNu, absurd events, OCOP, escalation, save, and exit.');
