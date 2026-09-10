@@ -65,7 +65,7 @@ const readSave = (): GameSave | null => {
     const value = window.localStorage.getItem(PHIENG_LOI_SAVE_KEY);
     if (!value) return null;
     const parsed = JSON.parse(value) as GameSave;
-    return parsed?.version === 1 ? parsed : null;
+    return parsed?.version === 1 || parsed?.version === 2 ? parsed : null;
   } catch {
     return null;
   }
