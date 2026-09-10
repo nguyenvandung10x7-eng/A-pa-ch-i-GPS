@@ -23,10 +23,7 @@ import {
   createGame,
   createSave,
   createUiSnapshot,
-  renderGame,
   stepGame,
-  RENDER_HEIGHT,
-  RENDER_WIDTH,
   type GameQuality,
   type GameSave,
   type GameState,
@@ -34,6 +31,8 @@ import {
   type PowerKind,
   type UiSnapshot,
 } from '../experiences/phieng-loi/gameEngine';
+import { PhiengLoiVisualScene } from '../experiences/phieng-loi/PhiengLoiVisualScene';
+import { preloadPhiengLoiVisualAssets } from '../experiences/phieng-loi/visualAssets';
 import type { LanguageCode } from '../types/task';
 import {
   clearPhiengLoiSave,
@@ -102,7 +101,6 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     return readSave();
   });
   const [initialGame] = useState(() => createGame(profile.quality, profile.reducedMotion, initialSave));
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const gameRef = useRef<GameState>(initialGame);
   const inputRef = useRef<InputState>(createInputState());
   const audioRef = useRef<PhiengLoiAudioDirector | null>(null);
@@ -122,7 +120,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   const [guideUntil, setGuideUntil] = useState(initialSave ? initialGame.elapsed : initialGame.elapsed + 6.2);
 
   const syncUi = useCallback((game: GameState, force = false) => {
-    if (!force && game.elapsed - uiSyncAtRef.current < 0.075) return;
+    if (!force && game.elapsed - uiSyncAtRef.current < 0.034) return;
     uiSyncAtRef.current = game.elapsed;
     setUi(createUiSnapshot(game));
   }, []);
@@ -209,6 +207,10 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   }, [ensureAudio]);
 
   useEffect(() => {
+    void preloadPhiengLoiVisualAssets();
+  }, []);
+
+  useEffect(() => {
     const portrait = window.matchMedia('(orientation: portrait)');
     const coarse = window.matchMedia('(pointer: coarse)');
     const update = () => setNeedsLandscape(portrait.matches && coarse.matches);
@@ -234,12 +236,9 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   }, [saveGame]);
 
   useEffect(() => {
-    const context = canvasRef.current?.getContext('2d', { alpha: false });
     const game = gameRef.current;
-    if (!context) return;
-    context.imageSmoothingEnabled = true;
     if (status !== 'playing' || bookOpen) {
-      renderGame(context, game);
+      syncUi(game, true);
       return;
     }
 
@@ -284,8 +283,6 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     const frame = (time: number) => {
       if (!active) return;
       const current = gameRef.current;
-      const currentContext = canvasRef.current?.getContext('2d', { alpha: false });
-      if (!currentContext) return;
       const dt = Math.min(0.032, Math.max(0.001, (time - previousTime) / 1_000));
       previousTime = time;
       const events = stepGame(current, inputRef.current, dt);
@@ -299,7 +296,6 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
         nearStream: current.player.x > 1_020 && current.player.y > 590,
       });
       if (events.some((event) => event.type === 'pha-oi')) setVoiceStatus(audio?.getVoiceAssetStatus() ?? 'missing');
-      renderGame(currentContext, current);
       syncUi(current, events.length > 0);
       if (current.elapsed - saveAtRef.current >= 1.2) {
         saveAtRef.current = current.elapsed;
@@ -370,21 +366,16 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   return (
     <main className={`phieng-game${ui.chasing ? ' is-chasing' : ''}`} aria-labelledby="phieng-game-title">
       <section className="phieng-game__frame" aria-label={vi ? 'Trò chơi Phiêng Lơi' : 'Phiêng Lơi game'}>
-        <canvas
-          ref={canvasRef}
-          width={RENDER_WIDTH}
-          height={RENDER_HEIGHT}
-          aria-label={vi ? 'Bản Phiêng Lơi nhỏ với đường bản, nhà sàn, ruộng và suối' : 'Compact Phiêng Lơi village with paths, stilt houses, fields and a stream'}
-        />
+        <PhiengLoiVisualScene ui={ui} />
 
         <header className="phieng-game__hud">
-          <Link to="/" aria-label={vi ? 'Về menu' : 'Back to menu'}><ArrowLeft aria-hidden="true" /></Link>
-          <div><strong id="phieng-game-title">PHIÊNG LƠI</strong><span>{vi ? 'ĐI QUA BẢN' : 'CROSS THE VILLAGE'}</span></div>
+          <Link className="phieng-game__location" to="/" aria-label={vi ? 'Về menu' : 'Back to menu'}>
+            <ArrowLeft aria-hidden="true" />
+            <span><strong id="phieng-game-title">PHIÊNG LƠI</strong><small>ĐIỆN BIÊN</small></span>
+          </Link>
+          <div className="phieng-game__objective">{vi ? 'Cứ đi qua bản thôi…' : 'Just cross the village…'}</div>
           <nav>
             <button type="button" onClick={openBook} aria-label={vi ? 'Mở Book' : 'Open Book'}><BookOpen aria-hidden="true" /></button>
-            <button type="button" onClick={toggleMute} aria-label={muted ? (vi ? 'Bật âm thanh' : 'Turn sound on') : (vi ? 'Tắt âm thanh' : 'Mute sound')}>
-              {muted ? <VolumeX aria-hidden="true" /> : <Volume2 aria-hidden="true" />}
-            </button>
             {(status === 'playing' || status === 'paused') ? (
               <button type="button" onClick={togglePause} aria-label={status === 'playing' ? (vi ? 'Tạm dừng' : 'Pause') : (vi ? 'Tiếp tục' : 'Resume')}>
                 {status === 'playing' ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}

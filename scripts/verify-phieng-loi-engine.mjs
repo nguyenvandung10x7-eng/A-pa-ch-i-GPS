@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
-  RENDER_HEIGHT,
-  RENDER_WIDTH,
   VIEW_HEIGHT,
   VIEW_WIDTH,
   WORLD_WIDTH,
@@ -11,6 +10,7 @@ import {
   stepGame,
 } from '../src/experiences/phieng-loi/gameEngine.ts';
 import { PHIENG_LOI_AUDIO_CUES } from '../src/experiences/phieng-loi/audioManifest.ts';
+import { PHIENG_LOI_VISUAL_ASSETS } from '../src/experiences/phieng-loi/visualAssets.ts';
 
 const freshInput = (callQueued = false) => ({
   left: false,
@@ -41,9 +41,13 @@ const quietHeeSun = (game) => {
   game.heesun.modeUntil = 99_999;
 };
 
-assert.equal(RENDER_WIDTH, 960, 'the hand-drawn renderer should use a 960px backing canvas');
-assert.equal(RENDER_HEIGHT, 540, 'the hand-drawn renderer should use a 540px backing canvas');
-assert.equal(RENDER_WIDTH / VIEW_WIDTH, RENDER_HEIGHT / VIEW_HEIGHT, 'render scale should preserve 16:9 logical framing');
+assert.equal(VIEW_WIDTH / VIEW_HEIGHT, 16 / 9, 'the asset viewport should preserve 16:9 framing');
+assert.equal(new Set(Object.values(PHIENG_LOI_VISUAL_ASSETS)).size, Object.values(PHIENG_LOI_VISUAL_ASSETS).length, 'visual asset slots must be unique');
+Object.values(PHIENG_LOI_VISUAL_ASSETS).forEach((path) => assert.match(path, /^\/images\/phieng-loi\/.+\.webp$/));
+const engineSource = readFileSync(new URL('../src/experiences/phieng-loi/gameEngine.ts', import.meta.url), 'utf8');
+const pageSource = readFileSync(new URL('../src/pages/PhiengLoiGamePage.tsx', import.meta.url), 'utf8');
+assert.doesNotMatch(engineSource, /CanvasRenderingContext2D|\.fillRect\(|\.beginPath\(/, 'game logic must not contain final-art drawing primitives');
+assert.doesNotMatch(pageSource, /<canvas|renderGame\(/, 'the gameplay page must mount the asset scene instead of the prototype canvas');
 assert.equal(new Set(PHIENG_LOI_AUDIO_CUES.map((cue) => cue.id)).size, PHIENG_LOI_AUDIO_CUES.length, 'audio cue ids must be unique');
 PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
   assert.equal(cue.files.length, cue.takes, `${cue.id} should declare one filename per take`);

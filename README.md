@@ -1,7 +1,7 @@
 # Book of Dien Bien
 
 Book of Dien Bien now opens as **Phiêng Lơi**, a compact, mobile-first, landscape
-Canvas comedy game. The player is only trying to cross a small village. Movement
+asset-based 2D comedy game. The player is only trying to cross a small village. Movement
 and one contextual `PHÀ ƠI!` button are the entire control vocabulary; the village
 supplies the consequences.
 
@@ -23,10 +23,11 @@ contracts are unchanged.
 
 ## Phiêng Lơi
 
-The game uses a dependency-free 960×540 Canvas renderer and a small dense village:
+The game uses a DOM/CSS cutout compositor and a small dense village:
 road, layered stilt houses, fields, produce, animated stream, waterwheel, village
 chief, drinking table, animals, everyday props, and shortcuts. The presentation is
-smooth hand-drawn/cutout cartoon art with a 3/4 camera—not pixel primitives. It has
+project-owned WebP atlases and a hand-painted 3/4 world plate—not pixel or Canvas
+primitives. It has
 no RPG progression, quest log, XP, combat, crafting, or inventory system.
 
 The loop is deliberately short:
@@ -67,9 +68,11 @@ staff tools are preserved. Book is not a quest log and does not mutate game stat
 ## Rendering, lifecycle, and persistence
 
 - The game route stays lazy-loaded; no game-engine dependency is added.
-- A 480×270 logical camera renders to a smooth 960×540 backing canvas; scenery
-  outside the camera margin is culled.
-- A constrained-device profile reduces particles and honors reduced motion.
+- A 480×270 logical camera drives a responsive 16:9 DOM/CSS world compositor.
+- Character and support poses come from transparent WebP atlases; the environment
+  comes from one versioned world plate. Asset slots are centralized in
+  `visualAssets.ts`.
+- CSS transform animation honors reduced motion.
 - Page hide, blur, and visibility changes clear input and pause safely.
 - Leaving the route cancels animation frames, removes listeners, stops the voice
   element, and closes the AudioContext.

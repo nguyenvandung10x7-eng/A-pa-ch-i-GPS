@@ -2,190 +2,262 @@
   position: relative;
   min-height: 100dvh;
   overflow: hidden;
-  background: #112d26;
-  color: #fff0bd;
+  background: #183a31;
+  color: #fff4cc;
   font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
   isolation: isolate;
 }
 
 .phieng-wait,
-.phieng-wait * {
-  box-sizing: border-box;
-}
+.phieng-wait * { box-sizing: border-box; }
 
 .phieng-wait__scene,
 .phieng-wait__pixels {
   position: absolute;
-  z-index: -2;
+  z-index: -3;
   inset: 0;
 }
 
 .phieng-wait__scene {
-  background:
-    linear-gradient(90deg, rgba(8, 29, 24, .96) 0%, rgba(10, 31, 25, .78) 38%, rgba(10, 31, 25, .26) 75%, rgba(10, 30, 25, .64) 100%),
-    linear-gradient(0deg, rgba(9, 26, 22, .86), transparent 55%),
-    url('/images/tasks/ban-phieng-loi-mthen.webp') center / cover no-repeat;
-  filter: saturate(.88) contrast(1.04);
-  transform: scale(1.02);
+  background: url('/images/phieng-loi/village-world-v1.webp') center 54% / cover no-repeat;
+  filter: saturate(.96) contrast(1.02) brightness(.9);
+  transform: scale(1.035);
+  animation: phieng-menu-breathe 18s ease-in-out infinite alternate;
 }
 
 .phieng-wait__pixels {
-  z-index: -1;
+  z-index: -2;
   background:
-    radial-gradient(circle at 14% 24%, rgba(255, 241, 181, .045) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 70% 34%, rgba(244, 194, 76, .18), transparent 28rem),
-    linear-gradient(115deg, rgba(255, 255, 255, .018), transparent 38%, rgba(6, 23, 19, .11));
-  background-size: 7px 7px, auto, auto;
-  box-shadow: inset 0 0 9rem rgba(6, 24, 19, .45);
+    radial-gradient(ellipse at 50% 42%, rgba(255, 218, 116, .1), transparent 38%),
+    linear-gradient(90deg, rgba(12, 34, 28, .5), transparent 30% 70%, rgba(10, 28, 23, .55)),
+    linear-gradient(0deg, rgba(8, 26, 21, .76), transparent 46%);
+  box-shadow: inset 0 0 8rem rgba(7, 25, 20, .36);
   pointer-events: none;
+}
+
+.phieng-wait__character {
+  position: absolute;
+  z-index: -1;
+  bottom: -2.5vh;
+  aspect-ratio: 1;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-size: contain;
+  filter: drop-shadow(0 1.2rem 1.25rem rgba(10, 28, 22, .42));
+  pointer-events: none;
+  transform-origin: 50% 100%;
+}
+
+.phieng-wait__character.is-heesun {
+  left: clamp(-6rem, -2vw, -1rem);
+  width: min(45rem, 48vw, 92vh);
+  background-image: url('/images/phieng-loi/heesun-menu-v1.webp');
+  animation: phieng-menu-heesun 4.8s cubic-bezier(.44, 0, .38, 1) infinite;
+}
+
+.phieng-wait__character.is-hanu {
+  right: clamp(-4rem, 1vw, 2rem);
+  width: min(34rem, 36vw, 74vh);
+  background-image: url('/images/phieng-loi/hanu-menu-v1.webp');
+  animation: phieng-menu-hanu 6.4s ease-in-out infinite;
 }
 
 .phieng-wait__header,
 .phieng-wait__footer {
   position: absolute;
-  right: clamp(1rem, 3vw, 3rem);
-  left: clamp(1rem, 3vw, 3rem);
+  z-index: 6;
+  right: max(clamp(1rem, 3vw, 3rem), env(safe-area-inset-right));
+  left: max(clamp(1rem, 3vw, 3rem), env(safe-area-inset-left));
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.phieng-wait__header {
-  top: max(1rem, env(safe-area-inset-top));
-}
+.phieng-wait__header { top: max(.8rem, env(safe-area-inset-top)); }
 
-.phieng-wait__header > strong {
-  font-size: clamp(.7rem, 1vw, .9rem);
+.phieng-wait__header > strong,
+.phieng-wait__footer {
+  color: rgba(255, 247, 218, .82);
+  font-size: clamp(.58rem, .9vw, .76rem);
   font-weight: 950;
-  letter-spacing: .16em;
-  text-shadow: 0 .12rem .6rem rgba(4, 19, 15, .8);
+  letter-spacing: .14em;
+  text-shadow: 0 .12rem .55rem rgba(4, 19, 15, .82);
 }
 
 .phieng-wait__header > button {
   display: inline-flex;
+  min-width: 3rem;
   min-height: 2.5rem;
   align-items: center;
-  gap: .45rem;
-  border: 1px solid rgba(255, 238, 185, .32);
-  border-radius: 99px;
-  padding: .45rem .7rem;
-  background: rgba(15, 45, 37, .7);
+  justify-content: center;
+  gap: .38rem;
+  border: 2px solid rgba(255, 235, 170, .45);
+  border-radius: 46% 54% 49% 51% / 55% 46% 54% 45%;
+  padding: .42rem .7rem;
+  background: rgba(31, 62, 48, .86);
+  box-shadow: .12rem .2rem 0 rgba(11, 31, 24, .55);
   color: inherit;
-  font-size: .72rem;
-  font-weight: 900;
+  font-size: .7rem;
+  font-weight: 950;
   cursor: pointer;
-  backdrop-filter: blur(7px);
+  backdrop-filter: blur(6px);
 }
 
-.phieng-wait__header svg {
-  width: 1rem;
-}
+.phieng-wait__header svg { width: .95rem; }
 
 .phieng-wait__menu {
+  position: relative;
+  z-index: 3;
   display: flex;
-  width: min(43rem, 100%);
+  width: min(34rem, 92%);
   min-height: 100dvh;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: clamp(5.2rem, 10vh, 8rem) clamp(1.2rem, 7vw, 7rem) clamp(4.5rem, 9vh, 7rem);
+  margin: 0 auto;
+  padding: clamp(3.8rem, 8vh, 6rem) 1rem clamp(3.2rem, 7vh, 5rem);
+  text-align: center;
+}
+
+.phieng-wait__menu::before {
+  position: absolute;
+  z-index: -1;
+  width: min(37rem, 105%);
+  height: min(39rem, 84vh);
+  border-radius: 48% 52% 44% 56% / 54% 43% 57% 46%;
+  background: radial-gradient(ellipse, rgba(20, 48, 38, .76), rgba(11, 33, 26, .4) 58%, transparent 75%);
+  filter: blur(3px);
+  content: "";
 }
 
 .phieng-wait__menu > p {
-  margin: 0 0 .35rem;
-  color: #f0cb66;
-  font-size: clamp(.62rem, 1vw, .82rem);
-  font-weight: 950;
-  letter-spacing: .18em;
-  text-shadow: 0 .1rem .5rem rgba(8, 25, 20, .8);
+  margin: 0 0 .1rem;
+  color: #ffda68;
+  font-size: clamp(.57rem, .9vw, .76rem);
+  font-weight: 1000;
+  letter-spacing: .16em;
+  text-shadow: 0 .13rem .5rem rgba(8, 29, 22, .88);
 }
 
 .phieng-wait__menu h1 {
+  position: relative;
   margin: 0;
-  font-size: clamp(4rem, 11vw, 9rem);
+  color: #ffd23f;
+  font-size: clamp(4.6rem, 10.5vw, 8.8rem);
   font-weight: 1000;
   line-height: .82;
-  letter-spacing: -.08em;
+  letter-spacing: -.09em;
+  -webkit-text-stroke: clamp(1px, .22vw, 4px) #5c2b1f;
   text-shadow:
-    .12rem .15rem 0 #bd5538,
-    .28rem .35rem 0 rgba(11, 37, 30, .88),
-    0 1rem 3rem rgba(6, 22, 18, .54);
-  transform: rotate(-.55deg);
+    .13rem .15rem 0 #f07d32,
+    .28rem .34rem 0 #6f3123,
+    .48rem .62rem 0 rgba(11, 35, 27, .85),
+    0 1.1rem 2.4rem rgba(6, 22, 17, .56);
+  transform: rotate(-1.2deg);
+}
+
+.phieng-wait__menu h1::after {
+  position: absolute;
+  right: .1em;
+  bottom: -.14em;
+  left: .13em;
+  height: .11em;
+  border-radius: 55% 45% 60% 40%;
+  background: #fff1a2;
+  box-shadow: 0 .08em 0 #7b3b27;
+  content: "";
+  transform: rotate(.8deg);
 }
 
 .phieng-wait__menu > span {
-  max-width: 37ch;
+  max-width: 39ch;
   margin-top: 1rem;
-  color: rgba(255, 241, 194, .79);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1rem, 1.9vw, 1.45rem);
-  line-height: 1.42;
-  text-shadow: 0 .1rem .6rem rgba(6, 22, 18, .8);
+  color: rgba(255, 246, 211, .9);
+  font-size: clamp(.85rem, 1.35vw, 1.1rem);
+  font-weight: 750;
+  line-height: 1.38;
+  text-shadow: 0 .1rem .55rem rgba(5, 24, 18, .92);
 }
 
 .phieng-wait__menu nav {
   display: grid;
-  width: min(23rem, 100%);
-  gap: .5rem;
-  margin-top: 1.55rem;
+  width: min(21rem, 84vw);
+  gap: .62rem;
+  margin-top: 1.15rem;
+  perspective: 700px;
 }
 
 .phieng-wait__menu nav > * {
+  position: relative;
   display: flex;
-  min-height: 3.2rem;
+  min-height: 3.15rem;
   align-items: center;
-  gap: .75rem;
-  border: 1px solid rgba(255, 239, 190, .25);
-  border-radius: .48rem;
-  padding: .65rem .85rem;
-  background: rgba(17, 47, 39, .7);
-  box-shadow: .25rem .34rem 0 rgba(6, 22, 18, .25);
-  color: #fff0bd;
-  font-size: clamp(.75rem, 1.2vw, .95rem);
-  font-weight: 950;
-  letter-spacing: .08em;
+  justify-content: flex-start;
+  gap: .72rem;
+  overflow: hidden;
+  border: 3px solid #5c3523;
+  border-radius: .55rem .85rem .5rem .72rem;
+  padding: .56rem 1rem;
+  background:
+    linear-gradient(92deg, rgba(255, 230, 158, .26), transparent 28% 72%, rgba(93, 46, 27, .16)),
+    repeating-linear-gradient(0deg, transparent 0 10px, rgba(97, 51, 27, .09) 11px 12px),
+    #c98b45;
+  box-shadow: .24rem .35rem 0 #3e281d, 0 .8rem 1.2rem rgba(5, 22, 17, .24);
+  color: #231f19;
+  font-size: clamp(.79rem, 1.2vw, 1rem);
+  font-weight: 1000;
+  letter-spacing: .06em;
   text-decoration: none;
   cursor: pointer;
-  backdrop-filter: blur(8px);
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+  transform: rotate(.25deg);
+  transition: filter 140ms ease, transform 140ms ease;
+}
+
+.phieng-wait__menu nav > *:nth-child(2) { transform: rotate(-.45deg); }
+.phieng-wait__menu nav > *:nth-child(3) { transform: rotate(.65deg); }
+
+.phieng-wait__menu nav > *::after {
+  position: absolute;
+  right: 1rem;
+  width: .42rem;
+  aspect-ratio: 1;
+  border: 1px solid #6f462b;
+  border-radius: 50%;
+  background: #9b6939;
+  box-shadow: inset .08rem .08rem rgba(255, 225, 151, .35);
+  content: "";
 }
 
 .phieng-wait__menu nav > *:hover,
 .phieng-wait__menu nav > *:focus-visible {
-  border-color: rgba(255, 229, 139, .72);
-  background: rgba(29, 71, 58, .85);
-  transform: translateX(.25rem);
+  filter: brightness(1.1) saturate(1.08);
+  transform: translateY(-.16rem) rotate(-.25deg);
 }
 
 .phieng-wait__menu nav > .is-play {
   min-height: 3.7rem;
-  border: 2px solid #ffe49b;
-  background: linear-gradient(135deg, #f1c64f, #df733e);
-  box-shadow: .3rem .42rem 0 #6d3f2c, 0 .8rem 2rem rgba(7, 24, 19, .3);
-  color: #17372e;
-  font-size: clamp(.9rem, 1.5vw, 1.15rem);
+  border-color: #674022;
+  background:
+    linear-gradient(92deg, rgba(255, 247, 189, .46), transparent 34% 72%, rgba(132, 57, 23, .16)),
+    repeating-linear-gradient(0deg, transparent 0 10px, rgba(112, 59, 21, .09) 11px 12px),
+    #efb64e;
+  box-shadow: .28rem .42rem 0 #633921, 0 .9rem 1.6rem rgba(6, 24, 18, .32);
+  font-size: clamp(.95rem, 1.45vw, 1.18rem);
 }
 
-.phieng-wait__menu nav svg {
-  width: 1.15rem;
-}
+.phieng-wait__menu nav svg { width: 1.18rem; }
 
 .phieng-wait__menu > small {
-  margin-top: .9rem;
-  color: rgba(255, 239, 187, .56);
-  font-size: clamp(.64rem, 1vw, .78rem);
-  font-weight: 750;
-  letter-spacing: .055em;
+  margin-top: .82rem;
+  color: rgba(255, 242, 198, .68);
+  font-size: clamp(.59rem, .88vw, .72rem);
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-shadow: 0 .08rem .4rem rgba(4, 20, 15, .9);
 }
 
-.phieng-wait__footer {
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  color: rgba(255, 239, 190, .56);
-  font-size: .62rem;
-  font-weight: 850;
-  letter-spacing: .1em;
-}
+.phieng-wait__footer { bottom: max(.7rem, env(safe-area-inset-bottom)); }
 
 .phieng-wait__settings-layer {
   position: fixed;
@@ -194,7 +266,7 @@
   display: grid;
   place-items: center;
   padding: 1rem;
-  background: rgba(6, 24, 19, .72);
+  background: rgba(7, 26, 20, .74);
   backdrop-filter: blur(9px);
 }
 
@@ -203,18 +275,18 @@
   display: grid;
   width: min(28rem, 100%);
   gap: .55rem;
-  border: 1px solid rgba(255, 232, 161, .38);
-  border-radius: .75rem;
+  border: 3px solid #5f3823;
+  border-radius: .8rem .55rem .86rem .62rem;
   padding: 1.25rem;
-  background: #163a30;
-  box-shadow: 0 1.4rem 4rem rgba(4, 19, 15, .55);
+  background: #c9904f;
+  box-shadow: .35rem .55rem 0 #35251d, 0 1.4rem 4rem rgba(4, 19, 15, .55);
+  color: #241f19;
 }
 
 .phieng-wait__settings > p {
   margin: 0 2rem .3rem 0;
-  color: #f1cb67;
   font-size: .76rem;
-  font-weight: 950;
+  font-weight: 1000;
   letter-spacing: .16em;
 }
 
@@ -223,13 +295,13 @@
   min-height: 3rem;
   align-items: center;
   gap: .65rem;
-  border: 1px solid rgba(255, 239, 190, .2);
-  border-radius: .45rem;
+  border: 2px solid rgba(73, 43, 27, .35);
+  border-radius: .5rem;
   padding: .65rem .75rem;
-  background: rgba(255, 255, 255, .06);
+  background: rgba(255, 244, 203, .24);
   color: inherit;
   font-size: .82rem;
-  font-weight: 800;
+  font-weight: 850;
   text-align: left;
   cursor: pointer;
 }
@@ -244,14 +316,12 @@
   place-items: center;
   border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, .09);
+  background: rgba(58, 34, 23, .16);
   color: inherit;
   cursor: pointer;
 }
 
-.phieng-wait__settings svg {
-  width: 1.05rem;
-}
+.phieng-wait__settings svg { width: 1.05rem; }
 
 .phieng-wait button:focus-visible,
 .phieng-wait a:focus-visible {
@@ -259,71 +329,44 @@
   outline-offset: 3px;
 }
 
-@media (max-width: 680px) {
-  .phieng-wait__scene {
-    background:
-      linear-gradient(90deg, rgba(8, 29, 24, .92), rgba(9, 29, 24, .54)),
-      linear-gradient(0deg, rgba(9, 26, 22, .9), transparent 60%),
-      url('/images/tasks/ban-phieng-loi-mthen.webp') 61% center / cover no-repeat;
-  }
-
-  .phieng-wait__menu {
-    width: 100%;
-    align-items: center;
-    padding-inline: 1rem;
-    text-align: center;
-  }
-
-  .phieng-wait__menu h1 {
-    font-size: clamp(4rem, 22vw, 7rem);
-  }
-
-  .phieng-wait__menu > span {
-    font-size: 1rem;
-  }
-
-  .phieng-wait__menu nav {
-    width: min(22rem, 95%);
-  }
+@keyframes phieng-menu-breathe {
+  from { transform: scale(1.035) translate3d(-.3%, 0, 0); }
+  to { transform: scale(1.075) translate3d(.4%, -.35%, 0); }
 }
 
-@media (orientation: landscape) and (max-height: 520px) {
-  .phieng-wait__header {
-    top: max(.55rem, env(safe-area-inset-top));
-  }
+@keyframes phieng-menu-heesun {
+  0%, 100% { transform: rotate(-1.4deg) translateY(0) scale(1); }
+  48% { transform: rotate(.8deg) translateY(-.45rem) scale(1.01, .99); }
+  55% { transform: rotate(-.5deg) translateY(.1rem) scale(.99, 1.01); }
+}
 
-  .phieng-wait__menu {
-    width: min(36rem, 72%);
-    padding-top: 3.6rem;
-    padding-bottom: 2.8rem;
-  }
+@keyframes phieng-menu-hanu {
+  0%, 100% { transform: rotate(1deg) translateY(0); }
+  50% { transform: rotate(-.5deg) translateY(.28rem); }
+}
 
-  .phieng-wait__menu h1 {
-    font-size: clamp(3.6rem, 14vh, 5.7rem);
-  }
+@media (max-width: 720px) and (orientation: portrait) {
+  .phieng-wait__character { opacity: .55; }
+  .phieng-wait__character.is-heesun { left: -12rem; width: 30rem; }
+  .phieng-wait__character.is-hanu { right: -10rem; width: 25rem; }
+  .phieng-wait__menu h1 { font-size: clamp(4.1rem, 22vw, 7rem); }
+  .phieng-wait__footer span:last-child { display: none; }
+}
 
-  .phieng-wait__menu > span {
-    margin-top: .6rem;
-    font-size: .92rem;
-  }
-
-  .phieng-wait__menu nav {
-    grid-template-columns: 1.35fr 1fr 1fr;
-    width: min(34rem, 100%);
-    margin-top: .8rem;
-  }
-
+@media (orientation: landscape) and (max-height: 560px) {
+  .phieng-wait__header { top: max(.45rem, env(safe-area-inset-top)); }
+  .phieng-wait__menu { width: min(31rem, 48vw); padding-block: 2.65rem 2rem; }
+  .phieng-wait__menu h1 { font-size: clamp(3.8rem, 18vh, 6.2rem); }
+  .phieng-wait__menu > p { font-size: .52rem; }
+  .phieng-wait__menu > span { margin-top: .62rem; font-size: .76rem; }
+  .phieng-wait__menu nav { width: min(18rem, 100%); gap: .38rem; margin-top: .72rem; }
   .phieng-wait__menu nav > *,
-  .phieng-wait__menu nav > .is-play {
-    min-height: 2.8rem;
-    padding: .45rem .62rem;
-  }
+  .phieng-wait__menu nav > .is-play { min-height: 2.5rem; padding: .38rem .72rem; }
+  .phieng-wait__menu > small { margin-top: .48rem; }
+  .phieng-wait__footer { bottom: max(.35rem, env(safe-area-inset-bottom)); }
+}
 
-  .phieng-wait__menu > small {
-    margin-top: .55rem;
-  }
-
-  .phieng-wait__footer {
-    bottom: max(.45rem, env(safe-area-inset-bottom));
-  }
+@media (prefers-reduced-motion: reduce) {
+  .phieng-wait__scene,
+  .phieng-wait__character { animation: none; }
 }

@@ -42,6 +42,8 @@ export const ExperiencesHubPage = ({ language, setLanguage }: ExperiencesHubPage
     <main className="phieng-wait" aria-labelledby="phieng-wait-title">
       <div className="phieng-wait__scene" aria-hidden="true" />
       <div className="phieng-wait__pixels" aria-hidden="true" />
+      <div className="phieng-wait__character is-heesun" aria-hidden="true" />
+      <div className="phieng-wait__character is-hanu" aria-hidden="true" />
       <header className="phieng-wait__header">
         <strong>BOOK OF DIEN BIEN</strong>
         <button type="button" onClick={() => setLanguage(vi ? 'en' : 'vi')} aria-label={vi ? 'Switch to English' : 'Chuyển sang tiếng Việt'}>
@@ -52,7 +54,7 @@ export const ExperiencesHubPage = ({ language, setLanguage }: ExperiencesHubPage
       <section className="phieng-wait__menu">
         <p>{vi ? 'MỘT BẢN NHỎ · CHUYỆN KHÔNG NHỎ' : 'ONE SMALL VILLAGE · TOO MUCH TROUBLE'}</p>
         <h1 id="phieng-wait-title">PHIÊNG LƠI</h1>
-        <span>{vi ? 'Bạn chỉ muốn đi qua bản. Phiêng Lơi có ý kiến khác.' : 'You only want to cross the village. Phiêng Lơi has other ideas.'}</span>
+        <span>{vi ? 'Chạy thì sống. Đứng lại thì… có người mời ngồi tí.' : 'Run and live. Stop and… someone will ask you to sit for a minute.'}</span>
         <nav aria-label={vi ? 'Menu chờ' : 'Waiting menu'}>
           <Link className="is-play" to={hasSave ? '/phieng-loi?resume=1' : '/phieng-loi?new=1'}>
             <Play aria-hidden="true" />

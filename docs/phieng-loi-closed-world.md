@@ -11,18 +11,17 @@ flow but retained on their direct routes and in source.
 The map is a deliberately compressed fictional play space, not a geographic or
 travel-time claim. Its visual vocabulary—stilt houses, mountain layers, village
 road, fields and corn, stream, waterwheel, cooking smoke, chickens, a dog, a
-buffalo, produce, and everyday objects—is rendered by project-owned Canvas code.
+buffalo, produce, and everyday objects—is rendered from project-owned WebP assets.
 
 ## Character-art checkpoint
 
-The current HeeSun, HANU, player, chief, villagers, stream group, and animals are
-original layered Canvas cutouts, not pixel sprites and not traced from a commercial
-IP. HeeSun's concept silhouette locks the short, tight, close-to-scalp curls and
-larger pear-shaped body; HANU locks the smaller build, dark hair, white tank top,
-shorts, and always-visible phone. These are concept-quality placeholders pending
-the owner's promised character reference. A later reference pass must fictionalize
-the people, never ship or trace the real photo, and must replace these draw layers
-in place rather than create another runtime.
+HeeSun and HANU now use six-pose transparent WebP atlases derived from owner-supplied
+character boards. Raw reference photos are not shipped. HeeSun locks the short,
+tight, close-to-scalp curls, recognizable face, suspicious gentle smile, and a
+slightly round body reduced from the previous chubby prototype. HANU locks the
+recognizable face, heavier build, messy hair, white tank top, shorts, sandals, and
+always-visible phone. Player, chief, villagers, stream group, and animals share a
+support atlas and remain deliberately less visually dominant.
 
 ## Core loop and controls
 
@@ -40,7 +39,8 @@ markers, checklists, minimap POIs, or required explanation of world systems.
 
 ### HeeSun
 
-- Distinct, larger red/yellow silhouette and comic chase motif.
+- Distinct tight-curl silhouette, blue/white sports shirt, suspicious gentle smile,
+  and comic chase motif.
 - Required meeting sequence: invitation, player “Thôi.”, the short silence,
   “Bạn ôi…”, then “BẠN ƠI!” and chase.
 - No combat and no Game Over.
@@ -51,7 +51,7 @@ markers, checklists, minimap POIs, or required explanation of world systems.
 
 ### HaNu
 
-- Smaller blue silhouette; the phone is always visible.
+- Heavier white-tank-top silhouette; the phone is always visible.
 - Walks an independent loop while cycling “Ừ.” / “Thế à?” calls.
 - Opens HeeSun's gate, physically blocks a route, startles chickens, reveals the
   nearby player with “Nó ở đây này!”, starts an object domino, and can collide with
@@ -89,7 +89,7 @@ HeeSun entrances, persistent distant replies, packed fish, and background events
 
 ## Book contract
 
-Book opens in a same-origin overlay while the Canvas state remains mounted. The
+Book opens in a same-origin overlay while the game state and asset scene remain mounted. The
 game pauses and persists before opening. Closing Book restores the exact position
 and prior status; Book does not inspect or mutate game events. Direct `/book`
 access remains available from the waiting menu.
@@ -101,7 +101,7 @@ The signature call must be a real, consented human recording. Runtime reserves:
 `public/audio/phieng-loi/pha-oi-human.mp3`
 
 There is deliberately no beep, oscillator, synthesized voice, or TTS fallback for
-that call. Missing media is visible in Settings and does not block the Canvas/NPC
+that call. Missing media is visible in Settings and does not block the visual/NPC
 response. Do not mark the audio complete until the supplied recording is added to
 the provenance ledger and the project has explicit usage and redistribution
 rights.
@@ -115,11 +115,11 @@ Only documented, project-cleared recordings may be marked ready.
 
 ## Performance and lifecycle
 
-- 960×540 backing canvas with a stable 480×270 logical camera, smooth curve-based
-  hand-drawn/cutout art, camera-space scenery culling, capped particles, and a
-  low-quality profile for constrained devices. This is not integer-upscaled pixel
-  art: characters, houses, animals, water, crops, and props are layered paths with
-  elastic transforms, soft shadows, depth sorting, and atmospheric overlays.
+- Responsive 16:9 DOM/CSS compositor driven by the stable 480×270 logical camera.
+  The world is a hand-painted WebP plate; named characters and supporting actors
+  are transparent pose atlases with depth sorting, cutout transforms, contact
+  shadows, squash/stretch, reaction poses, and atmospheric overlays. No Canvas
+  primitive drawing remains in the mounted gameplay presentation.
 - Landscape/coarse-pointer rotation guard and entirely touch-playable controls.
 - Visibility and blur clear sticky movement; pause/Book suspend audio.
 - Unmount cancels animation, removes listeners, stops the voice element, and closes
