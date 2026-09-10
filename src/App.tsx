@@ -1,200 +1,49 @@
-import { lazy, Suspense, useEffect, useRef, useState, type ReactElement } from 'react';
-import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
-import { Loader2, LogIn } from 'lucide-react';
-import { Layout } from './components/Layout';
-import { MobileAppShell } from './components/MobileAppShell';
-import { ProductSurfaceFrame } from './components/ProductSurfaceFrame';
-import { Card } from './components/Card';
-import { TimeTrainBookGate } from './components/TimeTrainBookGate';
-import { useAuth } from './contexts/AuthContext';
-import { useAdminStatus } from './hooks/useAdminStatus';
-import { useTasks } from './hooks/useTasks';
+import { lazy, Suspense } from 'react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useTranslation } from './hooks/useTranslation';
-import { AdminPage } from './pages/AdminPage';
-import { NewBookPage } from './pages/NewBookPage';
-import { BookPageRoute } from './pages/BookPageRoute';
-import { BookUtilityPage } from './pages/BookUtilityPage';
-import { ChallengePage } from './pages/ChallengePage';
-import { CreditsPage } from './pages/CreditsPage';
-import { DiscoverPage } from './pages/DiscoverPage';
-import { GameMapPage } from './pages/GameMapPage';
-import { LegalSafetyPage } from './pages/LegalSafetyPage';
-import { LeaderboardPage } from './pages/LeaderboardPage';
-import { ModerationPage } from './pages/ModerationPage';
-import { SavedBookPage } from './pages/SavedBookPage';
-import { TikTokSubmissionPage } from './pages/TikTokSubmissionPage';
-import { CHALLENGE_CLEAR_VERSION_KEY, getChallengeClearVersion } from './services/tasks';
-import './journey.css';
 
+const ExperiencesHubPage = lazy(() => import('./pages/ExperiencesHubPage').then((module) => ({ default: module.ExperiencesHubPage })));
 const JourneyPage = lazy(() => import('./pages/JourneyPage').then((module) => ({ default: module.JourneyPage })));
-
-const parseClearVersion = (value: string | null): number => {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 0) return 0;
-  return parsed;
-};
-
-const isBookPath = (pathname: string): boolean =>
-  pathname === '/book' || pathname.startsWith('/book/');
+const PhiengLoiGamePage = lazy(() => import('./pages/PhiengLoiGamePage').then((module) => ({ default: module.PhiengLoiGamePage })));
+const ApplicationEntry = lazy(() => import('./ApplicationEntry').then((module) => ({ default: module.ApplicationEntry })));
 
 const normalizeRoutePath = (pathname: string): string => {
   const normalized = pathname.toLowerCase().replace(/\/+$/, '');
   return normalized || '/';
 };
 
-const AuthenticatedRoute = ({
-  t,
-  redirectPath,
-  children,
-}: {
-  t: (key: string, values?: Record<string, string | number>) => string;
-  redirectPath: string;
-  children: ReactElement;
-}) => {
-  const { user, loading, signIn } = useAuth();
+const EXPERIENCE_ROUTE_PATHS = new Set(['/', '/1954', '/phieng-loi', '/journey/1954', '/experiences']);
 
-  if (loading) {
-    return (
-      <Card>
-        <div className="flex items-center gap-3 text-slate-200">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>{t('admin.authLoading')}</span>
-        </div>
-      </Card>
-    );
-  }
-
-  if (!user) {
-    return (
-      <Card>
-        <div className="flex items-center gap-3 text-cyan-200">
-          <LogIn className="h-5 w-5" />
-          <p className="text-lg font-semibold">{t('admin.signInRequired')}</p>
-        </div>
-        <p className="mt-4 text-slate-300">{t('admin.signInDescription')}</p>
-        <button
-          type="button"
-          onClick={() => { void signIn(`${window.location.origin}${redirectPath}`); }}
-          className="mt-6 rounded-full bg-cyan-400 px-5 py-3 font-black text-slate-950 transition hover:bg-cyan-300"
-        >
-          {t('admin.signIn')}
-        </button>
-      </Card>
-    );
-  }
-
-  return children;
-};
+const ExperienceLoader = ({ label }: { label: string }) => (
+  <main className="experience-route-loader" role="status">
+    <span>BOOK OF DIEN BIEN</span>
+    <strong>{label}</strong>
+    <p>Loading…</p>
+  </main>
+);
 
 export default function App() {
   const { language, setLanguage, t } = useTranslation();
-  const { tasks, setTasks } = useTasks();
-  const { isAdmin, checkingAdmin, adminCheckFailed } = useAdminStatus();
-  const [clearVersion, setClearVersion] = useState(() => getChallengeClearVersion());
   const location = useLocation();
-  const navigationType = useNavigationType();
-  const previousPathRef = useRef(location.pathname);
+  const pathname = normalizeRoutePath(location.pathname);
 
-  useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (event.storageArea !== window.localStorage) return;
-      if (event.key !== CHALLENGE_CLEAR_VERSION_KEY) return;
-      if (event.newValue === null) return;
-      if (event.newValue === event.oldValue) return;
-      const nextVersion = parseClearVersion(event.newValue);
-      const previousVersion = parseClearVersion(event.oldValue);
-      if (nextVersion === previousVersion) return;
-      setClearVersion(nextVersion);
-    };
-
-    window.addEventListener('storage', handleStorage);
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-    };
-  }, []);
-
-  useEffect(() => {
-    const previousPath = previousPathRef.current;
-    previousPathRef.current = location.pathname;
-
-    if (navigationType === 'POP') return;
-    if (!isBookPath(previousPath) && !isBookPath(location.pathname)) return;
-
-    const frameId = window.requestAnimationFrame(() => {
-      const targetId = location.hash.startsWith('#') ? location.hash.slice(1) : '';
-      const target = targetId ? document.getElementById(targetId) : null;
-      if (target) {
-        target.scrollIntoView({ block: 'start', behavior: 'auto' });
-        return;
-      }
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    });
-
-    return () => window.cancelAnimationFrame(frameId);
-  }, [location.hash, location.pathname, navigationType]);
-
-  const publicRoutes = (
-    <Routes>
-      <Route path="/" element={(
-        <Suspense fallback={<main className="temporal-loader"><span>BOOK OF DIEN BIEN</span><strong>1954</strong><p>{language === 'vi' ? 'Đang dựng địa hình…' : 'Building the terrain…'}</p></main>}>
-          <JourneyPage language={language} setLanguage={setLanguage} />
-        </Suspense>
-      )} />
-      <Route path="/journey/1954" element={<Navigate to="/" replace />} />
-      <Route path="/book" element={<TimeTrainBookGate><NewBookPage language={language} /></TimeTrainBookGate>} />
-      <Route path="/book/chapter/:chapterId" element={<TimeTrainBookGate><NewBookPage language={language} /></TimeTrainBookGate>} />
-      <Route path="/book/page/:pageId" element={<TimeTrainBookGate><BookPageRoute /></TimeTrainBookGate>} />
-      <Route path="/recent" element={<Navigate to="/book" replace />} />
-      <Route path="/saved" element={<TimeTrainBookGate><SavedBookPage language={language} /></TimeTrainBookGate>} />
-      <Route path="/nearby" element={<TimeTrainBookGate><BookUtilityPage language={language} mode="near-me" /></TimeTrainBookGate>} />
-      <Route path="/credits" element={<CreditsPage language={language} />} />
-      <Route path="/challenge" element={<ChallengePage tasks={tasks} clearVersion={clearVersion} language={language} t={t} />} />
-      <Route path="/map" element={<GameMapPage tasks={tasks} language={language} t={t} />} />
-      <Route path="/near-me" element={<Navigate to="/nearby" replace />} />
-      <Route path="/history" element={<Navigate to="/book" replace />} />
-      <Route path="/experiences" element={<Navigate to="/challenge" replace />} />
-      <Route path="/discover" element={<ProductSurfaceFrame surface="challenge"><DiscoverPage language={language} t={t} /></ProductSurfaceFrame>} />
-      <Route path="/leaderboard" element={<ProductSurfaceFrame surface="challenge"><LeaderboardPage language={language} t={t} /></ProductSurfaceFrame>} />
-      <Route path="/submit-tiktok" element={<ProductSurfaceFrame surface="challenge"><TikTokSubmissionPage clearVersion={clearVersion} language={language} t={t} /></ProductSurfaceFrame>} />
-    </Routes>
-  );
-
-  const normalizedPathname = normalizeRoutePath(location.pathname);
-  const staffOrLegalRoute = ['/admin', '/moderation', '/privacy', '/legal'].includes(normalizedPathname);
+  if (!EXPERIENCE_ROUTE_PATHS.has(pathname)) {
+    return (
+      <Suspense fallback={<ExperienceLoader label="BOOK" />}>
+        <ApplicationEntry language={language} setLanguage={setLanguage} t={t} />
+      </Suspense>
+    );
+  }
 
   return (
-    <Layout
-      language={language}
-      setLanguage={setLanguage}
-      t={t}
-      isAdmin={isAdmin}
-      checkingAdmin={checkingAdmin}
-    >
-      {staffOrLegalRoute ? (
-        <Routes>
-          <Route path="/privacy" element={<LegalSafetyPage t={t} />} />
-          <Route path="/legal" element={<LegalSafetyPage t={t} />} />
-          <Route path="/moderation" element={(
-            <ModerationPage
-              language={language}
-              t={t}
-              isAdmin={isAdmin}
-              checkingAdmin={checkingAdmin}
-              adminCheckFailed={adminCheckFailed}
-            />
-          )} />
-          <Route path="/admin" element={<AuthenticatedRoute t={t} redirectPath="/admin"><AdminPage tasks={tasks} setTasks={setTasks} t={t} /></AuthenticatedRoute>} />
-        </Routes>
-      ) : (
-        <MobileAppShell
-          language={language}
-          setLanguage={setLanguage}
-          isAdmin={isAdmin}
-          checkingAdmin={checkingAdmin}
-        >
-          {publicRoutes}
-        </MobileAppShell>
-      )}
-    </Layout>
+    <Suspense fallback={<ExperienceLoader label="EXPERIENCES" />}>
+      <Routes>
+        <Route path="/" element={<ExperiencesHubPage language={language} setLanguage={setLanguage} />} />
+        <Route path="/1954" element={<JourneyPage language={language} setLanguage={setLanguage} />} />
+        <Route path="/phieng-loi" element={<PhiengLoiGamePage language={language} setLanguage={setLanguage} />} />
+        <Route path="/journey/1954" element={<Navigate to="/1954" replace />} />
+        <Route path="/experiences" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }

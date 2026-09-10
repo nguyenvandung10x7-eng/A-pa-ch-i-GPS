@@ -1,0 +1,395 @@
+.phieng-game {
+  --phieng-ink: #18352d;
+  --phieng-paper: #f2e6c1;
+  min-height: 100dvh;
+  padding: clamp(1rem, 2.4vw, 2.2rem) clamp(.85rem, 3vw, 3.4rem) calc(1rem + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 8% 3%, rgba(255, 251, 218, .82), transparent 28rem),
+    linear-gradient(155deg, #c8dcaf, #77a78e 48%, #395d52);
+  color: var(--phieng-ink);
+  font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
+}
+
+.phieng-game__header,
+.phieng-game__title,
+.phieng-game__footer {
+  width: min(78rem, 100%);
+  margin-inline: auto;
+}
+
+.phieng-game__header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+}
+
+.phieng-game__back,
+.phieng-game__header > button {
+  display: inline-flex;
+  min-height: 2.55rem;
+  align-items: center;
+  gap: .5rem;
+  border: 1px solid rgba(24, 53, 45, .22);
+  border-radius: 999px;
+  padding: .45rem .75rem;
+  background: rgba(245, 235, 198, .58);
+  font-size: .7rem;
+  font-weight: 850;
+  cursor: pointer;
+  backdrop-filter: blur(9px);
+}
+
+.phieng-game__back {
+  width: fit-content;
+}
+
+.phieng-game__header > button {
+  justify-self: end;
+  color: inherit;
+}
+
+.phieng-game__header svg {
+  width: 1rem;
+}
+
+.phieng-game__brand {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: .7rem;
+  font-size: .63rem;
+  letter-spacing: .13em;
+}
+
+.phieng-game__brand span {
+  opacity: .58;
+}
+
+.phieng-game__title {
+  display: grid;
+  grid-template-columns: 1.45fr .75fr;
+  align-items: end;
+  gap: 2rem;
+  padding: clamp(2rem, 5vh, 3.8rem) 0 clamp(1rem, 2.5vh, 1.8rem);
+}
+
+.phieng-game__title p {
+  margin: 0;
+  font-size: clamp(.72rem, 1.1vw, .9rem);
+  line-height: 1.55;
+}
+
+.phieng-game__title > div > p {
+  margin-bottom: .5rem;
+  color: rgba(24, 53, 45, .66);
+  font-size: .61rem;
+  font-weight: 900;
+  letter-spacing: .18em;
+}
+
+.phieng-game__title h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.25rem, 5vw, 5.2rem);
+  font-weight: 500;
+  line-height: .98;
+  letter-spacing: -.045em;
+}
+
+.phieng-game__console {
+  width: min(78rem, 100%);
+  margin: 0 auto;
+  border: 1px solid rgba(21, 53, 43, .24);
+  border-radius: clamp(1rem, 2.1vw, 1.8rem);
+  padding: clamp(.55rem, 1.2vw, .9rem);
+  background: rgba(244, 232, 193, .88);
+  box-shadow: 0 2rem 5rem rgba(21, 48, 41, .28), inset 0 1px rgba(255, 255, 255, .8);
+}
+
+.phieng-game__hud {
+  display: grid;
+  grid-template-columns: 5rem 1fr 4rem;
+  align-items: center;
+  gap: .8rem;
+  min-height: 2.6rem;
+  padding: .3rem .55rem .7rem;
+  font-size: .74rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+}
+
+.phieng-game__hud > span:first-child {
+  color: #a63c3c;
+  font-size: 1rem;
+  letter-spacing: .12em;
+}
+
+.phieng-game__hud > span:last-child {
+  text-align: right;
+}
+
+.phieng-game__progress {
+  height: .5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(33, 69, 55, .16);
+}
+
+.phieng-game__progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5c874b, #d09f3f);
+  transition: width 180ms linear;
+}
+
+.phieng-game__stage {
+  position: relative;
+  overflow: hidden;
+  border: clamp(4px, .75vw, 9px) solid #27483d;
+  border-radius: clamp(.65rem, 1.5vw, 1.1rem);
+  background: #96c3b2;
+  box-shadow: inset 0 0 0 2px rgba(244, 230, 184, .4);
+}
+
+.phieng-game__stage canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  image-rendering: pixelated;
+}
+
+.phieng-game__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: linear-gradient(rgba(20, 45, 38, .52), rgba(15, 35, 30, .78));
+  color: #fff7dd;
+  text-align: center;
+  backdrop-filter: blur(3px);
+}
+
+.phieng-game__overlay > p {
+  margin: 0 0 .55rem;
+  color: rgba(255, 247, 221, .72);
+  font-size: .58rem;
+  font-weight: 900;
+  letter-spacing: .2em;
+}
+
+.phieng-game__overlay h2 {
+  max-width: 18ch;
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.7rem, 4.2vw, 4rem);
+  font-weight: 500;
+  line-height: 1.04;
+}
+
+.phieng-game__overlay > div {
+  max-width: 50ch;
+  margin-top: .8rem;
+  color: rgba(255, 247, 221, .78);
+  font-size: clamp(.72rem, 1.2vw, .9rem);
+}
+
+.phieng-game__overlay > button,
+.phieng-game__overlay nav > * {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  border: 1px solid rgba(255, 255, 255, .32);
+  border-radius: 999px;
+  padding: .55rem 1rem;
+  background: #f0cd70;
+  color: #19352c;
+  font-size: .72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.phieng-game__overlay > button {
+  margin-top: 1.25rem;
+}
+
+.phieng-game__overlay svg {
+  width: 1rem;
+}
+
+.phieng-game__overlay.is-result {
+  background: rgba(18, 48, 39, .88);
+}
+
+.phieng-game__overlay.is-result > svg {
+  width: 1.7rem;
+  height: 1.7rem;
+  margin-bottom: .75rem;
+  color: #f2cd6f;
+}
+
+.phieng-game__overlay nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .5rem;
+  margin-top: 1.1rem;
+}
+
+.phieng-game__overlay nav > *:nth-child(2),
+.phieng-game__overlay nav > button {
+  background: rgba(255, 255, 255, .09);
+  color: #fff7dd;
+}
+
+.phieng-game__powers {
+  display: flex;
+  min-height: 3rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem;
+  padding: .65rem .4rem .1rem;
+}
+
+.phieng-game__powers span {
+  border-radius: 999px;
+  padding: .28rem .6rem;
+  background: rgba(36, 68, 56, .09);
+  color: rgba(24, 53, 45, .72);
+  font-size: .62rem;
+  font-weight: 800;
+}
+
+.phieng-game__powers .is-squash { background: rgba(126, 172, 61, .2); }
+.phieng-game__powers .is-coffee { background: rgba(131, 75, 47, .16); }
+.phieng-game__powers .is-tea { background: rgba(58, 139, 83, .18); }
+.phieng-game__powers .is-macadamia { background: rgba(208, 161, 63, .22); }
+
+.phieng-game__touch {
+  display: none;
+  grid-template-columns: 3.5rem 3.5rem 1fr;
+  gap: .55rem;
+  margin-top: .55rem;
+}
+
+.phieng-game__touch button {
+  display: inline-flex;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(29, 66, 53, .28);
+  border-radius: .85rem;
+  background: rgba(255, 248, 218, .72);
+  color: var(--phieng-ink);
+  font-size: .72rem;
+  font-weight: 950;
+  touch-action: none;
+  user-select: none;
+}
+
+.phieng-game__touch .is-jump {
+  justify-self: end;
+  width: min(10rem, 46vw);
+  background: #2f5c4c;
+  color: #fff4cf;
+}
+
+.phieng-game__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: .85rem;
+  color: rgba(20, 49, 40, .65);
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.phieng-game__footer nav {
+  display: flex;
+  gap: .8rem;
+}
+
+.phieng-game__footer a {
+  border-bottom: 1px solid currentColor;
+}
+
+.phieng-game a:focus-visible,
+.phieng-game button:focus-visible {
+  outline: 3px solid #fff2b2;
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px), (pointer: coarse) {
+  .phieng-game__touch {
+    display: grid;
+  }
+}
+
+@media (max-width: 680px) {
+  .phieng-game {
+    padding-inline: .65rem;
+  }
+
+  .phieng-game__header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .phieng-game__brand {
+    display: none;
+  }
+
+  .phieng-game__title {
+    display: block;
+    padding-top: 1.7rem;
+  }
+
+  .phieng-game__title > p {
+    margin-top: .75rem;
+  }
+
+  .phieng-game__console {
+    padding: .45rem;
+  }
+
+  .phieng-game__stage {
+    border-width: 4px;
+  }
+
+  .phieng-game__overlay {
+    padding: .7rem;
+  }
+
+  .phieng-game__overlay h2 {
+    font-size: clamp(1.25rem, 6.7vw, 2rem);
+  }
+
+  .phieng-game__overlay > div {
+    font-size: .66rem;
+  }
+
+  .phieng-game__overlay > button,
+  .phieng-game__overlay nav > * {
+    min-height: 2.25rem;
+    padding: .35rem .65rem;
+    font-size: .62rem;
+  }
+
+  .phieng-game__powers {
+    min-height: 2.7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phieng-game__progress i {
+    transition: none;
+  }
+}

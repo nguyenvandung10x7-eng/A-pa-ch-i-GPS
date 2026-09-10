@@ -1,17 +1,21 @@
 # Book of Dien Bien
 
-Book of Dien Bien is a bilingual React/Vite web experience about Điện Biên built around two public surfaces:
+Book of Dien Bien is a bilingual React/Vite web experience about Điện Biên with three equal, independently accessible entry experiences:
 
+- **1954** — a cinematic time-overlap at A1 Hill that can continue into the existing Time Train GPS task.
+- **NHỊP BẢN PHIÊNG LƠI** — a dependency-free 2D culture game that can continue into the existing Phiêng Lơi GPS task.
 - **BOOK** — a literary, memory-led book experience with chapters, pages, audio, saved/read state, nearby places, and optional real-world continuations.
-- **CHALLENGE** — GPS-based discovery tasks with progress, points, history, moderation/admin tooling, and location verification.
 
-The former standalone Experiences surface is retired; `/experiences` remains only as a compatibility redirect to `/challenge`.
+The existing **CHALLENGE** system remains the shared GPS/action service behind these experiences, with its progress, levels, points, history, moderation/admin tooling and location verification unchanged. There is no top-level unlock sequence between 1954, Phiêng Lơi and Book.
 
 ## Product structure
 
-- `/` — the single “Where Times Overlap · 1954” opening experience.
-- `/journey/1954` — compatibility redirect to the same opening; it is not a second scene.
-- `/book` — Book contents, unlocked only after the verified A1 Time Train GPS challenge.
+- `/` — lightweight Experiences Hub with all three entry cards visible at once.
+- `/1954` — “Where Times Overlap · 1954”.
+- `/phieng-loi` — “Nhịp bản Phiêng Lơi” 2D prototype.
+- `/book` — Book contents, directly accessible with no top-level gate.
+- `/journey/1954` — compatibility redirect to `/1954`.
+- `/experiences` — compatibility redirect to `/`.
 - `/book/chapter/:chapterId` — chapter entry.
 - `/book/page/:pageId` — full literary page.
 - `/recent` — recent Challenge/history activity.
@@ -21,15 +25,21 @@ The former standalone Experiences surface is retired; `/experiences` remains onl
 - `/privacy`, `/legal` — legal/safety pages.
 - `/admin`, `/moderation` — staff surfaces.
 
-The public mobile shell keeps BOOK and CHALLENGE distinct. Book reading/saved state is stored separately from Challenge progress.
+The Experience Hub and the two interactive scenes are route-level lazy chunks. The existing application shell loads only for Book, Challenge and staff routes, so Supabase/Auth and the internal navigation do not block the opening hub. Book reading/saved state remains separate from Challenge progress.
 
 ## Where Times Overlap · 1954
 
 The opening is a lazy-loaded hybrid scene. Two already-cleared present-day Điện Biên photographs provide the realistic valley and urban layers with restrained depth/parallax; the dependency-free WebGL layer renders only the 1954 A1 terrain, trenches, fortifications, cemetery horizon and an irregular temporal-overlap treatment. The camera begins at an approximately 20-metre artistic viewpoint with a short automatic drift and tightly limited pointer/touch or permission-gated device orientation. A 2.5D fallback preserves the same composition when WebGL is unavailable or the visitor selects the lighter mode.
 
-Five seconds after the visitor starts the scene, the temporal boundary reveals the **Chuyến tàu thời gian** threshold. It leads to the existing exact task `doi-a1-chuyen-tau-thoi-gian-1954`; the scene itself never requests GPS, writes Challenge history, awards points, or treats viewing/listening as task completion. The Book routes remain locked until the existing Challenge history contains a completed, GPS-verified run for that exact task. The original task coordinates, radius, external URL and persistence remain authoritative.
+Five seconds after the visitor starts the scene, the temporal boundary reveals the **Chuyến tàu thời gian** threshold. It always leads to the existing exact task `doi-a1-chuyen-tau-thoi-gian-1954`; the scene itself never requests GPS, writes Challenge history, awards points, or treats viewing/listening as task completion. Completing that route can hand the visitor into Book as a narrative continuation, but it is not an access gate. The original task coordinates, radius, external URL and persistence remain authoritative.
 
 Audio uses separate HRTF `PannerNode` sources. Empty asset slots fail silently; the current audible layer is an explicitly labelled oscillator-based spatial calibration study rather than historical audio. See `docs/temporal-1954-assets.md` before adding any stem.
+
+## Nhịp bản Phiêng Lơi
+
+`/phieng-loi` is a self-contained Canvas 2D prototype with keyboard and touch controls, checkpoints, restrained hazards, collectibles and four short power-ups based on Điện Biên produce: Tìa Dình squash, Mường Ảng coffee, macadamia and Tủa Chùa Shan Tuyết tea. It uses no game-engine dependency and cancels its animation frame and input listeners on unmount.
+
+The optional GPS continuation links to the exact existing `ban-phieng-loi-mthen` task. It bypasses only the generic level menu when launched from this featured experience; GPS verification, task data and Challenge persistence remain authoritative.
 
 ## Book content
 

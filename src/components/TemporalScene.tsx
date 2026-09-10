@@ -7,8 +7,8 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import { ArrowRight, Eye, Headphones, Languages, Move, Smartphone, Volume2, VolumeX } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { TIME_TRAIN_CHALLENGE_PATH, useTimeTrainUnlock } from '../hooks/useTimeTrainUnlock';
+import { Link, useNavigate } from 'react-router-dom';
+import { TIME_TRAIN_CHALLENGE_PATH } from '../services/featuredExperiences';
 import { createTemporalAudio } from '../services/temporalAudio';
 import type { LanguageCode } from '../types/task';
 import { createTemporalWorld, type TemporalFocus, type TemporalView, type TemporalWorld } from './temporal3d/createTemporalWorld';
@@ -101,7 +101,6 @@ export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => 
   const [fallbackYaw, setFallbackYaw] = useState(-0.04);
   const [viewYaw, setViewYaw] = useState(-0.04);
   const [departing, setDeparting] = useState(false);
-  const bookUnlocked = useTimeTrainUnlock();
   const copy = focusCopy[language][focus];
 
   const disposeAudio = useCallback(() => {
@@ -269,9 +268,8 @@ export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => 
     if (departing || !onwardReady) return;
     setDeparting(true);
     worldRef.current?.enterRift();
-    const destination = bookUnlocked ? '/book' : TIME_TRAIN_CHALLENGE_PATH;
     departureTimer.current = window.setTimeout(() => {
-      void navigate(destination);
+      void navigate(TIME_TRAIN_CHALLENGE_PATH);
     }, 1250);
   };
 
@@ -315,7 +313,10 @@ export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => 
       </div>
 
       <header className="temporal-experience__topline">
-        <span>BOOK OF DIEN BIEN</span>
+        <Link to="/" aria-label={vi ? 'Quay lại ba trải nghiệm' : 'Back to all experiences'}>
+          <span>BOOK OF DIEN BIEN</span>
+          <small>EXPERIENCES</small>
+        </Link>
         <button
           type="button"
           onClick={() => setLanguage(vi ? 'en' : 'vi')}
@@ -370,18 +371,12 @@ export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => 
           </div>
 
           <div className={`temporal-exit temporal-threshold ${onwardReady ? 'is-ready' : ''}`}>
-            <p>{bookUnlocked
-              ? (vi ? 'Chuyến tàu thời gian đã hoàn thành. Book of Dien Bien đang mở.' : 'The Time Train is complete. Book of Dien Bien is now open.')
-              : (vi ? 'Câu chuyện tiếp tục tại Đồi A1. GPS chỉ được xác nhận khi bạn thực sự có mặt.' : 'The story continues at A1 Hill. GPS is confirmed only when you are physically there.')}
-            </p>
+            <p>{vi ? 'Câu chuyện tiếp tục tại Đồi A1. GPS chỉ được xác nhận khi bạn thực sự có mặt.' : 'The story continues at A1 Hill. GPS is confirmed only when you are physically there.'}</p>
             <button type="button" onClick={continueJourney} disabled={departing}>
               <span className="temporal-threshold__rail" aria-hidden="true"><i /><i /></span>
               <span className="temporal-threshold__copy">
-                <small>{bookUnlocked ? (vi ? 'PHẦN TIẾP THEO' : 'NEXT CHAPTER') : (vi ? 'BƯỚC QUA VÙNG GIAO THOA' : 'CROSS THE OVERLAP')}</small>
-                <strong>{bookUnlocked
-                  ? (vi ? 'Mở Book of Dien Bien' : 'Open Book of Dien Bien')
-                  : (vi ? 'Chuyến tàu thời gian' : 'The Time Train')}
-                </strong>
+                <small>{vi ? 'BƯỚC QUA VÙNG GIAO THOA' : 'CROSS THE OVERLAP'}</small>
+                <strong>{vi ? 'Chuyến tàu thời gian' : 'The Time Train'}</strong>
               </span>
               <ArrowRight aria-hidden="true" />
             </button>

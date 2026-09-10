@@ -262,6 +262,23 @@
   letter-spacing: .19em;
 }
 
+.temporal-experience__topline > a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .65rem;
+}
+
+.temporal-experience__topline > a small {
+  color: rgba(241, 234, 216, .46);
+  font-size: .52rem;
+  letter-spacing: .16em;
+}
+
+.temporal-experience__topline > a:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: .35rem;
+}
+
 .temporal-experience__topline button,
 .temporal-controls button {
   display: inline-flex;

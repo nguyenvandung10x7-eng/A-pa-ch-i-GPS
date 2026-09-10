@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import type { LanguageCode } from '../types/task';
+import '../journey.css';
 
 const TemporalScene = lazy(() => import('../components/TemporalScene').then((module) => ({ default: module.TemporalScene })));
 

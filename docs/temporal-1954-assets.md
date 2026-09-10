@@ -36,12 +36,12 @@ Before replacing blockout details, record whether each feature is:
 
 Do not add named graves, identifiable faces, biographies or specific structures without reviewable evidence. The overlap light is always an artistic memory metaphor, never a claimed 1954 phenomenon.
 
-## Narrative and unlock contract
+## Narrative and routing contract
 
-1. `/` lazy-loads the 1954 module and waits for the visitor to enter.
+1. `/` is the lightweight three-card Experiences Hub; `/1954` lazy-loads this module and waits for the visitor to enter.
 2. The camera drifts gently for five seconds; looking around is deliberately limited.
 3. The in-scene **Chuyến tàu thời gian** threshold routes to the existing exact Challenge task.
-4. Only a completed run with `gpsVerified === true` for `doi-a1-chuyen-tau-thoi-gian-1954` unlocks Book routes.
+4. Book is independently available from the Hub; completing the exact Time Train task offers Book as a narrative handoff, never as an access unlock.
 5. The scene never creates a completion record, changes GPS coordinates/radius, or replaces the existing external Time Train URL.
 
 ## Spatial audio slots
