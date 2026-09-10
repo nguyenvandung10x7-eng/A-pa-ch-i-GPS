@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPoi
 import {
   ArrowLeft,
   BookOpen,
+  Compass,
   Languages,
   MapPin,
   Pause,
@@ -38,93 +39,144 @@ type PhiengLoiGamePageProps = {
   setLanguage: (language: LanguageCode) => void;
 };
 
-type GameStatus = 'intro' | 'playing' | 'paused' | 'completed' | 'failed';
+type GameStatus = 'intro' | 'playing' | 'paused' | 'completed';
 type LocalizedCopy = Record<LanguageCode, string>;
 
 const POWER_COPY: Record<PowerKind, { name: LocalizedCopy; tagline: LocalizedCopy; effect: LocalizedCopy }> = {
   squash: {
     name: { vi: 'BÍ XANH TÌA DÌNH', en: 'TIA DINH SQUASH' },
-    tagline: { vi: 'Không rõ tại sao. Nhưng bạn to lên.', en: 'No clear reason. But now you are bigger.' },
-    effect: { vi: 'To lên · bật cao · phá bó rơm', en: 'Grow · jump high · smash hay' },
+    tagline: { vi: 'Không giải thích. Bạn bỗng lớn hơn.', en: 'No explanation. You are suddenly larger.' },
+    effect: { vi: 'Thân hình lớn · bước chân nặng', en: 'Larger body · heavier steps' },
   },
   coffee: {
     name: { vi: 'CÀ PHÊ MƯỜNG ẢNG', en: 'MUONG ANG COFFEE' },
-    tagline: { vi: 'Hơi nhiều năng lượng.', en: 'Possibly too much energy.' },
-    effect: { vi: 'Tăng tốc · nhảy xa', en: 'Sprint · jump farther' },
+    tagline: { vi: 'Một ngụm, tỉnh cả lòng chảo.', en: 'One sip wakes the whole basin.' },
+    effect: { vi: 'Di chuyển nhanh hơn', en: 'Move faster' },
   },
   macadamia: {
     name: { vi: 'MẮC CA ĐIỆN BIÊN', en: 'DIEN BIEN MACADAMIA' },
-    tagline: { vi: 'Vỏ cứng, tâm an.', en: 'Hard shell, calm mind.' },
-    effect: { vi: 'Chặn một cú va chạm', en: 'Blocks one collision' },
+    tagline: { vi: 'Vỏ cứng. Đường tắt mềm lòng.', en: 'Hard shell. Soft shortcuts.' },
+    effect: { vi: 'Lướt hồi nhanh hơn', en: 'Dash recharges faster' },
   },
   tea: {
     name: { vi: 'CHÈ SHAN TUYẾT TỦA CHÙA', en: 'TUA CHUA SHAN TUYET TEA' },
-    tagline: { vi: 'Bình tĩnh nào.', en: 'Take it easy.' },
-    effect: { vi: 'Làm chậm cả thế giới', en: 'Slows the whole world' },
+    tagline: { vi: 'Đi chậm lại, thấy được nhiều hơn.', en: 'Slow down and notice more.' },
+    effect: { vi: 'Tăng khoảng cách tương tác', en: 'Wider interaction range' },
   },
   buffalo: {
     name: { vi: 'THỊT TRÂU GÁC BẾP', en: 'SMOKED BUFFALO' },
-    tagline: { vi: 'Khỏe lên thấy rõ.', en: 'Now that is real strength.' },
-    effect: { vi: 'Nạp lực · phá vật cản', en: 'Power up · break obstacles' },
+    tagline: { vi: 'Nặng mùi khói, nhẹ chuyện đường xa.', en: 'Smoky, sturdy and ready for the road.' },
+    effect: { vi: 'Bước khoẻ hơn', en: 'Stronger movement' },
   },
 };
 
 const ZONE_COPY: Record<ZoneKind, LocalizedCopy> = {
   0: { vi: 'Bản', en: 'Village' },
-  1: { vi: 'Ruộng', en: 'Fields' },
+  1: { vi: 'Nương', en: 'Uplands' },
   2: { vi: 'Suối', en: 'Stream' },
-  3: { vi: 'Sân cuối', en: 'Courtyard' },
+  3: { vi: 'Phố ký ức', en: 'Memory town' },
 };
 
-const HERO_COPY: Record<ZoneKind, { title: LocalizedCopy; detail: LocalizedCopy }> = {
-  0: {
-    title: { vi: 'Đầu bản', en: 'Village entrance' },
-    detail: { vi: 'Nhà sàn thức dậy trong khói bếp.', en: 'Stilt houses wake beneath cooking smoke.' },
+const LANDMARK_COPY: Record<LandmarkKind, {
+  eyebrow: LocalizedCopy;
+  title: LocalizedCopy;
+  detail: LocalizedCopy;
+}> = {
+  'stilt-house': {
+    eyebrow: { vi: 'NẾP BẢN', en: 'VILLAGE LIFE' },
+    title: { vi: 'Nhà sàn bên khói bếp', en: 'Stilt house in cooking smoke' },
+    detail: {
+      vi: 'Sàn gỗ, cầu thang và bếp lửa tạo nên một ngôi nhà biết kể chuyện bằng tiếng bước chân.',
+      en: 'Timber floors, stairs and a warm hearth turn footsteps into a story.',
+    },
   },
-  1: {
-    title: { vi: 'Lòng chảo mở ra', en: 'The valley opens' },
-    detail: { vi: 'Ruộng, núi và một khoảng trời rộng.', en: 'Fields, mountains and a wider sky.' },
+  feast: {
+    eyebrow: { vi: 'CUỘC GẶP ĐỜI THƯỜNG', en: 'AN EVERYDAY ENCOUNTER' },
+    title: { vi: 'Ngồi chung một mâm', en: 'Sit at the roadside table' },
+    detail: {
+      vi: 'Bạn có thể chọn chén trà và ngồi lại. Sau câu chào, kỹ năng “ƠI!” khiến cả bản đáp lời và chỉ hướng.',
+      en: 'Choose tea and stay a moment. Your new “HEY!” call makes the village answer and point the way.',
+    },
   },
-  2: {
-    title: { vi: 'Dòng suối Phiêng Lơi', en: 'Phiêng Lơi stream' },
-    detail: { vi: 'Nước, đá và nhịp sống bên bờ.', en: 'Water, stones and life along the bank.' },
+  'buffalo-kitchen': {
+    eyebrow: { vi: 'BẾP BẢN', en: 'VILLAGE KITCHEN' },
+    title: { vi: 'Thịt trâu gác bếp', en: 'Smoked buffalo kitchen' },
+    detail: {
+      vi: 'Khói bếp bám lên từng thớ thịt; mang theo một chút sức bền cho quãng đường sau.',
+      en: 'Hearth smoke settles into every strip and lends strength to the road ahead.',
+    },
   },
-  3: {
-    title: { vi: 'Sân bản cuối chiều', en: 'Village courtyard at dusk' },
-    detail: { vi: 'Ánh đèn, tiếng nhạc và mọi người trở về.', en: 'Lanterns, music and people coming home.' },
-  },
-};
-
-const LANDMARK_COPY: Record<LandmarkKind, { eyebrow: LocalizedCopy; title: LocalizedCopy; detail: LocalizedCopy }> = {
-  cornfield: {
-    eyebrow: { vi: 'CẢNH SẮC ĐIỆN BIÊN', en: 'A DIEN BIEN LANDSCAPE' },
-    title: { vi: 'Đồng ngô cuối bản', en: 'Cornfield at the village edge' },
-    detail: { vi: 'Gió chạy thành từng hàng qua lá ngô.', en: 'Wind moves through the corn in long green rows.' },
+  'squash-field': {
+    eyebrow: { vi: 'SẢN VẬT ĐỊA PHƯƠNG', en: 'LOCAL PRODUCE' },
+    title: { vi: 'Bí xanh Tìa Dình', en: 'Tia Dinh squash field' },
+    detail: {
+      vi: 'Những quả bí nằm dưới tán lá. Chạm vào một quả và nhân vật lớn lên theo cách rất vô lý.',
+      en: 'Squash hides beneath the leaves. Touch one and grow for no sensible reason.',
+    },
   },
   terraces: {
-    eyebrow: { vi: 'CẢNH SẮC ĐIỆN BIÊN', en: 'A DIEN BIEN LANDSCAPE' },
-    title: { vi: 'Ruộng bậc thang', en: 'Terraced rice fields' },
-    detail: { vi: 'Mặt núi được xếp lại thành từng mùa lúa.', en: 'The mountainside is shaped into seasons of rice.' },
+    eyebrow: { vi: 'ĐỊA HÌNH ĐIỆN BIÊN', en: 'DIEN BIEN TERRAIN' },
+    title: { vi: 'Ruộng bậc thang', en: 'Terraced fields' },
+    detail: {
+      vi: 'Các đường đồng mức ôm lấy sườn núi, vừa là cảnh quan vừa là đường đi.',
+      en: 'Contour lines wrap the slope, becoming both landscape and route.',
+    },
+  },
+  'macadamia-grove': {
+    eyebrow: { vi: 'SẢN VẬT ĐỊA PHƯƠNG', en: 'LOCAL PRODUCE' },
+    title: { vi: 'Vườn mắc ca Điện Biên', en: 'Dien Bien macadamia grove' },
+    detail: {
+      vi: 'Một hạt nhỏ, một nhịp lướt nhanh hơn. Luật vật lý của bản đôi khi rất dễ tính.',
+      en: 'One small nut, one faster dash. Village physics can be surprisingly generous.',
+    },
+  },
+  'tea-hut': {
+    eyebrow: { vi: 'HƯƠNG NÚI', en: 'MOUNTAIN AROMA' },
+    title: { vi: 'Chè Shan tuyết Tủa Chùa', en: 'Tua Chua Shan Tuyet tea' },
+    detail: {
+      vi: 'Chén trà khiến bước chân chậm hơn một nhịp nhưng bạn nhận ra những tương tác từ xa hơn.',
+      en: 'Tea slows your pace, but lets you notice interactions from farther away.',
+    },
   },
   waterwheel: {
-    eyebrow: { vi: 'CÔNG TRÌNH BẢN THÁI', en: 'THAI VILLAGE CRAFT' },
+    eyebrow: { vi: 'KỸ NGHỆ BẢN THÁI', en: 'THAI VILLAGE CRAFT' },
     title: { vi: 'Cọn nước bên suối', en: 'Waterwheel by the stream' },
-    detail: { vi: 'Tre, dòng chảy và một cách đưa nước lên nương.', en: 'Bamboo and current lift water toward the fields.' },
+    detail: {
+      vi: 'Tre, dòng chảy và trọng lực làm việc cùng nhau để đưa nước lên nương.',
+      en: 'Bamboo, current and gravity work together to lift water toward the fields.',
+    },
   },
   'stream-girl': {
-    eyebrow: { vi: 'CUỘC GẶP BÊN SUỐI', en: 'A MEETING BY THE STREAM' },
-    title: { vi: 'Cô gái Thái bên dòng nước', en: 'A Thai woman by the water' },
-    detail: { vi: 'Cô xuống suối tắm; đàn cá lấp lánh tìm về.', en: 'She bathes in the stream as silver fish gather nearby.' },
+    eyebrow: { vi: 'CUỘC GẶP BÊN NƯỚC', en: 'A MEETING BY THE WATER' },
+    title: { vi: 'Người phụ nữ Thái bên suối', en: 'A Thai woman by the stream' },
+    detail: {
+      vi: 'Một người phụ nữ trưởng thành đang tắm suối sau màn cây. Góc nhìn giữ khoảng cách; câu chuyện thuộc về nhịp sống, không phải sự ngắm nhìn.',
+      en: 'An adult woman bathes beyond the foliage. The camera keeps its distance; this is daily life, not spectacle.',
+    },
+  },
+  'coffee-hill': {
+    eyebrow: { vi: 'HƯƠNG VỊ MƯỜNG ẢNG', en: 'A TASTE OF MUONG ANG' },
+    title: { vi: 'Cà phê Mường Ảng', en: 'Muong Ang coffee hill' },
+    detail: {
+      vi: 'Quả cà phê đỏ trên sườn đồi. Một ngụm nhỏ khiến mọi con đường ngắn lại.',
+      en: 'Red coffee cherries cover the hill. One sip makes every road feel shorter.',
+    },
   },
   museum: {
-    eyebrow: { vi: 'DẤU ẤN THÀNH PHỐ', en: 'CITY LANDMARK' },
+    eyebrow: { vi: 'KIẾN TRÚC KÝ ỨC', en: 'ARCHITECTURE OF MEMORY' },
     title: { vi: 'Bảo tàng Chiến thắng Điện Biên Phủ', en: 'Dien Bien Phu Victory Museum' },
-    detail: { vi: 'Mái nón nan và lớp lưới quả trám hiện lên giữa lòng chảo.', en: 'A woven-helmet form and diamond lattice rise in the basin.' },
+    detail: {
+      vi: 'Mái công trình gợi chiếc mũ nan phủ lưới ngụy trang; lịch sử hiện lên bằng hình khối.',
+      en: 'Its roof recalls a woven helmet under camouflage netting; history becomes form.',
+    },
   },
   monument: {
-    eyebrow: { vi: 'DẤU ẤN THÀNH PHỐ', en: 'CITY LANDMARK' },
+    eyebrow: { vi: 'ĐIỂM NHÌN LÒNG CHẢO', en: 'BASIN OVERLOOK' },
     title: { vi: 'Tượng đài Chiến thắng', en: 'Victory Monument' },
-    detail: { vi: 'Ba người lính nâng lá cờ lên khỏi lòng chảo.', en: 'Three soldiers raise the flag above the valley.' },
+    detail: {
+      vi: 'Từ đỉnh đồi, thành phố, cánh đồng và những đường đã đi cùng nằm trong một khung hình.',
+      en: 'From the hilltop, city, fields and every travelled path share one frame.',
+    },
   },
 };
 
@@ -146,8 +198,11 @@ const requestLandscape = () => {
 const createInputState = (): InputState => ({
   left: false,
   right: false,
-  moveAxis: 0,
-  jumpQueued: false,
+  up: false,
+  down: false,
+  moveX: 0,
+  moveY: 0,
+  interactQueued: false,
   dashQueued: false,
   cheerQueued: false,
 });
@@ -194,17 +249,21 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     setStatus('playing');
   }, [ensureAudio, profile.quality, profile.reducedMotion]);
 
+  const clearInput = useCallback(() => {
+    inputRef.current = createInputState();
+    setJoystick({ x: 0, y: 0 });
+  }, []);
+
   const togglePause = useCallback(() => {
     if (status === 'playing') {
-      inputRef.current = createInputState();
-      setJoystick({ x: 0, y: 0 });
+      clearInput();
       void audioRef.current?.suspend();
       setStatus('paused');
       return;
     }
     ensureAudio();
     setStatus('playing');
-  }, [ensureAudio, status]);
+  }, [clearInput, ensureAudio, status]);
 
   const toggleMute = useCallback(() => {
     setMuted((current) => {
@@ -246,27 +305,31 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
 
     let previousTime = performance.now();
     let active = true;
-    const clearInput = () => {
-      inputRef.current = createInputState();
-      setJoystick({ x: 0, y: 0 });
-    };
     const keyDown = (event: KeyboardEvent) => {
-      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', ' ', 'a', 'd', 'w', 'A', 'D', 'W', 'Shift', 'e', 'E'].includes(event.key)) event.preventDefault();
-      if (event.key === 'Escape') {
+      const key = event.key.toLowerCase();
+      if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' ', 'a', 'd', 'w', 's', 'shift', 'e', 'q'].includes(key)) {
+        event.preventDefault();
+      }
+      if (key === 'escape') {
         clearInput();
         void audioRef.current?.suspend();
         setStatus('paused');
         return;
       }
-      if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') inputRef.current.left = true;
-      if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') inputRef.current.right = true;
-      if ((event.key === 'ArrowUp' || event.key === ' ' || event.key.toLowerCase() === 'w') && !event.repeat) inputRef.current.jumpQueued = true;
-      if (event.key === 'Shift' && !event.repeat) inputRef.current.dashQueued = true;
-      if (event.key.toLowerCase() === 'e' && !event.repeat) inputRef.current.cheerQueued = true;
+      if (key === 'arrowleft' || key === 'a') inputRef.current.left = true;
+      if (key === 'arrowright' || key === 'd') inputRef.current.right = true;
+      if (key === 'arrowup' || key === 'w') inputRef.current.up = true;
+      if (key === 'arrowdown' || key === 's') inputRef.current.down = true;
+      if ((key === 'e' || key === ' ') && !event.repeat) inputRef.current.interactQueued = true;
+      if (key === 'shift' && !event.repeat) inputRef.current.dashQueued = true;
+      if (key === 'q' && !event.repeat) inputRef.current.cheerQueued = true;
     };
     const keyUp = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') inputRef.current.left = false;
-      if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') inputRef.current.right = false;
+      const key = event.key.toLowerCase();
+      if (key === 'arrowleft' || key === 'a') inputRef.current.left = false;
+      if (key === 'arrowright' || key === 'd') inputRef.current.right = false;
+      if (key === 'arrowup' || key === 'w') inputRef.current.up = false;
+      if (key === 'arrowdown' || key === 's') inputRef.current.down = false;
     };
     const visibilityChange = () => {
       if (!document.hidden) return;
@@ -283,7 +346,8 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     const frame = (time: number) => {
       if (!active) return;
       const current = gameRef.current;
-      if (!current) return;
+      const currentContext = canvasRef.current?.getContext('2d', { alpha: false });
+      if (!current || !currentContext) return;
       const dt = Math.min(0.032, Math.max(0.001, (time - previousTime) / 1_000));
       previousTime = time;
       const events = stepGame(current, inputRef.current, dt);
@@ -294,13 +358,9 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
         zone: current.zone,
         powers: snapshot.powers.map((power) => power.kind),
       });
-      renderGame(context, current);
+      renderGame(currentContext, current);
       syncUi(current, events.length > 0);
 
-      if (current.failed) {
-        setStatus('failed');
-        return;
-      }
       if (current.complete) {
         setStatus('completed');
         return;
@@ -319,7 +379,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
       document.removeEventListener('visibilitychange', visibilityChange);
       clearInput();
     };
-  }, [status, syncUi]);
+  }, [clearInput, status, syncUi]);
 
   const updateJoystick = (event: ReactPointerEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -332,8 +392,8 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
       x /= length;
       y /= length;
     }
-    const axis = Math.abs(x) < 0.12 ? 0 : x;
-    inputRef.current.moveAxis = axis;
+    inputRef.current.moveX = Math.abs(x) < 0.1 ? 0 : x;
+    inputRef.current.moveY = Math.abs(y) < 0.1 ? 0 : y;
     setJoystick({ x, y });
   };
 
@@ -344,20 +404,20 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   };
 
   const moveJoystick = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-    updateJoystick(event);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) updateJoystick(event);
   };
 
   const releaseJoystick = (event: ReactPointerEvent<HTMLDivElement>) => {
     event.preventDefault();
-    inputRef.current.moveAxis = 0;
+    inputRef.current.moveX = 0;
+    inputRef.current.moveY = 0;
     setJoystick({ x: 0, y: 0 });
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
-  const queueJump = (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const queueInteract = (event: ReactPointerEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    inputRef.current.jumpQueued = true;
+    inputRef.current.interactQueued = true;
   };
 
   const queueDash = (event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -370,44 +430,54 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     inputRef.current.cheerQueued = true;
   };
 
-  const activeCallout = ui.callout ? POWER_COPY[ui.callout] : null;
-  const activeLandmark = ui.landmark ? LANDMARK_COPY[ui.landmark] : null;
-  const isPlaying = status === 'playing';
-  const showArrival = isPlaying && ui.elapsed > 0.45 && ui.elapsed < 3.8;
-  const showTouchGuide = isPlaying && ui.elapsed < 5.2;
+  const activeLandmark = ui.callout ? LANDMARK_COPY[ui.callout] : null;
+  const nearbyLandmark = ui.nearby ? LANDMARK_COPY[ui.nearby] : null;
+  const powerPopKind = ui.flash && ui.flash !== 'cheer' ? ui.flash : null;
+  const activePowerCopy = powerPopKind ? POWER_COPY[powerPopKind] : null;
+  const showArrival = status === 'playing' && ui.elapsed > 0.35 && ui.elapsed < 3.6;
+  const showGuide = status === 'playing' && ui.elapsed < 7;
 
   return (
-    <main className="phieng-game" aria-labelledby="phieng-game-title">
-      <header className="phieng-game__header">
-        <Link to="/" className="phieng-game__back"><ArrowLeft aria-hidden="true" />{vi ? 'Ba trải nghiệm' : 'All experiences'}</Link>
-        <div className="phieng-game__brand"><strong>BOOK OF DIEN BIEN</strong><span>PHIÊNG LƠI</span></div>
+    <main className="phieng-world" aria-labelledby="phieng-world-title">
+      <header className="phieng-world__header">
+        <Link to="/" className="phieng-world__back"><ArrowLeft aria-hidden="true" />{vi ? 'Ba trải nghiệm' : 'All experiences'}</Link>
+        <div className="phieng-world__brand"><strong>BOOK OF DIEN BIEN</strong><span>PHIÊNG LƠI</span></div>
         <button type="button" onClick={() => setLanguage(vi ? 'en' : 'vi')} aria-label={vi ? 'Switch to English' : 'Chuyển sang tiếng Việt'}>
           <Languages aria-hidden="true" /><strong>{language.toUpperCase()}</strong>
         </button>
       </header>
 
-      <section className="phieng-game__title">
+      <section className="phieng-world__title">
         <div>
-          <p>{vi ? 'CHƯƠNG VĂN HOÁ · MOBILE GAME 2D' : 'CULTURE CHAPTER · 2D MOBILE GAME'}</p>
-          <h1 id="phieng-game-title">{vi ? 'Nhịp bản Phiêng Lơi' : 'Phiêng Lơi Village Rhythm'}</h1>
+          <p>{vi ? 'CHƯƠNG VĂN HOÁ · THẾ GIỚI MỞ THU NHỎ' : 'CULTURE CHAPTER · COMPACT OPEN WORLD'}</p>
+          <h1 id="phieng-world-title">{vi ? 'Phiêng Lơi: Bản đồ ký ức' : 'Phiêng Lơi: A Memory Map'}</h1>
         </div>
-        <p>{vi ? 'Một hành trình pixel qua đồng ngô, ruộng bậc thang, cọn nước, bến suối và những dấu ấn của Điện Biên. Sản vật — cùng một cuộc gặp ven đường — sẽ làm bạn biến đổi theo những cách khó đoán.' : 'A pixel journey through cornfields, terraces, waterwheels, the stream and Dien Bien landmarks. Local produce — and one roadside encounter — change you in unexpected ways.'}</p>
+        <p>
+          {vi
+            ? 'Một thế giới pixel 2D góc nhìn 3/4. Không có đường đi bắt buộc: hãy tự chọn lối qua bản, nương, suối và thành phố.'
+            : 'A 3/4-view 2D pixel world. There is no required route: choose your own way through village, uplands, stream and town.'}
+        </p>
       </section>
 
-      <section className="phieng-game__console" aria-label={vi ? 'Trò chơi Phiêng Lơi' : 'Phiêng Lơi game'}>
-        <div className="phieng-game__stage">
-          <canvas ref={canvasRef} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={vi ? 'Màn chơi cuộn ngang qua bản Phiêng Lơi' : 'Side-scrolling journey through Phiêng Lơi village'} />
+      <section className="phieng-world__console" aria-label={vi ? 'Trò chơi thế giới mở Phiêng Lơi' : 'Phiêng Lơi open-world game'}>
+        <div className="phieng-world__stage">
+          <canvas
+            ref={canvasRef}
+            width={VIEW_WIDTH}
+            height={VIEW_HEIGHT}
+            aria-label={vi ? 'Bản đồ ký ức 2D có thể khám phá tự do' : 'Freely explorable 2D memory map'}
+          />
 
-          <div className="phieng-game__hud">
-            <span className="phieng-game__hearts" aria-label={vi ? `${ui.lives} lượt còn lại` : `${ui.lives} lives left`}>{'♥'.repeat(Math.max(0, ui.lives))}</span>
-            <ol className="phieng-game__zones" aria-label={vi ? 'Các chặng của hành trình' : 'Journey zones'}>
-              {([0, 1, 2, 3] as ZoneKind[]).map((zone) => (
-                <li key={zone} className={zone === ui.zone ? 'is-current' : zone < ui.zone ? 'is-done' : undefined}>
-                  <i aria-hidden="true" /><span>{ZONE_COPY[zone][language]}</span>
-                </li>
-              ))}
-            </ol>
-            <div className="phieng-game__hud-actions">
+          <div className="phieng-world__hud">
+            <div className="phieng-world__counter">
+              <span>{vi ? 'MẢNH KÝ ỨC' : 'MEMORIES'}</span>
+              <strong>{ui.memories}<i>/</i>{ui.totalMemories}</strong>
+            </div>
+            <div className="phieng-world__location">
+              <span>{vi ? 'ĐANG Ở' : 'CURRENT AREA'}</span>
+              <strong>{ZONE_COPY[ui.zone][language]}</strong>
+            </div>
+            <div className="phieng-world__hud-actions">
               <button type="button" onClick={toggleMute} aria-label={muted ? (vi ? 'Bật âm thanh' : 'Turn sound on') : (vi ? 'Tắt âm thanh' : 'Mute sound')}>
                 {muted ? <VolumeX aria-hidden="true" /> : <Volume2 aria-hidden="true" />}
               </button>
@@ -417,184 +487,201 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
                 </button>
               ) : null}
             </div>
-            <div className="phieng-game__progress" aria-label={vi ? `Tiến độ ${Math.round(ui.progress * 100)}%` : `${Math.round(ui.progress * 100)}% progress`}>
-              <i style={{ width: `${ui.progress * 100}%` }} />
+            <div className="phieng-world__progress" aria-label={vi ? 'Tiến độ ký ức' : 'Memory progress'}>
+              <i style={{ width: String(ui.progress * 100) + '%' }} />
             </div>
           </div>
 
+          <aside className="phieng-world__minimap" aria-label={vi ? 'Bản đồ ký ức không theo tỉ lệ' : 'Memory map, not to scale'}>
+            <div className="phieng-world__minimap-head">
+              <Compass aria-hidden="true" />
+              <span>{vi ? 'BẢN ĐỒ KÝ ỨC' : 'MEMORY MAP'}</span>
+            </div>
+            <div className="phieng-world__map-field">
+              <i className="is-river" aria-hidden="true" />
+              {ui.mapPoints.map((point) => (
+                <span
+                  key={point.kind}
+                  className={point.discovered ? 'is-found' : undefined}
+                  style={{ left: String(point.x * 100) + '%', top: String(point.y * 100) + '%' }}
+                  title={LANDMARK_COPY[point.kind].title[language]}
+                />
+              ))}
+              <b style={{ left: String(ui.playerMapX * 100) + '%', top: String(ui.playerMapY * 100) + '%' }} aria-label={vi ? 'Vị trí của bạn' : 'Your position'} />
+            </div>
+            <small>{vi ? 'Không theo tỉ lệ thật' : 'Not to geographic scale'}</small>
+          </aside>
+
           {ui.powers.length > 0 ? (
-            <div className="phieng-game__power-hud" aria-live="polite">
+            <div className="phieng-world__powers" aria-live="polite">
               {ui.powers.map((power) => (
-                <div key={power.kind} className={`is-${power.kind}`}>
+                <div key={power.kind} className={'is-' + power.kind}>
                   <span>{POWER_COPY[power.kind].name[language]}</span>
-                  <i><b style={{ width: `${power.remaining * 100}%` }} /></i>
+                  <i><b style={{ width: String(power.remaining * 100) + '%' }} /></i>
                 </div>
               ))}
             </div>
           ) : null}
 
           {showArrival ? (
-            <div className="phieng-game__arrival" aria-live="polite">
-              <p>{vi ? 'RƠI XUỐNG TỪ CHUYẾN TÀU THỜI GIAN' : 'DROPPED FROM THE TIME TRAIN'}</p>
+            <div className="phieng-world__arrival" aria-live="polite">
+              <p>{vi ? 'MỘT BẢN ĐỒ KHÔNG THEO TỈ LỆ' : 'A MAP THAT IS NOT TO SCALE'}</p>
               <strong>PHIÊNG LƠI</strong>
-              <span>{vi ? 'Đi qua bản trước khi trời tối' : 'Cross the village before nightfall'}</span>
+              <span>{vi ? 'Chọn một hướng và bắt đầu đi' : 'Choose a direction and begin'}</span>
             </div>
           ) : null}
 
-          {ui.heroZone !== null && status === 'playing' ? (
-            <div className="phieng-game__hero" aria-live="polite">
-              <span>0{ui.heroZone + 1}</span>
-              <div><strong>{HERO_COPY[ui.heroZone].title[language]}</strong><small>{HERO_COPY[ui.heroZone].detail[language]}</small></div>
-            </div>
-          ) : null}
-
-          {activeLandmark && ui.landmark && status === 'playing' ? (
-            <div className={`phieng-game__landmark is-${ui.landmark}`} role="status">
+          {activeLandmark && ui.callout && status === 'playing' ? (
+            <article className={'phieng-world__story is-' + ui.callout} aria-live="polite">
               <span>{activeLandmark.eyebrow[language]}</span>
               <strong>{activeLandmark.title[language]}</strong>
-              <small>{activeLandmark.detail[language]}</small>
+              <p>{activeLandmark.detail[language]}</p>
+              {ui.callout === 'feast' && ui.busy ? <small>{vi ? 'Bạn đang ngồi lại một lát…' : 'You stay for a moment…'}</small> : null}
+            </article>
+          ) : null}
+
+          {activePowerCopy && powerPopKind ? (
+            <div className={'phieng-world__power-pop is-' + powerPopKind} role="status">
+              <span>{activePowerCopy.effect[language]}</span>
+              <strong>{activePowerCopy.name[language]}</strong>
+              <small>{activePowerCopy.tagline[language]}</small>
             </div>
           ) : null}
 
-          {activeCallout && ui.callout ? (
-            <div className={`phieng-game__power-callout is-${ui.callout}`} role="status">
-              <span>{activeCallout.effect[language]}</span>
-              <strong>{activeCallout.name[language]}</strong>
-              <small>{activeCallout.tagline[language]}</small>
+          {ui.guideTarget && status === 'playing' ? (
+            <div className="phieng-world__guide-target" role="status">
+              <Compass aria-hidden="true" />
+              <span>{vi ? 'Cả bản đang chỉ về' : 'The village points toward'}</span>
+              <strong>{LANDMARK_COPY[ui.guideTarget].title[language]}</strong>
             </div>
           ) : null}
 
-          {ui.feastPhase && status === 'playing' ? (
-            <div className={`phieng-game__feast-callout is-${ui.feastPhase}`} role="status">
-              <p>{ui.feastPhase === 'meeting'
-                ? (vi ? 'GẶP MỘT MÂM NHẬU VEN ĐƯỜNG' : 'A ROADSIDE GATHERING')
-                : (vi ? 'KỸ NĂNG VÔ LÝ ĐÃ MỞ' : 'ABSURD SKILL UNLOCKED')}</p>
-              <strong>{ui.feastPhase === 'meeting'
-                ? (vi ? 'Ngồi lại một lát.' : 'Sit for a moment.')
-                : 'DZÔ!'}</strong>
-              <span>{ui.feastPhase === 'meeting'
-                ? (vi ? 'Không ai hỏi bạn đang đi đâu.' : 'Nobody asks where you are going.')
-                : (vi ? 'Hô một tiếng, cả con đường tự né.' : 'One shout, and the whole road moves aside.')}</span>
-            </div>
+          {nearbyLandmark && ui.nearby && status === 'playing' && !ui.busy && !ui.callout ? (
+            <button type="button" className="phieng-world__prompt" onPointerDown={queueInteract}>
+              <span>{ui.nearbyVisited ? (vi ? 'XEM LẠI' : 'REVISIT') : (vi ? 'KHÁM PHÁ' : 'DISCOVER')}</span>
+              <strong>{nearbyLandmark.title[language]}</strong>
+              <kbd>E</kbd>
+            </button>
           ) : null}
 
-          {ui.flash ? <div className={`phieng-game__flash is-${ui.flash}`} aria-hidden="true" /> : null}
+          {ui.flash ? <div className={'phieng-world__flash is-' + ui.flash} aria-hidden="true" /> : null}
 
           {status === 'intro' ? (
-            <div className="phieng-game__overlay is-intro">
-              <p>{vi ? 'MỘT CHUYẾN ĐI 2D QUA BẢN' : 'A 2D JOURNEY THROUGH THE VILLAGE'}</p>
-              <h2>{vi ? 'Đi qua Phiêng Lơi trước khi trời tối.' : 'Cross Phiêng Lơi before nightfall.'}</h2>
-              <div>{vi ? 'Bạn sẽ gặp mâm nhậu ngay đầu bản, rồi đi qua đồng ngô, ruộng bậc thang, cọn nước, bến suối, bảo tàng và tượng đài.' : 'Meet a roadside gathering near the village entrance, then cross cornfields, terraces, a waterwheel, the stream, museum and monument.'}</div>
-              <div className="phieng-game__intro-controls">
-                <span>← → / A D</span><span>{vi ? 'Space · Nhảy' : 'Space · Jump'}</span><span>Shift · {vi ? 'Lướt' : 'Dash'}</span><span>E · DZÔ!</span><span>♬ Piano · Ính lả ơi</span>
+            <div className="phieng-world__overlay is-intro">
+              <p>{vi ? 'THẾ GIỚI MỞ THU NHỎ · 2D PIXEL' : 'COMPACT OPEN WORLD · 2D PIXEL'}</p>
+              <h2>{vi ? 'Không chạy qua Điện Biên. Hãy ở lại và khám phá.' : 'Do not race through Dien Bien. Stay and explore.'}</h2>
+              <div>
+                {vi
+                  ? 'Mười hai địa điểm đều mở ngay từ đầu: nhà sàn, mâm bên đường, bí xanh Tìa Dình, ruộng bậc thang, cọn nước, bến suối, cà phê Mường Ảng, bảo tàng, tượng đài và nhiều hơn nữa.'
+                  : 'All twelve places are open from the start: stilt houses, a roadside table, Tia Dinh squash, terraces, waterwheel, stream, Muong Ang coffee, museum, monument and more.'}
               </div>
-              <button type="button" onClick={startGame}>{vi ? 'Bắt đầu hành trình' : 'Start the journey'}<ArrowLeft className="is-forward" aria-hidden="true" /></button>
+              <ul className="phieng-world__intro-grid">
+                <li><strong>{vi ? 'Tự do chọn hướng' : 'Choose any direction'}</strong><span>{vi ? 'Không có đường chạy cố định' : 'No fixed running lane'}</span></li>
+                <li><strong>{vi ? 'Tới gần rồi chạm' : 'Approach and interact'}</strong><span>{vi ? 'Mỗi nơi có một phản ứng riêng' : 'Every place responds differently'}</span></li>
+                <li><strong>{vi ? 'Một tay vẫn chơi được' : 'Playable with one hand'}</strong><span>{vi ? 'Joystick trái, hành động phải' : 'Left stick, right actions'}</span></li>
+                <li><strong>{vi ? 'Piano Ính lả ơi' : 'Ính lả ơi piano'}</strong><span>{vi ? 'Âm nhạc đổi theo khu vực' : 'Music changes by area'}</span></li>
+              </ul>
+              <div className="phieng-world__intro-controls">
+                <span>WASD / ↑↓←→</span><span>E / Space · {vi ? 'Tương tác' : 'Interact'}</span><span>Shift · {vi ? 'Lướt' : 'Dash'}</span><span>Q · ƠI!</span>
+              </div>
+              <button type="button" onClick={startGame}>{vi ? 'Bước vào bản đồ' : 'Enter the map'}<ArrowLeft className="is-forward" aria-hidden="true" /></button>
             </div>
           ) : null}
 
           {status === 'paused' ? (
-            <div className="phieng-game__overlay is-pause">
+            <div className="phieng-world__overlay is-pause">
               <p>{vi ? 'ĐANG TẠM DỪNG' : 'PAUSED'}</p>
               <h2>{ZONE_COPY[ui.zone][language]}</h2>
+              <div>{vi ? 'Mọi địa điểm vẫn mở. Đi tiếp theo hướng bạn muốn.' : 'Every place remains open. Continue in any direction.'}</div>
               <button type="button" onClick={togglePause}><Play aria-hidden="true" />{vi ? 'Đi tiếp' : 'Continue'}</button>
             </div>
           ) : null}
 
           {status === 'completed' ? (
-            <div className="phieng-game__overlay is-result">
+            <div className="phieng-world__overlay is-result">
               <Sparkles aria-hidden="true" />
-              <p>{vi ? 'ĐÃ ĐI QUA BẢN' : 'JOURNEY COMPLETE'}</p>
-              <h2>PHIÊNG LƠI</h2>
-              <div>{vi ? 'Một bản của người Thái bên lòng chảo Điện Biên.' : 'A Thai village beside the Dien Bien basin.'}</div>
-              <ul className="phieng-game__memory-list">
-                <li>{vi ? 'Nhà sàn' : 'Stilt houses'}</li>
-                <li>{vi ? 'Đồng ngô' : 'Cornfields'}</li>
-                <li>{vi ? 'Ruộng bậc thang' : 'Rice terraces'}</li>
-                <li>{vi ? 'Cọn nước' : 'Waterwheel'}</li>
-                <li>{vi ? 'Bến suối' : 'Stream'}</li>
-                <li>{vi ? 'Mâm nhậu ven đường' : 'Roadside gathering'}</li>
-                <li>{vi ? 'Bảo tàng' : 'Museum'}</li>
-                <li>{vi ? 'Tượng đài' : 'Monument'}</li>
-              </ul>
+              <p>{vi ? 'BẢN ĐỒ ĐÃ CÓ TIẾNG NÓI' : 'THE MAP HAS FOUND ITS VOICE'}</p>
+              <h2>{vi ? 'Bạn đã gặp đủ một Điện Biên rất đời thường.' : 'You found an everyday Dien Bien.'}</h2>
+              <div>
+                {vi
+                  ? 'Đây là kết thúc của lượt khám phá, không phải một khoá. Book và GPS vẫn luôn có thể mở trực tiếp từ màn chính.'
+                  : 'This ends the journey, not a lock. Book and GPS always remain directly available from the main screen.'}
+              </div>
               <nav>
-                <Link to="/book"><BookOpen aria-hidden="true" />{vi ? 'Đi tiếp vào Book' : 'Continue to Book'}</Link>
-                <button type="button" onClick={startGame}><RotateCcw aria-hidden="true" />{vi ? 'Chơi lại' : 'Play again'}</button>
+                <Link to="/book"><BookOpen aria-hidden="true" />{vi ? 'Mở Book' : 'Open Book'}</Link>
+                <button type="button" onClick={startGame}><RotateCcw aria-hidden="true" />{vi ? 'Đi lại một vòng' : 'Explore again'}</button>
                 <Link to={PHIENG_LOI_CHALLENGE_PATH} className="is-tertiary"><MapPin aria-hidden="true" />{vi ? 'Ghé điểm thật' : 'Visit the real place'}</Link>
               </nav>
             </div>
           ) : null}
 
-          {status === 'failed' ? (
-            <div className="phieng-game__overlay is-result">
-              <p>{vi ? 'DỪNG CHÂN MỘT CHÚT' : 'TAKE A BREATH'}</p>
-              <h2>{vi ? 'Con đường vẫn ở đây.' : 'The path is still here.'}</h2>
-              <div>{vi ? 'Thử lại từ đầu bản — những sản vật bạn gặp sẽ vẫn theo đúng thứ tự.' : 'Try again from the village entrance — each power-up will return in the same order.'}</div>
-              <button type="button" onClick={startGame}><RotateCcw aria-hidden="true" />{vi ? 'Thử lại' : 'Try again'}</button>
-            </div>
-          ) : null}
-
           {status === 'playing' ? (
-            <div className={`phieng-game__mobile-controls${showTouchGuide ? ' is-guiding' : ''}`} aria-label={vi ? 'Điều khiển kiểu MOBA' : 'MOBA-style controls'}>
+            <div className={'phieng-world__controls' + (showGuide ? ' is-guiding' : '')} aria-label={vi ? 'Điều khiển kiểu MOBA' : 'MOBA-style controls'}>
               <div
-                className="phieng-game__joystick"
+                className="phieng-world__joystick"
                 role="group"
-                aria-label={vi ? 'Joystick di chuyển' : 'Movement joystick'}
+                aria-label={vi ? 'Joystick di chuyển tự do' : 'Free movement joystick'}
                 onPointerDown={startJoystick}
                 onPointerMove={moveJoystick}
                 onPointerUp={releaseJoystick}
                 onPointerCancel={releaseJoystick}
                 onLostPointerCapture={releaseJoystick}
               >
-                <span className="phieng-game__joystick-ring" aria-hidden="true">
-                  <i style={{ transform: `translate(${joystick.x * 1.25}rem, ${joystick.y * 1.25}rem)` }} />
+                <span className="phieng-world__joystick-ring" aria-hidden="true">
+                  <i style={{ transform: 'translate(' + String(joystick.x * 1.2) + 'rem, ' + String(joystick.y * 1.2) + 'rem)' }} />
                 </span>
-                <small>{vi ? 'DI CHUYỂN' : 'MOVE'}</small>
+                <small>{vi ? 'ĐI BẤT KỲ HƯỚNG NÀO' : 'MOVE ANY DIRECTION'}</small>
               </div>
-              <div className="phieng-game__actions">
+              <div className="phieng-world__actions">
+                <button
+                  type="button"
+                  className={'is-call' + (ui.cheerActive ? ' is-active' : '')}
+                  aria-label={ui.cheerUnlocked ? (vi ? 'Gọi cả bản chỉ hướng' : 'Ask the village for directions') : (vi ? 'Kỹ năng ƠI! chưa mở' : 'HEY! skill locked')}
+                  disabled={!ui.cheerUnlocked || ui.cheerCooldown > 0}
+                  onPointerDown={queueCheer}
+                >
+                  <i style={{ transform: 'scaleY(' + String(ui.cheerCooldown) + ')' }} aria-hidden="true" />
+                  <strong>{ui.cheerUnlocked ? 'ƠI!' : '🔒'}</strong>
+                  <small>{ui.cheerUnlocked ? (vi ? 'CHỈ LỐI' : 'GUIDE') : (vi ? 'NGỒI MÂM' : 'SIT FIRST')}</small>
+                </button>
+                <button
+                  type="button"
+                  className={'is-interact' + (ui.nearby ? ' is-ready' : '')}
+                  aria-label={nearbyLandmark ? nearbyLandmark.title[language] : (vi ? 'Tương tác' : 'Interact')}
+                  disabled={!ui.nearby || ui.busy}
+                  onPointerDown={queueInteract}
+                >
+                  <strong>{vi ? 'CHẠM' : 'ACT'}</strong>
+                  <small>{ui.nearby ? '!' : '…'}</small>
+                </button>
                 <button
                   type="button"
                   className="is-dash"
                   aria-label={vi ? 'Lướt nhanh' : 'Dash'}
-                  disabled={ui.dashCooldown > 0}
+                  disabled={ui.dashCooldown > 0 || ui.busy}
                   onPointerDown={queueDash}
                 >
-                  <i style={{ transform: `scaleY(${ui.dashCooldown})` }} aria-hidden="true" />
+                  <i style={{ transform: 'scaleY(' + String(ui.dashCooldown) + ')' }} aria-hidden="true" />
                   <strong>{vi ? 'LƯỚT' : 'DASH'}</strong>
-                  <small>{ui.dashCooldown > 0 ? Math.ceil(ui.dashCooldown * 3.2) : '↗'}</small>
-                </button>
-                <button type="button" className="is-jump" aria-label={vi ? 'Nhảy' : 'Jump'} onPointerDown={queueJump}>
-                  <strong>{vi ? 'NHẢY' : 'JUMP'}</strong><small>↑</small>
-                </button>
-                <button
-                  type="button"
-                  className={`is-cheer${ui.cheerActive ? ' is-active' : ''}`}
-                  aria-label={ui.cheerUnlocked ? 'DZÔ!' : (vi ? 'Kỹ năng DZÔ! chưa mở' : 'DZÔ! skill locked')}
-                  disabled={!ui.cheerUnlocked || ui.cheerCooldown > 0}
-                  onPointerDown={queueCheer}
-                >
-                  <i style={{ transform: `scaleY(${ui.cheerCooldown})` }} aria-hidden="true" />
-                  <strong>{ui.cheerUnlocked ? 'DZÔ!' : '🔒'}</strong>
-                  <small>{ui.cheerUnlocked
-                    ? (ui.cheerCooldown > 0 ? Math.ceil(ui.cheerCooldown * 10) : (vi ? 'NÉ!' : 'MOVE!'))
-                    : (vi ? 'CHƯA MỞ' : 'LOCKED')}</small>
+                  <small>{ui.dashCooldown > 0 ? String(Math.ceil(ui.dashCooldown * 3)) : '↗'}</small>
                 </button>
               </div>
-              {showTouchGuide ? <p>{vi ? 'Ngón trái điều hướng · Ngón phải nhảy và dùng kỹ năng' : 'Left thumb moves · Right thumb jumps and uses skills'}</p> : null}
+              {showGuide ? <p>{vi ? 'Ngón trái đi 360° · Ngón phải chạm, lướt và gọi bản' : 'Left thumb moves 360° · Right thumb acts, dashes and calls'}</p> : null}
             </div>
           ) : null}
         </div>
       </section>
 
-      <footer className="phieng-game__footer">
-        <span>{vi ? `Pixel Canvas 2D · Piano Ính lả ơi · ${profile.quality === 'low' ? 'chất lượng thích ứng' : 'chi tiết cao'}` : `Pixel Canvas 2D · Ính lả ơi piano · ${profile.quality === 'low' ? 'adaptive quality' : 'high detail'}`}</span>
+      <footer className="phieng-world__footer">
+        <span>{vi ? 'Pixel Canvas 480×270 · Không tải engine ngoài · Bản đồ ký ức không theo tỉ lệ' : 'Pixel Canvas 480×270 · No external engine · Memory map not to scale'}</span>
         <nav><Link to="/1954">1954</Link><Link to="/book">BOOK</Link></nav>
       </footer>
 
       {needsLandscape ? (
-        <div className="phieng-game__rotate" role="dialog" aria-modal="true" aria-label={vi ? 'Xoay điện thoại' : 'Rotate your phone'}>
+        <div className="phieng-world__rotate" role="dialog" aria-modal="true" aria-label={vi ? 'Xoay điện thoại' : 'Rotate your phone'}>
           <RotateCw aria-hidden="true" />
           <strong>{vi ? 'Xoay điện thoại sang ngang' : 'Rotate your phone'}</strong>
-          <span>{vi ? 'Phiêng Lơi được thiết kế để chơi ở chế độ landscape.' : 'Phiêng Lơi is designed for landscape play.'}</span>
+          <span>{vi ? 'Bản đồ Phiêng Lơi được thiết kế để chơi ở chế độ landscape.' : 'The Phiêng Lơi map is designed for landscape play.'}</span>
         </div>
       ) : null}
     </main>
