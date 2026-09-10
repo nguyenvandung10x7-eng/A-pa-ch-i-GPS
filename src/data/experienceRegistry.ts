@@ -1,5 +1,10 @@
 import type { LanguageCode, LocalizedText } from '../types/task';
 
+/**
+ * @deprecated Archived three-peer hub registry from the PR #147 checkpoint.
+ * The Phiêng Lơi-first waiting menu intentionally has no runtime dependency on it.
+ */
+
 export type FeaturedExperienceId = '1954' | 'phieng-loi' | 'book';
 
 export type FeaturedExperience = {

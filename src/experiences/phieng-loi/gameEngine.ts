@@ -1,34 +1,19 @@
 export const VIEW_WIDTH = 480;
 export const VIEW_HEIGHT = 270;
-export const WORLD_WIDTH = 2_080;
-export const WORLD_HEIGHT = 1_280;
+export const WORLD_WIDTH = 1_680;
+export const WORLD_HEIGHT = 920;
 
-const PLAYER_START_X = 920;
-const PLAYER_START_Y = 700;
-const INTERACTION_RADIUS = 48;
-const DASH_DURATION = 0.28;
-const DASH_COOLDOWN = 2.6;
-const CALL_DURATION = 3.8;
-const CALL_COOLDOWN = 8;
-const FEAST_DURATION = 3.1;
-const CAMERA_VERTICAL_ANCHOR = 0.62;
+const PLAYER_START_X = 92;
+const PLAYER_START_Y = 486;
+const PLAYER_SPEED = 67;
+const CAMERA_VERTICAL_ANCHOR = 0.58;
+const SAVE_VERSION = 1;
 
-export type PowerKind = 'squash' | 'coffee' | 'macadamia' | 'tea' | 'buffalo';
-export type ZoneKind = 0 | 1 | 2 | 3;
 export type GameQuality = 'low' | 'high';
-export type LandmarkKind =
-  | 'stilt-house'
-  | 'feast'
-  | 'buffalo-kitchen'
-  | 'squash-field'
-  | 'terraces'
-  | 'macadamia-grove'
-  | 'tea-hut'
-  | 'waterwheel'
-  | 'stream-girl'
-  | 'coffee-hill'
-  | 'museum'
-  | 'monument';
+export type PowerKind = 'squash' | 'coffee' | 'macadamia';
+export type HeeSunMode = 'waiting' | 'intro' | 'chasing' | 'distracted' | 'drinking' | 'ambush';
+export type SceneKind = 'none' | 'heesun-intro' | 'capture' | 'stream';
+export type MessageTone = 'plain' | 'heesun' | 'hanu' | 'chief' | 'stream' | 'ocop' | 'world';
 
 export type InputState = {
   left: boolean;
@@ -37,9 +22,17 @@ export type InputState = {
   down: boolean;
   moveX: number;
   moveY: number;
-  interactQueued: boolean;
-  dashQueued: boolean;
-  cheerQueued: boolean;
+  callQueued: boolean;
+};
+
+type LocalizedMessage = {
+  id: number;
+  speakerVi: string;
+  speakerEn: string;
+  textVi: string;
+  textEn: string;
+  tone: MessageTone;
+  expiresAt: number;
 };
 
 type PlayerState = {
@@ -52,6 +45,41 @@ type PlayerState = {
   walk: number;
 };
 
+type HeeSunState = {
+  x: number;
+  y: number;
+  mode: HeeSunMode;
+  modeUntil: number;
+  met: boolean;
+  caught: number;
+  scale: number;
+  speedBoostUntil: number;
+  nextAmbushAt: number;
+};
+
+type HaNuState = {
+  x: number;
+  y: number;
+  waypoint: number;
+  lineIndex: number;
+  nextLineAt: number;
+  revealReadyAt: number;
+  lastCollisionAt: number;
+  saidAtStream: boolean;
+};
+
+type FeastState = {
+  x: number;
+  y: number;
+  encounters: number;
+  pendingRelocate: boolean;
+  relocateAt: number;
+  nextTriggerAt: number;
+};
+
+type ChickenState = { panicStartedAt: number; panicUntil: number };
+type SceneState = { kind: SceneKind; startedAt: number; stage: number };
+
 type Particle = {
   x: number;
   y: number;
@@ -59,162 +87,125 @@ type Particle = {
   vy: number;
   life: number;
   maxLife: number;
+  color: string;
   size: number;
-  color: string;
-  kind: 'square' | 'leaf' | 'water' | 'note';
-};
-
-type AmbientActor = {
-  x: number;
-  y: number;
-  phase: number;
-  kind: 'chicken' | 'buffalo' | 'dog' | 'villager';
-  color: string;
-};
-
-type SceneryProp = {
-  x: number;
-  y: number;
-  variant: number;
-  kind: 'tree' | 'bamboo' | 'rock' | 'flower';
-};
-
-type PoiDefinition = {
-  kind: LandmarkKind;
-  x: number;
-  y: number;
-  zone: ZoneKind;
-  power?: PowerKind;
+  kind: 'dust' | 'leaf' | 'note' | 'splash' | 'crumb';
 };
 
 export type GameEvent =
-  | {
-    type:
-      | 'dash'
-      | 'complete'
-      | 'feast-start'
-      | 'feast-finish'
-      | 'cheer'
-      | 'token'
-      | 'interact'
-      | 'jump'
-      | 'land'
-      | 'hit'
-      | 'shield-break'
-      | 'break';
-  }
-  | { type: 'power-start' | 'power-end'; power: PowerKind }
-  | { type: 'zone-change'; zone: ZoneKind }
-  | { type: 'landmark'; landmark: LandmarkKind };
+  | { type: 'pha-oi' | 'footstep' | 'crunch' | 'chicken-panic' | 'chase-start' | 'chase-stop' | 'capture' | 'reset' | 'phone' | 'domino' | 'stream' | 'feast' | 'exit' }
+  | { type: 'power-start' | 'power-end'; power: PowerKind };
 
-export type ActivePower = { kind: PowerKind; remaining: number };
-
-export type MapPoint = {
-  kind: LandmarkKind;
-  x: number;
-  y: number;
-  discovered: boolean;
+export type GameSave = {
+  version: number;
+  player: { x: number; y: number; facingX: number; facingY: number };
+  elapsed: number;
+  absurdityScore: number;
+  callCount: number;
+  triggered: string[];
+  feast: Pick<FeastState, 'x' | 'y' | 'encounters'> & { pendingRelocate?: boolean };
+  heesun: Pick<HeeSunState, 'x' | 'y' | 'mode' | 'met' | 'caught' | 'scale'>;
+  hanu: Pick<HaNuState, 'x' | 'y' | 'waypoint' | 'lineIndex' | 'saidAtStream'>;
+  leaderStarted: boolean;
+  streamSeen: boolean;
+  gateOpen: boolean;
+  dominoStartedAt: number;
+  powerRemaining?: Partial<Record<PowerKind, number>>;
+  squashSequence?: { age: number; stage: number };
+  complete: boolean;
 };
 
 export type UiSnapshot = {
-  progress: number;
-  zone: ZoneKind;
   elapsed: number;
-  memories: number;
-  totalMemories: number;
-  powers: ActivePower[];
-  callout: LandmarkKind | null;
-  flash: PowerKind | 'cheer' | null;
-  dashCooldown: number;
-  cheerCooldown: number;
-  cheerUnlocked: boolean;
-  cheerActive: boolean;
-  nearby: LandmarkKind | null;
-  nearbyVisited: boolean;
-  busy: boolean;
-  guideTarget: LandmarkKind | null;
-  playerMapX: number;
-  playerMapY: number;
-  mapPoints: MapPoint[];
-  discovered: LandmarkKind[];
+  message: LocalizedMessage | null;
+  callSerial: number;
+  callActive: boolean;
+  replyActive: boolean;
+  cinematicVi: string | null;
+  cinematicEn: string | null;
+  scene: SceneKind;
+  sceneAge: number;
+  leaderClock: string | null;
+  chiefSpeaking: boolean;
+  power: PowerKind | null;
+  powerRemaining: number;
+  chasing: boolean;
+  caught: number;
+  complete: boolean;
 };
 
 export type GameState = {
   player: PlayerState;
+  heesun: HeeSunState;
+  hanu: HaNuState;
+  feast: FeastState;
+  chicken: ChickenState;
+  scene: SceneState;
   elapsed: number;
   worldTime: number;
   cameraX: number;
   cameraY: number;
-  zone: ZoneKind;
-  discovered: Set<LandmarkKind>;
-  activePoi: LandmarkKind | null;
-  activePoiUntil: number;
-  nearbyPoi: LandmarkKind | null;
-  activity: 'feast' | null;
-  activityUntil: number;
-  completionAt: number;
-  powerUntil: Record<PowerKind, number>;
-  dashUntil: number;
-  dashReadyAt: number;
-  cheerUntil: number;
-  cheerReadyAt: number;
-  cheerUnlocked: boolean;
-  flashUntil: number;
-  flashKind: PowerKind | 'cheer' | null;
-  particles: Particle[];
   quality: GameQuality;
   reducedMotion: boolean;
+  message: LocalizedMessage | null;
+  messageSerial: number;
+  callSerial: number;
+  callPulseUntil: number;
+  replyPulseUntil: number;
+  delayedFarReplyAt: number;
+  lastCallAt: number;
+  rapidCalls: number;
+  callCount: number;
+  absurdityScore: number;
+  absurdityLevel: 0 | 1 | 2 | 3;
+  nextTimeEscalationAt: number;
+  triggered: Set<string>;
+  leaderStartedAt: number;
+  streamStartedAt: number;
+  fishBoost: number;
+  gateOpen: boolean;
+  dominoStartedAt: number;
+  powerUntil: Record<PowerKind, number>;
+  squashSequenceAt: number;
+  squashSequenceStage: number;
+  nextFootstepAt: number;
+  nextCrunchAt: number;
+  shakeUntil: number;
+  particles: Particle[];
   complete: boolean;
 };
 
-export const POWER_DURATION: Record<PowerKind, number> = {
-  squash: 12,
-  coffee: 13,
-  macadamia: 14,
-  tea: 15,
-  buffalo: 12,
-};
+const POWER_DURATION: Record<PowerKind, number> = { squash: 11, coffee: 12, macadamia: 12 };
 
-export const POWER_KINDS: PowerKind[] = ['squash', 'coffee', 'macadamia', 'tea', 'buffalo'];
-
-export const LANDMARK_KINDS: LandmarkKind[] = [
-  'stilt-house',
-  'feast',
-  'buffalo-kitchen',
-  'squash-field',
-  'terraces',
-  'macadamia-grove',
-  'tea-hut',
-  'waterwheel',
-  'stream-girl',
-  'coffee-hill',
-  'museum',
-  'monument',
+const HOUSES = [
+  { x: 210, y: 260, width: 170, height: 94 },
+  { x: 455, y: 126, width: 152, height: 84 },
+  { x: 760, y: 548, width: 175, height: 96 },
+  { x: 1_260, y: 112, width: 158, height: 88 },
 ];
 
-const POIS: PoiDefinition[] = [
-  { kind: 'stilt-house', x: 520, y: 530, zone: 0 },
-  { kind: 'feast', x: 860, y: 680, zone: 0 },
-  { kind: 'buffalo-kitchen', x: 690, y: 745, zone: 0, power: 'buffalo' },
-  { kind: 'squash-field', x: 265, y: 270, zone: 1, power: 'squash' },
-  { kind: 'terraces', x: 1_020, y: 235, zone: 1 },
-  { kind: 'macadamia-grove', x: 1_210, y: 520, zone: 1, power: 'macadamia' },
-  { kind: 'tea-hut', x: 820, y: 345, zone: 1, power: 'tea' },
-  { kind: 'waterwheel', x: 1_385, y: 500, zone: 2 },
-  { kind: 'stream-girl', x: 1_675, y: 655, zone: 2 },
-  { kind: 'coffee-hill', x: 1_775, y: 1_025, zone: 3, power: 'coffee' },
-  { kind: 'museum', x: 445, y: 1_045, zone: 3 },
-  { kind: 'monument', x: 870, y: 1_055, zone: 3 },
+const HOUSE_CALL_POINTS = [
+  { x: 295, y: 370 },
+  { x: 530, y: 220 },
+  { x: 845, y: 660 },
+  { x: 1_340, y: 210 },
 ];
 
-const AMBIENT_ACTORS: AmbientActor[] = [
-  { x: 748, y: 595, phase: 0.2, kind: 'chicken', color: '#cf783e' },
-  { x: 790, y: 620, phase: 1.6, kind: 'chicken', color: '#e8c167' },
-  { x: 610, y: 650, phase: 2.4, kind: 'dog', color: '#8a613d' },
-  { x: 1_125, y: 645, phase: 0.8, kind: 'buffalo', color: '#493b31' },
-  { x: 1_590, y: 485, phase: 1.2, kind: 'villager', color: '#7f4052' },
-  { x: 1_820, y: 940, phase: 3.1, kind: 'villager', color: '#315e65' },
-  { x: 510, y: 920, phase: 4.2, kind: 'villager', color: '#9d5941' },
+const OCOP_ITEMS: Array<{ kind: PowerKind; x: number; y: number }> = [
+  { kind: 'squash', x: 585, y: 602 },
+  { kind: 'coffee', x: 942, y: 335 },
+  { kind: 'macadamia', x: 1_335, y: 525 },
+];
+
+const HANU_PATH = [
+  { x: 650, y: 462 },
+  { x: 792, y: 445 },
+  { x: 1_060, y: 650 },
+  { x: 1_210, y: 595 },
+  { x: 1_300, y: 388 },
+  { x: 980, y: 276 },
+  { x: 710, y: 320 },
+  { x: 520, y: 560 },
 ];
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -224,54 +215,29 @@ const hash2 = (x: number, y: number) => {
   return value - Math.floor(value);
 };
 
-const scenery: SceneryProp[] = (() => {
-  const props: SceneryProp[] = [];
-  for (let y = 44; y < WORLD_HEIGHT - 36; y += 42) {
-    for (let x = 42; x < WORLD_WIDTH - 36; x += 44) {
-      const chance = hash2(x, y);
-      const edge = x < 125 || x > WORLD_WIDTH - 135 || y < 120 || y > WORLD_HEIGHT - 90;
-      const grove = (x > 1_690 && y > 900) || (x > 1_100 && x < 1_330 && y > 390 && y < 620);
-      const clearVillage = x > 380 && x < 1_020 && y > 430 && y < 820;
-      const clearCity = x > 260 && x < 1_050 && y > 850;
-      const clearRiver = x > 1_310 && x < 1_560;
-      if ((edge && chance > 0.38) || (grove && chance > 0.52) || (!clearVillage && !clearCity && !clearRiver && chance > 0.88)) {
-        const kind: SceneryProp['kind'] =
-          chance > 0.95 ? 'bamboo' : chance > 0.9 ? 'tree' : chance > 0.87 ? 'rock' : 'flower';
-        props.push({
-          x: x + Math.floor(hash2(y, x) * 20 - 10),
-          y: y + Math.floor(hash2(x + 9, y - 7) * 18 - 9),
-          variant: Math.floor(chance * 5),
-          kind,
-        });
-      }
-    }
-  }
-  return props;
-})();
-
-const solidRects = [
-  { x: 420, y: 365, width: 205, height: 118 },
-  { x: 705, y: 455, width: 165, height: 100 },
-  { x: 560, y: 820, width: 150, height: 86 },
-  { x: 330, y: 880, width: 230, height: 128 },
-  { x: 760, y: 870, width: 220, height: 118 },
-  { x: 1_690, y: 900, width: 176, height: 84 },
-];
-
-const riverCenterX = (y: number) => 1_475 + Math.sin(y * 0.008) * 42;
-const isBridgeY = (y: number) => (y > 455 && y < 535) || (y > 835 && y < 915);
-
-const isBlocked = (x: number, y: number) => {
-  if (x < 28 || y < 38 || x > WORLD_WIDTH - 28 || y > WORLD_HEIGHT - 26) return true;
-  if (!isBridgeY(y) && Math.abs(x - riverCenterX(y)) < 34) return true;
-  return solidRects.some((rect) => x > rect.x - 7 && x < rect.x + rect.width + 7 && y > rect.y - 5 && y < rect.y + rect.height + 8);
+const absurdityFromScore = (score: number): 0 | 1 | 2 | 3 => {
+  if (score >= 12) return 3;
+  if (score >= 7) return 2;
+  if (score >= 3) return 1;
+  return 0;
 };
 
-const zoneAt = (x: number, y: number): ZoneKind => {
-  if (x > 1_330 && y < 900) return 2;
-  if (y > 820) return 3;
-  if (y < 470 || x < 355) return 1;
-  return 0;
+const addAbsurdity = (game: GameState, amount: number) => {
+  game.absurdityScore += amount;
+  game.absurdityLevel = absurdityFromScore(game.absurdityScore);
+};
+
+const setMessage = (
+  game: GameState,
+  speakerVi: string,
+  speakerEn: string,
+  textVi: string,
+  textEn: string,
+  tone: MessageTone,
+  duration = 2.7,
+) => {
+  game.messageSerial += 1;
+  game.message = { id: game.messageSerial, speakerVi, speakerEn, textVi, textEn, tone, expiresAt: game.elapsed + duration };
 };
 
 const addParticles = (
@@ -280,29 +246,630 @@ const addParticles = (
   y: number,
   colors: string[],
   count: number,
-  kind: Particle['kind'] = 'square',
+  kind: Particle['kind'],
   strength = 28,
 ) => {
-  const qualityFactor = game.quality === 'low' ? 0.55 : 1;
-  const motionFactor = game.reducedMotion ? 0.35 : 1;
-  const actual = Math.max(2, Math.round(count * qualityFactor * motionFactor));
-  const limit = game.quality === 'low' ? 55 : 110;
+  const qualityScale = game.quality === 'low' ? 0.55 : 1;
+  const motionScale = game.reducedMotion ? 0.3 : 1;
+  const actual = Math.max(2, Math.round(count * qualityScale * motionScale));
+  const limit = game.quality === 'low' ? 70 : 145;
   for (let index = 0; index < actual && game.particles.length < limit; index += 1) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = strength * (0.3 + Math.random() * 0.75);
+    const speed = strength * (0.35 + Math.random() * 0.75);
     const life = 0.45 + Math.random() * 0.85;
     game.particles.push({
       x,
       y,
       vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - strength * 0.16,
+      vy: Math.sin(angle) * speed - strength * 0.18,
       life,
       maxLife: life,
-      size: 1 + Math.floor(Math.random() * 2),
       color: colors[Math.floor(Math.random() * colors.length)],
+      size: 1 + Math.floor(Math.random() * 2),
       kind,
     });
   }
+};
+
+const defaultGame = (quality: GameQuality, reducedMotion: boolean): GameState => ({
+  player: { x: PLAYER_START_X, y: PLAYER_START_Y, vx: 0, vy: 0, facingX: 1, facingY: 0, walk: 0 },
+  heesun: {
+    x: 365,
+    y: 456,
+    mode: 'waiting',
+    modeUntil: 0,
+    met: false,
+    caught: 0,
+    scale: 1,
+    speedBoostUntil: 0,
+    nextAmbushAt: 62,
+  },
+  hanu: {
+    x: HANU_PATH[0].x,
+    y: HANU_PATH[0].y,
+    waypoint: 1,
+    lineIndex: 0,
+    nextLineAt: 5,
+    revealReadyAt: 0,
+    lastCollisionAt: 0,
+    saidAtStream: false,
+  },
+  feast: { x: 515, y: 432, encounters: 0, pendingRelocate: false, relocateAt: 0, nextTriggerAt: 0 },
+  chicken: { panicStartedAt: 0, panicUntil: 0 },
+  scene: { kind: 'none', startedAt: 0, stage: 0 },
+  elapsed: 0,
+  worldTime: 0,
+  cameraX: 0,
+  cameraY: clamp(PLAYER_START_Y - VIEW_HEIGHT * CAMERA_VERTICAL_ANCHOR, 0, WORLD_HEIGHT - VIEW_HEIGHT),
+  quality,
+  reducedMotion,
+  message: null,
+  messageSerial: 0,
+  callSerial: 0,
+  callPulseUntil: 0,
+  replyPulseUntil: 0,
+  delayedFarReplyAt: 0,
+  lastCallAt: -10,
+  rapidCalls: 0,
+  callCount: 0,
+  absurdityScore: 0,
+  absurdityLevel: 0,
+  nextTimeEscalationAt: 38,
+  triggered: new Set<string>(),
+  leaderStartedAt: 0,
+  streamStartedAt: 0,
+  fishBoost: 0,
+  gateOpen: false,
+  dominoStartedAt: 0,
+  powerUntil: { squash: 0, coffee: 0, macadamia: 0 },
+  squashSequenceAt: 0,
+  squashSequenceStage: 0,
+  nextFootstepAt: 0,
+  nextCrunchAt: 0,
+  shakeUntil: 0,
+  particles: [],
+  complete: false,
+});
+
+export const createGame = (quality: GameQuality, reducedMotion: boolean, save?: GameSave | null): GameState => {
+  const game = defaultGame(quality, reducedMotion);
+  if (!save || save.version !== SAVE_VERSION || save.complete) return game;
+
+  game.player.x = clamp(save.player.x, 32, WORLD_WIDTH - 32);
+  game.player.y = clamp(save.player.y, 42, WORLD_HEIGHT - 32);
+  game.player.facingX = save.player.facingX;
+  game.player.facingY = save.player.facingY;
+  game.elapsed = Math.max(0, save.elapsed);
+  game.worldTime = game.elapsed;
+  game.absurdityScore = Math.max(0, save.absurdityScore);
+  game.absurdityLevel = absurdityFromScore(game.absurdityScore);
+  game.callCount = Math.max(0, save.callCount);
+  game.triggered = new Set(save.triggered);
+  game.feast.x = save.feast.x;
+  game.feast.y = save.feast.y;
+  game.feast.encounters = save.feast.encounters;
+  game.feast.pendingRelocate = save.feast.pendingRelocate ?? false;
+  game.feast.relocateAt = game.feast.pendingRelocate ? game.elapsed + 1.1 : 0;
+  game.heesun.x = save.heesun.x;
+  game.heesun.y = save.heesun.y;
+  game.heesun.mode = save.heesun.mode === 'intro' || save.heesun.mode === 'ambush' ? 'waiting' : save.heesun.mode;
+  game.heesun.met = save.heesun.met;
+  game.heesun.caught = save.heesun.caught;
+  game.heesun.scale = save.heesun.scale;
+  game.heesun.modeUntil = game.heesun.mode === 'drinking' ? game.elapsed + 8 : 0;
+  game.heesun.nextAmbushAt = game.elapsed + 34;
+  game.hanu.x = save.hanu.x;
+  game.hanu.y = save.hanu.y;
+  game.hanu.waypoint = save.hanu.waypoint;
+  game.hanu.lineIndex = save.hanu.lineIndex;
+  game.hanu.saidAtStream = save.hanu.saidAtStream;
+  game.hanu.nextLineAt = game.elapsed + 4;
+  game.leaderStartedAt = save.leaderStarted ? game.elapsed - 20 : 0;
+  game.streamStartedAt = save.streamSeen ? Math.max(0.001, game.elapsed - 12) : 0;
+  game.gateOpen = save.gateOpen;
+  game.dominoStartedAt = save.dominoStartedAt ? game.elapsed - 2 : 0;
+  (Object.keys(game.powerUntil) as PowerKind[]).forEach((power) => {
+    const remaining = Math.max(0, save.powerRemaining?.[power] ?? 0);
+    game.powerUntil[power] = remaining > 0 ? game.elapsed + remaining : 0;
+  });
+  if (game.powerUntil.squash > game.elapsed && save.squashSequence) {
+    game.squashSequenceAt = Math.max(0.001, game.elapsed - Math.max(0, save.squashSequence.age));
+    game.squashSequenceStage = clamp(Math.round(save.squashSequence.stage), 0, 2);
+  }
+  game.complete = save.complete;
+  game.nextTimeEscalationAt = game.elapsed + 32;
+  game.cameraX = clamp(game.player.x - VIEW_WIDTH / 2, 0, WORLD_WIDTH - VIEW_WIDTH);
+  game.cameraY = clamp(game.player.y - VIEW_HEIGHT * CAMERA_VERTICAL_ANCHOR, 0, WORLD_HEIGHT - VIEW_HEIGHT);
+  return game;
+};
+
+export const createSave = (game: GameState): GameSave => ({
+  version: SAVE_VERSION,
+  player: {
+    x: Math.round(game.player.x),
+    y: Math.round(game.player.y),
+    facingX: game.player.facingX,
+    facingY: game.player.facingY,
+  },
+  elapsed: game.elapsed,
+  absurdityScore: game.absurdityScore,
+  callCount: game.callCount,
+  triggered: [...game.triggered],
+  feast: {
+    x: game.feast.x,
+    y: game.feast.y,
+    encounters: game.feast.encounters,
+    pendingRelocate: game.feast.pendingRelocate,
+  },
+  heesun: {
+    x: game.heesun.x,
+    y: game.heesun.y,
+    mode: game.heesun.mode,
+    met: game.heesun.met,
+    caught: game.heesun.caught,
+    scale: game.heesun.scale,
+  },
+  hanu: {
+    x: game.hanu.x,
+    y: game.hanu.y,
+    waypoint: game.hanu.waypoint,
+    lineIndex: game.hanu.lineIndex,
+    saidAtStream: game.hanu.saidAtStream,
+  },
+  leaderStarted: game.leaderStartedAt !== 0,
+  streamSeen: game.streamStartedAt !== 0,
+  gateOpen: game.gateOpen,
+  dominoStartedAt: game.dominoStartedAt,
+  powerRemaining: {
+    squash: Math.max(0, game.powerUntil.squash - game.elapsed),
+    coffee: Math.max(0, game.powerUntil.coffee - game.elapsed),
+    macadamia: Math.max(0, game.powerUntil.macadamia - game.elapsed),
+  },
+  squashSequence: game.squashSequenceAt > 0
+    ? { age: game.elapsed - game.squashSequenceAt, stage: game.squashSequenceStage }
+    : undefined,
+  complete: game.complete,
+});
+
+const currentPower = (game: GameState): PowerKind | null => {
+  const powers = (Object.keys(game.powerUntil) as PowerKind[])
+    .filter((kind) => game.powerUntil[kind] > game.elapsed)
+    .sort((first, second) => game.powerUntil[second] - game.powerUntil[first]);
+  return powers[0] ?? null;
+};
+
+const chiefClock = (game: GameState) => {
+  if (game.leaderStartedAt === 0) return null;
+  const age = game.elapsed - game.leaderStartedAt;
+  if (age < 1.4) return '00:01';
+  if (age < 4.4) return '02:17';
+  if (age < 8.2) return '07:42';
+  return '19:36';
+};
+
+const cinematicCopy = (game: GameState): { vi: string; en: string } | null => {
+  if (game.scene.kind === 'capture') {
+    const age = game.elapsed - game.scene.startedAt;
+    if (age < 1.45) return { vi: '3 GIỜ SAU', en: '3 HOURS LATER' };
+    if (age >= 4.35) return { vi: '5 GIỜ SAU', en: '5 HOURS LATER' };
+  }
+  if (game.scene.kind === 'stream' && game.elapsed - game.scene.startedAt < 2.65) {
+    return {
+      vi: 'Người đẹp đi ra suối tắm, cá tìm về xem chân em nữa.',
+      en: 'The village beauties go down to the stream; even the fish come to see their feet.',
+    };
+  }
+  return null;
+};
+
+export const createUiSnapshot = (game: GameState): UiSnapshot => {
+  const power = currentPower(game);
+  const cinematic = cinematicCopy(game);
+  return {
+    elapsed: game.elapsed,
+    message: game.message && game.message.expiresAt > game.elapsed ? game.message : null,
+    callSerial: game.callSerial,
+    callActive: game.callPulseUntil > game.elapsed,
+    replyActive: game.replyPulseUntil > game.elapsed,
+    cinematicVi: cinematic?.vi ?? null,
+    cinematicEn: cinematic?.en ?? null,
+    scene: game.scene.kind,
+    sceneAge: game.scene.kind === 'none' ? 0 : game.elapsed - game.scene.startedAt,
+    leaderClock: chiefClock(game),
+    chiefSpeaking: game.leaderStartedAt !== 0,
+    power,
+    powerRemaining: power ? clamp((game.powerUntil[power] - game.elapsed) / POWER_DURATION[power], 0, 1) : 0,
+    chasing: game.heesun.mode === 'chasing' || game.heesun.mode === 'distracted',
+    caught: game.heesun.caught,
+    complete: game.complete,
+  };
+};
+
+const clearQueuedInput = (input: InputState) => { input.callQueued = false; };
+const riverCenterX = (y: number) => 1_105 + Math.sin(y * 0.009) * 30;
+const isBridgeY = (y: number) => (y > 402 && y < 474) || (y > 662 && y < 728);
+const solidRects = HOUSES.map((house) => ({ x: house.x - 10, y: house.y - 18, width: house.width + 20, height: house.height + 70 }));
+
+const isBlocked = (game: GameState, x: number, y: number) => {
+  if (x < 24 || y < 44 || x > WORLD_WIDTH - 24 || y > WORLD_HEIGHT - 26) return true;
+  if (!isBridgeY(y) && Math.abs(x - riverCenterX(y)) < 34) return true;
+  if (solidRects.some((rect) => x > rect.x && x < rect.x + rect.width && y > rect.y && y < rect.y + rect.height)) return true;
+  return distance(x, y, game.hanu.x, game.hanu.y) < 14;
+};
+
+const startChickenPanic = (game: GameState, events: GameEvent[]) => {
+  if (game.chicken.panicUntil > game.elapsed) return;
+  game.chicken.panicStartedAt = game.elapsed;
+  game.chicken.panicUntil = game.elapsed + 4.3;
+  game.shakeUntil = game.elapsed + 0.34;
+  addAbsurdity(game, 1.15);
+  addParticles(game, 760, 454, ['#ead08c', '#c66b3d', '#fff2c0'], 28, 'leaf', 58);
+  events.push({ type: 'chicken-panic' });
+  setMessage(game, 'CẢ BẢN', 'THE WHOLE VILLAGE', 'Không ai biết con gà đầu tiên đã báo động điều gì.', 'Nobody knows what the first chicken warned them about.', 'world', 3.1);
+  if (game.heesun.mode === 'chasing') {
+    game.heesun.mode = 'distracted';
+    game.heesun.modeUntil = game.elapsed + 2.6;
+  }
+};
+
+const startChase = (game: GameState, events: GameEvent[], shout = true) => {
+  if (game.heesun.mode === 'chasing') return;
+  game.heesun.met = true;
+  game.heesun.mode = 'chasing';
+  game.heesun.modeUntil = 0;
+  if (shout) setMessage(game, 'HEESUN', 'HEESUN', 'BẠN ƠI!', 'MY FRIEND!', 'heesun', 1.8);
+  game.shakeUntil = game.elapsed + 0.26;
+  events.push({ type: 'chase-start' });
+};
+
+const startHeeSunIntro = (game: GameState) => {
+  game.heesun.mode = 'intro';
+  game.scene = { kind: 'heesun-intro', startedAt: game.elapsed, stage: 0 };
+  setMessage(
+    game,
+    'HEESUN',
+    'HEESUN',
+    'Ôi bạn ôi, lâu lắm không gặp hay anh em ngồi tí nhỉ?',
+    'My friend! Long time no see. Shall we sit down for just a little while?',
+    'heesun',
+    2.55,
+  );
+};
+
+const startCapture = (game: GameState, events: GameEvent[]) => {
+  game.scene = { kind: 'capture', startedAt: game.elapsed, stage: 0 };
+  game.heesun.mode = 'drinking';
+  game.player.vx = 0;
+  game.player.vy = 0;
+  game.message = null;
+  game.shakeUntil = game.elapsed + 0.5;
+  events.push({ type: 'capture' });
+};
+
+const resetAfterCapture = (game: GameState, events: GameEvent[]) => {
+  game.player.x = PLAYER_START_X;
+  game.player.y = PLAYER_START_Y;
+  game.player.vx = 0;
+  game.player.vy = 0;
+  game.player.facingX = 1;
+  game.player.facingY = 0;
+  game.heesun.caught += 1;
+  game.heesun.x = game.feast.x - 30;
+  game.heesun.y = game.feast.y + 20;
+  game.heesun.mode = 'drinking';
+  game.heesun.modeUntil = game.elapsed + 13;
+  game.heesun.nextAmbushAt = game.elapsed + 42;
+  game.scene = { kind: 'none', startedAt: 0, stage: 0 };
+  game.message = null;
+  game.cameraX = 0;
+  game.cameraY = clamp(PLAYER_START_Y - VIEW_HEIGHT * CAMERA_VERTICAL_ANCHOR, 0, WORLD_HEIGHT - VIEW_HEIGHT);
+  addAbsurdity(game, 1.25);
+  events.push({ type: 'reset' });
+};
+
+const updateScene = (game: GameState, events: GameEvent[]) => {
+  if (game.scene.kind === 'none') return;
+  const age = game.elapsed - game.scene.startedAt;
+  if (game.scene.kind === 'heesun-intro') {
+    if (game.scene.stage === 0 && age >= 2.55) {
+      game.scene.stage = 1;
+      setMessage(game, 'BẠN', 'YOU', 'Thôi.', 'No.', 'plain', 0.75);
+    } else if (game.scene.stage === 1 && age >= 3.75) {
+      game.scene.stage = 2;
+      setMessage(game, 'HEESUN', 'HEESUN', 'Bạn ôi…', 'My friend…', 'heesun', 0.82);
+    } else if (game.scene.stage === 2 && age >= 4.58) {
+      game.scene = { kind: 'none', startedAt: 0, stage: 0 };
+      startChase(game, events);
+    }
+    return;
+  }
+  if (game.scene.kind === 'capture') {
+    if (game.scene.stage === 0 && age >= 1.55) game.scene.stage = 1;
+    if (game.scene.stage === 1 && age >= 2.18) {
+      game.scene.stage = 2;
+      setMessage(game, 'HEESUN', 'HEESUN', 'Làm chén cuối.', 'One last cup.', 'heesun', 2.05);
+    }
+    if (age >= 6.05) resetAfterCapture(game, events);
+    return;
+  }
+  if (game.scene.kind === 'stream') {
+    if (game.scene.stage === 0 && age >= 2.65) {
+      game.scene.stage = 1;
+      game.fishBoost = Math.max(game.fishBoost, 44);
+      setMessage(game, 'MỘT CÔ GÁI', 'ONE OF THE WOMEN', 'Hôm nay cá hơi đông.', 'The fish are a little crowded today.', 'stream', 2.45);
+    }
+    if (age >= 5.35) game.scene = { kind: 'none', startedAt: 0, stage: 0 };
+  }
+};
+
+const activatePower = (game: GameState, power: PowerKind, events: GameEvent[]) => {
+  const key = `ocop-${power}`;
+  if (game.triggered.has(key)) return;
+  game.triggered.add(key);
+  game.powerUntil[power] = game.elapsed + POWER_DURATION[power];
+  addAbsurdity(game, 1.35);
+  game.shakeUntil = game.elapsed + 0.38;
+  events.push({ type: 'power-start', power });
+  if (power === 'squash') {
+    game.squashSequenceAt = game.elapsed;
+    game.squashSequenceStage = 0;
+    setMessage(game, 'BÍ XANH TÌA DÌNH', 'TIA DINH SQUASH', 'Bạn phình lớn bất thường. Không ai tỏ ra ngạc nhiên.', 'You swell to an unreasonable size. Nobody looks surprised.', 'ocop', 2.5);
+    addParticles(game, game.player.x, game.player.y, ['#a8d35f', '#e1ef91', '#fff0a7'], 34, 'leaf', 48);
+  } else if (power === 'coffee') {
+    setMessage(game, 'CÀ PHÊ MƯỜNG ẢNG', 'MUONG ANG COFFEE', 'Cả thế giới chậm lại. Riêng HeeSun thì không.', 'The whole world slows down. HeeSun does not.', 'ocop', 3);
+    addParticles(game, game.player.x, game.player.y, ['#d56f3e', '#f3bc63', '#fff0a0'], 30, 'note', 45);
+  } else {
+    setMessage(game, 'MẮC CA ĐIỆN BIÊN', 'DIEN BIEN MACADAMIA', 'Mỗi bước chân bây giờ giòn đến mức không thể lẩn trốn.', 'Every step is now far too crunchy for hiding.', 'ocop', 3);
+    addParticles(game, game.player.x, game.player.y, ['#d7b56d', '#f4df9a', '#805331'], 30, 'crumb', 42);
+  }
+};
+
+const nearestHouseDistance = (game: GameState) => HOUSE_CALL_POINTS.reduce(
+  (nearest, house) => Math.min(nearest, distance(game.player.x, game.player.y, house.x, house.y)),
+  Number.POSITIVE_INFINITY,
+);
+
+const handleCall = (game: GameState, events: GameEvent[]) => {
+  game.callSerial += 1;
+  game.callCount += 1;
+  game.callPulseUntil = game.elapsed + 1.05;
+  game.shakeUntil = game.elapsed + 0.2;
+  events.push({ type: 'pha-oi' });
+  const interval = game.elapsed - game.lastCallAt;
+  game.rapidCalls = interval < 1.15 ? game.rapidCalls + 1 : 1;
+  game.lastCallAt = game.elapsed;
+  addAbsurdity(game, game.rapidCalls >= 3 ? 1.05 : 0.48);
+  addParticles(game, game.player.x, game.player.y - 13, ['#fff2a8', '#efbc58', '#e56c43'], 24, 'note', 55);
+
+  const nearestPower = OCOP_ITEMS
+    .filter((item) => !game.triggered.has(`ocop-${item.kind}`))
+    .map((item) => ({ item, value: distance(game.player.x, game.player.y, item.x, item.y) }))
+    .sort((first, second) => first.value - second.value)[0];
+  if (nearestPower && nearestPower.value < 70) {
+    activatePower(game, nearestPower.item.kind, events);
+    return;
+  }
+  if (distance(game.player.x, game.player.y, 765, 458) < 105) {
+    startChickenPanic(game, events);
+    return;
+  }
+  if (distance(game.player.x, game.player.y, game.hanu.x, game.hanu.y) < 82) {
+    setMessage(game, 'HANU', 'HANU', 'Ừ?', 'Yeah?', 'hanu', 1.45);
+    events.push({ type: 'phone' });
+    return;
+  }
+  if (distance(game.player.x, game.player.y, game.heesun.x, game.heesun.y) < 115) {
+    if (!game.heesun.met && game.scene.kind === 'none') startHeeSunIntro(game);
+    else setMessage(game, 'HEESUN', 'HEESUN', 'Bạn gọi tôi à?', 'Were you calling me?', 'heesun', 2);
+    return;
+  }
+  if (game.streamStartedAt !== 0 && distance(game.player.x, game.player.y, 1_205, 705) < 145) {
+    game.fishBoost = Math.min(76, game.fishBoost + 12);
+    setMessage(game, 'BÊN SUỐI', 'BY THE STREAM', 'Cá lại tìm về đông thêm một lớp.', 'Another layer of fish arrives.', 'stream', 2.2);
+    events.push({ type: 'stream' });
+    return;
+  }
+  if (nearestHouseDistance(game) < 125) {
+    const count = Number(game.triggered.has('house-call-1')) + Number(game.triggered.has('house-call-2'));
+    if (count === 0) {
+      game.triggered.add('house-call-1');
+      game.replyPulseUntil = game.elapsed + 1.05;
+      setMessage(game, 'TRONG NHÀ', 'INSIDE THE HOUSE', 'Ơi.', 'Yes?', 'world', 1.65);
+    } else if (count === 1) {
+      game.triggered.add('house-call-2');
+      game.replyPulseUntil = game.elapsed + 1.05;
+      setMessage(game, 'TRONG NHÀ', 'INSIDE THE HOUSE', 'Ơiiii.', 'Yeees?', 'world', 1.8);
+    } else {
+      game.delayedFarReplyAt = game.elapsed + 1.15;
+      game.message = null;
+    }
+    return;
+  }
+  if (game.rapidCalls >= 3) {
+    startChickenPanic(game, events);
+    game.delayedFarReplyAt = game.elapsed + 0.7;
+    return;
+  }
+  if (game.absurdityLevel >= 2 || game.callCount % 3 === 0) game.delayedFarReplyAt = game.elapsed + 0.8;
+  else {
+    game.replyPulseUntil = game.elapsed + 0.9;
+    setMessage(game, 'AI ĐÓ RẤT XA', 'SOMEONE VERY FAR AWAY', 'Ơi…', 'Yeees…', 'world', 1.8);
+  }
+};
+
+const updatePowers = (game: GameState, previousElapsed: number, moving: boolean, events: GameEvent[]) => {
+  (Object.keys(game.powerUntil) as PowerKind[]).forEach((power) => {
+    if (game.powerUntil[power] > previousElapsed && game.powerUntil[power] <= game.elapsed) {
+      events.push({ type: 'power-end', power });
+      if (power === 'squash') game.heesun.scale = 1;
+    }
+  });
+  if (game.squashSequenceAt > 0) {
+    const age = game.elapsed - game.squashSequenceAt;
+    if (game.squashSequenceStage === 0 && age >= 2.65) {
+      game.squashSequenceStage = 1;
+      setMessage(game, 'HEESUN', 'HEESUN', 'Bạn dạo này béo lên đấy.', 'You have put on some weight.', 'heesun', 1.7);
+    } else if (game.squashSequenceStage === 1 && age >= 4.45) {
+      game.squashSequenceStage = 2;
+      game.heesun.scale = 1.72;
+      setMessage(game, 'PHIÊNG LƠI', 'PHIENG LOI', 'HeeSun ăn theo. Đây là một sai lầm.', 'HeeSun copies you. This is a mistake.', 'world', 2.3);
+      game.shakeUntil = game.elapsed + 0.45;
+      addParticles(game, game.heesun.x, game.heesun.y, ['#a8d35f', '#f4e594'], 36, 'leaf', 52);
+    }
+  }
+  if (moving && game.powerUntil.macadamia > game.elapsed && game.elapsed >= game.nextCrunchAt) {
+    game.nextCrunchAt = game.elapsed + 0.32;
+    events.push({ type: 'crunch' });
+    addParticles(game, game.player.x, game.player.y + 5, ['#e0bd75', '#855a37'], 5, 'crumb', 16);
+    if (game.heesun.mode === 'waiting' && distance(game.player.x, game.player.y, game.heesun.x, game.heesun.y) < 330) {
+      setMessage(game, 'HEESUN', 'HEESUN', 'Tôi nghe thấy bạn rồi.', 'I can hear you.', 'heesun', 1.7);
+      startChase(game, events, false);
+    }
+  }
+};
+
+const updateFeast = (game: GameState, events: GameEvent[]) => {
+  if (game.feast.pendingRelocate && game.elapsed >= game.feast.relocateAt) {
+    const farEnough = distance(game.player.x, game.player.y, game.feast.x, game.feast.y) > 110;
+    if (farEnough || game.elapsed >= game.feast.relocateAt + 2.2) {
+      game.feast.pendingRelocate = false;
+      if (game.feast.encounters === 1) {
+        game.feast.x = clamp(game.player.x + 330, 610, 1_020);
+        game.feast.y = game.player.y < 460 ? game.player.y + 150 : game.player.y - 145;
+      } else if (game.feast.encounters === 2) {
+        game.feast.x = 1_018;
+        game.feast.y = 224;
+      }
+    }
+  }
+  if (game.feast.encounters >= 3 || game.feast.pendingRelocate || game.elapsed < game.feast.nextTriggerAt) return;
+  if (distance(game.player.x, game.player.y, game.feast.x, game.feast.y) > 73 || game.scene.kind !== 'none') return;
+  game.feast.encounters += 1;
+  game.feast.nextTriggerAt = game.elapsed + 5;
+  game.feast.pendingRelocate = game.feast.encounters < 3;
+  game.feast.relocateAt = game.elapsed + 2.25;
+  addAbsurdity(game, 1.4);
+  events.push({ type: 'feast' });
+  setMessage(game, 'MÂM NHẬU', 'THE DRINKING TABLE', 'Vào làm chén.', 'Come have a cup.', 'world', 2.05);
+};
+
+const updateLeader = (game: GameState) => {
+  if (game.leaderStartedAt === 0 && distance(game.player.x, game.player.y, 700, 247) < 92 && game.scene.kind === 'none') {
+    game.leaderStartedAt = game.elapsed || 0.001;
+    addAbsurdity(game, 1.25);
+    setMessage(game, 'TRƯỞNG BẢN', 'VILLAGE CHIEF', 'Tôi xin nói ngắn gọn.', 'I will be brief.', 'chief', 2.1);
+  }
+  if (game.leaderStartedAt !== 0 && !game.triggered.has('chief-first') && game.elapsed - game.leaderStartedAt >= 2.25) {
+    game.triggered.add('chief-first');
+    setMessage(game, 'TRƯỞNG BẢN', 'VILLAGE CHIEF', 'Thứ nhất…', 'Firstly…', 'chief', 2.4);
+  }
+};
+
+const updateStream = (game: GameState, events: GameEvent[]) => {
+  if (game.streamStartedAt !== 0 || game.scene.kind !== 'none') return;
+  if (distance(game.player.x, game.player.y, 1_205, 704) > 90) return;
+  game.streamStartedAt = game.elapsed || 0.001;
+  game.scene = { kind: 'stream', startedAt: game.elapsed, stage: 0 };
+  game.player.vx = 0;
+  game.player.vy = 0;
+  addAbsurdity(game, 1.5);
+  events.push({ type: 'stream' });
+};
+
+const updateHaNu = (game: GameState, dt: number, events: GameEvent[]) => {
+  const target = HANU_PATH[game.hanu.waypoint % HANU_PATH.length];
+  const dx = target.x - game.hanu.x;
+  const dy = target.y - game.hanu.y;
+  const length = Math.max(0.001, Math.hypot(dx, dy));
+  const environmentSlow = game.powerUntil.coffee > game.elapsed ? 0.22 : 1;
+  const speed = 24 * environmentSlow;
+  game.hanu.x += (dx / length) * speed * dt;
+  game.hanu.y += (dy / length) * speed * dt;
+  if (length < 8) game.hanu.waypoint = (game.hanu.waypoint + 1) % HANU_PATH.length;
+
+  if (game.elapsed >= game.hanu.nextLineAt && game.scene.kind !== 'capture') {
+    const lines = [['Ừ.', 'Yeah.'], ['Ừ.', 'Yeah.'], ['Thế à?', 'Really?'], ['Ừ.', 'Yeah.']];
+    const line = lines[game.hanu.lineIndex % lines.length];
+    game.hanu.lineIndex += 1;
+    game.hanu.nextLineAt = game.elapsed + 4.2 + (game.hanu.lineIndex % 3) * 1.1;
+    setMessage(game, 'HANU · ĐIỆN THOẠI', 'HANU · ON THE PHONE', line[0], line[1], 'hanu', 1.25);
+    events.push({ type: 'phone' });
+  }
+  if (!game.hanu.saidAtStream && game.hanu.x > 1_020 && game.hanu.y > 605) {
+    game.hanu.saidAtStream = true;
+    setMessage(game, 'HANU · GIỮA SUỐI', 'HANU · IN THE STREAM', 'Ừ, tôi đang ở nhà.', 'Yeah, I am at home.', 'hanu', 2.7);
+    events.push({ type: 'phone' });
+    addAbsurdity(game, 1);
+  }
+  if (!game.gateOpen && game.absurdityLevel >= 1 && game.hanu.x > 760 && game.hanu.x < 825 && game.hanu.y < 485) {
+    game.gateOpen = true;
+    addAbsurdity(game, 0.6);
+    if (game.heesun.met && game.heesun.mode === 'waiting') {
+      setMessage(game, 'PHIÊNG LƠI', 'PHIENG LOI', 'HaNu vô tình mở cổng cho HeeSun.', 'HaNu accidentally opens the gate for HeeSun.', 'world', 2.3);
+      startChase(game, events, false);
+    }
+  }
+  if (game.dominoStartedAt === 0 && game.hanu.x > 1_260 && game.hanu.y > 350 && game.hanu.y < 440) {
+    game.dominoStartedAt = game.elapsed;
+    addAbsurdity(game, 1.1);
+    setMessage(game, 'PHIÊNG LƠI', 'PHIENG LOI', 'HaNu không hề nhìn thấy chuyện vừa xảy ra.', 'HaNu does not notice what just happened.', 'world', 2.4);
+    events.push({ type: 'domino' });
+  }
+  if (distance(game.hanu.x, game.hanu.y, 765, 458) < 54 && game.chicken.panicUntil <= game.elapsed) startChickenPanic(game, events);
+
+  const chasing = game.heesun.mode === 'chasing' || game.heesun.mode === 'distracted';
+  if (chasing && distance(game.player.x, game.player.y, game.hanu.x, game.hanu.y) < 70 && game.elapsed >= game.hanu.revealReadyAt) {
+    game.hanu.revealReadyAt = game.elapsed + 11;
+    game.heesun.speedBoostUntil = game.elapsed + 2.1;
+    setMessage(game, 'HANU · ĐIỆN THOẠI', 'HANU · ON THE PHONE', 'Nó ở đây này!', 'It is right here!', 'hanu', 1.7);
+    events.push({ type: 'phone' });
+  }
+  if (chasing && distance(game.heesun.x, game.heesun.y, game.hanu.x, game.hanu.y) < 23 && game.elapsed >= game.hanu.lastCollisionAt + 8) {
+    game.hanu.lastCollisionAt = game.elapsed;
+    game.heesun.mode = 'distracted';
+    game.heesun.modeUntil = game.elapsed + 2.2;
+    setMessage(game, 'HANU', 'HANU', 'Ơ… xin lỗi.', 'Oh… sorry.', 'hanu', 1.7);
+    events.push({ type: 'phone' });
+  }
+};
+
+const updateHeeSun = (game: GameState, dt: number, events: GameEvent[]) => {
+  if (!game.heesun.met && game.scene.kind === 'none' && distance(game.player.x, game.player.y, game.heesun.x, game.heesun.y) < 82) startHeeSunIntro(game);
+  if (game.heesun.mode === 'drinking' && game.elapsed >= game.heesun.modeUntil) game.heesun.mode = 'waiting';
+  if (game.heesun.mode === 'ambush' && game.elapsed >= game.heesun.modeUntil) startChase(game, events);
+  if (
+    game.absurdityLevel >= 3
+    && game.heesun.met
+    && game.heesun.mode === 'waiting'
+    && game.elapsed >= game.heesun.nextAmbushAt
+    && game.player.x > 720
+    && game.scene.kind === 'none'
+  ) {
+    game.heesun.x = clamp(game.player.x + 205, 780, WORLD_WIDTH - 130);
+    game.heesun.y = clamp(game.player.y + (game.player.y < 470 ? 105 : -105), 110, WORLD_HEIGHT - 80);
+    game.heesun.mode = 'ambush';
+    game.heesun.modeUntil = game.elapsed + 1.25;
+    game.heesun.nextAmbushAt = game.elapsed + 38;
+    setMessage(game, 'PHIÊNG LƠI', 'PHIENG LOI', 'Một tiếng “bạn ơi” phát ra từ chỗ không nên có người.', 'A “my friend” comes from somewhere nobody should be.', 'world', 2.3);
+  }
+  if (game.heesun.mode === 'waiting' && game.heesun.met && distance(game.player.x, game.player.y, game.heesun.x, game.heesun.y) < 92) startChase(game, events);
+  if (game.heesun.mode === 'distracted') {
+    const panic = game.chicken.panicUntil > game.elapsed;
+    const targetX = panic ? 1_520 : game.hanu.x;
+    const targetY = panic ? 455 : game.hanu.y;
+    const angle = Math.atan2(targetY - game.heesun.y, targetX - game.heesun.x);
+    game.heesun.x += Math.cos(angle) * 49 * dt;
+    game.heesun.y += Math.sin(angle) * 49 * dt;
+    if (game.elapsed >= game.heesun.modeUntil) game.heesun.mode = 'chasing';
+    return;
+  }
+  if (game.heesun.mode !== 'chasing' || game.scene.kind === 'stream' || game.scene.kind === 'capture') return;
+  const angle = Math.atan2(game.player.y - game.heesun.y, game.player.x - game.heesun.x);
+  const boost = game.heesun.speedBoostUntil > game.elapsed ? 1.3 : 1;
+  const speed = (game.absurdityLevel >= 3 ? 58 : 53) * boost;
+  game.heesun.x += Math.cos(angle) * speed * dt;
+  game.heesun.y += Math.sin(angle) * speed * dt;
+  if (distance(game.player.x, game.player.y, game.heesun.x, game.heesun.y) < 17 * Math.max(1, game.heesun.scale * 0.8)) startCapture(game, events);
 };
 
 const updateParticles = (game: GameState, dt: number) => {
@@ -311,182 +878,16 @@ const updateParticles = (game: GameState, dt: number) => {
     if (particle.life <= 0) return false;
     particle.x += particle.vx * dt;
     particle.y += particle.vy * dt;
-    particle.vx *= 1 - dt * 1.8;
-    particle.vy += (particle.kind === 'leaf' ? 2 : 12) * dt;
+    particle.vx *= 1 - dt * 1.7;
+    particle.vy += (particle.kind === 'leaf' || particle.kind === 'note' ? 3 : 18) * dt;
     return true;
   });
-};
-
-export const createGame = (quality: GameQuality, reducedMotion: boolean): GameState => ({
-  player: {
-    x: PLAYER_START_X,
-    y: PLAYER_START_Y,
-    vx: 0,
-    vy: 0,
-    facingX: 0,
-    facingY: 1,
-    walk: 0,
-  },
-  elapsed: 0,
-  worldTime: 0,
-  cameraX: clamp(PLAYER_START_X - VIEW_WIDTH / 2, 0, WORLD_WIDTH - VIEW_WIDTH),
-  cameraY: clamp(PLAYER_START_Y - VIEW_HEIGHT * CAMERA_VERTICAL_ANCHOR, 0, WORLD_HEIGHT - VIEW_HEIGHT),
-  zone: 0,
-  discovered: new Set<LandmarkKind>(),
-  activePoi: null,
-  activePoiUntil: 0,
-  nearbyPoi: null,
-  activity: null,
-  activityUntil: 0,
-  completionAt: 0,
-  powerUntil: {
-    squash: 0,
-    coffee: 0,
-    macadamia: 0,
-    tea: 0,
-    buffalo: 0,
-  },
-  dashUntil: 0,
-  dashReadyAt: 0,
-  cheerUntil: 0,
-  cheerReadyAt: 0,
-  cheerUnlocked: false,
-  flashUntil: 0,
-  flashKind: null,
-  particles: [],
-  quality,
-  reducedMotion,
-  complete: false,
-});
-
-const activePowers = (game: GameState): ActivePower[] => POWER_KINDS
-  .filter((kind) => game.powerUntil[kind] > game.elapsed)
-  .map((kind) => ({
-    kind,
-    remaining: clamp((game.powerUntil[kind] - game.elapsed) / POWER_DURATION[kind], 0, 1),
-  }));
-
-const nearestUndiscovered = (game: GameState) => POIS
-  .filter((poi) => !game.discovered.has(poi.kind))
-  .sort((a, b) => (
-    distance(game.player.x, game.player.y, a.x, a.y)
-    - distance(game.player.x, game.player.y, b.x, b.y)
-  ))[0] ?? null;
-
-export const createUiSnapshot = (game: GameState): UiSnapshot => ({
-  progress: game.discovered.size / POIS.length,
-  zone: game.zone,
-  elapsed: game.elapsed,
-  memories: game.discovered.size,
-  totalMemories: POIS.length,
-  powers: activePowers(game),
-  callout: game.activePoiUntil > game.elapsed ? game.activePoi : null,
-  flash: game.flashUntil > game.elapsed ? game.flashKind : null,
-  dashCooldown: clamp((game.dashReadyAt - game.elapsed) / DASH_COOLDOWN, 0, 1),
-  cheerCooldown: clamp((game.cheerReadyAt - game.elapsed) / CALL_COOLDOWN, 0, 1),
-  cheerUnlocked: game.cheerUnlocked,
-  cheerActive: game.cheerUntil > game.elapsed,
-  nearby: game.nearbyPoi,
-  nearbyVisited: game.nearbyPoi ? game.discovered.has(game.nearbyPoi) : false,
-  busy: game.activity !== null,
-  guideTarget: game.cheerUntil > game.elapsed ? nearestUndiscovered(game)?.kind ?? null : null,
-  playerMapX: game.player.x / WORLD_WIDTH,
-  playerMapY: game.player.y / WORLD_HEIGHT,
-  mapPoints: POIS.map((poi) => ({
-    kind: poi.kind,
-    x: poi.x / WORLD_WIDTH,
-    y: poi.y / WORLD_HEIGHT,
-    discovered: game.discovered.has(poi.kind),
-  })),
-  discovered: [...game.discovered],
-});
-
-const clearQueuedInput = (input: InputState) => {
-  input.interactQueued = false;
-  input.dashQueued = false;
-  input.cheerQueued = false;
-};
-
-const powerColors: Record<PowerKind, string[]> = {
-  squash: ['#9ec55a', '#d7ed83', '#fff2a1'],
-  coffee: ['#a95532', '#e4904d', '#ffd47a'],
-  macadamia: ['#b79555', '#ead58c', '#fff0bc'],
-  tea: ['#77ac83', '#bde2a0', '#edffcf'],
-  buffalo: ['#8d4330', '#df7747', '#ffc071'],
-};
-
-const discoverPoi = (game: GameState, poi: PoiDefinition, events: GameEvent[]) => {
-  const isNew = !game.discovered.has(poi.kind);
-  game.activePoi = poi.kind;
-  game.activePoiUntil = game.elapsed + (isNew ? 4.4 : 2.4);
-  events.push({ type: 'interact' });
-
-  if (isNew) {
-    game.discovered.add(poi.kind);
-    events.push({ type: 'landmark', landmark: poi.kind });
-    events.push({ type: 'token' });
-    addParticles(game, poi.x, poi.y - 8, ['#f4d477', '#fff0b0', '#8fc28b'], 22, 'leaf', 36);
-  }
-
-  if (poi.power) {
-    game.powerUntil[poi.power] = game.elapsed + POWER_DURATION[poi.power];
-    game.flashKind = poi.power;
-    game.flashUntil = game.elapsed + 1.45;
-    events.push({ type: 'power-start', power: poi.power });
-    addParticles(game, game.player.x, game.player.y - 8, powerColors[poi.power], 28, 'square', 42);
-  }
-
-  if (game.discovered.size === POIS.length && game.completionAt === 0) {
-    game.completionAt = game.elapsed + 4.8;
-  }
-};
-
-const interact = (game: GameState, events: GameEvent[]) => {
-  if (!game.nearbyPoi || game.activity) return;
-  const poi = POIS.find((candidate) => candidate.kind === game.nearbyPoi);
-  if (!poi) return;
-
-  if (poi.kind === 'feast' && !game.discovered.has('feast')) {
-    game.activity = 'feast';
-    game.activityUntil = game.elapsed + FEAST_DURATION;
-    game.player.x = poi.x;
-    game.player.y = poi.y + 17;
-    game.player.vx = 0;
-    game.player.vy = 0;
-    game.activePoi = 'feast';
-    game.activePoiUntil = game.activityUntil + 2.6;
-    events.push({ type: 'feast-start' });
-    return;
-  }
-
-  discoverPoi(game, poi, events);
-};
-
-const finishActivity = (game: GameState, events: GameEvent[]) => {
-  if (game.activity !== 'feast' || game.elapsed < game.activityUntil) return;
-  game.activity = null;
-  game.cheerUnlocked = true;
-  const feast = POIS.find((poi) => poi.kind === 'feast');
-  if (feast) discoverPoi(game, feast, events);
-  events.push({ type: 'feast-finish' });
-  game.flashKind = 'cheer';
-  game.flashUntil = game.elapsed + 0.5;
-  addParticles(game, game.player.x, game.player.y - 12, ['#f4cd65', '#e9854f', '#fff1ad'], 34, 'note', 50);
-};
-
-const updateNearby = (game: GameState) => {
-  const radius = game.powerUntil.tea > game.elapsed ? INTERACTION_RADIUS * 1.5 : INTERACTION_RADIUS;
-  const nearest = POIS
-    .map((poi) => ({ poi, value: distance(game.player.x, game.player.y, poi.x, poi.y) }))
-    .filter((entry) => entry.value <= radius)
-    .sort((a, b) => a.value - b.value)[0];
-  game.nearbyPoi = nearest?.poi.kind ?? null;
 };
 
 const updateCamera = (game: GameState, dt: number) => {
   const targetX = clamp(game.player.x - VIEW_WIDTH / 2, 0, WORLD_WIDTH - VIEW_WIDTH);
   const targetY = clamp(game.player.y - VIEW_HEIGHT * CAMERA_VERTICAL_ANCHOR, 0, WORLD_HEIGHT - VIEW_HEIGHT);
-  const response = game.reducedMotion ? 1 : 1 - Math.exp(-dt * 6.5);
+  const response = game.reducedMotion ? 1 : 1 - Math.exp(-dt * 7.2);
   game.cameraX += (targetX - game.cameraX) * response;
   game.cameraY += (targetY - game.cameraY) * response;
 };
@@ -496,117 +897,78 @@ export const stepGame = (game: GameState, input: InputState, dt: number): GameEv
   const previousElapsed = game.elapsed;
   game.elapsed += dt;
   game.worldTime += dt;
-
-  POWER_KINDS.forEach((power) => {
-    if (game.powerUntil[power] > previousElapsed && game.powerUntil[power] <= game.elapsed) {
-      events.push({ type: 'power-end', power });
-    }
-  });
-
-  finishActivity(game, events);
-
-  if (game.completionAt > 0 && game.elapsed >= game.completionAt && !game.complete) {
-    game.complete = true;
-    events.push({ type: 'complete' });
+  if (game.message && game.message.expiresAt <= game.elapsed) game.message = null;
+  if (game.delayedFarReplyAt > 0 && game.elapsed >= game.delayedFarReplyAt) {
+    game.delayedFarReplyAt = 0;
+    game.replyPulseUntil = game.elapsed + 1.2;
+    setMessage(game, 'MỘT CĂN NHÀ RẤT XA', 'A VERY DISTANT HOUSE', 'ƠIIII!', 'YEEEES!', 'world', 2.3);
   }
+  if (game.elapsed >= game.nextTimeEscalationAt) {
+    game.nextTimeEscalationAt = game.elapsed + 42;
+    addAbsurdity(game, 0.8);
+  }
+  updateScene(game, events);
 
   let moveX = input.moveX;
   let moveY = input.moveY;
   if (Math.abs(moveX) < 0.08) moveX = Number(input.right) - Number(input.left);
   if (Math.abs(moveY) < 0.08) moveY = Number(input.down) - Number(input.up);
-  const length = Math.hypot(moveX, moveY);
-  if (length > 1) {
-    moveX /= length;
-    moveY /= length;
+  const inputLength = Math.hypot(moveX, moveY);
+  if (inputLength > 1) {
+    moveX /= inputLength;
+    moveY /= inputLength;
   }
-
-  if (!game.activity && !game.complete) {
-    if (input.dashQueued && game.elapsed >= game.dashReadyAt && length > 0.08) {
-      game.dashUntil = game.elapsed + DASH_DURATION;
-      game.dashReadyAt = game.elapsed + (game.powerUntil.macadamia > game.elapsed ? DASH_COOLDOWN * 0.56 : DASH_COOLDOWN);
-      events.push({ type: 'dash' });
-      addParticles(game, game.player.x, game.player.y, ['#efe0a4', '#b8d38d'], 14, 'leaf', 32);
-    }
-
-    if (input.cheerQueued && game.cheerUnlocked && game.elapsed >= game.cheerReadyAt) {
-      game.cheerUntil = game.elapsed + CALL_DURATION;
-      game.cheerReadyAt = game.elapsed + (game.powerUntil.tea > game.elapsed ? CALL_COOLDOWN * 0.62 : CALL_COOLDOWN);
-      game.flashKind = 'cheer';
-      game.flashUntil = game.elapsed + 0.32;
-      events.push({ type: 'cheer' });
-      addParticles(game, game.player.x, game.player.y - 8, ['#ffd66d', '#f08c57', '#fff0ae'], 30, 'note', 48);
-    }
-
-    const coffee = game.powerUntil.coffee > game.elapsed;
-    const tea = game.powerUntil.tea > game.elapsed;
-    const buffalo = game.powerUntil.buffalo > game.elapsed;
-    const baseSpeed = coffee ? 78 : tea ? 52 : 60;
-    const dashSpeed = game.dashUntil > game.elapsed ? 2.35 : 1;
-    const strengthSpeed = buffalo ? 1.08 : 1;
-    const targetVx = moveX * baseSpeed * dashSpeed * strengthSpeed;
-    const targetVy = moveY * baseSpeed * dashSpeed * strengthSpeed;
-    const response = 1 - Math.exp(-dt * (dashSpeed > 1 ? 21 : 13));
+  const introAge = game.scene.kind === 'heesun-intro' ? game.elapsed - game.scene.startedAt : 99;
+  const controlsLocked = game.scene.kind === 'capture' || (game.scene.kind === 'heesun-intro' && introAge < 3.75) || game.complete;
+  const moving = !controlsLocked && inputLength > 0.08;
+  if (!controlsLocked) {
+    const targetVx = moveX * PLAYER_SPEED;
+    const targetVy = moveY * PLAYER_SPEED;
+    const response = 1 - Math.exp(-dt * 14);
     game.player.vx += (targetVx - game.player.vx) * response;
     game.player.vy += (targetVy - game.player.vy) * response;
-
     const nextX = game.player.x + game.player.vx * dt;
-    if (!isBlocked(nextX, game.player.y)) game.player.x = nextX;
+    if (!isBlocked(game, nextX, game.player.y)) game.player.x = nextX;
     else game.player.vx = 0;
     const nextY = game.player.y + game.player.vy * dt;
-    if (!isBlocked(game.player.x, nextY)) game.player.y = nextY;
+    if (!isBlocked(game, game.player.x, nextY)) game.player.y = nextY;
     else game.player.vy = 0;
-
-    if (length > 0.1) {
+    if (moving) {
       game.player.facingX = moveX;
       game.player.facingY = moveY;
-      game.player.walk += dt * (coffee ? 12 : 8.5) * dashSpeed;
-      if (game.quality === 'high' && game.player.walk % 1 < dt * 3 && hash2(game.player.x, game.worldTime) > 0.62) {
-        addParticles(game, game.player.x, game.player.y + 4, ['#a78b62', '#d0b781'], 2, 'square', 8);
+      game.player.walk += dt * 9.2;
+      if (game.elapsed >= game.nextFootstepAt) {
+        game.nextFootstepAt = game.elapsed + 0.36;
+        events.push({ type: 'footstep' });
+        if (game.quality === 'high') addParticles(game, game.player.x, game.player.y + 5, ['#9f815b', '#c8ac75'], 2, 'dust', 8);
       }
     }
   } else {
     game.player.vx = 0;
     game.player.vy = 0;
   }
-
-  updateNearby(game);
-  if (input.interactQueued) interact(game, events);
-
-  const nextZone = zoneAt(game.player.x, game.player.y);
-  if (nextZone !== game.zone) {
-    game.zone = nextZone;
-    events.push({ type: 'zone-change', zone: nextZone });
+  updatePowers(game, previousElapsed, moving, events);
+  updateFeast(game, events);
+  updateLeader(game);
+  updateStream(game, events);
+  updateHaNu(game, dt, events);
+  updateHeeSun(game, dt, events);
+  if (input.callQueued && game.scene.kind !== 'capture' && !game.complete) handleCall(game, events);
+  if (!game.complete && game.player.x > WORLD_WIDTH - 58 && game.player.y > 385 && game.player.y < 565) {
+    game.complete = true;
+    game.player.vx = 0;
+    game.player.vy = 0;
+    setMessage(game, 'PHIÊNG LƠI', 'PHIENG LOI', 'Bạn đã ra khỏi bản. Phía sau vẫn có người gọi “Bạn ơi…”.', 'You made it out. Behind you, someone is still calling “My friend…”', 'world', 4);
+    events.push({ type: 'exit' });
   }
-
+  game.fishBoost = Math.max(0, game.fishBoost - dt * 0.45);
   updateParticles(game, dt);
   updateCamera(game, dt);
   clearQueuedInput(input);
   return events;
 };
 
-const roundedRect = (
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number,
-) => {
-  const safeRadius = Math.min(radius, width / 2, height / 2);
-  context.beginPath();
-  context.moveTo(x + safeRadius, y);
-  context.lineTo(x + width - safeRadius, y);
-  context.quadraticCurveTo(x + width, y, x + width, y + safeRadius);
-  context.lineTo(x + width, y + height - safeRadius);
-  context.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height);
-  context.lineTo(x + safeRadius, y + height);
-  context.quadraticCurveTo(x, y + height, x, y + height - safeRadius);
-  context.lineTo(x, y + safeRadius);
-  context.quadraticCurveTo(x, y, x + safeRadius, y);
-  context.closePath();
-};
-
-const inView = (game: GameState, x: number, y: number, margin = 100) => (
+const inView = (game: GameState, x: number, y: number, margin = 90) => (
   x > game.cameraX - margin
   && x < game.cameraX + VIEW_WIDTH + margin
   && y > game.cameraY - margin
@@ -614,829 +976,770 @@ const inView = (game: GameState, x: number, y: number, margin = 100) => (
 );
 
 const drawGround = (context: CanvasRenderingContext2D, game: GameState) => {
-  context.fillStyle = '#78945d';
-  context.fillRect(game.cameraX, game.cameraY, VIEW_WIDTH, VIEW_HEIGHT);
-
+  context.fillStyle = '#748c54';
+  context.fillRect(game.cameraX - 2, game.cameraY - 2, VIEW_WIDTH + 4, VIEW_HEIGHT + 4);
   const startX = Math.floor(game.cameraX / 16) * 16;
   const startY = Math.floor(game.cameraY / 16) * 16;
   for (let y = startY; y < game.cameraY + VIEW_HEIGHT + 16; y += 16) {
     for (let x = startX; x < game.cameraX + VIEW_WIDTH + 16; x += 16) {
       const value = hash2(x / 16, y / 16);
-      if (y < 126) context.fillStyle = value > 0.7 ? '#768a59' : value < 0.2 ? '#5c734e' : '#687f51';
-      else if (y > 815) context.fillStyle = value > 0.7 ? '#91a274' : value < 0.2 ? '#7c9067' : '#879b6e';
-      else context.fillStyle = value > 0.7 ? '#829c63' : value < 0.2 ? '#6f8956' : '#78945d';
+      context.fillStyle = value > 0.72 ? '#7f985b' : value < 0.19 ? '#647c4d' : '#748c54';
       context.fillRect(x, y, 16, 16);
-      if (game.quality === 'high' && value > 0.58) {
-        context.fillStyle = value > 0.82 ? '#b5bd70' : '#5d7e50';
-        context.fillRect(x + 4 + Math.floor(value * 7), y + 4, 1, 3);
+      if (game.quality === 'high' && value > 0.62) {
+        context.fillStyle = value > 0.86 ? '#d1bd63' : '#496d43';
+        context.fillRect(x + 5 + Math.floor(value * 5), y + 5, 1, 3);
       }
     }
   }
 };
 
-const drawCityPaving = (context: CanvasRenderingContext2D) => {
-  context.fillStyle = 'rgba(174, 158, 112, .34)';
-  context.fillRect(248, 830, 820, 338);
-  for (let y = 838; y < 1_165; y += 18) {
-    for (let x = 255; x < 1_065; x += 22) {
-      const offset = (Math.floor(y / 18) % 2) * 11;
-      context.fillStyle = hash2(x, y) > 0.5 ? 'rgba(222, 202, 148, .18)' : 'rgba(91, 112, 79, .16)';
-      context.fillRect(x + offset, y, 18, 1);
-      context.fillRect(x + offset, y, 1, 12);
-    }
-  }
+const drawMountains = (context: CanvasRenderingContext2D) => {
+  context.fillStyle = '#344f43';
+  context.beginPath();
+  context.moveTo(0, 145);
+  context.lineTo(100, 80);
+  context.lineTo(205, 132);
+  context.lineTo(350, 48);
+  context.lineTo(470, 118);
+  context.lineTo(640, 35);
+  context.lineTo(790, 126);
+  context.lineTo(935, 64);
+  context.lineTo(1_090, 133);
+  context.lineTo(1_260, 42);
+  context.lineTo(1_430, 116);
+  context.lineTo(WORLD_WIDTH, 56);
+  context.lineTo(WORLD_WIDTH, 180);
+  context.lineTo(0, 180);
+  context.closePath();
+  context.fill();
+  context.fillStyle = '#516b4d';
+  context.beginPath();
+  context.moveTo(0, 158);
+  context.lineTo(145, 116);
+  context.lineTo(285, 154);
+  context.lineTo(460, 102);
+  context.lineTo(630, 161);
+  context.lineTo(790, 113);
+  context.lineTo(1_015, 162);
+  context.lineTo(1_225, 104);
+  context.lineTo(1_455, 164);
+  context.lineTo(WORLD_WIDTH, 120);
+  context.lineTo(WORLD_WIDTH, 195);
+  context.lineTo(0, 195);
+  context.closePath();
+  context.fill();
 };
 
 const drawRoads = (context: CanvasRenderingContext2D) => {
   const paths: Array<Array<[number, number]>> = [
-    [[920, 700], [780, 650], [600, 615], [500, 545]],
-    [[920, 700], [700, 770], [520, 890], [445, 1_045]],
-    [[920, 700], [875, 890], [870, 1_055]],
-    [[920, 700], [1_130, 620], [1_360, 500], [1_485, 495], [1_675, 655]],
-    [[920, 700], [1_160, 790], [1_450, 880], [1_775, 1_025]],
-    [[920, 700], [850, 500], [820, 345], [1_020, 235]],
-    [[820, 345], [550, 310], [265, 270]],
-    [[1_020, 235], [1_180, 360], [1_210, 520]],
+    [[35, 492], [250, 470], [470, 450], [680, 470], [870, 424], [1_080, 446], [1_300, 470], [1_660, 470]],
+    [[470, 450], [565, 345], [700, 247], [850, 300], [942, 335]],
+    [[680, 470], [585, 602], [790, 710], [1_080, 696], [1_205, 704], [1_335, 525]],
+    [[1_210, 465], [1_300, 388], [1_430, 280]],
   ];
-
   context.lineCap = 'round';
   context.lineJoin = 'round';
   paths.forEach((points) => {
     context.beginPath();
-    points.forEach(([x, y], index) => {
-      if (index === 0) context.moveTo(x, y);
-      else context.lineTo(x, y);
-    });
-    context.strokeStyle = '#566f4f';
+    points.forEach(([x, y], index) => index === 0 ? context.moveTo(x, y) : context.lineTo(x, y));
+    context.strokeStyle = '#55694b';
+    context.lineWidth = 24;
+    context.stroke();
+    context.strokeStyle = '#a99063';
     context.lineWidth = 18;
     context.stroke();
-    context.strokeStyle = '#b6a878';
-    context.lineWidth = 13;
+    context.strokeStyle = '#c5aa72';
+    context.lineWidth = 11;
     context.stroke();
-    context.strokeStyle = '#c9bb88';
-    context.lineWidth = 7;
+    context.strokeStyle = 'rgba(246, 215, 148, .36)';
+    context.lineWidth = 2;
     context.stroke();
   });
 };
 
+const drawFields = (context: CanvasRenderingContext2D, game: GameState) => {
+  context.fillStyle = '#735739';
+  context.fillRect(390, 560, 265, 250);
+  context.fillStyle = '#947344';
+  for (let y = 575; y < 805; y += 25) context.fillRect(395, y, 255, 7);
+  for (let y = 580; y < 800; y += 25) {
+    for (let x = 407; x < 645; x += 18) {
+      const sway = Math.round(Math.sin(game.worldTime * 1.6 + x * 0.04 + y) * 1);
+      context.fillStyle = '#3f7241';
+      context.fillRect(x + sway, y - 9, 2, 10);
+      context.fillStyle = '#d2aa43';
+      context.fillRect(x + 2 + sway, y - 7, 2, 5);
+    }
+  }
+  context.fillStyle = '#6c7f45';
+  context.beginPath();
+  context.ellipse(940, 195, 260, 145, 0, 0, Math.PI * 2);
+  context.fill();
+  const colors = ['#99a857', '#b7b85c', '#cbb65c', '#879a50'];
+  for (let index = 0; index < 8; index += 1) {
+    context.strokeStyle = colors[index % colors.length];
+    context.lineWidth = 8;
+    context.beginPath();
+    context.ellipse(940, 205 + index * 10, 238 - index * 24, 106 - index * 8, 0, Math.PI, Math.PI * 2);
+    context.stroke();
+  }
+  context.fillStyle = '#806b43';
+  context.fillRect(1_260, 480, 250, 210);
+  for (let row = 0; row < 6; row += 1) {
+    for (let column = 0; column < 8; column += 1) {
+      const x = 1_278 + column * 29 + (row % 2) * 7;
+      const y = 500 + row * 31;
+      context.fillStyle = '#315a3b';
+      context.fillRect(x - 7, y - 8, 14, 13);
+      context.fillStyle = '#557a46';
+      context.fillRect(x - 10, y - 4, 20, 6);
+      context.fillStyle = '#ddc06f';
+      context.fillRect(x - 4, y - 5, 2, 2);
+      context.fillRect(x + 5, y, 2, 2);
+    }
+  }
+};
+
 const drawRiver = (context: CanvasRenderingContext2D, game: GameState) => {
   context.beginPath();
-  for (let y = -40; y <= WORLD_HEIGHT + 60; y += 32) {
+  for (let y = 120; y <= WORLD_HEIGHT + 40; y += 28) {
     const x = riverCenterX(y);
-    if (y === -40) context.moveTo(x, y);
+    if (y === 120) context.moveTo(x, y);
     else context.lineTo(x, y);
   }
   context.lineCap = 'round';
-  context.strokeStyle = '#426b6e';
-  context.lineWidth = 78;
+  context.strokeStyle = '#3d656a';
+  context.lineWidth = 80;
   context.stroke();
-  context.strokeStyle = '#6da5a3';
-  context.lineWidth = 64;
+  context.strokeStyle = '#69a1a3';
+  context.lineWidth = 65;
   context.stroke();
-  context.strokeStyle = '#91c8bd';
-  context.lineWidth = 42;
+  context.strokeStyle = '#8ac1b9';
+  context.lineWidth = 43;
   context.stroke();
-
-  const startY = Math.floor(game.cameraY / 24) * 24;
-  for (let y = startY; y < game.cameraY + VIEW_HEIGHT + 28; y += 24) {
+  const slowTime = game.powerUntil.coffee > game.elapsed ? game.worldTime * 0.22 : game.worldTime;
+  const startY = Math.floor(game.cameraY / 22) * 22;
+  for (let y = startY; y < game.cameraY + VIEW_HEIGHT + 30; y += 22) {
     const x = riverCenterX(y);
-    const wave = Math.sin(game.worldTime * 1.8 + y * 0.06) * 5;
-    context.fillStyle = 'rgba(222, 244, 218, .58)';
-    context.fillRect(x - 16 + wave, y, 10, 1);
-    context.fillRect(x + 7 - wave * 0.45, y + 9, 14, 1);
+    const wave = Math.sin(slowTime * 1.8 + y * 0.07) * 6;
+    context.fillStyle = 'rgba(224, 244, 221, .6)';
+    context.fillRect(x - 17 + wave, y, 12, 1);
+    context.fillRect(x + 5 - wave * 0.5, y + 9, 15, 1);
   }
 };
 
 const drawBridge = (context: CanvasRenderingContext2D, y: number) => {
   const x = riverCenterX(y);
-  context.fillStyle = '#5d4432';
-  context.fillRect(x - 47, y - 13, 94, 27);
-  context.fillStyle = '#b3844f';
-  for (let offset = -42; offset <= 36; offset += 9) context.fillRect(x + offset, y - 11, 7, 23);
+  context.fillStyle = '#55402f';
+  context.fillRect(x - 49, y - 14, 98, 28);
+  context.fillStyle = '#ae7f4a';
+  for (let offset = -44; offset <= 38; offset += 9) context.fillRect(x + offset, y - 12, 7, 24);
   context.fillStyle = '#e0b66e';
-  context.fillRect(x - 47, y - 13, 94, 2);
-  context.fillRect(x - 47, y + 11, 94, 2);
-};
-
-const drawWaterfall = (context: CanvasRenderingContext2D, time: number) => {
-  const x = riverCenterX(92);
-  context.fillStyle = '#4f5f50';
-  context.beginPath();
-  context.moveTo(x - 105, 36);
-  context.lineTo(x - 52, 18);
-  context.lineTo(x - 20, 58);
-  context.lineTo(x + 26, 28);
-  context.lineTo(x + 104, 52);
-  context.lineTo(x + 92, 146);
-  context.lineTo(x - 92, 146);
-  context.closePath();
-  context.fill();
-  context.fillStyle = '#6f7b61';
-  context.fillRect(x - 78, 58, 44, 46);
-  context.fillRect(x + 32, 55, 52, 55);
-  context.fillStyle = '#84bbb5';
-  context.fillRect(x - 27, 48, 52, 101);
-  context.fillStyle = '#d7eee0';
-  context.fillRect(x - 18 + Math.sin(time * 2) * 2, 48, 9, 86);
-  context.fillRect(x + 6 + Math.sin(time * 1.7 + 1) * 2, 53, 7, 82);
-  context.fillStyle = 'rgba(229, 247, 231, .72)';
-  context.fillRect(x - 31, 137, 64, 5);
-  context.fillRect(x - 20, 145, 40, 3);
-};
-
-const drawTerraces = (context: CanvasRenderingContext2D, time: number) => {
-  context.save();
-  context.translate(1_020, 188);
-  context.fillStyle = '#60784e';
-  context.beginPath();
-  context.ellipse(0, 35, 210, 110, -0.04, Math.PI, Math.PI * 2);
-  context.fill();
-  const colors = ['#9aab5f', '#b7bc63', '#d0bd65', '#8fa45b'];
-  for (let index = 0; index < 7; index += 1) {
-    context.strokeStyle = colors[index % colors.length];
-    context.lineWidth = 8;
-    context.beginPath();
-    context.ellipse(0, 43 + index * 9, 192 - index * 23, 76 - index * 6, 0, Math.PI, Math.PI * 2);
-    context.stroke();
-    context.strokeStyle = 'rgba(239, 216, 126, .45)';
-    context.lineWidth = 1;
-    context.stroke();
-  }
-  context.fillStyle = '#d8e08a';
-  for (let index = 0; index < 24; index += 1) {
-    const angle = index * 0.61 + time * 0.015;
-    const radius = 28 + (index % 5) * 24;
-    context.fillRect(Math.cos(angle) * radius, 45 + Math.sin(angle) * radius * 0.32, 1, 3);
-  }
-  context.restore();
-};
-
-const drawSquashField = (context: CanvasRenderingContext2D, time: number) => {
-  context.fillStyle = '#735a3c';
-  context.fillRect(126, 145, 284, 194);
-  context.fillStyle = '#987649';
-  for (let y = 160; y < 332; y += 28) context.fillRect(130, y, 275, 8);
-  for (let y = 174; y < 330; y += 28) {
-    for (let x = 145; x < 398; x += 34) {
-      const sway = Math.round(Math.sin(time * 1.7 + x * 0.05 + y) * 1);
-      context.fillStyle = '#3e7245';
-      context.fillRect(x + sway, y - 6, 8, 3);
-      context.fillRect(x + 3, y - 10, 3, 11);
-      if ((x + y) % 3 < 1) {
-        context.fillStyle = '#9ac55d';
-        context.fillRect(x + 4, y, 9, 6);
-        context.fillStyle = '#d8e27a';
-        context.fillRect(x + 6, y + 1, 4, 1);
-      }
-    }
-  }
-};
-
-const drawCoffeeHill = (context: CanvasRenderingContext2D, time: number) => {
-  context.fillStyle = '#657a4b';
-  context.beginPath();
-  context.ellipse(1_775, 1_034, 235, 152, 0.08, 0, Math.PI * 2);
-  context.fill();
-  for (let row = 0; row < 6; row += 1) {
-    for (let column = 0; column < 10; column += 1) {
-      const x = 1_585 + column * 40 + (row % 2) * 11;
-      const y = 925 + row * 42;
-      context.fillStyle = '#36563c';
-      context.fillRect(x - 7, y - 6, 14, 12);
-      context.fillStyle = '#52784a';
-      context.fillRect(x - 10, y - 3, 20, 7);
-      context.fillStyle = '#b8503c';
-      context.fillRect(x - 5, y + ((column + row) % 3), 2, 2);
-      context.fillRect(x + 4, y + 2, 2, 2);
-      if (Math.sin(time + column) > 0.75) {
-        context.fillStyle = '#f4ce78';
-        context.fillRect(x, y - 8, 1, 1);
-      }
-    }
-  }
-};
-
-const drawCornfield = (context: CanvasRenderingContext2D, time: number) => {
-  context.fillStyle = '#8a8748';
-  context.fillRect(75, 430, 250, 240);
-  for (let y = 442; y < 665; y += 18) {
-    for (let x = 88; x < 318; x += 13) {
-      const sway = Math.round(Math.sin(time * 1.6 + x * 0.07 + y * 0.03));
-      context.fillStyle = '#436f3f';
-      context.fillRect(x + sway, y - 8, 2, 10);
-      context.fillStyle = '#d7b850';
-      context.fillRect(x + 2 + sway, y - 5, 2, 4);
-    }
-  }
+  context.fillRect(x - 49, y - 13, 98, 2);
+  context.fillRect(x - 49, y + 11, 98, 2);
 };
 
 const drawTree = (context: CanvasRenderingContext2D, x: number, y: number, variant: number) => {
-  context.fillStyle = 'rgba(32, 52, 38, .24)';
-  context.fillRect(x - 7, y + 5, 19, 5);
-  context.fillStyle = '#59452f';
-  context.fillRect(x - 2, y - 9, 4, 17);
-  const dark = variant % 2 === 0 ? '#315f43' : '#3f6948';
-  const light = variant % 2 === 0 ? '#5d874f' : '#749454';
-  context.fillStyle = dark;
-  context.fillRect(x - 10, y - 22, 21, 15);
-  context.fillRect(x - 6, y - 29, 14, 10);
-  context.fillStyle = light;
-  context.fillRect(x - 7, y - 25, 9, 5);
-  context.fillRect(x + 3, y - 18, 6, 5);
+  context.fillStyle = 'rgba(31, 47, 34, .25)';
+  context.fillRect(x - 8, y + 4, 21, 5);
+  context.fillStyle = '#58422d';
+  context.fillRect(x - 2, y - 11, 4, 20);
+  context.fillStyle = variant % 2 ? '#315e3d' : '#3e6942';
+  context.fillRect(x - 11, y - 25, 23, 16);
+  context.fillRect(x - 7, y - 32, 15, 11);
+  context.fillStyle = variant % 2 ? '#5b864a' : '#759451';
+  context.fillRect(x - 8, y - 28, 9, 5);
+  context.fillRect(x + 3, y - 20, 7, 5);
 };
 
-const drawBamboo = (context: CanvasRenderingContext2D, x: number, y: number, variant: number) => {
-  const height = 22 + variant * 2;
-  context.fillStyle = '#385c3d';
-  context.fillRect(x - 5, y - height, 2, height + 3);
-  context.fillRect(x, y - height - 4, 2, height + 7);
-  context.fillRect(x + 5, y - height + 3, 2, height);
-  context.fillStyle = '#759755';
-  context.fillRect(x - 10, y - height + 2, 7, 2);
-  context.fillRect(x + 2, y - height + 7, 9, 2);
-  context.fillRect(x - 4, y - 10, 8, 2);
+const drawScenery = (context: CanvasRenderingContext2D, game: GameState) => {
+  for (let y = 205; y < WORLD_HEIGHT - 24; y += 50) {
+    for (let x = 45; x < WORLD_WIDTH - 32; x += 53) {
+      const chance = hash2(x, y);
+      const clearRoad = Math.abs(y - (455 + Math.sin(x * 0.006) * 24)) < 52;
+      const river = Math.abs(x - riverCenterX(y)) < 80;
+      const building = solidRects.some((rect) => x > rect.x - 30 && x < rect.x + rect.width + 30 && y > rect.y - 30 && y < rect.y + rect.height + 30);
+      if (clearRoad || river || building || chance < 0.82 || !inView(game, x, y, 45)) continue;
+      if (chance > 0.91) drawTree(context, x, y, Math.floor(chance * 10));
+      else {
+        context.fillStyle = chance > 0.86 ? '#d7c55e' : '#e19a79';
+        context.fillRect(x, y - 2, 2, 2);
+        context.fillStyle = '#4e7444';
+        context.fillRect(x, y, 1, 3);
+      }
+    }
+  }
 };
 
 const drawStiltHouse = (
   context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  accent: string,
+  house: { x: number; y: number; width: number; height: number },
+  index: number,
+  time: number,
 ) => {
-  context.fillStyle = 'rgba(40, 45, 33, .27)';
-  context.fillRect(x - 8, y + 63, width + 28, 12);
-  context.fillStyle = '#59442e';
-  context.fillRect(x + 14, y + 42, 5, 30);
-  context.fillRect(x + width - 20, y + 42, 5, 30);
-  context.fillStyle = '#a97949';
-  context.fillRect(x + 5, y + 20, width - 10, 35);
-  context.fillStyle = '#d0a76b';
-  for (let line = x + 12; line < x + width - 10; line += 13) context.fillRect(line, y + 22, 2, 30);
-  context.fillStyle = '#2f4439';
-  context.fillRect(x + width * 0.56, y + 31, 18, 24);
-  context.fillStyle = '#332f28';
+  const { x, y, width } = house;
+  context.fillStyle = 'rgba(35, 42, 31, .28)';
+  context.fillRect(x - 8, y + 66, width + 20, 14);
+  context.fillStyle = '#57422d';
+  context.fillRect(x + 15, y + 44, 5, 36);
+  context.fillRect(x + width - 20, y + 44, 5, 36);
+  context.fillStyle = index % 2 ? '#9c6b45' : '#b0804e';
+  context.fillRect(x + 5, y + 21, width - 10, 40);
+  context.fillStyle = '#d3ad70';
+  for (let line = x + 11; line < x + width - 9; line += 13) context.fillRect(line, y + 23, 2, 34);
+  context.fillStyle = '#263d35';
+  context.fillRect(x + width * 0.58, y + 34, 20, 27);
+  context.fillStyle = '#302d28';
   context.beginPath();
-  context.moveTo(x - 14, y + 21);
-  context.lineTo(x + width / 2, y - 14);
-  context.lineTo(x + width + 14, y + 21);
+  context.moveTo(x - 15, y + 22);
+  context.lineTo(x + width / 2, y - 16);
+  context.lineTo(x + width + 15, y + 22);
   context.closePath();
   context.fill();
-  context.fillStyle = accent;
+  context.fillStyle = index % 2 ? '#6f7e50' : '#855143';
   context.beginPath();
-  context.moveTo(x - 9, y + 18);
-  context.lineTo(x + width / 2, y - 9);
-  context.lineTo(x + width + 9, y + 18);
+  context.moveTo(x - 9, y + 19);
+  context.lineTo(x + width / 2, y - 10);
+  context.lineTo(x + width + 9, y + 19);
   context.closePath();
   context.fill();
-  context.strokeStyle = 'rgba(255, 226, 145, .45)';
-  context.lineWidth = 2;
-  context.beginPath();
-  context.moveTo(x + 3, y + 15);
-  context.lineTo(x + width / 2, y - 4);
-  context.lineTo(x + width - 3, y + 15);
-  context.stroke();
-  context.fillStyle = '#6f5133';
-  context.fillRect(x + width - 28, y + 52, 4, 26);
-  context.fillRect(x + width - 5, y + 52, 4, 26);
-  for (let step = 0; step < 4; step += 1) context.fillRect(x + width - 28, y + 56 + step * 6, 27, 2);
+  context.fillStyle = '#654a32';
+  context.fillRect(x + width - 31, y + 57, 4, 28);
+  context.fillRect(x + width - 6, y + 57, 4, 28);
+  for (let step = 0; step < 4; step += 1) context.fillRect(x + width - 31, y + 61 + step * 6, 29, 2);
+  const smoke = Math.sin(time * 1.2 + index) * 3;
+  context.fillStyle = 'rgba(229, 224, 195, .45)';
+  context.fillRect(x + 26 + smoke, y - 18, 5, 8);
+  context.fillRect(x + 23 - smoke * 0.4, y - 28, 7, 7);
 };
 
-const drawFeast = (context: CanvasRenderingContext2D, game: GameState) => {
-  const x = 860;
-  const y = 664;
-  context.fillStyle = 'rgba(37, 45, 32, .28)';
-  context.fillRect(x - 39, y + 14, 78, 16);
-  context.fillStyle = '#b64e3e';
-  context.fillRect(x - 27, y - 6, 54, 34);
-  context.fillStyle = '#e7c868';
-  for (let stripe = -22; stripe < 25; stripe += 9) context.fillRect(x + stripe, y - 4, 3, 30);
-  context.fillStyle = '#f3dca0';
-  context.fillRect(x - 9, y + 3, 18, 8);
-  context.fillStyle = '#769356';
-  context.fillRect(x - 5, y + 5, 4, 3);
-  context.fillStyle = '#a9543e';
-  context.fillRect(x + 2, y + 5, 4, 3);
-
-  const people = [
-    [-35, -1, '#914c3f'],
-    [35, -1, '#315e65'],
-    [-24, 32, '#6f7250'],
-    [24, 33, '#a76742'],
-    [0, -20, '#4f665c'],
-  ] as const;
-  people.forEach(([dx, dy, color], index) => {
-    const wave = game.cheerUntil > game.elapsed ? Math.sin(game.elapsed * 12 + index) * 2 : 0;
-    context.fillStyle = '#c58b62';
-    context.fillRect(x + dx - 2, y + dy - 10 + wave, 5, 5);
-    context.fillStyle = color;
-    context.fillRect(x + dx - 5, y + dy - 5 + wave, 10, 10);
-    context.fillStyle = '#3e342c';
-    context.fillRect(x + dx - 7, y + dy + 4, 5, 3);
-    context.fillRect(x + dx + 3, y + dy + 4, 5, 3);
-  });
-};
-
-const drawBuffaloKitchen = (context: CanvasRenderingContext2D, time: number) => {
-  context.fillStyle = '#4d382b';
-  context.fillRect(642, 708, 95, 43);
-  context.fillStyle = '#7e5035';
-  context.beginPath();
-  context.moveTo(632, 709);
-  context.lineTo(690, 680);
-  context.lineTo(747, 709);
-  context.closePath();
-  context.fill();
-  context.fillStyle = '#d38c4d';
-  context.fillRect(667, 727, 48, 4);
-  context.fillStyle = '#2a2925';
-  for (let item = 0; item < 4; item += 1) context.fillRect(671 + item * 11, 714, 5, 17);
-  const smoke = Math.sin(time * 1.4) * 3;
-  context.fillStyle = 'rgba(226, 218, 186, .48)';
-  context.fillRect(713 + smoke, 687, 4, 8);
-  context.fillRect(709 - smoke * 0.4, 678, 5, 6);
-};
-
-const drawTeaHut = (context: CanvasRenderingContext2D) => {
-  context.fillStyle = '#5a4731';
-  context.fillRect(777, 297, 88, 54);
-  context.fillStyle = '#6d8c58';
-  context.beginPath();
-  context.moveTo(766, 300);
-  context.lineTo(821, 272);
-  context.lineTo(875, 300);
-  context.closePath();
-  context.fill();
-  context.fillStyle = '#d8bc75';
-  context.fillRect(790, 317, 26, 16);
-  context.fillStyle = '#35513f';
-  context.fillRect(827, 309, 23, 28);
-};
-
-const drawMacadamiaGrove = (context: CanvasRenderingContext2D) => {
-  for (let row = 0; row < 4; row += 1) {
-    for (let column = 0; column < 5; column += 1) {
-      const x = 1_140 + column * 34 + (row % 2) * 8;
-      const y = 434 + row * 33;
-      drawTree(context, x, y, column + row);
-      context.fillStyle = '#e4c77a';
-      context.fillRect(x - 5, y - 20, 2, 2);
-      context.fillRect(x + 4, y - 14, 2, 2);
-    }
-  }
-};
-
-const drawWaterwheel = (context: CanvasRenderingContext2D, time: number) => {
-  const x = 1_407;
-  const y = 481;
+const drawWaterwheel = (context: CanvasRenderingContext2D, game: GameState) => {
+  const x = 1_073;
+  const y = 668;
+  const time = game.powerUntil.coffee > game.elapsed ? game.worldTime * 0.22 : game.worldTime;
   context.save();
   context.translate(x, y);
-  context.strokeStyle = '#6a482d';
+  context.strokeStyle = '#68492f';
   context.lineWidth = 3;
   context.beginPath();
-  context.arc(0, 0, 31, 0, Math.PI * 2);
+  context.arc(0, 0, 30, 0, Math.PI * 2);
   context.stroke();
-  context.strokeStyle = '#c09558';
-  context.lineWidth = 2;
-  context.beginPath();
-  context.arc(0, 0, 25, 0, Math.PI * 2);
-  context.stroke();
-  context.rotate(time * 0.42);
+  context.rotate(time * 0.45);
   for (let spoke = 0; spoke < 12; spoke += 1) {
     context.rotate(Math.PI / 6);
-    context.fillStyle = '#d0a467';
-    context.fillRect(-2, -30, 4, 30);
-    context.fillStyle = '#765037';
-    context.fillRect(-5, -34, 10, 5);
+    context.fillStyle = '#c09356';
+    context.fillRect(-2, -29, 4, 29);
+    context.fillStyle = '#745039';
+    context.fillRect(-5, -33, 10, 5);
   }
-  context.fillStyle = '#5b3f2c';
+  context.fillStyle = '#533a29';
   context.fillRect(-4, -4, 8, 8);
   context.restore();
 };
 
-const drawStreamScene = (context: CanvasRenderingContext2D, time: number) => {
-  const x = 1_675;
-  const y = 634;
-  context.fillStyle = '#587354';
-  context.fillRect(x - 70, y + 18, 140, 25);
-  context.fillStyle = '#778676';
-  context.fillRect(x - 42, y + 2, 28, 18);
-  context.fillRect(x + 25, y + 7, 38, 17);
-  for (let fish = 0; fish < 5; fish += 1) {
-    const fishX = x - 42 + ((time * (8 + fish) + fish * 23) % 95);
-    const fishY = y + 31 + Math.sin(time * 1.5 + fish) * 3;
-    context.fillStyle = '#e9d59a';
-    context.fillRect(fishX, fishY, 4, 1);
-  }
-
-  // The adult NPC is framed from a respectful distance behind water and foliage.
-  context.fillStyle = '#2e2928';
-  context.fillRect(x - 3, y - 22, 7, 7);
-  context.fillStyle = '#c88d69';
-  context.fillRect(x - 2, y - 15, 5, 7);
-  context.fillStyle = '#315f62';
-  context.fillRect(x - 6, y - 9, 13, 14);
-  context.fillStyle = '#b64f52';
-  context.fillRect(x - 6, y - 2, 13, 3);
-  context.fillStyle = '#283d40';
-  context.fillRect(x - 5, y + 5, 4, 12);
-  context.fillRect(x + 2, y + 5, 4, 12);
-  context.fillStyle = '#416d52';
-  context.fillRect(x - 16, y + 3, 13, 17);
-  context.fillRect(x + 6, y + 1, 18, 20);
+const drawFeast = (context: CanvasRenderingContext2D, game: GameState) => {
+  const { x, y } = game.feast;
+  context.fillStyle = 'rgba(34, 39, 29, .3)';
+  context.fillRect(x - 40, y + 15, 80, 17);
+  context.fillStyle = '#b54b3d';
+  context.fillRect(x - 28, y - 7, 56, 36);
+  context.fillStyle = '#e3c45d';
+  for (let stripe = -23; stripe < 26; stripe += 9) context.fillRect(x + stripe, y - 5, 3, 32);
+  context.fillStyle = '#f1dda0';
+  context.fillRect(x - 10, y + 2, 20, 9);
+  context.fillStyle = '#70934d';
+  context.fillRect(x - 6, y + 5, 5, 3);
+  context.fillStyle = '#a64f3b';
+  context.fillRect(x + 2, y + 5, 5, 3);
+  const people = [[-37, 0, '#7c483f'], [37, 0, '#315d62'], [-25, 34, '#6e714a'], [25, 34, '#9f603d']] as const;
+  people.forEach(([dx, dy, color], index) => {
+    const wave = game.callPulseUntil > game.elapsed ? Math.sin(game.elapsed * 14 + index) * 2 : 0;
+    context.fillStyle = '#c58a60';
+    context.fillRect(x + dx - 2, y + dy - 10 + wave, 5, 5);
+    context.fillStyle = color;
+    context.fillRect(x + dx - 5, y + dy - 5 + wave, 10, 11);
+    context.fillStyle = '#362f2b';
+    context.fillRect(x + dx - 7, y + dy + 5, 5, 3);
+    context.fillRect(x + dx + 3, y + dy + 5, 5, 3);
+  });
 };
 
-const drawMuseum = (context: CanvasRenderingContext2D) => {
+const drawChief = (context: CanvasRenderingContext2D, game: GameState) => {
+  const x = 700;
+  const y = 247;
+  const speaking = game.leaderStartedAt !== 0;
+  const bob = speaking ? Math.round(Math.sin(game.worldTime * 4)) : 0;
+  context.fillStyle = 'rgba(31, 43, 33, .28)';
+  context.fillRect(x - 8, y + 8, 18, 5);
+  context.fillStyle = '#2c2927';
+  context.fillRect(x - 4, y - 21 + bob, 9, 7);
+  context.fillStyle = '#c58a61';
+  context.fillRect(x - 3, y - 14 + bob, 7, 6);
+  context.fillStyle = '#5c3130';
+  context.fillRect(x - 7, y - 8 + bob, 15, 16);
+  context.fillStyle = '#d4ba70';
+  context.fillRect(x - 8, y - 24 + bob, 17, 4);
+  if (speaking) {
+    context.fillStyle = 'rgba(25, 42, 34, .9)';
+    context.fillRect(x - 28, y - 43, 57, 14);
+    context.fillStyle = '#f4dda0';
+    context.font = '700 6px monospace';
+    context.textAlign = 'center';
+    context.fillText('THỨ NHẤT…', x, y - 34);
+  }
+};
+
+const drawStreamGroup = (context: CanvasRenderingContext2D) => {
+  const people = [
+    { x: 1_183, y: 682, dress: '#8d3f55', sash: '#e7c15b' },
+    { x: 1_207, y: 695, dress: '#315e68', sash: '#e85b62' },
+    { x: 1_232, y: 680, dress: '#4f7148', sash: '#f0c95e' },
+  ];
+  people.forEach((person, index) => {
+    context.fillStyle = '#292728';
+    context.fillRect(person.x - 4, person.y - 23, 9, 8);
+    context.fillStyle = '#c68d69';
+    context.fillRect(person.x - 3, person.y - 15, 7, 6);
+    context.fillStyle = person.dress;
+    context.fillRect(person.x - 7, person.y - 9, 15, 17);
+    context.fillStyle = person.sash;
+    context.fillRect(person.x - 7, person.y - 3, 15, 3);
+    context.fillStyle = '#263b3d';
+    context.fillRect(person.x - 6, person.y + 8, 5, 11);
+    context.fillRect(person.x + 2, person.y + 8, 5, 11);
+    if (index === 1) {
+      context.fillStyle = '#d9bd7a';
+      context.fillRect(person.x + 8, person.y - 2, 5, 4);
+    }
+  });
+  context.fillStyle = '#3d6a49';
+  context.fillRect(1_164, 698, 31, 17);
+  context.fillRect(1_222, 696, 35, 20);
+};
+
+const drawFish = (context: CanvasRenderingContext2D, game: GameState) => {
+  const streamAge = game.streamStartedAt > 0 ? Math.max(0, game.elapsed - game.streamStartedAt) : 0;
+  const base = game.streamStartedAt !== 0 ? Math.min(46, Math.floor(streamAge * 10)) : 5;
+  const count = Math.min(84, base + Math.floor(game.fishBoost) + (game.absurdityLevel >= 3 ? 26 : 0));
+  const time = game.powerUntil.coffee > game.elapsed ? game.worldTime * 0.2 : game.worldTime;
+  for (let index = 0; index < count; index += 1) {
+    const lane = index % 9;
+    const fishX = 1_142 + ((time * (5 + index % 4) + index * 19) % 127);
+    const fishY = 696 + lane * 6 + Math.sin(time * 1.4 + index) * 2;
+    context.fillStyle = index % 3 === 0 ? '#f0d68f' : index % 3 === 1 ? '#d97c5a' : '#f1ecbd';
+    context.fillRect(fishX, fishY, 5, 2);
+    context.fillRect(fishX - 2, fishY - 1, 2, 4);
+  }
+};
+
+const drawChicken = (context: CanvasRenderingContext2D, x: number, y: number, color: string) => {
+  context.fillStyle = color;
+  context.fillRect(x - 4, y - 6, 8, 6);
+  context.fillStyle = '#f1d8a0';
+  context.fillRect(x + 3, y - 8, 4, 4);
+  context.fillStyle = '#d9a43d';
+  context.fillRect(x + 7, y - 6, 3, 1);
+  context.fillStyle = '#3c342d';
+  context.fillRect(x - 2, y, 1, 3);
+  context.fillRect(x + 3, y, 1, 3);
+};
+
+const drawDog = (context: CanvasRenderingContext2D, game: GameState) => {
   const x = 330;
-  const y = 880;
-  context.fillStyle = 'rgba(36, 43, 34, .28)';
-  context.fillRect(x - 10, y + 110, 250, 20);
-  context.fillStyle = '#b99463';
-  context.fillRect(x, y + 48, 230, 80);
-  context.fillStyle = '#413f38';
-  for (let column = 0; column < 12; column += 1) context.fillRect(x + 10 + column * 19, y + 55, 2, 65);
-  context.fillStyle = '#7c553c';
-  context.beginPath();
-  context.moveTo(x - 14, y + 52);
-  context.quadraticCurveTo(x + 115, y - 20, x + 244, y + 52);
-  context.closePath();
-  context.fill();
-  context.strokeStyle = '#d2ad6c';
-  context.lineWidth = 3;
-  for (let stripe = 0; stripe < 7; stripe += 1) {
-    context.beginPath();
-    context.moveTo(x + 20 + stripe * 31, y + 42);
-    context.lineTo(x + 48 + stripe * 22, y + 2 + Math.abs(3 - stripe) * 4);
-    context.stroke();
+  const y = 534;
+  const heardCall = game.callPulseUntil > game.elapsed && distance(game.player.x, game.player.y, x, y) < 300;
+  const wag = Math.round(Math.sin(game.worldTime * (heardCall ? 15 : 5)) * 3);
+  context.fillStyle = 'rgba(30, 39, 31, .28)';
+  context.fillRect(x - 12, y + 2, 28, 5);
+  context.fillStyle = '#704a32';
+  context.fillRect(x - 8, y - 8, 18, 10);
+  context.fillRect(x + 7, y - 13, 9, 10);
+  context.fillStyle = '#3c3028';
+  context.fillRect(x + 9, y - 16, 3, 5);
+  context.fillRect(x + 14, y - 15, 3, 5);
+  context.fillRect(x + 14, y - 9, 4, 2);
+  context.fillStyle = '#81583a';
+  context.fillRect(x - 12, y - 8 - wag, 5, 3);
+  context.fillStyle = '#49352a';
+  context.fillRect(x - 6, y, 3, 7);
+  context.fillRect(x + 6, y, 3, 7);
+  if (heardCall) {
+    context.fillStyle = '#f1d992';
+    context.fillRect(x + 19, y - 18, 2, 5);
+    context.fillRect(x + 23, y - 20, 2, 7);
   }
-  context.fillStyle = '#283c36';
-  context.fillRect(x + 94, y + 83, 42, 45);
 };
 
-const drawMonument = (context: CanvasRenderingContext2D) => {
-  const x = 760;
-  const y = 870;
-  context.fillStyle = 'rgba(35, 43, 33, .28)';
-  context.fillRect(x - 30, y + 105, 270, 22);
-  context.fillStyle = '#9c8664';
-  context.fillRect(x, y + 72, 220, 43);
-  context.fillStyle = '#c3ad84';
-  context.fillRect(x + 18, y + 57, 184, 18);
-  context.fillStyle = '#574d40';
-  context.fillRect(x + 86, y + 1, 12, 58);
-  context.fillRect(x + 111, y - 6, 12, 65);
-  context.fillRect(x + 136, y + 4, 12, 55);
-  context.fillStyle = '#6d5a45';
-  context.fillRect(x + 80, y + 18, 24, 18);
-  context.fillRect(x + 105, y + 11, 24, 20);
-  context.fillRect(x + 130, y + 20, 24, 18);
-  context.fillStyle = '#a43f37';
-  context.beginPath();
-  context.moveTo(x + 118, y - 10);
-  context.lineTo(x + 174, y + 1);
-  context.lineTo(x + 118, y + 19);
-  context.closePath();
-  context.fill();
-  context.fillStyle = '#e9cf72';
-  context.fillRect(x + 141, y + 2, 3, 3);
+const drawBuffalo = (context: CanvasRenderingContext2D, game: GameState) => {
+  const x = 888;
+  const y = 585;
+  const chew = Math.round(Math.sin(game.worldTime * 2.2));
+  context.fillStyle = 'rgba(30, 39, 31, .3)';
+  context.fillRect(x - 28, y + 6, 62, 8);
+  context.fillStyle = '#4a4941';
+  context.fillRect(x - 25, y - 19, 45, 25);
+  context.fillRect(x + 14, y - 16, 20, 18);
+  context.fillStyle = '#383a37';
+  context.fillRect(x - 20, y + 2, 6, 16);
+  context.fillRect(x + 8, y + 2, 6, 16);
+  context.fillRect(x + 23, y - 2, 6, 15);
+  context.fillStyle = '#d7c492';
+  context.fillRect(x + 25, y - 22, 14, 3);
+  context.fillRect(x + 31, y - 25, 9, 3);
+  context.fillRect(x + 12, y - 22, 11, 3);
+  context.fillRect(x + 9, y - 25, 8, 3);
+  context.fillStyle = '#232928';
+  context.fillRect(x + 27, y - 12, 2, 2);
+  context.fillRect(x + 34, y - 8 + chew, 4, 2);
+  context.fillStyle = '#303330';
+  context.fillRect(x - 30, y - 19, 6, 3);
 };
 
-const drawCoffeeShelter = (context: CanvasRenderingContext2D) => {
-  context.fillStyle = '#4c3c2f';
-  context.fillRect(1_692, 900, 176, 84);
-  context.fillStyle = '#9c603d';
-  context.beginPath();
-  context.moveTo(1_680, 906);
-  context.lineTo(1_780, 864);
-  context.lineTo(1_880, 906);
-  context.closePath();
-  context.fill();
-  context.fillStyle = '#e3c078';
-  context.fillRect(1_720, 934, 78, 22);
-  context.fillStyle = '#5b3229';
-  context.fillRect(1_817, 924, 31, 60);
-  context.fillStyle = '#f0d895';
-  context.font = '700 7px monospace';
-  context.textAlign = 'center';
-  context.fillText('MƯỜNG ẢNG', 1_759, 948);
+const drawChickens = (context: CanvasRenderingContext2D, game: GameState) => {
+  const panicking = game.chicken.panicUntil > game.elapsed;
+  const progress = panicking ? (game.elapsed - game.chicken.panicStartedAt) / 4.3 : 0;
+  const count = panicking ? (game.quality === 'low' ? 18 : 34) : 4;
+  const time = game.powerUntil.coffee > game.elapsed ? game.worldTime * 0.2 : game.worldTime;
+  for (let index = 0; index < count; index += 1) {
+    const row = index % 6;
+    const x = panicking ? 710 + progress * 720 + (index % 7) * 17 : 744 + index * 13;
+    const y = panicking ? 414 + row * 15 + Math.sin(time * 12 + index) * 6 : 448 + (index % 2) * 12;
+    drawChicken(context, x, y, index % 2 ? '#e7bd63' : '#bd613b');
+  }
 };
 
-const drawActor = (context: CanvasRenderingContext2D, actor: AmbientActor, game: GameState) => {
-  const panic = game.cheerUntil > game.elapsed
-    ? Math.max(0, 1 - distance(actor.x, actor.y, game.player.x, game.player.y) / 330)
-    : 0;
-  const offsetX = panic * Math.sign(actor.x - game.player.x || 1) * 18;
-  const bob = Math.round(Math.sin(game.worldTime * (panic ? 10 : 2.2) + actor.phase));
-  const x = actor.x + offsetX;
-  const y = actor.y + bob;
+const drawHaNu = (context: CanvasRenderingContext2D, game: GameState) => {
+  const { x, y } = game.hanu;
+  const slow = game.powerUntil.coffee > game.elapsed ? 0.22 : 1;
+  const bob = Math.round(Math.abs(Math.sin(game.worldTime * 5 * slow)) * -2);
+  context.save();
+  context.translate(Math.round(x), Math.round(y + bob));
+  context.fillStyle = 'rgba(27, 39, 31, .3)';
+  context.fillRect(-10, 8, 22, 5);
+  context.fillStyle = '#343a36';
+  context.fillRect(-7, 0, 5, 10);
+  context.fillRect(3, 0, 5, 10);
+  context.fillStyle = '#315f68';
+  context.fillRect(-10, -14, 20, 17);
+  context.fillRect(-8, -18, 16, 7);
+  context.fillStyle = '#c68e68';
+  context.fillRect(-5, -26, 11, 9);
+  context.fillStyle = '#2d2929';
+  context.fillRect(-6, -29, 12, 5);
+  context.fillStyle = '#c68e68';
+  context.fillRect(7, -18, 4, 13);
+  context.fillStyle = '#80e0a2';
+  context.fillRect(8, -25, 4, 9);
+  context.fillStyle = '#14211f';
+  context.fillRect(9, -23, 2, 5);
+  context.restore();
+};
 
-  if (actor.kind === 'chicken') {
-    context.fillStyle = actor.color;
-    context.fillRect(x - 4, y - 6, 8, 6);
-    context.fillStyle = '#f0d7a1';
-    context.fillRect(x + 3, y - 8, 4, 4);
-    context.fillStyle = '#d3a044';
-    context.fillRect(x + 7, y - 6, 3, 1);
-    context.fillStyle = '#42372c';
-    context.fillRect(x - 2, y, 1, 3);
-    context.fillRect(x + 3, y, 1, 3);
-    return;
+const drawHeeSun = (context: CanvasRenderingContext2D, game: GameState) => {
+  const { x, y, scale, mode } = game.heesun;
+  const chasing = mode === 'chasing' || mode === 'distracted';
+  const bob = chasing ? Math.round(Math.abs(Math.sin(game.worldTime * 9)) * -3) : Math.round(Math.sin(game.worldTime * 2));
+  context.save();
+  context.translate(Math.round(x), Math.round(y + bob));
+  context.scale(scale, scale);
+  context.fillStyle = 'rgba(29, 36, 29, .34)';
+  context.fillRect(-13, 9, 28, 6);
+  context.fillStyle = '#333630';
+  context.fillRect(-10, 0, 6, 12);
+  context.fillRect(5, 0, 6, 12);
+  context.fillStyle = '#983f38';
+  context.fillRect(-14, -17, 28, 20);
+  context.fillStyle = '#d8b667';
+  for (let stripe = -10; stripe <= 10; stripe += 7) context.fillRect(stripe, -17, 2, 20);
+  context.fillStyle = '#c88e67';
+  context.fillRect(-7, -29, 15, 12);
+  context.fillStyle = '#302828';
+  context.fillRect(-8, -32, 16, 5);
+  context.fillStyle = '#2c2626';
+  context.fillRect(-4, -23, 2, 2);
+  context.fillRect(4, -23, 2, 2);
+  context.fillRect(-2, -19, 7, 2);
+  if (chasing) {
+    context.fillStyle = '#c88e67';
+    context.fillRect(-18, -13, 5, 15);
+    context.fillRect(13, -13, 5, 15);
   }
-  if (actor.kind === 'dog') {
-    context.fillStyle = actor.color;
-    context.fillRect(x - 8, y - 7, 14, 8);
-    context.fillRect(x + 5, y - 11, 7, 7);
-    context.fillRect(x - 7, y, 2, 5);
-    context.fillRect(x + 3, y, 2, 5);
-    return;
-  }
-  if (actor.kind === 'buffalo') {
-    context.fillStyle = '#2e2b29';
-    context.fillRect(x - 16, y - 12, 28, 15);
-    context.fillRect(x + 9, y - 9, 12, 11);
-    context.fillRect(x - 12, y + 2, 4, 10);
-    context.fillRect(x + 6, y + 2, 4, 10);
-    context.fillStyle = '#b7a27b';
-    context.fillRect(x + 18, y - 12, 8, 2);
-    return;
-  }
-  context.fillStyle = '#342f2a';
-  context.fillRect(x - 3, y - 19, 7, 7);
-  context.fillStyle = '#c38a63';
-  context.fillRect(x - 2, y - 12, 5, 5);
-  context.fillStyle = actor.color;
-  context.fillRect(x - 5, y - 7, 11, 12);
-  context.fillStyle = '#343c39';
-  context.fillRect(x - 4, y + 5, 3, 8);
-  context.fillRect(x + 2, y + 5, 3, 8);
+  context.restore();
 };
 
 const drawPlayer = (context: CanvasRenderingContext2D, game: GameState) => {
-  const player = game.player;
-  const squash = game.powerUntil.squash > game.elapsed;
-  const scale = squash ? 1.25 : 1;
+  const { player } = game;
+  const scale = game.powerUntil.squash > game.elapsed ? 1.42 : 1;
   const moving = Math.hypot(player.vx, player.vy) > 5;
-  const bob = game.activity === 'feast' ? 3 : moving ? Math.round(Math.abs(Math.sin(player.walk)) * -2) : 0;
+  const bob = moving ? Math.round(Math.abs(Math.sin(player.walk)) * -2) : 0;
   const step = moving ? Math.round(Math.sin(player.walk) * 2) : 0;
   context.save();
   context.translate(Math.round(player.x), Math.round(player.y + bob));
   context.scale(scale, scale);
-  context.fillStyle = 'rgba(29, 42, 32, .32)';
-  context.fillRect(-8, 5, 17, 5);
-
-  if (game.activity === 'feast') {
-    context.fillStyle = '#3c4c41';
-    context.fillRect(-6, -4, 12, 9);
-    context.fillStyle = '#d4a077';
-    context.fillRect(-3, -11, 7, 7);
-    context.fillStyle = '#62734d';
-    context.fillRect(-7, -15, 15, 5);
-    context.fillStyle = '#454b35';
-    context.fillRect(-5, 5, 4, 3);
-    context.fillRect(2, 5, 4, 3);
-    context.restore();
-    return;
-  }
-
-  context.fillStyle = '#3a463f';
+  context.fillStyle = 'rgba(28, 40, 31, .32)';
+  context.fillRect(-8, 6, 18, 5);
+  context.fillStyle = '#38473f';
   context.fillRect(-5, 0, 4, 9 + step);
   context.fillRect(2, 0, 4, 9 - step);
-  context.fillStyle = '#cf9b70';
+  context.fillStyle = '#d0a078';
   context.fillRect(-5, -16, 10, 9);
-  context.fillStyle = '#33322e';
-  context.fillRect(-5, -18, 10, 4);
-  context.fillStyle = '#d9c590';
+  context.fillStyle = '#332f2d';
+  context.fillRect(-5, -19, 10, 4);
+  context.fillStyle = '#d9c48b';
   context.fillRect(-6, -8, 12, 11);
-  context.fillStyle = '#455b50';
+  context.fillStyle = '#425950';
   context.fillRect(-8, -7, 4, 10);
   context.fillRect(5, -7, 4, 10);
-  context.fillStyle = '#586a42';
-  context.fillRect(-7, -22, 14, 4);
-  context.fillRect(-5, -25, 10, 4);
-  context.fillStyle = '#d7bd68';
-  context.fillRect(-1, -24, 3, 2);
-  if (player.facingY < -0.25) {
-    context.fillStyle = '#5a4635';
-    context.fillRect(-5, -14, 10, 4);
-  } else if (player.facingX > 0.25) {
-    context.fillStyle = '#302c29';
-    context.fillRect(4, -14, 1, 1);
-  } else if (player.facingX < -0.25) {
-    context.fillStyle = '#302c29';
-    context.fillRect(-5, -14, 1, 1);
-  } else {
-    context.fillStyle = '#302c29';
-    context.fillRect(-3, -14, 1, 1);
-    context.fillRect(2, -14, 1, 1);
-  }
+  context.fillStyle = '#5d6f42';
+  context.fillRect(-7, -23, 14, 4);
+  context.fillRect(-5, -26, 10, 4);
+  context.fillStyle = '#d9bd67';
+  context.fillRect(-1, -25, 3, 2);
   context.restore();
 };
 
-const drawPoiMarker = (context: CanvasRenderingContext2D, game: GameState, poi: PoiDefinition) => {
-  const discovered = game.discovered.has(poi.kind);
-  const nearby = game.nearbyPoi === poi.kind;
-  const y = poi.y - 30 + Math.sin(game.worldTime * 2.2 + poi.x) * 2;
+const drawOcop = (context: CanvasRenderingContext2D, game: GameState) => {
+  OCOP_ITEMS.forEach((item) => {
+    if (game.triggered.has(`ocop-${item.kind}`) || !inView(game, item.x, item.y, 40)) return;
+    const bob = Math.sin(game.worldTime * 2 + item.x) * 2;
+    context.save();
+    context.translate(item.x, item.y + bob);
+    context.fillStyle = 'rgba(25, 40, 31, .24)';
+    context.fillRect(-11, 7, 23, 5);
+    if (item.kind === 'squash') {
+      context.fillStyle = '#8fbe55';
+      context.fillRect(-9, -4, 18, 12);
+      context.fillStyle = '#d8e98c';
+      context.fillRect(-5, -6, 10, 3);
+      context.fillStyle = '#3b6b3d';
+      context.fillRect(-1, -9, 3, 4);
+    } else if (item.kind === 'coffee') {
+      context.fillStyle = '#f0d49a';
+      context.fillRect(-8, -5, 14, 12);
+      context.fillStyle = '#5c352c';
+      context.fillRect(6, -2, 4, 6);
+      context.fillStyle = '#bb563d';
+      context.fillRect(-3, -9, 3, 3);
+      context.fillRect(2, -10, 3, 3);
+    } else {
+      context.fillStyle = '#d8b86f';
+      context.fillRect(-8, -5, 7, 9);
+      context.fillRect(2, -7, 8, 11);
+      context.fillStyle = '#775334';
+      context.fillRect(-5, -3, 2, 5);
+      context.fillRect(5, -5, 2, 6);
+    }
+    context.restore();
+  });
+};
+
+const drawGate = (context: CanvasRenderingContext2D, game: GameState) => {
+  const x = 805;
+  const y = 447;
+  context.fillStyle = '#5a412d';
+  context.fillRect(x - 36, y - 20, 5, 43);
+  context.fillRect(x + 31, y - 20, 5, 43);
   context.save();
-  context.translate(poi.x, y);
-  context.fillStyle = nearby ? '#fff2a8' : discovered ? 'rgba(221, 235, 184, .72)' : '#efc75f';
-  context.beginPath();
-  context.moveTo(0, -5);
-  context.lineTo(5, 0);
-  context.lineTo(0, 5);
-  context.lineTo(-5, 0);
-  context.closePath();
-  context.fill();
-  context.fillStyle = '#2d4c3f';
-  context.fillRect(-1, -2, 2, 4);
-  if (nearby) {
-    context.strokeStyle = 'rgba(255, 240, 166, .7)';
-    context.lineWidth = 1;
-    context.beginPath();
-    context.arc(0, 0, 9 + Math.sin(game.worldTime * 3) * 2, 0, Math.PI * 2);
-    context.stroke();
-  }
+  context.translate(x - 31, y - 16);
+  if (game.gateOpen) context.rotate(-0.9);
+  context.fillStyle = '#a17443';
+  context.fillRect(0, 0, 62, 5);
+  context.fillRect(0, 14, 62, 5);
+  for (let bar = 0; bar <= 56; bar += 14) context.fillRect(bar, 0, 4, 23);
   context.restore();
+};
+
+const drawDomino = (context: CanvasRenderingContext2D, game: GameState) => {
+  const age = game.dominoStartedAt > 0 ? game.elapsed - game.dominoStartedAt : 0;
+  for (let index = 0; index < 5; index += 1) {
+    const progress = clamp(age * 2.2 - index * 0.32, 0, 1);
+    context.save();
+    context.translate(1_275 + index * 18, 408 + index * 2);
+    context.rotate(progress * 1.2);
+    context.fillStyle = index % 2 ? '#825239' : '#9c6841';
+    context.fillRect(-7, -12, 14, 18);
+    context.fillStyle = '#d2a35c';
+    context.fillRect(-6, -9, 12, 2);
+    context.restore();
+  }
+};
+
+const drawExit = (context: CanvasRenderingContext2D, game: GameState) => {
+  const x = WORLD_WIDTH - 62;
+  const y = 452;
+  context.fillStyle = '#5b422e';
+  context.fillRect(x, y - 35, 4, 52);
+  context.fillStyle = '#e3c878';
+  context.fillRect(x - 33, y - 39, 68, 22);
+  context.fillStyle = '#2c493e';
+  context.font = '900 8px monospace';
+  context.textAlign = 'center';
+  context.fillText('LỐI RA →', x + 1, y - 25);
+  if (game.absurdityLevel >= 2) {
+    context.fillStyle = '#e3c878';
+    context.fillRect(x - 16, y - 66, 34, 16);
+    context.fillStyle = '#2c493e';
+    context.font = '800 6px monospace';
+    context.fillText('CHẮC VẬY', x + 1, y - 56);
+  }
+};
+
+const drawWrongVillagers = (context: CanvasRenderingContext2D, game: GameState) => {
+  if (game.absurdityLevel < 1) return;
+  const positions = [
+    { x: 480, y: 706, color: '#7d4054' },
+    { x: 985, y: 188, color: '#315c63' },
+    { x: 1_146, y: 590, color: '#8d5a3d' },
+  ];
+  positions.slice(0, game.absurdityLevel).forEach((person, index) => {
+    const bob = Math.round(Math.sin(game.worldTime * 2 + index));
+    context.fillStyle = '#2f2929';
+    context.fillRect(person.x - 3, person.y - 19 + bob, 7, 7);
+    context.fillStyle = '#c68c66';
+    context.fillRect(person.x - 2, person.y - 12 + bob, 5, 5);
+    context.fillStyle = person.color;
+    context.fillRect(person.x - 5, person.y - 7 + bob, 11, 13);
+    context.fillStyle = '#343a36';
+    context.fillRect(person.x - 4, person.y + 5 + bob, 3, 8);
+    context.fillRect(person.x + 2, person.y + 5 + bob, 3, 8);
+  });
 };
 
 const drawParticles = (context: CanvasRenderingContext2D, game: GameState) => {
   game.particles.forEach((particle) => {
-    const alpha = clamp(particle.life / particle.maxLife, 0, 1);
-    context.globalAlpha = alpha;
+    context.globalAlpha = clamp(particle.life / particle.maxLife, 0, 1);
     context.fillStyle = particle.color;
     if (particle.kind === 'note') {
       context.fillRect(Math.round(particle.x), Math.round(particle.y), 2, 4);
       context.fillRect(Math.round(particle.x) + 2, Math.round(particle.y), 2, 1);
-    } else if (particle.kind === 'leaf') {
-      context.fillRect(Math.round(particle.x), Math.round(particle.y), particle.size + 2, particle.size);
     } else {
-      context.fillRect(Math.round(particle.x), Math.round(particle.y), particle.size, particle.size);
+      context.fillRect(Math.round(particle.x), Math.round(particle.y), particle.size + (particle.kind === 'leaf' ? 2 : 0), particle.size);
     }
   });
   context.globalAlpha = 1;
 };
 
 const drawCallWave = (context: CanvasRenderingContext2D, game: GameState) => {
-  if (game.cheerUntil <= game.elapsed) return;
-  const progress = 1 - (game.cheerUntil - game.elapsed) / CALL_DURATION;
-  const radius = 18 + progress * 245;
-  context.strokeStyle = 'rgba(247, 211, 104, ' + (0.75 * (1 - progress)).toFixed(3) + ')';
+  if (game.callPulseUntil <= game.elapsed) return;
+  const progress = 1 - (game.callPulseUntil - game.elapsed) / 1.05;
+  const radius = 14 + progress * 120;
+  context.strokeStyle = `rgba(255, 224, 118, ${(0.82 * (1 - progress)).toFixed(3)})`;
   context.lineWidth = 3;
   context.beginPath();
-  context.arc(game.player.x, game.player.y - 5, radius, 0, Math.PI * 2);
+  context.arc(game.player.x, game.player.y - 6, radius, 0, Math.PI * 2);
   context.stroke();
-  context.strokeStyle = 'rgba(255, 243, 175, ' + (0.4 * (1 - progress)).toFixed(3) + ')';
+  context.strokeStyle = `rgba(255, 246, 194, ${(0.48 * (1 - progress)).toFixed(3)})`;
   context.lineWidth = 1;
   context.beginPath();
-  context.arc(game.player.x, game.player.y - 5, radius + 8, 0, Math.PI * 2);
+  context.arc(game.player.x, game.player.y - 6, radius + 8, 0, Math.PI * 2);
   context.stroke();
 };
 
-const drawWorldTitle = (
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  title: string,
-  discovered: boolean,
-) => {
-  context.font = '700 6px monospace';
-  context.textAlign = 'center';
-  const width = Math.max(48, context.measureText(title).width + 10);
-  roundedRect(context, x - width / 2, y, width, 13, 3);
-  context.fillStyle = discovered ? 'rgba(35, 65, 51, .74)' : 'rgba(48, 52, 38, .82)';
-  context.fill();
-  context.fillStyle = discovered ? '#dce7bc' : '#f3d274';
-  context.fillText(title, x, y + 9);
-};
-
-const poiWorldTitles: Record<LandmarkKind, string> = {
-  'stilt-house': 'NHÀ SÀN',
-  feast: 'MÂM BÊN ĐƯỜNG',
-  'buffalo-kitchen': 'BẾP GÁC',
-  'squash-field': 'BÍ TÌA DÌNH',
-  terraces: 'RUỘNG BẬC THANG',
-  'macadamia-grove': 'VƯỜN MẮC CA',
-  'tea-hut': 'CHÈ TỦA CHÙA',
-  waterwheel: 'CỌN NƯỚC',
-  'stream-girl': 'BẾN SUỐI',
-  'coffee-hill': 'CÀ PHÊ MƯỜNG ẢNG',
-  museum: 'BẢO TÀNG',
-  monument: 'TƯỢNG ĐÀI',
-};
-
-const drawCompassArrow = (context: CanvasRenderingContext2D, game: GameState) => {
-  if (game.cheerUntil <= game.elapsed) return;
-  const target = nearestUndiscovered(game);
-  if (!target) return;
-  const screenX = target.x - game.cameraX;
-  const screenY = target.y - game.cameraY;
-  if (screenX > 24 && screenX < VIEW_WIDTH - 24 && screenY > 30 && screenY < VIEW_HEIGHT - 24) return;
-  const dx = target.x - game.player.x;
-  const dy = target.y - game.player.y;
-  const angle = Math.atan2(dy, dx);
-  const radiusX = VIEW_WIDTH / 2 - 28;
-  const radiusY = VIEW_HEIGHT / 2 - 30;
-  const scale = Math.min(
-    Math.abs(radiusX / (Math.cos(angle) || 0.001)),
-    Math.abs(radiusY / (Math.sin(angle) || 0.001)),
-  );
-  const x = VIEW_WIDTH / 2 + Math.cos(angle) * scale;
-  const y = VIEW_HEIGHT / 2 + Math.sin(angle) * scale;
-  context.save();
-  context.translate(x, y);
-  context.rotate(angle);
-  context.fillStyle = '#f5d36f';
+const drawCaptureScene = (context: CanvasRenderingContext2D, game: GameState) => {
+  const age = game.elapsed - game.scene.startedAt;
+  context.fillStyle = age >= 4.35 ? '#151d1c' : '#3a4038';
+  context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+  if (age < 1.45 || age >= 4.35) return;
+  context.fillStyle = '#6d8053';
+  context.fillRect(0, 122, VIEW_WIDTH, 148);
+  context.fillStyle = '#273d35';
   context.beginPath();
-  context.moveTo(9, 0);
-  context.lineTo(-5, -5);
-  context.lineTo(-2, 0);
-  context.lineTo(-5, 5);
+  context.moveTo(0, 133);
+  context.lineTo(80, 70);
+  context.lineTo(150, 125);
+  context.lineTo(250, 54);
+  context.lineTo(350, 128);
+  context.lineTo(435, 72);
+  context.lineTo(VIEW_WIDTH, 118);
+  context.lineTo(VIEW_WIDTH, 152);
+  context.lineTo(0, 152);
   context.closePath();
   context.fill();
+  const fakeGame = { ...game, feast: { ...game.feast, x: 240, y: 172 } };
+  drawFeast(context, fakeGame);
+  context.save();
+  context.translate(206, 201);
+  context.fillStyle = '#38473f';
+  context.fillRect(-6, -5, 12, 10);
+  context.fillStyle = '#d0a078';
+  context.fillRect(-4, -15, 9, 8);
+  context.fillStyle = '#332f2d';
+  context.fillRect(-5, -18, 10, 4);
+  context.fillStyle = '#f2e7b8';
+  context.fillRect(-3, -12, 1, 1);
+  context.fillRect(3, -12, 1, 1);
   context.restore();
+  const fakeHeeSun = { ...game, heesun: { ...game.heesun, x: 281, y: 199, scale: 1.18, mode: 'drinking' as HeeSunMode } };
+  drawHeeSun(context, fakeHeeSun);
+  context.fillStyle = 'rgba(33, 29, 29, .28)';
+  context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
 };
 
 export const renderGame = (context: CanvasRenderingContext2D, game: GameState) => {
   context.save();
   context.imageSmoothingEnabled = false;
   context.clearRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
-  context.translate(-Math.round(game.cameraX), -Math.round(game.cameraY));
+  if (game.scene.kind === 'capture') {
+    drawCaptureScene(context, game);
+    context.restore();
+    return;
+  }
+  const shaking = !game.reducedMotion && game.shakeUntil > game.elapsed;
+  const shakeX = shaking ? Math.sin(game.worldTime * 91) * 1.4 : 0;
+  const shakeY = shaking ? Math.cos(game.worldTime * 77) * 0.9 : 0;
+  context.translate(-Math.round(game.cameraX) + shakeX, -Math.round(game.cameraY) + shakeY);
   drawGround(context, game);
-  drawCityPaving(context);
-  drawSquashField(context, game.worldTime);
-  drawCornfield(context, game.worldTime);
-  drawTerraces(context, game.worldTime);
-  drawCoffeeHill(context, game.worldTime);
+  drawMountains(context);
+  drawFields(context, game);
   drawRoads(context);
   drawRiver(context, game);
-  drawWaterfall(context, game.worldTime);
-  drawBridge(context, 495);
-  drawBridge(context, 875);
-  drawMacadamiaGrove(context);
+  drawBridge(context, 438);
+  drawBridge(context, 695);
+  drawScenery(context, game);
+  drawWaterwheel(context, game);
+  drawFish(context, game);
+  drawStreamGroup(context);
+  drawGate(context, game);
+  drawDomino(context, game);
+  drawExit(context, game);
+
   const drawables: Array<{ y: number; draw: () => void }> = [];
-  scenery.forEach((prop) => {
-    if (!inView(game, prop.x, prop.y, 40)) return;
-    drawables.push({
-      y: prop.y,
-      draw: () => {
-        if (prop.kind === 'tree') drawTree(context, prop.x, prop.y, prop.variant);
-        else if (prop.kind === 'bamboo') drawBamboo(context, prop.x, prop.y, prop.variant);
-        else if (prop.kind === 'rock') {
-          context.fillStyle = '#58675c';
-          context.fillRect(prop.x - 4, prop.y - 3, 9, 6);
-          context.fillStyle = '#84917b';
-          context.fillRect(prop.x - 2, prop.y - 4, 5, 2);
-        } else {
-          context.fillStyle = prop.variant % 2 ? '#e3cf70' : '#e8a081';
-          context.fillRect(prop.x, prop.y - 2, 2, 2);
-          context.fillStyle = '#4e7745';
-          context.fillRect(prop.x, prop.y, 1, 3);
-        }
-      },
-    });
+  HOUSES.forEach((house, index) => {
+    if (inView(game, house.x + house.width / 2, house.y + 35, 100)) {
+      drawables.push({ y: house.y + 82, draw: () => drawStiltHouse(context, house, index, game.worldTime) });
+    }
   });
-  [
-    { y: 438, draw: () => drawStiltHouse(context, 420, 365, 205, '#805345') },
-    { y: 528, draw: () => drawStiltHouse(context, 705, 455, 165, '#6c7d55') },
-    { y: 893, draw: () => drawStiltHouse(context, 560, 820, 150, '#a86a45') },
-    { y: 352, draw: () => drawTeaHut(context) },
-    { y: 752, draw: () => drawBuffaloKitchen(context, game.worldTime) },
-    { y: 580, draw: () => drawWaterwheel(context, game.worldTime) },
-    { y: 672, draw: () => drawStreamScene(context, game.worldTime) },
-    { y: 700, draw: () => drawFeast(context, game) },
-    { y: 1_010, draw: () => drawMuseum(context) },
-    { y: 990, draw: () => drawMonument(context) },
-    { y: 986, draw: () => drawCoffeeShelter(context) },
+  drawables.push(
+    { y: game.feast.y + 40, draw: () => drawFeast(context, game) },
+    { y: 270, draw: () => drawChief(context, game) },
+    { y: 490, draw: () => drawChickens(context, game) },
+    { y: 534, draw: () => drawDog(context, game) },
+    { y: 585, draw: () => drawBuffalo(context, game) },
+    { y: game.hanu.y, draw: () => drawHaNu(context, game) },
+    { y: game.heesun.y, draw: () => drawHeeSun(context, game) },
     { y: game.player.y, draw: () => drawPlayer(context, game) },
-  ].forEach((drawable) => drawables.push(drawable));
-  AMBIENT_ACTORS.forEach((actor) => {
-    if (inView(game, actor.x, actor.y, 40)) {
-      drawables.push({ y: actor.y, draw: () => drawActor(context, actor, game) });
-    }
-  });
-  drawables.sort((first, second) => first.y - second.y).forEach((drawable) => drawable.draw());
-  POIS.forEach((poi) => {
-    if (!inView(game, poi.x, poi.y, 65)) return;
-    drawPoiMarker(context, game, poi);
-    if (game.nearbyPoi === poi.kind || game.discovered.has(poi.kind)) {
-      drawWorldTitle(context, poi.x, poi.y + 24, poiWorldTitles[poi.kind], game.discovered.has(poi.kind));
-    }
-  });
+  );
+  drawables.sort((first, second) => first.y - second.y).forEach((item) => item.draw());
+  drawWrongVillagers(context, game);
+  drawOcop(context, game);
   drawCallWave(context, game);
   drawParticles(context, game);
   context.restore();
 
-  const dayProgress = clamp(game.discovered.size / POIS.length, 0, 1);
-  if (dayProgress > 0.36) {
-    context.fillStyle = 'rgba(43, 48, 70, ' + ((dayProgress - 0.36) * 0.16).toFixed(3) + ')';
+  const chiefAge = game.leaderStartedAt === 0 ? 0 : game.elapsed - game.leaderStartedAt;
+  if (chiefAge > 1.4) {
+    const sunset = clamp(chiefAge / 15, 0, 1);
+    context.fillStyle = `rgba(73, 55, 76, ${(sunset * 0.2).toFixed(3)})`;
+    context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    context.fillStyle = `rgba(238, 133, 76, ${(sunset * 0.13).toFixed(3)})`;
+    context.fillRect(0, 0, VIEW_WIDTH, 92);
+  }
+  if (game.powerUntil.coffee > game.elapsed) {
+    context.fillStyle = 'rgba(236, 176, 91, .08)';
     context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
   }
-  if (game.quality === 'high') {
-    context.fillStyle = 'rgba(255, 235, 166, .55)';
-    for (let index = 0; index < 10; index += 1) {
-      const x = (index * 83 + game.worldTime * (3 + index % 3)) % VIEW_WIDTH;
-      const y = 26 + ((index * 47 + Math.sin(game.worldTime + index) * 12) % (VIEW_HEIGHT - 52));
-      context.fillRect(Math.round(x), Math.round(y), 1, 1);
-    }
+  if (game.absurdityLevel >= 3) {
+    context.fillStyle = `rgba(219, 103, 73, ${(0.025 + Math.sin(game.worldTime * 0.7) * 0.008).toFixed(3)})`;
+    context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
   }
-  drawCompassArrow(context, game);
 };

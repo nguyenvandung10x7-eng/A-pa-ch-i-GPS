@@ -1,4 +1,9 @@
-# Phiêng Lơi — compact open-world remake
+# Phiêng Lơi — compact open-world remake (archived checkpoint)
+
+> This document records the direction preserved by PR #147. It is not the current
+> runtime specification. The replacement closed-world comedy contract is in
+> [`phieng-loi-closed-world.md`](phieng-loi-closed-world.md). The checkpoint source
+> remains available in Git history and has not been deleted or merged.
 
 ## Product decision
 

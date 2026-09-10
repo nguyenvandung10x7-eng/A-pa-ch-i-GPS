@@ -1,56 +1,64 @@
-import type { GameEvent, PowerKind, ZoneKind } from './gameEngine';
+import type { GameEvent, PowerKind } from './gameEngine';
 
 type AudioContextConstructor = typeof AudioContext;
 
 type AudioUpdate = {
   elapsed: number;
-  zone: ZoneKind;
-  powers: PowerKind[];
+  chasing: boolean;
+  power: PowerKind | null;
+  nearStream: boolean;
 };
 
-// A short, original Web Audio piano arrangement follows the F-major pentatonic
-// contour of the traditional Thai folk song “Ính lả ơi”; no recording is bundled.
-const zoneNotes: Record<ZoneKind, number[]> = {
-  0: [349.23, 440, 523.25, 440, 392, 440, 349.23, 293.66, 349.23, 440, 523.25, 587.33, 523.25, 440, 392, 349.23],
-  1: [349.23, 392, 440, 523.25, 440, 392, 349.23, 392, 440, 523.25, 587.33, 523.25, 440, 392, 349.23, 349.23],
-  2: [523.25, 440, 392, 349.23, 440, 523.25, 440, 392, 349.23, 392, 440, 523.25, 440, 392, 349.23, 349.23],
-  3: [349.23, 440, 523.25, 587.33, 523.25, 440, 392, 349.23, 392, 440, 523.25, 440, 392, 349.23, 523.25, 349.23],
-};
+export type VoiceAssetStatus = 'checking' | 'ready' | 'missing';
 
-const zoneTempo: Record<ZoneKind, number> = { 0: 84, 1: 88, 2: 80, 3: 92 };
+// Deliberately no oscillator/TTS fallback: the identity call must be a licensed
+// human recording. The project owner can drop that exact file into this slot.
+export const PHA_OI_VOICE_ASSET = '/audio/phieng-loi/pha-oi-human.mp3';
 
 export class PhiengLoiAudioDirector {
   private context: AudioContext;
   private master: GainNode;
-  private musicBus: GainNode;
+  private ambienceBus: GainNode;
   private sfxBus: GainNode;
-  private musicFilter: BiquadFilterNode;
   private noiseBuffer: AudioBuffer;
-  private nextBeatAt = 0;
-  private nextAmbientAt = 0;
-  private beatIndex = 0;
+  private voice: HTMLAudioElement;
+  private voiceStatus: VoiceAssetStatus = 'checking';
   private muted = false;
   private disposed = false;
+  private nextAmbientAt = 0;
+  private nextStreamAt = 0;
+  private nextDogAt = 10;
+  private nextChaseBeatAt = 0;
+  private chaseBeat = 0;
 
   constructor(Context: AudioContextConstructor) {
     this.context = new Context();
     this.master = this.context.createGain();
-    this.musicBus = this.context.createGain();
+    this.ambienceBus = this.context.createGain();
     this.sfxBus = this.context.createGain();
-    this.musicFilter = this.context.createBiquadFilter();
-    this.master.gain.value = 0.72;
-    this.musicBus.gain.value = 0.16;
-    this.sfxBus.gain.value = 0.48;
-    this.musicFilter.type = 'lowpass';
-    this.musicFilter.frequency.value = 6_500;
-    this.musicBus.connect(this.musicFilter);
-    this.musicFilter.connect(this.master);
+    this.master.gain.value = 0.78;
+    this.ambienceBus.gain.value = 0.16;
+    this.sfxBus.gain.value = 0.46;
+    this.ambienceBus.connect(this.master);
     this.sfxBus.connect(this.master);
     this.master.connect(this.context.destination);
 
-    this.noiseBuffer = this.context.createBuffer(1, Math.ceil(this.context.sampleRate * 0.6), this.context.sampleRate);
+    this.noiseBuffer = this.context.createBuffer(1, Math.ceil(this.context.sampleRate * 0.8), this.context.sampleRate);
     const data = this.noiseBuffer.getChannelData(0);
     for (let index = 0; index < data.length; index += 1) data[index] = Math.random() * 2 - 1;
+
+    this.voice = new Audio(PHA_OI_VOICE_ASSET);
+    this.voice.preload = 'auto';
+    this.voice.addEventListener('canplaythrough', this.markVoiceReady, { once: true });
+    this.voice.addEventListener('error', this.markVoiceMissing, { once: true });
+    this.voice.load();
+  }
+
+  private markVoiceReady = () => { this.voiceStatus = 'ready'; };
+  private markVoiceMissing = () => { this.voiceStatus = 'missing'; };
+
+  getVoiceAssetStatus() {
+    return this.voiceStatus;
   }
 
   async resume() {
@@ -59,18 +67,16 @@ export class PhiengLoiAudioDirector {
 
   async suspend() {
     if (!this.disposed && this.context.state === 'running') await this.context.suspend();
+    this.voice.pause();
   }
 
   setMuted(muted: boolean) {
     this.muted = muted;
+    this.voice.muted = muted;
     if (this.disposed) return;
     const now = this.context.currentTime;
     this.master.gain.cancelScheduledValues(now);
-    this.master.gain.setTargetAtTime(muted ? 0 : 0.72, now, 0.025);
-  }
-
-  isMuted() {
-    return this.muted;
+    this.master.gain.setTargetAtTime(muted ? 0 : 0.78, now, 0.025);
   }
 
   private tone(
@@ -78,9 +84,9 @@ export class PhiengLoiAudioDirector {
     duration: number,
     type: OscillatorType,
     volume: number,
-    destination: AudioNode = this.sfxBus,
     delay = 0,
     endFrequency?: number,
+    destination: AudioNode = this.sfxBus,
   ) {
     if (this.disposed || this.context.state !== 'running') return;
     const start = this.context.currentTime + delay;
@@ -90,7 +96,7 @@ export class PhiengLoiAudioDirector {
     oscillator.frequency.setValueAtTime(Math.max(20, frequency), start);
     if (endFrequency) oscillator.frequency.exponentialRampToValueAtTime(Math.max(20, endFrequency), start + duration);
     gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), start + Math.min(0.02, duration * 0.18));
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), start + Math.min(0.018, duration * 0.18));
     gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
     oscillator.connect(gain);
     gain.connect(destination);
@@ -98,7 +104,7 @@ export class PhiengLoiAudioDirector {
     oscillator.stop(start + duration + 0.03);
   }
 
-  private noise(duration: number, volume: number, cutoff: number, delay = 0) {
+  private noise(duration: number, volume: number, cutoff: number, delay = 0, destination: AudioNode = this.sfxBus) {
     if (this.disposed || this.context.state !== 'running') return;
     const start = this.context.currentTime + delay;
     const source = this.context.createBufferSource();
@@ -112,236 +118,144 @@ export class PhiengLoiAudioDirector {
     gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
     source.connect(filter);
     filter.connect(gain);
-    gain.connect(this.sfxBus);
+    gain.connect(destination);
     source.start(start);
     source.stop(start + duration + 0.02);
   }
 
-  private piano(frequency: number, duration: number, volume: number, destination?: AudioNode, delay = 0) {
-    if (this.disposed || this.context.state !== 'running') return;
-    const start = this.context.currentTime + delay;
-    const target = destination ?? this.musicBus;
-    const filter = this.context.createBiquadFilter();
-    const envelope = this.context.createGain();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(Math.min(5_400, frequency * 7), start);
-    filter.frequency.exponentialRampToValueAtTime(Math.max(900, frequency * 2.4), start + duration);
-    filter.Q.value = 0.7;
-    envelope.gain.setValueAtTime(0.0001, start);
-    envelope.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), start + 0.008);
-    envelope.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume * 0.28), start + Math.min(0.13, duration * 0.34));
-    envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-    filter.connect(envelope);
-    envelope.connect(target);
-
-    const partials: Array<[number, OscillatorType, number, number]> = [
-      [1, 'triangle', 1, -2],
-      [2, 'sine', 0.22, 3],
-      [3, 'sine', 0.08, -4],
-    ];
-    let endedPartials = 0;
-    partials.forEach(([ratio, type, level, detune]) => {
-      const oscillator = this.context.createOscillator();
-      const partialGain = this.context.createGain();
-      oscillator.type = type;
-      oscillator.frequency.setValueAtTime(frequency * ratio, start);
-      oscillator.detune.value = detune;
-      partialGain.gain.value = level;
-      oscillator.connect(partialGain);
-      partialGain.connect(filter);
-      oscillator.onended = () => {
-        oscillator.disconnect();
-        partialGain.disconnect();
-        endedPartials += 1;
-        if (endedPartials === partials.length) {
-          filter.disconnect();
-          envelope.disconnect();
-        }
-      };
-      oscillator.start(start);
-      oscillator.stop(start + duration + 0.03);
-    });
-  }
-
-  private chord(notes: number[], duration = 0.34, type: OscillatorType = 'triangle', volume = 0.055) {
-    notes.forEach((note, index) => this.tone(note, duration, type, volume / notes.length, this.sfxBus, index * 0.028));
+  private playHumanCall() {
+    if (this.disposed || this.muted || this.voiceStatus === 'missing') return;
+    this.voice.currentTime = 0;
+    void this.voice.play()
+      .then(() => { this.voiceStatus = 'ready'; })
+      .catch(() => { this.voiceStatus = 'missing'; });
   }
 
   handle(event: GameEvent) {
     if (this.disposed) return;
-    if (event.type === 'dash') {
-      this.noise(0.16, 0.07, 3_600);
-      this.tone(230, 0.2, 'triangle', 0.065, this.sfxBus, 0, 620);
+    if (event.type === 'pha-oi') {
+      this.playHumanCall();
       return;
     }
-    if (event.type === 'feast-start') {
-      this.chord([196, 293.66, 392], 0.44, 'triangle', 0.1);
-      this.tone(880, 0.08, 'sine', 0.045, this.sfxBus, 0.18);
-      this.tone(1_050, 0.08, 'sine', 0.04, this.sfxBus, 0.3);
+    if (event.type === 'footstep') {
+      this.noise(0.045, 0.012, 520);
       return;
     }
-    if (event.type === 'feast-finish') {
-      [392, 523.25, 659.25, 783.99].forEach((note, index) => this.tone(note, 0.32, 'triangle', 0.055, this.sfxBus, index * 0.075));
-      this.noise(0.12, 0.045, 2_800, 0.16);
+    if (event.type === 'crunch') {
+      this.noise(0.08, 0.085, 2_200);
+      this.tone(155, 0.055, 'square', 0.025, 0, 95);
       return;
     }
-    if (event.type === 'cheer') {
-      this.chord([110, 164.81, 220], 0.52, 'sawtooth', 0.15);
-      this.noise(0.28, 0.11, 1_900);
-      this.tone(330, 0.42, 'triangle', 0.08, this.sfxBus, 0.08, 690);
-      return;
-    }
-    if (event.type === 'landmark') {
-      if (event.landmark === 'waterwheel') {
-        this.noise(0.38, 0.035, 2_400);
-        [196, 246.94, 293.66].forEach((note, index) => this.tone(note, 0.09, 'triangle', 0.045, this.sfxBus, index * 0.095));
-      } else if (event.landmark === 'stream-girl') {
-        [523.25, 659.25, 783.99, 1_046.5].forEach((note, index) => this.piano(note, 0.52, 0.065, this.sfxBus, index * 0.105));
-        this.noise(0.42, 0.025, 3_800, 0.05);
-      } else if (event.landmark === 'museum') {
-        [174.61, 261.63, 349.23].forEach((note, index) => this.piano(note, 0.82, 0.07, this.sfxBus, index * 0.055));
-      } else if (event.landmark === 'monument') {
-        [87.31, 174.61, 261.63, 349.23].forEach((note, index) => this.piano(note, 1.05, 0.075, this.sfxBus, index * 0.075));
-      } else {
-        [349.23, 440, 523.25].forEach((note, index) => this.piano(note, 0.48, 0.052, this.sfxBus, index * 0.09));
+    if (event.type === 'chicken-panic') {
+      for (let index = 0; index < 7; index += 1) {
+        this.tone(720 + (index % 3) * 160, 0.08, 'square', 0.025, index * 0.07, 1_120 + index * 40);
       }
+      this.noise(0.4, 0.08, 2_800);
       return;
     }
-    if (event.type === 'jump') {
-      this.tone(260, 0.13, 'square', 0.07, this.sfxBus, 0, 440);
-      this.noise(0.06, 0.035, 1_500);
+    if (event.type === 'chase-start') {
+      this.tone(92, 0.25, 'sawtooth', 0.09, 0, 155);
+      this.tone(185, 0.18, 'square', 0.045, 0.09, 120);
       return;
     }
-    if (event.type === 'land') {
-      this.tone(95, 0.09, 'sine', 0.08, this.sfxBus, 0, 58);
-      this.noise(0.08, 0.04, 720);
+    if (event.type === 'capture') {
+      this.noise(0.32, 0.16, 950);
+      this.tone(155, 0.5, 'sawtooth', 0.085, 0, 48);
       return;
     }
-    if (event.type === 'token') {
-      this.tone(660, 0.13, 'sine', 0.09);
-      this.tone(880, 0.18, 'sine', 0.075, this.sfxBus, 0.07);
+    if (event.type === 'reset') {
+      this.tone(220, 0.4, 'triangle', 0.045, 0, 440);
       return;
     }
-    if (event.type === 'hit') {
-      this.noise(0.18, 0.15, 1_100);
-      this.tone(170, 0.24, 'sawtooth', 0.08, this.sfxBus, 0, 62);
+    if (event.type === 'phone') {
+      this.tone(820, 0.09, 'sine', 0.035);
+      this.tone(1_080, 0.08, 'sine', 0.025, 0.12);
       return;
     }
-    if (event.type === 'shield-break') {
-      this.chord([740, 930, 1_180], 0.28, 'sine', 0.14);
-      this.noise(0.18, 0.08, 4_200, 0.04);
+    if (event.type === 'domino') {
+      for (let index = 0; index < 5; index += 1) this.tone(210 - index * 22, 0.1, 'triangle', 0.055, index * 0.12, 90);
       return;
     }
-    if (event.type === 'break') {
-      this.noise(0.2, 0.13, 1_650);
-      this.tone(105, 0.18, 'triangle', 0.11, this.sfxBus, 0, 54);
+    if (event.type === 'stream') {
+      this.noise(0.55, 0.05, 2_600);
+      [520, 660, 790].forEach((note, index) => this.tone(note, 0.34, 'sine', 0.035, index * 0.09));
       return;
     }
-    if (event.type === 'zone-change') {
-      const roots: Record<ZoneKind, number[]> = {
-        0: [293.66, 440],
-        1: [329.63, 493.88, 659.25],
-        2: [293.66, 440, 587.33],
-        3: [392, 493.88, 659.25],
-      };
-      this.chord(roots[event.zone], 0.65, 'triangle', 0.11);
+    if (event.type === 'feast') {
+      this.tone(196, 0.16, 'triangle', 0.055);
+      this.tone(294, 0.18, 'triangle', 0.045, 0.12);
+      this.tone(392, 0.2, 'triangle', 0.04, 0.24);
       return;
     }
-    if (event.type === 'complete') {
-      [392, 493.88, 587.33, 783.99].forEach((note, index) => this.tone(note, 0.58, 'triangle', 0.07, this.sfxBus, index * 0.12));
+    if (event.type === 'exit') {
+      [392, 494, 587, 784].forEach((note, index) => this.tone(note, 0.58, 'triangle', 0.055, index * 0.1));
       return;
     }
     if (event.type === 'power-end') {
-      if (event.power === 'squash') {
-        this.tone(310, 0.24, 'sine', 0.08, this.sfxBus, 0, 105);
-      } else if (event.power === 'coffee') {
-        this.tone(360, 0.23, 'square', 0.045, this.sfxBus, 0, 150);
-      } else if (event.power === 'macadamia') {
-        this.tone(690, 0.24, 'sine', 0.06, this.sfxBus, 0, 410);
-      } else if (event.power === 'tea') {
-        this.tone(430, 0.42, 'sine', 0.055, this.sfxBus, 0, 760);
-      } else {
-        this.tone(180, 0.26, 'triangle', 0.07, this.sfxBus, 0, 95);
-      }
+      this.tone(event.power === 'coffee' ? 310 : 220, 0.28, 'sine', 0.05, 0, 105);
       return;
     }
     if (event.type !== 'power-start') return;
     if (event.power === 'squash') {
-      this.noise(0.1, 0.06, 900);
-      this.tone(145, 0.22, 'square', 0.09, this.sfxBus, 0, 390);
-      this.tone(523.25, 0.3, 'triangle', 0.07, this.sfxBus, 0.14);
+      this.noise(0.12, 0.07, 900);
+      this.tone(130, 0.25, 'square', 0.085, 0, 390);
+      this.tone(520, 0.3, 'triangle', 0.055, 0.16);
     } else if (event.power === 'coffee') {
-      this.noise(0.08, 0.045, 3_200);
-      [330, 440, 660, 880].forEach((note, index) => this.tone(note, 0.14, 'square', 0.045, this.sfxBus, index * 0.045));
-    } else if (event.power === 'macadamia') {
-      this.tone(390, 0.12, 'triangle', 0.08);
-      this.tone(780, 0.55, 'sine', 0.11, this.sfxBus, 0.08);
-    } else if (event.power === 'tea') {
-      [880, 740, 587.33].forEach((note, index) => this.tone(note, 0.52, 'sine', 0.045, this.sfxBus, index * 0.09));
-      this.noise(0.34, 0.025, 5_600);
+      this.noise(0.08, 0.04, 3_200);
+      [330, 440, 660, 880].forEach((note, index) => this.tone(note, 0.13, 'square', 0.035, index * 0.05));
     } else {
-      this.noise(0.14, 0.07, 1_200);
-      this.chord([110, 164.81, 220], 0.48, 'triangle', 0.16);
+      this.noise(0.14, 0.1, 2_400);
+      this.tone(390, 0.11, 'triangle', 0.07);
+      this.tone(780, 0.42, 'sine', 0.08, 0.08);
     }
   }
 
-  private playMusicBeat(zone: ZoneKind, coffee: boolean, tea: boolean, buffalo: boolean) {
-    const sequence = zoneNotes[zone];
-    const note = sequence[this.beatIndex % sequence.length];
-    const strongBeat = this.beatIndex % 4 === 0;
-    this.piano(note, tea ? 0.88 : 0.58, strongBeat ? 0.16 : 0.11, this.musicBus);
-    if (strongBeat) this.piano(note / 2, 0.72, buffalo ? 0.105 : 0.075, this.musicBus);
-    if (coffee && this.beatIndex % 2 === 1) {
-      this.noise(0.035, 0.022, 4_800);
-      this.tone(note * 2, 0.07, 'square', 0.018, this.musicBus);
-    }
-    this.beatIndex += 1;
-  }
-
-  private playAmbient(zone: ZoneKind) {
-    if (zone === 0) {
-      this.tone(1_050, 0.06, 'square', 0.025, this.musicBus);
-      this.tone(1_480, 0.08, 'square', 0.02, this.musicBus, 0.08);
-    } else if (zone === 1) {
-      this.tone(1_250, 0.08, 'sine', 0.025, this.musicBus);
-      this.tone(1_620, 0.11, 'sine', 0.018, this.musicBus, 0.1);
-    } else if (zone === 2) {
-      this.noise(0.42, 0.018, 2_100);
-      this.tone(540, 0.18, 'sine', 0.02, this.musicBus, 0.08, 720);
-    } else {
-      this.tone(196, 0.12, 'triangle', 0.035, this.musicBus);
-      this.tone(293.66, 0.18, 'triangle', 0.028, this.musicBus, 0.12);
-    }
-  }
-
-  update({ elapsed, zone, powers }: AudioUpdate) {
+  update({ elapsed, chasing, power, nearStream }: AudioUpdate) {
     if (this.disposed || this.context.state !== 'running') return;
-    const coffee = powers.includes('coffee');
-    const tea = powers.includes('tea');
-    const buffalo = powers.includes('buffalo');
-    const tempo = zoneTempo[zone] * (coffee ? 1.28 : tea ? 0.82 : 1);
-    const beatDuration = 30 / tempo;
-    if (elapsed < this.nextBeatAt - 1) this.nextBeatAt = elapsed;
-    if (elapsed >= this.nextBeatAt) {
-      this.playMusicBeat(zone, coffee, tea, buffalo);
-      this.nextBeatAt = elapsed + beatDuration;
-    }
     if (elapsed >= this.nextAmbientAt) {
-      this.playAmbient(zone);
-      this.nextAmbientAt = elapsed + (zone === 2 ? 1.7 : 2.8 + Math.random() * 1.4);
+      this.noise(0.7, 0.009, 1_400, 0, this.ambienceBus);
+      this.tone(1_050 + Math.random() * 420, 0.06, 'sine', 0.012, 0.1, undefined, this.ambienceBus);
+      this.nextAmbientAt = elapsed + 2.4 + Math.random() * 2.2;
+    }
+    if (nearStream && elapsed >= this.nextStreamAt) {
+      this.noise(0.62, 0.018, 3_100, 0, this.ambienceBus);
+      this.nextStreamAt = elapsed + 0.48;
+    } else if (!nearStream) {
+      this.nextStreamAt = elapsed;
+    }
+    if (elapsed >= this.nextDogAt) {
+      this.noise(0.09, 0.032, 1_050, 0, this.ambienceBus);
+      this.tone(245, 0.1, 'square', 0.018, 0, 195, this.ambienceBus);
+      this.tone(280, 0.08, 'square', 0.014, 0.16, 220, this.ambienceBus);
+      this.nextDogAt = elapsed + 14 + Math.random() * 13;
+    }
+    if (chasing && elapsed >= this.nextChaseBeatAt) {
+      const notes = [82, 98, 82, 123];
+      const note = notes[this.chaseBeat % notes.length];
+      this.tone(note, 0.16, 'square', 0.035, 0, note * 0.75, this.ambienceBus);
+      if (this.chaseBeat % 2 === 0) this.noise(0.06, 0.026, 480, 0, this.ambienceBus);
+      this.chaseBeat += 1;
+      this.nextChaseBeatAt = elapsed + 0.24;
+    } else if (!chasing) {
+      this.nextChaseBeatAt = elapsed;
+      this.chaseBeat = 0;
     }
     const now = this.context.currentTime;
-    this.musicFilter.frequency.setTargetAtTime(tea ? 1_300 : 6_500, now, 0.15);
-    this.musicBus.gain.setTargetAtTime(coffee ? 0.21 : zone === 3 ? 0.19 : 0.16, now, 0.1);
+    this.ambienceBus.gain.setTargetAtTime(chasing ? 0.24 : power === 'coffee' ? 0.08 : 0.16, now, 0.12);
   }
 
   async dispose() {
     if (this.disposed) return;
     this.disposed = true;
+    this.voice.removeEventListener('canplaythrough', this.markVoiceReady);
+    this.voice.removeEventListener('error', this.markVoiceMissing);
+    this.voice.pause();
+    this.voice.removeAttribute('src');
+    this.voice.load();
     try {
       await this.context.close();
     } catch {
-      // The browser may have already closed the context while unloading.
+      // Browsers may close the context during page teardown first.
     }
   }
 }
