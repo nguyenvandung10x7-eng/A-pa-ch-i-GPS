@@ -109,13 +109,22 @@ const requestLandscape = () => {
   if (typeof orientation?.lock === 'function') void orientation.lock('landscape').catch(() => undefined);
 };
 
+const createInputState = (): InputState => ({
+  left: false,
+  right: false,
+  moveAxis: 0,
+  jumpQueued: false,
+  dashQueued: false,
+  cheerQueued: false,
+});
+
 export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePageProps) {
   const vi = language === 'vi';
   const [profile] = useState(getDeviceProfile);
   const [initialGame] = useState(() => createGame(profile.quality, profile.reducedMotion));
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const gameRef = useRef<GameState>(initialGame);
-  const inputRef = useRef<InputState>({ left: false, right: false, jumpQueued: false });
+  const inputRef = useRef<InputState>(createInputState());
   const audioRef = useRef<PhiengLoiAudioDirector | null>(null);
   const animationRef = useRef<number | null>(null);
   const uiSyncAtRef = useRef(0);
@@ -124,6 +133,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   const [ui, setUi] = useState<UiSnapshot>(() => createUiSnapshot(initialGame));
   const [muted, setMuted] = useState(false);
   const [needsLandscape, setNeedsLandscape] = useState(false);
+  const [joystick, setJoystick] = useState({ x: 0, y: 0 });
 
   const syncUi = useCallback((game: GameState, force = false) => {
     if (!force && game.elapsed - uiSyncAtRef.current < 0.08) return;
@@ -143,7 +153,8 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     ensureAudio();
     const game = createGame(profile.quality, profile.reducedMotion);
     gameRef.current = game;
-    inputRef.current = { left: false, right: false, jumpQueued: false };
+    inputRef.current = createInputState();
+    setJoystick({ x: 0, y: 0 });
     uiSyncAtRef.current = 0;
     setUi(createUiSnapshot(game));
     setStatus('playing');
@@ -151,7 +162,8 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
 
   const togglePause = useCallback(() => {
     if (status === 'playing') {
-      inputRef.current = { left: false, right: false, jumpQueued: false };
+      inputRef.current = createInputState();
+      setJoystick({ x: 0, y: 0 });
       void audioRef.current?.suspend();
       setStatus('paused');
       return;
@@ -200,9 +212,12 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
 
     let previousTime = performance.now();
     let active = true;
-    const clearInput = () => { inputRef.current = { left: false, right: false, jumpQueued: false }; };
+    const clearInput = () => {
+      inputRef.current = createInputState();
+      setJoystick({ x: 0, y: 0 });
+    };
     const keyDown = (event: KeyboardEvent) => {
-      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', ' ', 'a', 'd', 'w', 'A', 'D', 'W'].includes(event.key)) event.preventDefault();
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', ' ', 'a', 'd', 'w', 'A', 'D', 'W', 'Shift', 'e', 'E'].includes(event.key)) event.preventDefault();
       if (event.key === 'Escape') {
         clearInput();
         void audioRef.current?.suspend();
@@ -212,6 +227,8 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
       if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') inputRef.current.left = true;
       if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') inputRef.current.right = true;
       if ((event.key === 'ArrowUp' || event.key === ' ' || event.key.toLowerCase() === 'w') && !event.repeat) inputRef.current.jumpQueued = true;
+      if (event.key === 'Shift' && !event.repeat) inputRef.current.dashQueued = true;
+      if (event.key.toLowerCase() === 'e' && !event.repeat) inputRef.current.cheerQueued = true;
     };
     const keyUp = (event: KeyboardEvent) => {
       if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') inputRef.current.left = false;
@@ -270,25 +287,53 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     };
   }, [status, syncUi]);
 
-  const moveDirection = (event: ReactPointerEvent<HTMLButtonElement>): 'left' | 'right' => (
-    event.currentTarget.dataset.direction === 'left' ? 'left' : 'right'
-  );
-
-  const pressMove = (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const updateJoystick = (event: ReactPointerEvent<HTMLDivElement>) => {
     event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    inputRef.current[moveDirection(event)] = true;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const radius = Math.max(1, bounds.width * 0.34);
+    let x = (event.clientX - (bounds.left + bounds.width / 2)) / radius;
+    let y = (event.clientY - (bounds.top + bounds.height / 2)) / radius;
+    const length = Math.hypot(x, y);
+    if (length > 1) {
+      x /= length;
+      y /= length;
+    }
+    const axis = Math.abs(x) < 0.12 ? 0 : x;
+    inputRef.current.moveAxis = axis;
+    setJoystick({ x, y });
   };
 
-  const releaseMove = (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const startJoystick = (event: ReactPointerEvent<HTMLDivElement>) => {
     event.preventDefault();
-    inputRef.current[moveDirection(event)] = false;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    updateJoystick(event);
+  };
+
+  const moveJoystick = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    updateJoystick(event);
+  };
+
+  const releaseJoystick = (event: ReactPointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    inputRef.current.moveAxis = 0;
+    setJoystick({ x: 0, y: 0 });
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
   const queueJump = (event: ReactPointerEvent<HTMLButtonElement>) => {
     event.preventDefault();
     inputRef.current.jumpQueued = true;
+  };
+
+  const queueDash = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    inputRef.current.dashQueued = true;
+  };
+
+  const queueCheer = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    inputRef.current.cheerQueued = true;
   };
 
   const activeCallout = ui.callout ? POWER_COPY[ui.callout] : null;
@@ -311,7 +356,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
           <p>{vi ? 'CHƯƠNG VĂN HOÁ · MOBILE GAME 2D' : 'CULTURE CHAPTER · 2D MOBILE GAME'}</p>
           <h1 id="phieng-game-title">{vi ? 'Nhịp bản Phiêng Lơi' : 'Phiêng Lơi Village Rhythm'}</h1>
         </div>
-        <p>{vi ? 'Một hành trình ngắn qua nhà sàn, ruộng, suối và sân bản. Mỗi sản vật Điện Biên làm bạn biến đổi theo một cách riêng.' : 'A short journey through stilt houses, fields, water and the village courtyard. Each Dien Bien product changes you in a different way.'}</p>
+        <p>{vi ? 'Một hành trình ngắn qua nhà sàn, ruộng, thác suối và sân bản. Sản vật — cùng một cuộc gặp ven đường — sẽ làm bạn biến đổi theo những cách khó đoán.' : 'A short journey through stilt houses, fields, waterfalls and the village courtyard. Local produce — and one roadside encounter — change you in unexpected ways.'}</p>
       </section>
 
       <section className="phieng-game__console" aria-label={vi ? 'Trò chơi Phiêng Lơi' : 'Phiêng Lơi game'}>
@@ -376,15 +421,29 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
             </div>
           ) : null}
 
+          {ui.feastPhase && status === 'playing' ? (
+            <div className={`phieng-game__feast-callout is-${ui.feastPhase}`} role="status">
+              <p>{ui.feastPhase === 'meeting'
+                ? (vi ? 'GẶP MỘT MÂM NHẬU VEN ĐƯỜNG' : 'A ROADSIDE GATHERING')
+                : (vi ? 'KỸ NĂNG VÔ LÝ ĐÃ MỞ' : 'ABSURD SKILL UNLOCKED')}</p>
+              <strong>{ui.feastPhase === 'meeting'
+                ? (vi ? 'Ngồi lại một lát.' : 'Sit for a moment.')
+                : 'DZÔ!'}</strong>
+              <span>{ui.feastPhase === 'meeting'
+                ? (vi ? 'Không ai hỏi bạn đang đi đâu.' : 'Nobody asks where you are going.')
+                : (vi ? 'Hô một tiếng, cả con đường tự né.' : 'One shout, and the whole road moves aside.')}</span>
+            </div>
+          ) : null}
+
           {ui.flash ? <div className={`phieng-game__flash is-${ui.flash}`} aria-hidden="true" /> : null}
 
           {status === 'intro' ? (
             <div className="phieng-game__overlay is-intro">
               <p>{vi ? 'MỘT CHUYẾN ĐI 2D QUA BẢN' : 'A 2D JOURNEY THROUGH THE VILLAGE'}</p>
               <h2>{vi ? 'Đi qua Phiêng Lơi trước khi trời tối.' : 'Cross Phiêng Lơi before nightfall.'}</h2>
-              <div>{vi ? 'Bạn sẽ rơi xuống từ Chuyến tàu thời gian, gặp năm sản vật và đi qua bốn không gian có thật.' : 'Drop in from the Time Train, meet five local products and cross four living landscapes.'}</div>
+              <div>{vi ? 'Bạn sẽ rơi xuống từ Chuyến tàu thời gian, gặp năm sản vật, một mâm nhậu ven đường và đi qua bốn không gian có thật.' : 'Drop in from the Time Train, meet five local products, one roadside gathering and cross four living landscapes.'}</div>
               <div className="phieng-game__intro-controls">
-                <span>← → / A D</span><span>{vi ? 'Space để nhảy' : 'Space to jump'}</span>
+                <span>← → / A D</span><span>{vi ? 'Space · Nhảy' : 'Space · Jump'}</span><span>Shift · {vi ? 'Lướt' : 'Dash'}</span><span>E · DZÔ!</span>
               </div>
               <button type="button" onClick={startGame}>{vi ? 'Bắt đầu hành trình' : 'Start the journey'}<ArrowLeft className="is-forward" aria-hidden="true" /></button>
             </div>
@@ -429,29 +488,52 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
           ) : null}
 
           {status === 'playing' ? (
-            <div className={`phieng-game__touch-surface${showTouchGuide ? ' is-guiding' : ''}`} aria-label={vi ? 'Điều khiển cảm ứng' : 'Touch controls'}>
-              <button
-                type="button"
-                data-direction="left"
-                aria-label={vi ? 'Đi sang trái' : 'Move left'}
-                onPointerDown={pressMove}
-                onPointerUp={releaseMove}
-                onPointerCancel={releaseMove}
-                onLostPointerCapture={releaseMove}
-              ><span>←</span></button>
-              <button
-                type="button"
-                data-direction="right"
-                aria-label={vi ? 'Đi sang phải' : 'Move right'}
-                onPointerDown={pressMove}
-                onPointerUp={releaseMove}
-                onPointerCancel={releaseMove}
-                onLostPointerCapture={releaseMove}
-              ><span>→</span></button>
-              <button type="button" className="is-jump" aria-label={vi ? 'Nhảy' : 'Jump'} onPointerDown={queueJump}>
-                <span>{vi ? 'CHẠM ĐỂ NHẢY' : 'TAP TO JUMP'}</span>
-              </button>
-              {showTouchGuide ? <p>{vi ? 'Chạm bên trái để di chuyển · Chạm bên phải để nhảy' : 'Touch left to move · Touch right to jump'}</p> : null}
+            <div className={`phieng-game__mobile-controls${showTouchGuide ? ' is-guiding' : ''}`} aria-label={vi ? 'Điều khiển kiểu MOBA' : 'MOBA-style controls'}>
+              <div
+                className="phieng-game__joystick"
+                role="group"
+                aria-label={vi ? 'Joystick di chuyển' : 'Movement joystick'}
+                onPointerDown={startJoystick}
+                onPointerMove={moveJoystick}
+                onPointerUp={releaseJoystick}
+                onPointerCancel={releaseJoystick}
+                onLostPointerCapture={releaseJoystick}
+              >
+                <span className="phieng-game__joystick-ring" aria-hidden="true">
+                  <i style={{ transform: `translate(${joystick.x * 1.25}rem, ${joystick.y * 1.25}rem)` }} />
+                </span>
+                <small>{vi ? 'DI CHUYỂN' : 'MOVE'}</small>
+              </div>
+              <div className="phieng-game__actions">
+                <button
+                  type="button"
+                  className="is-dash"
+                  aria-label={vi ? 'Lướt nhanh' : 'Dash'}
+                  disabled={ui.dashCooldown > 0}
+                  onPointerDown={queueDash}
+                >
+                  <i style={{ transform: `scaleY(${ui.dashCooldown})` }} aria-hidden="true" />
+                  <strong>{vi ? 'LƯỚT' : 'DASH'}</strong>
+                  <small>{ui.dashCooldown > 0 ? Math.ceil(ui.dashCooldown * 3.2) : '↗'}</small>
+                </button>
+                <button type="button" className="is-jump" aria-label={vi ? 'Nhảy' : 'Jump'} onPointerDown={queueJump}>
+                  <strong>{vi ? 'NHẢY' : 'JUMP'}</strong><small>↑</small>
+                </button>
+                <button
+                  type="button"
+                  className={`is-cheer${ui.cheerActive ? ' is-active' : ''}`}
+                  aria-label={ui.cheerUnlocked ? 'DZÔ!' : (vi ? 'Kỹ năng DZÔ! chưa mở' : 'DZÔ! skill locked')}
+                  disabled={!ui.cheerUnlocked || ui.cheerCooldown > 0}
+                  onPointerDown={queueCheer}
+                >
+                  <i style={{ transform: `scaleY(${ui.cheerCooldown})` }} aria-hidden="true" />
+                  <strong>{ui.cheerUnlocked ? 'DZÔ!' : '🔒'}</strong>
+                  <small>{ui.cheerUnlocked
+                    ? (ui.cheerCooldown > 0 ? Math.ceil(ui.cheerCooldown * 10) : (vi ? 'NÉ!' : 'MOVE!'))
+                    : (vi ? 'CHƯA MỞ' : 'LOCKED')}</small>
+                </button>
+              </div>
+              {showTouchGuide ? <p>{vi ? 'Ngón trái điều hướng · Ngón phải nhảy và dùng kỹ năng' : 'Left thumb moves · Right thumb jumps and uses skills'}</p> : null}
             </div>
           ) : null}
         </div>

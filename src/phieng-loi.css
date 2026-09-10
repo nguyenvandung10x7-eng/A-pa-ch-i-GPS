@@ -623,8 +623,60 @@
   font-weight: 750;
 }
 
-.phieng-game__touch-surface {
+.phieng-game__mobile-controls {
   display: none;
+}
+
+.phieng-game__feast-callout {
+  position: absolute;
+  z-index: 13;
+  top: 56%;
+  left: 50%;
+  display: grid;
+  width: min(34rem, 76%);
+  justify-items: center;
+  padding: .85rem 1rem;
+  border: 1px solid rgba(255, 224, 143, .38);
+  border-radius: 1rem;
+  background: linear-gradient(145deg, rgba(25, 49, 39, .9), rgba(71, 56, 37, .8));
+  box-shadow: 0 1rem 3rem rgba(15, 33, 27, .34);
+  color: #fff4ce;
+  text-align: center;
+  text-shadow: 0 .1rem .7rem rgba(17, 34, 28, .62);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  backdrop-filter: blur(8px);
+}
+
+.phieng-game__feast-callout.is-meeting {
+  animation: phieng-feast-in 2.75s both;
+}
+
+.phieng-game__feast-callout.is-unlocked {
+  border-color: rgba(255, 213, 101, .68);
+  background: radial-gradient(circle, rgba(194, 109, 57, .76), rgba(25, 49, 39, .92) 72%);
+  animation: phieng-skill-unlock 2.35s both;
+}
+
+.phieng-game__feast-callout p {
+  margin: 0 0 .3rem;
+  color: #f3d27b;
+  font-size: clamp(.45rem, .8vw, .64rem);
+  font-weight: 950;
+  letter-spacing: .15em;
+}
+
+.phieng-game__feast-callout strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 3.7vw, 3.2rem);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.phieng-game__feast-callout span {
+  margin-top: .35rem;
+  color: rgba(255, 244, 206, .78);
+  font-size: clamp(.55rem, .9vw, .75rem);
 }
 
 .phieng-game__footer {
@@ -720,28 +772,47 @@
   to { opacity: 0; }
 }
 
+@keyframes phieng-feast-in {
+  0% { opacity: 0; transform: translate(-50%, -44%) scale(.96); }
+  12%, 82% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -54%) scale(1); }
+}
+
+@keyframes phieng-skill-unlock {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.72); }
+  13% { opacity: 1; transform: translate(-50%, -50%) scale(1.07); }
+  22%, 78% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -56%) scale(1.03); }
+}
+
+@keyframes phieng-action-pulse {
+  0%, 100% { box-shadow: 0 .35rem 1.25rem rgba(17, 37, 30, .34), inset 0 0 0 1px rgba(255,255,255,.16); }
+  50% { box-shadow: 0 .35rem 1.6rem rgba(245, 184, 79, .56), inset 0 0 0 2px rgba(255, 232, 159, .55); }
+}
+
 @keyframes phieng-rotate {
   0%, 100% { transform: rotate(-14deg); }
   50% { transform: rotate(76deg); }
 }
 
 @media (max-width: 760px), (pointer: coarse) {
-  .phieng-game__touch-surface {
+  .phieng-game__mobile-controls {
     position: absolute;
-    z-index: 11;
+    z-index: 15;
     inset: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr 2fr;
-    grid-template-rows: 1fr;
+    display: block;
     pointer-events: none;
   }
 
-  .phieng-game__touch-surface button {
-    position: relative;
-    border: 0;
-    padding: 0;
-    background: transparent;
-    color: #fff1be;
+  .phieng-game__joystick {
+    position: absolute;
+    bottom: max(.72rem, env(safe-area-inset-bottom));
+    left: max(.8rem, env(safe-area-inset-left));
+    display: grid;
+    width: clamp(5.4rem, 16vw, 7.2rem);
+    aspect-ratio: 1;
+    place-items: center;
+    border-radius: 50%;
     cursor: default;
     pointer-events: auto;
     touch-action: none;
@@ -749,45 +820,124 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .phieng-game__touch-surface button span {
+  .phieng-game__joystick-ring {
     position: absolute;
-    bottom: max(.72rem, env(safe-area-inset-bottom));
-    left: 50%;
+    inset: 7%;
     display: grid;
-    min-width: 2.5rem;
-    min-height: 2.5rem;
     place-items: center;
-    border: 1px solid rgba(255,255,255,0);
+    border: 1px solid rgba(255, 239, 191, .3);
     border-radius: 999px;
-    background: rgba(21, 43, 36, 0);
-    font-size: 1rem;
+    background: radial-gradient(circle, rgba(35, 66, 54, .2) 0 34%, rgba(17, 40, 33, .5) 36% 100%);
+    box-shadow: inset 0 0 1.2rem rgba(255,255,255,.08), 0 .4rem 1.5rem rgba(15, 34, 28, .25);
+    backdrop-filter: blur(5px);
+  }
+
+  .phieng-game__joystick-ring i {
+    width: 43%;
+    aspect-ratio: 1;
+    border: 1px solid rgba(255, 246, 215, .48);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 28%, #f7df9c, #9b7141 78%);
+    box-shadow: 0 .28rem .65rem rgba(12, 29, 24, .42);
+    transition: transform 45ms linear;
+  }
+
+  .phieng-game__joystick > small {
+    position: absolute;
+    top: 100%;
+    color: rgba(255, 244, 206, .7);
+    font-size: .42rem;
+    font-weight: 900;
+    letter-spacing: .12em;
+    text-shadow: 0 .1rem .45rem rgba(15, 32, 27, .9);
+  }
+
+  .phieng-game__actions {
+    position: absolute;
+    right: max(.75rem, env(safe-area-inset-right));
+    bottom: max(.68rem, env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: clamp(3.2rem, 9vw, 4rem) clamp(4.4rem, 12vw, 5.25rem) clamp(3.2rem, 9vw, 4rem);
+    align-items: end;
+    gap: clamp(.3rem, 1vw, .58rem);
+    pointer-events: auto;
+  }
+
+  .phieng-game__actions button {
+    position: relative;
+    display: grid;
+    aspect-ratio: 1;
+    place-content: center;
+    gap: .05rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 241, 198, .34);
+    border-radius: 50%;
+    padding: .2rem;
+    background: rgba(23, 51, 42, .72);
+    box-shadow: 0 .35rem 1.25rem rgba(17, 37, 30, .34), inset 0 0 0 1px rgba(255,255,255,.12);
+    color: #fff0b7;
+    cursor: default;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    backdrop-filter: blur(7px);
+  }
+
+  .phieng-game__actions button:active:not(:disabled) {
+    transform: scale(.92);
+  }
+
+  .phieng-game__actions button:disabled {
+    color: rgba(255, 241, 198, .48);
+  }
+
+  .phieng-game__actions button > i {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background: rgba(9, 27, 22, .62);
+    transform-origin: bottom;
+    pointer-events: none;
+  }
+
+  .phieng-game__actions strong,
+  .phieng-game__actions small {
+    position: relative;
+    z-index: 1;
+  }
+
+  .phieng-game__actions strong {
+    font-size: clamp(.48rem, 1.5vw, .67rem);
     font-weight: 950;
-    opacity: 0;
-    transform: translateX(-50%);
-    transition: opacity .5s ease, background .5s ease, border-color .5s ease;
+    letter-spacing: .04em;
   }
 
-  .phieng-game__touch-surface .is-jump span {
-    right: max(.8rem, env(safe-area-inset-right));
-    left: auto;
-    min-width: auto;
-    min-height: 0;
-    padding: .45rem .65rem;
-    font-size: .5rem;
-    letter-spacing: .08em;
-    transform: none;
+  .phieng-game__actions small {
+    font-size: clamp(.36rem, 1vw, .48rem);
+    font-weight: 850;
+    opacity: .74;
   }
 
-  .phieng-game__touch-surface.is-guiding button span {
-    border-color: rgba(255,255,255,.24);
-    background: rgba(21, 43, 36, .44);
-    opacity: .8;
+  .phieng-game__actions .is-jump {
+    border-color: rgba(255, 225, 136, .62);
+    background: radial-gradient(circle at 38% 28%, rgba(225, 148, 77, .9), rgba(105, 57, 40, .88));
   }
 
-  .phieng-game__touch-surface p {
+  .phieng-game__actions .is-cheer:not(:disabled),
+  .phieng-game__actions .is-cheer.is-active {
+    border-color: rgba(255, 220, 119, .7);
+    background: radial-gradient(circle at 35% 25%, rgba(216, 132, 67, .92), rgba(72, 73, 48, .9));
+  }
+
+  .phieng-game__actions .is-cheer.is-active {
+    animation: phieng-action-pulse .58s ease-in-out infinite;
+  }
+
+  .phieng-game__mobile-controls > p {
     position: absolute;
     right: 0;
-    bottom: 15%;
+    bottom: 26%;
     left: 0;
     margin: auto;
     color: rgba(255, 247, 213, .9);
@@ -797,6 +947,11 @@
     text-shadow: 0 .1rem .6rem rgba(17, 35, 29, .8);
     pointer-events: none;
     animation: phieng-guide 5.1s both;
+  }
+
+  .phieng-game__mobile-controls.is-guiding .phieng-game__joystick-ring,
+  .phieng-game__mobile-controls.is-guiding .phieng-game__actions button {
+    box-shadow: 0 0 0 2px rgba(255, 235, 169, .18), 0 .4rem 1.5rem rgba(15, 34, 28, .3);
   }
 
   @keyframes phieng-guide {
@@ -915,9 +1070,9 @@
   }
 
   .phieng-game__power-hud {
-    right: .42rem;
-    bottom: .4rem;
-    width: min(12rem, 31%);
+    right: max(1rem, 21vw);
+    bottom: .35rem;
+    width: min(10rem, 24%);
   }
 
   .phieng-game__power-hud > div {
@@ -930,6 +1085,12 @@
 
   .phieng-game__memory-list {
     margin-top: .55rem;
+  }
+
+  .phieng-game__feast-callout {
+    top: 48%;
+    width: min(28rem, 62%);
+    padding: .55rem .75rem;
   }
 }
 

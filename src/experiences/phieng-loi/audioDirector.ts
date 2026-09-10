@@ -121,6 +121,28 @@ export class PhiengLoiAudioDirector {
 
   handle(event: GameEvent) {
     if (this.disposed) return;
+    if (event.type === 'dash') {
+      this.noise(0.16, 0.07, 3_600);
+      this.tone(230, 0.2, 'triangle', 0.065, this.sfxBus, 0, 620);
+      return;
+    }
+    if (event.type === 'feast-start') {
+      this.chord([196, 293.66, 392], 0.44, 'triangle', 0.1);
+      this.tone(880, 0.08, 'sine', 0.045, this.sfxBus, 0.18);
+      this.tone(1_050, 0.08, 'sine', 0.04, this.sfxBus, 0.3);
+      return;
+    }
+    if (event.type === 'feast-finish') {
+      [392, 523.25, 659.25, 783.99].forEach((note, index) => this.tone(note, 0.32, 'triangle', 0.055, this.sfxBus, index * 0.075));
+      this.noise(0.12, 0.045, 2_800, 0.16);
+      return;
+    }
+    if (event.type === 'cheer') {
+      this.chord([110, 164.81, 220], 0.52, 'sawtooth', 0.15);
+      this.noise(0.28, 0.11, 1_900);
+      this.tone(330, 0.42, 'triangle', 0.08, this.sfxBus, 0.08, 690);
+      return;
+    }
     if (event.type === 'jump') {
       this.tone(260, 0.13, 'square', 0.07, this.sfxBus, 0, 440);
       this.noise(0.06, 0.035, 1_500);

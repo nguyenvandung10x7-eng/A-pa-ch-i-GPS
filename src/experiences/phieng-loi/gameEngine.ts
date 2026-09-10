@@ -5,6 +5,12 @@ const GROUND_Y = 438;
 const PLAYER_START_X = 240;
 const ZONE_LENGTH = 6_400;
 export const LEVEL_END = ZONE_LENGTH * 4;
+const FEAST_X = 20_620;
+const FEAST_DURATION = 2.75;
+const DASH_DURATION = 0.34;
+const DASH_COOLDOWN = 3.2;
+const CHEER_DURATION = 2.45;
+const CHEER_COOLDOWN = 10;
 
 export type PowerKind = 'squash' | 'coffee' | 'macadamia' | 'tea' | 'buffalo';
 export type ZoneKind = 0 | 1 | 2 | 3;
@@ -13,7 +19,10 @@ export type GameQuality = 'low' | 'high';
 export type InputState = {
   left: boolean;
   right: boolean;
+  moveAxis: number;
   jumpQueued: boolean;
+  dashQueued: boolean;
+  cheerQueued: boolean;
 };
 
 type PlayerState = {
@@ -59,7 +68,7 @@ type Particle = {
 type TrailPoint = { x: number; y: number; life: number };
 
 export type GameEvent =
-  | { type: 'jump' | 'land' | 'token' | 'hit' | 'shield-break' | 'break' | 'complete' }
+  | { type: 'jump' | 'land' | 'token' | 'hit' | 'shield-break' | 'break' | 'complete' | 'dash' | 'feast-start' | 'feast-finish' | 'cheer' }
   | { type: 'power-start' | 'power-end'; power: PowerKind }
   | { type: 'zone-change'; zone: ZoneKind };
 
@@ -74,7 +83,12 @@ export type UiSnapshot = {
   powers: ActivePower[];
   callout: PowerKind | null;
   heroZone: ZoneKind | null;
-  flash: PowerKind | 'hit' | null;
+  flash: PowerKind | 'hit' | 'cheer' | null;
+  dashCooldown: number;
+  cheerCooldown: number;
+  cheerUnlocked: boolean;
+  cheerActive: boolean;
+  feastPhase: 'meeting' | 'unlocked' | null;
 };
 
 export type GameState = {
@@ -93,12 +107,20 @@ export type GameState = {
   freezeUntil: number;
   shakeUntil: number;
   flashUntil: number;
-  flashKind: PowerKind | 'hit' | null;
+  flashKind: PowerKind | 'hit' | 'cheer' | null;
   calloutKind: PowerKind | null;
   calloutUntil: number;
   heroZone: ZoneKind | null;
   heroUntil: number;
   powerUntil: Record<PowerKind, number>;
+  dashUntil: number;
+  dashReadyAt: number;
+  cheerUntil: number;
+  cheerReadyAt: number;
+  cheerUnlocked: boolean;
+  feastStarted: boolean;
+  feastUntil: number;
+  feastNoticeUntil: number;
   lastDustAt: number;
   lastTrailAt: number;
   quality: GameQuality;
@@ -230,9 +252,16 @@ const updateParticles = (game: GameState, dt: number) => {
 };
 
 const movingHazardX = (hazard: Hazard, game: GameState) => {
-  if (hazard.kind === 'goat') return hazard.x + Math.sin(game.worldTime * 2.25 + hazard.x * 0.01) * 42;
-  if (hazard.kind === 'chicken') return hazard.x + Math.sin(game.worldTime * 3.1 + hazard.x * 0.02) * 58;
-  return hazard.x;
+  let x = hazard.x;
+  if (hazard.kind === 'goat') x += Math.sin(game.worldTime * 2.25 + hazard.x * 0.01) * 42;
+  if (hazard.kind === 'chicken') x += Math.sin(game.worldTime * 3.1 + hazard.x * 0.02) * 58;
+  if (hazard.kind !== 'stream' && game.cheerUntil > game.elapsed) {
+    const progress = clamp(1 - (game.cheerUntil - game.elapsed) / CHEER_DURATION, 0, 1);
+    const away = x < game.player.x ? -1 : 1;
+    const distance = hazard.kind === 'goat' || hazard.kind === 'chicken' ? 185 : 58;
+    x += away * (24 + Math.sin(progress * Math.PI / 2) * distance);
+  }
+  return x;
 };
 
 const getHazardRect = (hazard: Hazard, game: GameState) => {
@@ -285,6 +314,14 @@ export const createGame = (quality: GameQuality, reducedMotion: boolean): GameSt
   heroZone: null,
   heroUntil: 0,
   powerUntil: { squash: 0, coffee: 0, macadamia: 0, tea: 0, buffalo: 0 },
+  dashUntil: 0,
+  dashReadyAt: 0,
+  cheerUntil: 0,
+  cheerReadyAt: 0,
+  cheerUnlocked: false,
+  feastStarted: false,
+  feastUntil: 0,
+  feastNoticeUntil: 0,
   lastDustAt: 0,
   lastTrailAt: 0,
   quality,
@@ -308,6 +345,15 @@ export const createUiSnapshot = (game: GameState): UiSnapshot => ({
   callout: game.calloutUntil > game.elapsed ? game.calloutKind : null,
   heroZone: game.heroUntil > game.elapsed ? game.heroZone : null,
   flash: game.flashUntil > game.elapsed ? game.flashKind : null,
+  dashCooldown: clamp((game.dashReadyAt - game.elapsed) / DASH_COOLDOWN, 0, 1),
+  cheerCooldown: clamp((game.cheerReadyAt - game.elapsed) / CHEER_COOLDOWN, 0, 1),
+  cheerUnlocked: game.cheerUnlocked,
+  cheerActive: game.cheerUntil > game.elapsed,
+  feastPhase: game.feastStarted && game.feastUntil > game.elapsed
+    ? 'meeting'
+    : game.feastNoticeUntil > game.elapsed
+      ? 'unlocked'
+      : null,
 });
 
 const activatePower = (game: GameState, power: PowerKind) => {
@@ -319,6 +365,18 @@ const activatePower = (game: GameState, power: PowerKind) => {
   game.flashKind = power;
   game.flashUntil = game.elapsed + 0.24;
   addParticles(game, game.player.x + 18, game.player.y + 24, particleColors[power], 28, 220, power === 'tea' ? 'leaf' : 'square');
+};
+
+const clearQueuedInput = (input: InputState) => {
+  input.jumpQueued = false;
+  input.dashQueued = false;
+  input.cheerQueued = false;
+};
+
+const updateCamera = (game: GameState, dt: number, fast: boolean) => {
+  const lookAhead = fast ? 355 : 255;
+  const targetCamera = clamp(game.player.x - lookAhead, 0, LEVEL_END - VIEW_WIDTH + 200);
+  game.cameraX += (targetCamera - game.cameraX) * Math.min(1, dt * (fast ? 7.5 : 5.2));
 };
 
 export const stepGame = (game: GameState, input: InputState, dt: number): GameEvent[] => {
@@ -339,8 +397,28 @@ export const stepGame = (game: GameState, input: InputState, dt: number): GameEv
   game.worldTime += dt * worldScale;
   updateParticles(game, dt);
 
+  if (game.feastStarted && !game.cheerUnlocked && game.elapsed >= game.feastUntil) {
+    game.cheerUnlocked = true;
+    game.feastNoticeUntil = game.elapsed + 2.35;
+    game.flashKind = 'cheer';
+    game.flashUntil = game.elapsed + 0.28;
+    game.shakeUntil = game.elapsed + (game.reducedMotion ? 0.06 : 0.24);
+    addParticles(game, game.player.x + 22, GROUND_Y - 43, ['#ffe39a', '#e18a54', '#8fd2af'], 26, 210, 'circle');
+    events.push({ type: 'feast-finish' });
+  }
+
+  if (game.feastStarted && game.feastUntil > game.elapsed) {
+    game.player.vx += (0 - game.player.vx) * Math.min(1, dt * 14);
+    game.player.vy = 0;
+    game.player.y = GROUND_Y - game.player.height;
+    game.player.grounded = true;
+    clearQueuedInput(input);
+    updateCamera(game, dt, false);
+    return events;
+  }
+
   if (game.freezeUntil > game.elapsed) {
-    input.jumpQueued = false;
+    clearQueuedInput(input);
     return events;
   }
 
@@ -348,10 +426,38 @@ export const stepGame = (game: GameState, input: InputState, dt: number): GameEv
   const coffeeActive = isPowerActive(game, 'coffee');
   const squashActive = isPowerActive(game, 'squash');
   const buffaloActive = isPowerActive(game, 'buffalo');
-  const direction = (input.right ? 1 : 0) - (input.left ? 1 : 0);
-  const targetSpeed = direction * (coffeeActive ? 355 : buffaloActive ? 220 : 205);
-  player.vx += (targetSpeed - player.vx) * Math.min(1, dt * (coffeeActive ? 12 : 8.5));
-  if (direction !== 0) player.facing = direction as -1 | 1;
+  const keyDirection = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+  const moveAxis = Math.abs(input.moveAxis) > 0.1 ? clamp(input.moveAxis, -1, 1) : keyDirection;
+
+  if (input.dashQueued && game.elapsed >= game.dashReadyAt) {
+    if (Math.abs(moveAxis) > 0.1) player.facing = moveAxis < 0 ? -1 : 1;
+    game.dashUntil = game.elapsed + DASH_DURATION;
+    game.dashReadyAt = game.elapsed + DASH_COOLDOWN;
+    game.invulnerableUntil = Math.max(game.invulnerableUntil, game.dashUntil);
+    player.vx = player.facing * (coffeeActive ? 650 : 570);
+    addParticles(game, player.x + player.width / 2, player.y + player.height / 2, ['#fff1b7', '#8ed0b1', '#527c6c'], 13, 170, 'circle');
+    events.push({ type: 'dash' });
+  }
+
+  if (input.cheerQueued && game.cheerUnlocked && game.elapsed >= game.cheerReadyAt) {
+    game.cheerUntil = game.elapsed + CHEER_DURATION;
+    game.cheerReadyAt = game.elapsed + CHEER_COOLDOWN;
+    game.invulnerableUntil = Math.max(game.invulnerableUntil, game.cheerUntil);
+    game.shakeUntil = game.elapsed + (game.reducedMotion ? 0.05 : 0.22);
+    game.flashKind = 'cheer';
+    game.flashUntil = game.elapsed + 0.18;
+    addParticles(game, player.x + player.width / 2, player.y + 24, ['#ffe08a', '#f5a35a', '#a4d9ac'], 34, 270, 'circle');
+    events.push({ type: 'cheer' });
+  }
+  input.dashQueued = false;
+  input.cheerQueued = false;
+
+  const dashActive = game.dashUntil > game.elapsed;
+  const targetSpeed = dashActive
+    ? player.facing * (coffeeActive ? 650 : 570)
+    : moveAxis * (coffeeActive ? 355 : buffaloActive ? 220 : 205);
+  player.vx += (targetSpeed - player.vx) * Math.min(1, dt * (dashActive ? 22 : coffeeActive ? 12 : 8.5));
+  if (!dashActive && Math.abs(moveAxis) > 0.1) player.facing = moveAxis < 0 ? -1 : 1;
 
   if (input.jumpQueued && player.grounded) {
     player.vy = squashActive ? -820 : coffeeActive ? -720 : -690;
@@ -399,6 +505,25 @@ export const stepGame = (game: GameState, input: InputState, dt: number): GameEv
     events.push({ type: 'zone-change', zone: nextZone });
   }
   if (player.x - game.checkpoint > 680) game.checkpoint = Math.max(PLAYER_START_X, player.x - 520);
+
+  if (!game.feastStarted && player.x >= FEAST_X - 118) {
+    game.feastStarted = true;
+    game.feastUntil = game.elapsed + FEAST_DURATION;
+    game.feastNoticeUntil = game.feastUntil + 2.35;
+    game.invulnerableUntil = Math.max(game.invulnerableUntil, game.feastUntil);
+    game.dashUntil = 0;
+    player.x = FEAST_X - 118;
+    player.y = GROUND_Y - player.height;
+    player.vx = 0;
+    player.vy = 0;
+    player.grounded = true;
+    player.facing = 1;
+    game.trail.length = 0;
+    clearQueuedInput(input);
+    events.push({ type: 'feast-start' });
+    updateCamera(game, dt, false);
+    return events;
+  }
 
   const playerRect = { x: player.x, y: player.y, width: player.width, height: player.height };
   pickups.forEach((pickup) => {
@@ -471,9 +596,7 @@ export const stepGame = (game: GameState, input: InputState, dt: number): GameEv
     events.push({ type: 'complete' });
   }
 
-  const lookAhead = coffeeActive ? 355 : 255;
-  const targetCamera = clamp(player.x - lookAhead, 0, LEVEL_END - VIEW_WIDTH + 200);
-  game.cameraX += (targetCamera - game.cameraX) * Math.min(1, dt * (coffeeActive ? 7.5 : 5.2));
+  updateCamera(game, dt, coffeeActive || dashActive);
   return events;
 };
 
@@ -728,6 +851,115 @@ const drawBuffalo = (context: CanvasRenderingContext2D, x: number, y: number) =>
   context.stroke();
 };
 
+const drawWaterfallCliff = (context: CanvasRenderingContext2D, camera: number, time: number, quality: GameQuality) => {
+  const x = VIEW_WIDTH / 2 + (14_850 - camera) * 0.78;
+  if (x < -360 || x > VIEW_WIDTH + 330) return;
+  context.save();
+  context.globalAlpha = 0.92;
+  context.fillStyle = '#52685b';
+  context.beginPath();
+  context.moveTo(x - 175, 338);
+  context.lineTo(x - 142, 198);
+  context.lineTo(x - 68, 150);
+  context.lineTo(x - 12, 176);
+  context.lineTo(x + 48, 126);
+  context.lineTo(x + 126, 178);
+  context.lineTo(x + 178, 338);
+  context.closePath();
+  context.fill();
+  context.fillStyle = '#354e45';
+  context.beginPath();
+  context.moveTo(x - 164, 338);
+  context.lineTo(x - 82, 184);
+  context.lineTo(x - 31, 203);
+  context.lineTo(x + 16, 338);
+  context.closePath();
+  context.fill();
+
+  const water = context.createLinearGradient(x + 28, 150, x + 66, 342);
+  water.addColorStop(0, 'rgba(226, 244, 224, .92)');
+  water.addColorStop(0.48, 'rgba(139, 203, 191, .86)');
+  water.addColorStop(1, 'rgba(79, 148, 143, .2)');
+  context.fillStyle = water;
+  context.beginPath();
+  context.moveTo(x + 24, 156);
+  context.bezierCurveTo(x + 5, 220, x + 57, 255, x + 31, 338);
+  context.lineTo(x + 92, 338);
+  context.bezierCurveTo(x + 68, 263, x + 105, 218, x + 75, 155);
+  context.closePath();
+  context.fill();
+  context.strokeStyle = 'rgba(239, 255, 237, .72)';
+  context.lineWidth = 3;
+  for (let stream = 0; stream < (quality === 'high' ? 5 : 3); stream += 1) {
+    const offset = stream * 13 + Math.sin(time * 2.1 + stream) * 5;
+    context.beginPath();
+    context.moveTo(x + 33 + offset, 164);
+    context.bezierCurveTo(x + 19 + offset, 222, x + 65 + offset, 274, x + 43 + offset, 334);
+    context.stroke();
+  }
+  if (quality === 'high') {
+    for (let mist = 0; mist < 7; mist += 1) {
+      const drift = Math.sin(time * 0.75 + mist * 1.8) * 18;
+      context.fillStyle = `rgba(226, 244, 226, ${0.05 + (mist % 3) * 0.025})`;
+      context.beginPath();
+      context.arc(x + 48 + drift + mist * 9, 328 - (mist % 2) * 11, 30 + mist * 4, 0, Math.PI * 2);
+      context.fill();
+    }
+  }
+  context.restore();
+};
+
+const drawMonumentalLandscape = (context: CanvasRenderingContext2D, camera: number, time: number, quality: GameQuality) => {
+  drawWaterfallCliff(context, camera, time, quality);
+
+  const structures = [
+    { worldX: 8_900, parallax: 0.48, baseY: 364, scale: 1.62, accent: '#c6a657' },
+    { worldX: 21_900, parallax: 0.58, baseY: 388, scale: 2.02, accent: '#d18f52' },
+  ];
+  structures.forEach((structure, index) => {
+    const x = VIEW_WIDTH / 2 + (structure.worldX - camera) * structure.parallax;
+    if (x < -360 || x > VIEW_WIDTH + 330) return;
+    context.save();
+    context.globalAlpha = index === 0 ? 0.58 : 0.7;
+    context.fillStyle = 'rgba(39, 57, 42, .28)';
+    context.beginPath();
+    context.moveTo(x - 170, structure.baseY + 8);
+    context.lineTo(x - 118, structure.baseY - 36);
+    context.lineTo(x + 195, structure.baseY - 22);
+    context.lineTo(x + 245, structure.baseY + 8);
+    context.closePath();
+    context.fill();
+    drawStiltHouse(context, x - 80, structure.baseY, structure.scale, structure.accent, time, quality === 'high');
+    context.restore();
+  });
+
+  const terraceX = 21_300 - camera;
+  if (terraceX > -520 && terraceX < VIEW_WIDTH + 280) {
+    context.save();
+    context.fillStyle = 'rgba(57, 70, 48, .76)';
+    context.beginPath();
+    context.moveTo(terraceX - 40, 374);
+    context.lineTo(terraceX + 90, 319);
+    context.lineTo(terraceX + 315, 338);
+    context.lineTo(terraceX + 410, 396);
+    context.lineTo(terraceX - 40, 396);
+    context.closePath();
+    context.fill();
+    context.strokeStyle = '#69503a';
+    context.lineWidth = 7;
+    context.beginPath();
+    context.moveTo(terraceX + 34, 350);
+    context.lineTo(terraceX + 355, 372);
+    context.stroke();
+    for (let post = 0; post < 7; post += 1) {
+      context.fillStyle = '#584231';
+      context.fillRect(terraceX + 52 + post * 48, 352 + post * 3, 5, 48 - post * 3);
+    }
+    drawStiltHouse(context, terraceX + 116, 335, 0.72, '#75a195', time, quality === 'high');
+    context.restore();
+  }
+};
+
 const drawVillage = (context: CanvasRenderingContext2D, camera: number, time: number, quality: GameQuality) => {
   const houses = [560, 1_650, 2_720, 4_150, 5_470];
   houses.forEach((worldX, index) => {
@@ -883,6 +1115,80 @@ const drawCommunity = (context: CanvasRenderingContext2D, camera: number, time: 
     context.arc(x, y, 6 + Math.sin(time * 2 + lantern), 0, Math.PI * 2);
     context.fill();
   }
+};
+
+const drawSeatedNeighbor = (
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  shirt: string,
+  time: number,
+  cheering: boolean,
+) => {
+  const bob = cheering ? Math.sin(time * 7 + x * 0.1) * 3 : Math.sin(time * 1.8 + x) * 1.2;
+  context.fillStyle = '#c99062';
+  context.beginPath();
+  context.arc(x, y - 35 + bob, 7, 0, Math.PI * 2);
+  context.fill();
+  context.strokeStyle = shirt;
+  context.lineWidth = 9;
+  context.lineCap = 'round';
+  context.beginPath();
+  context.moveTo(x, y - 25 + bob);
+  context.lineTo(x, y - 10 + bob);
+  context.stroke();
+  context.strokeStyle = '#26362f';
+  context.lineWidth = 4;
+  context.beginPath();
+  context.moveTo(x, y - 10 + bob);
+  context.lineTo(x - 11, y - 1);
+  context.moveTo(x, y - 10 + bob);
+  context.lineTo(x + 11, y - 1);
+  context.stroke();
+  context.strokeStyle = shirt;
+  context.beginPath();
+  context.moveTo(x, y - 23 + bob);
+  context.lineTo(x + (cheering ? 15 : 9), y - (cheering ? 40 : 19) + bob);
+  context.stroke();
+  context.fillStyle = '#f1dda7';
+  context.fillRect(x + (cheering ? 13 : 7), y - (cheering ? 45 : 24) + bob, 5, 6);
+};
+
+const drawRoadsideFeast = (context: CanvasRenderingContext2D, game: GameState, camera: number) => {
+  const x = FEAST_X - camera;
+  if (x < -250 || x > VIEW_WIDTH + 250) return;
+  const cheering = game.cheerUntil > game.elapsed || (game.feastNoticeUntil > game.elapsed && game.feastUntil <= game.elapsed);
+  context.save();
+  context.fillStyle = 'rgba(55, 49, 35, .22)';
+  context.beginPath();
+  context.ellipse(x + 18, GROUND_Y + 7, 112, 24, -0.02, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = '#b76e48';
+  context.beginPath();
+  context.ellipse(x + 12, GROUND_Y - 20, 48, 14, 0, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = '#e5b968';
+  context.beginPath();
+  context.ellipse(x + 12, GROUND_Y - 23, 39, 8, 0, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = '#6c8b5e';
+  context.beginPath();
+  context.arc(x - 2, GROUND_Y - 25, 5, 0, Math.PI * 2);
+  context.arc(x + 17, GROUND_Y - 24, 4, 0, Math.PI * 2);
+  context.fill();
+  drawSeatedNeighbor(context, x - 48, GROUND_Y - 2, '#a04d3d', game.worldTime, cheering);
+  drawSeatedNeighbor(context, x + 72, GROUND_Y - 2, '#376a67', game.worldTime, cheering);
+  drawSeatedNeighbor(context, x + 24, GROUND_Y - 58, '#746248', game.worldTime, cheering);
+
+  context.fillStyle = 'rgba(30, 52, 42, .82)';
+  roundedRect(context, x - 68, GROUND_Y - 107, 158, 28, 12);
+  context.fill();
+  context.fillStyle = '#ffe6a1';
+  context.font = '900 11px "Segoe UI", sans-serif';
+  context.textAlign = 'center';
+  context.fillText(game.cheerUnlocked ? 'MÂM NHẬU VEN ĐƯỜNG · DZÔ!' : 'MÂM NHẬU VEN ĐƯỜNG', x + 11, GROUND_Y - 89);
+  context.textAlign = 'start';
+  context.restore();
 };
 
 const pickupShortLabel: Record<PowerKind, string> = {
@@ -1114,8 +1420,48 @@ const drawPlayer = (context: CanvasRenderingContext2D, game: GameState, camera: 
   const runCycle = Math.sin(game.worldTime * (coffeeActive ? 25 : 14) + player.x * 0.03);
   const airborneStretch = player.grounded ? 1 : clamp(1 + Math.abs(player.vy) / 2_400, 1, 1.18);
   const growth = squashActive ? 1.36 : 1;
-  const blink = game.invulnerableUntil > game.elapsed && Math.floor(game.elapsed * 15) % 2 === 0;
+  const seated = trailX === undefined && game.feastStarted && game.feastUntil > game.elapsed;
+  const blink = !seated && game.invulnerableUntil > game.elapsed && Math.floor(game.elapsed * 15) % 2 === 0;
   if (blink && alpha === 1) return;
+
+  if (seated) {
+    context.save();
+    context.globalAlpha = alpha;
+    context.translate(x + player.width / 2, GROUND_Y - 4);
+    context.scale(player.facing, 1);
+    context.strokeStyle = '#172922';
+    context.lineWidth = 6;
+    context.lineCap = 'round';
+    context.beginPath();
+    context.moveTo(-2, -13);
+    context.lineTo(-16, -2);
+    context.moveTo(6, -13);
+    context.lineTo(18, -2);
+    context.stroke();
+    context.fillStyle = '#243f3c';
+    roundedRect(context, -12, -43, 27, 31, 7);
+    context.fill();
+    context.fillStyle = '#d7a16d';
+    context.beginPath();
+    context.arc(2, -50, 10, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = '#252e28';
+    context.beginPath();
+    context.arc(1, -53, 10, Math.PI, Math.PI * 2);
+    context.fill();
+    context.fillStyle = '#b44d3d';
+    context.fillRect(-10, -61, 25, 6);
+    context.strokeStyle = '#e6c86d';
+    context.lineWidth = 7;
+    context.beginPath();
+    context.moveTo(11, -35);
+    context.lineTo(27, -27);
+    context.stroke();
+    context.fillStyle = '#f1dda7';
+    context.fillRect(25, -31, 6, 8);
+    context.restore();
+    return;
+  }
 
   context.save();
   context.globalAlpha = alpha;
@@ -1197,6 +1543,31 @@ const drawPlayer = (context: CanvasRenderingContext2D, game: GameState, camera: 
   context.restore();
 };
 
+const drawCheerWave = (context: CanvasRenderingContext2D, game: GameState, camera: number) => {
+  if (game.cheerUntil <= game.elapsed) return;
+  const progress = clamp(1 - (game.cheerUntil - game.elapsed) / CHEER_DURATION, 0, 1);
+  const x = game.player.x + game.player.width / 2 - camera;
+  const y = game.player.y + 24;
+  context.save();
+  context.textAlign = 'center';
+  context.font = `900 ${30 + progress * 14}px "Segoe UI", sans-serif`;
+  context.fillStyle = `rgba(255, 230, 139, ${1 - progress * 0.72})`;
+  context.strokeStyle = 'rgba(42, 70, 57, .55)';
+  context.lineWidth = 5;
+  context.strokeText('DZÔÔÔ!', x + game.player.facing * 52, y - 58 - progress * 20);
+  context.fillText('DZÔÔÔ!', x + game.player.facing * 52, y - 58 - progress * 20);
+  for (let ring = 0; ring < 3; ring += 1) {
+    const ringProgress = clamp(progress * 1.25 - ring * 0.16, 0, 1);
+    if (ringProgress <= 0) continue;
+    context.strokeStyle = `rgba(255, 226, 132, ${(1 - ringProgress) * 0.68})`;
+    context.lineWidth = 5 - ringProgress * 2;
+    context.beginPath();
+    context.arc(x, y, 42 + ringProgress * 260, -0.72, 0.72);
+    context.stroke();
+  }
+  context.restore();
+};
+
 const drawParticles = (context: CanvasRenderingContext2D, game: GameState, camera: number) => {
   game.particles.forEach((particle) => {
     const alpha = clamp(particle.life / particle.maxLife, 0, 1);
@@ -1262,6 +1633,7 @@ export const renderGame = (context: CanvasRenderingContext2D, game: GameState) =
   drawMountainLayer(context, camera, 0.08, 275, mixColor('#7a9d91', '#6f6f7d', dayProgress), 240);
   drawMountainLayer(context, camera, 0.16, 337, mixColor('#52765d', '#52596a', dayProgress), 190);
 
+  drawMonumentalLandscape(context, camera, game.worldTime, game.quality);
   drawFields(context, camera, game.worldTime);
   drawStreamZone(context, camera, game.worldTime, game.quality);
   drawVillage(context, camera, game.worldTime, game.quality);
@@ -1278,6 +1650,7 @@ export const renderGame = (context: CanvasRenderingContext2D, game: GameState) =
     context.fill();
   }
 
+  drawRoadsideFeast(context, game, camera);
   hazards.forEach((hazard) => drawHazard(context, hazard, game, camera));
   pickups.forEach((pickup) => {
     if (game.collected.has(pickup.id)) return;
@@ -1299,6 +1672,7 @@ export const renderGame = (context: CanvasRenderingContext2D, game: GameState) =
 
   game.trail.forEach((trail) => drawPlayer(context, game, camera, clamp(trail.life / 0.34, 0, 0.24), trail.x, trail.y));
   drawPlayer(context, game, camera);
+  drawCheerWave(context, game, camera);
   drawParticles(context, game, camera);
   drawTemporalArrival(context, game, camera);
 
