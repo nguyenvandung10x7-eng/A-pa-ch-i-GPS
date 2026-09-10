@@ -1,6 +1,33 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { ArrowLeft, ArrowRight, BookOpen, Languages, MapPin, RotateCcw, Sparkles } from 'lucide-react';
+import {
+  ArrowLeft,
+  BookOpen,
+  Languages,
+  MapPin,
+  Pause,
+  Play,
+  RotateCcw,
+  RotateCw,
+  Sparkles,
+  Volume2,
+  VolumeX,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { createPhiengLoiAudio, type PhiengLoiAudioDirector } from '../experiences/phieng-loi/audioDirector';
+import {
+  createGame,
+  createUiSnapshot,
+  renderGame,
+  stepGame,
+  VIEW_HEIGHT,
+  VIEW_WIDTH,
+  type GameQuality,
+  type GameState,
+  type InputState,
+  type PowerKind,
+  type UiSnapshot,
+  type ZoneKind,
+} from '../experiences/phieng-loi/gameEngine';
 import { PHIENG_LOI_CHALLENGE_PATH } from '../services/featuredExperiences';
 import type { LanguageCode } from '../types/task';
 import '../phieng-loi.css';
@@ -10,380 +37,178 @@ type PhiengLoiGamePageProps = {
   setLanguage: (language: LanguageCode) => void;
 };
 
-type GameStatus = 'intro' | 'playing' | 'completed' | 'failed';
-type PowerKind = 'squash' | 'coffee' | 'macadamia' | 'tea';
-type InputState = { left: boolean; right: boolean; jumpQueued: boolean };
+type GameStatus = 'intro' | 'playing' | 'paused' | 'completed' | 'failed';
+type LocalizedCopy = Record<LanguageCode, string>;
 
-type PlayerState = {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  width: number;
-  height: number;
-  grounded: boolean;
+const POWER_COPY: Record<PowerKind, { name: LocalizedCopy; tagline: LocalizedCopy; effect: LocalizedCopy }> = {
+  squash: {
+    name: { vi: 'BÍ XANH TÌA DÌNH', en: 'TIA DINH SQUASH' },
+    tagline: { vi: 'Không rõ tại sao. Nhưng bạn to lên.', en: 'No clear reason. But now you are bigger.' },
+    effect: { vi: 'To lên · bật cao · phá bó rơm', en: 'Grow · jump high · smash hay' },
+  },
+  coffee: {
+    name: { vi: 'CÀ PHÊ MƯỜNG ẢNG', en: 'MUONG ANG COFFEE' },
+    tagline: { vi: 'Hơi nhiều năng lượng.', en: 'Possibly too much energy.' },
+    effect: { vi: 'Tăng tốc · nhảy xa', en: 'Sprint · jump farther' },
+  },
+  macadamia: {
+    name: { vi: 'MẮC CA ĐIỆN BIÊN', en: 'DIEN BIEN MACADAMIA' },
+    tagline: { vi: 'Vỏ cứng, tâm an.', en: 'Hard shell, calm mind.' },
+    effect: { vi: 'Chặn một cú va chạm', en: 'Blocks one collision' },
+  },
+  tea: {
+    name: { vi: 'CHÈ SHAN TUYẾT TỦA CHÙA', en: 'TUA CHUA SHAN TUYET TEA' },
+    tagline: { vi: 'Bình tĩnh nào.', en: 'Take it easy.' },
+    effect: { vi: 'Làm chậm cả thế giới', en: 'Slows the whole world' },
+  },
+  buffalo: {
+    name: { vi: 'THỊT TRÂU GÁC BẾP', en: 'SMOKED BUFFALO' },
+    tagline: { vi: 'Khỏe lên thấy rõ.', en: 'Now that is real strength.' },
+    effect: { vi: 'Nạp lực · phá vật cản', en: 'Power up · break obstacles' },
+  },
 };
 
-type Collectible = {
-  id: string;
-  x: number;
-  y: number;
-  kind: PowerKind | 'flower';
+const ZONE_COPY: Record<ZoneKind, LocalizedCopy> = {
+  0: { vi: 'Bản', en: 'Village' },
+  1: { vi: 'Ruộng', en: 'Fields' },
+  2: { vi: 'Suối', en: 'Stream' },
+  3: { vi: 'Sân cuối', en: 'Courtyard' },
 };
 
-type Hazard = {
-  x: number;
-  width: number;
-  kind: 'stream' | 'basket' | 'goat';
+const HERO_COPY: Record<ZoneKind, { title: LocalizedCopy; detail: LocalizedCopy }> = {
+  0: {
+    title: { vi: 'Đầu bản', en: 'Village entrance' },
+    detail: { vi: 'Nhà sàn thức dậy trong khói bếp.', en: 'Stilt houses wake beneath cooking smoke.' },
+  },
+  1: {
+    title: { vi: 'Lòng chảo mở ra', en: 'The valley opens' },
+    detail: { vi: 'Ruộng, núi và một khoảng trời rộng.', en: 'Fields, mountains and a wider sky.' },
+  },
+  2: {
+    title: { vi: 'Dòng suối Phiêng Lơi', en: 'Phiêng Lơi stream' },
+    detail: { vi: 'Nước, đá và nhịp sống bên bờ.', en: 'Water, stones and life along the bank.' },
+  },
+  3: {
+    title: { vi: 'Sân bản cuối chiều', en: 'Village courtyard at dusk' },
+    detail: { vi: 'Ánh đèn, tiếng nhạc và mọi người trở về.', en: 'Lanterns, music and people coming home.' },
+  },
 };
 
-type GameState = {
-  player: PlayerState;
-  collected: Set<string>;
-  lives: number;
-  checkpoint: number;
-  elapsed: number;
-  invulnerableUntil: number;
-  squashUntil: number;
-  coffeeUntil: number;
-  teaUntil: number;
-  shield: boolean;
+const getDeviceProfile = (): { quality: GameQuality; reducedMotion: boolean } => {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return { quality: 'high', reducedMotion: false };
+  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const constrained = (memory !== undefined && memory <= 4) || navigator.hardwareConcurrency <= 4;
+  return { quality: constrained || reducedMotion ? 'low' : 'high', reducedMotion };
 };
 
-type UiSnapshot = {
-  lives: number;
-  collected: number;
-  progress: number;
-  powers: PowerKind[];
-  shield: boolean;
+const requestLandscape = () => {
+  const orientation = screen.orientation as ScreenOrientation & {
+    lock?: (orientation: 'landscape') => Promise<void>;
+  };
+  if (typeof orientation?.lock === 'function') void orientation.lock('landscape').catch(() => undefined);
 };
 
-const VIEW_WIDTH = 960;
-const VIEW_HEIGHT = 540;
-const GROUND_Y = 435;
-const LEVEL_END = 10_900;
-const PLAYER_START_X = 110;
-
-const hazards: Hazard[] = [
-  { x: 1_180, width: 125, kind: 'stream' },
-  { x: 2_120, width: 64, kind: 'basket' },
-  { x: 2_890, width: 78, kind: 'goat' },
-  { x: 3_720, width: 145, kind: 'stream' },
-  { x: 4_760, width: 66, kind: 'basket' },
-  { x: 5_650, width: 82, kind: 'goat' },
-  { x: 6_610, width: 138, kind: 'stream' },
-  { x: 7_520, width: 66, kind: 'basket' },
-  { x: 8_330, width: 86, kind: 'goat' },
-  { x: 9_320, width: 148, kind: 'stream' },
-];
-
-const collectibles: Collectible[] = [
-  { id: 'flower-1', x: 520, y: 374, kind: 'flower' },
-  { id: 'squash', x: 1_020, y: 368, kind: 'squash' },
-  { id: 'flower-2', x: 1_590, y: 340, kind: 'flower' },
-  { id: 'flower-3', x: 1_880, y: 374, kind: 'flower' },
-  { id: 'coffee', x: 2_520, y: 368, kind: 'coffee' },
-  { id: 'flower-4', x: 3_260, y: 342, kind: 'flower' },
-  { id: 'macadamia', x: 4_230, y: 368, kind: 'macadamia' },
-  { id: 'flower-5', x: 5_140, y: 374, kind: 'flower' },
-  { id: 'tea', x: 6_170, y: 368, kind: 'tea' },
-  { id: 'flower-6', x: 7_080, y: 342, kind: 'flower' },
-  { id: 'coffee-2', x: 7_900, y: 368, kind: 'coffee' },
-  { id: 'flower-7', x: 8_760, y: 374, kind: 'flower' },
-  { id: 'macadamia-2', x: 9_820, y: 368, kind: 'macadamia' },
-  { id: 'flower-8', x: 10_360, y: 340, kind: 'flower' },
-];
-
-const createGame = (): GameState => ({
-  player: { x: PLAYER_START_X, y: GROUND_Y - 52, vx: 0, vy: 0, width: 34, height: 52, grounded: true },
-  collected: new Set(),
-  lives: 3,
-  checkpoint: PLAYER_START_X,
-  elapsed: 0,
-  invulnerableUntil: 0,
-  squashUntil: 0,
-  coffeeUntil: 0,
-  teaUntil: 0,
-  shield: false,
-});
-
-const initialSnapshot: UiSnapshot = { lives: 3, collected: 0, progress: 0, powers: [], shield: false };
-
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
-
-const overlaps = (
-  a: { x: number; y: number; width: number; height: number },
-  b: { x: number; y: number; width: number; height: number },
-) => a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
-
-const powerLabels: Record<PowerKind, Record<LanguageCode, string>> = {
-  squash: { vi: 'Bí xanh · bật cao', en: 'Squash · high jump' },
-  coffee: { vi: 'Cà phê · tăng tốc', en: 'Coffee · speed' },
-  macadamia: { vi: 'Mắc ca · lá chắn', en: 'Macadamia · shield' },
-  tea: { vi: 'Shan Tuyết · chậm thời gian', en: 'Shan Tuyet · slow time' },
-};
-
-const drawMountainLayer = (
-  context: CanvasRenderingContext2D,
-  camera: number,
-  parallax: number,
-  baseline: number,
-  color: string,
-  step: number,
-) => {
-  const offset = -((camera * parallax) % step);
-  context.beginPath();
-  context.moveTo(0, VIEW_HEIGHT);
-  context.lineTo(0, baseline);
-  for (let x = offset - step; x <= VIEW_WIDTH + step; x += step) {
-    context.lineTo(x, baseline);
-    context.lineTo(x + step * 0.46, baseline - step * 0.48);
-    context.lineTo(x + step, baseline);
-  }
-  context.lineTo(VIEW_WIDTH, VIEW_HEIGHT);
-  context.closePath();
-  context.fillStyle = color;
-  context.fill();
-};
-
-const drawStiltHouse = (context: CanvasRenderingContext2D, x: number, y: number, accent: string) => {
-  context.fillStyle = '#553925';
-  context.fillRect(x + 10, y + 35, 5, 38);
-  context.fillRect(x + 68, y + 35, 5, 38);
-  context.fillStyle = '#b78a54';
-  context.fillRect(x + 4, y + 18, 76, 38);
-  context.fillStyle = accent;
-  context.fillRect(x + 13, y + 29, 17, 18);
-  context.fillStyle = '#2d241c';
-  context.fillRect(x + 53, y + 31, 15, 25);
-  context.fillStyle = '#6e3e2d';
-  context.beginPath();
-  context.moveTo(x - 6, y + 20);
-  context.lineTo(x + 42, y - 10);
-  context.lineTo(x + 90, y + 20);
-  context.closePath();
-  context.fill();
-};
-
-const drawBuffalo = (context: CanvasRenderingContext2D, x: number, y: number) => {
-  context.fillStyle = '#3a3029';
-  context.fillRect(x, y, 39, 18);
-  context.fillRect(x + 31, y - 7, 18, 16);
-  context.fillRect(x + 6, y + 16, 5, 15);
-  context.fillRect(x + 30, y + 16, 5, 15);
-  context.strokeStyle = '#d8c49a';
-  context.lineWidth = 3;
-  context.beginPath();
-  context.arc(x + 47, y - 4, 9, 2.8, 4.7);
-  context.stroke();
-};
-
-const collectibleColor: Record<Collectible['kind'], string> = {
-  squash: '#9dcb58',
-  coffee: '#8a4c31',
-  macadamia: '#d6bd75',
-  tea: '#5eaa72',
-  flower: '#f2b6c1',
-};
-
-const drawCollectible = (context: CanvasRenderingContext2D, item: Collectible, screenX: number, elapsed: number) => {
-  const bob = Math.sin(elapsed * 4 + item.x * 0.02) * 5;
-  const y = item.y + bob;
-  context.fillStyle = 'rgba(16, 35, 28, 0.18)';
-  context.fillRect(screenX - 4, y + 25, 34, 6);
-  context.fillStyle = collectibleColor[item.kind];
-  if (item.kind === 'flower') {
-    context.fillRect(screenX + 10, y + 10, 5, 18);
-    context.fillRect(screenX + 3, y + 3, 10, 10);
-    context.fillRect(screenX + 14, y, 10, 10);
-    context.fillRect(screenX + 13, y + 11, 10, 10);
-    return;
-  }
-  context.fillRect(screenX, y, 27, 24);
-  context.fillStyle = 'rgba(255,255,255,.55)';
-  context.fillRect(screenX + 5, y + 4, 7, 5);
-  context.fillStyle = '#24372c';
-  context.font = '800 10px sans-serif';
-  context.fillText(item.kind === 'squash' ? 'BÍ' : item.kind === 'coffee' ? 'CF' : item.kind === 'tea' ? 'CHÈ' : 'MC', screenX + 3, y + 40);
-};
-
-const drawWorld = (context: CanvasRenderingContext2D, game: GameState) => {
-  const camera = clamp(game.player.x - 250, 0, LEVEL_END - VIEW_WIDTH + 140);
-  const sky = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
-  sky.addColorStop(0, '#a8d7d4');
-  sky.addColorStop(0.58, '#e8d99e');
-  sky.addColorStop(1, '#779c61');
-  context.fillStyle = sky;
-  context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
-
-  context.fillStyle = 'rgba(255, 247, 206, .65)';
-  context.fillRect(744, 74, 45, 45);
-  drawMountainLayer(context, camera, 0.08, 275, '#769a86', 230);
-  drawMountainLayer(context, camera, 0.16, 334, '#527760', 190);
-
-  const fieldOffset = -((camera * 0.34) % 180);
-  for (let x = fieldOffset - 180; x < VIEW_WIDTH + 180; x += 180) {
-    context.fillStyle = '#a6b85d';
-    context.fillRect(x, 334, 120, 102);
-    context.fillStyle = '#d2b85b';
-    context.fillRect(x + 120, 334, 60, 102);
-    context.strokeStyle = 'rgba(63, 87, 45, .22)';
-    context.beginPath();
-    context.moveTo(x, 348);
-    context.lineTo(x + 180, 400);
-    context.stroke();
-  }
-
-  const firstHouse = Math.floor((camera - 300) / 880);
-  for (let index = firstHouse; index <= firstHouse + 3; index += 1) {
-    const worldX = index * 880 + 370;
-    const screenX = worldX - camera * 0.72;
-    drawStiltHouse(context, screenX, 300 + (Math.abs(index) % 2) * 10, index % 2 === 0 ? '#d7b96a' : '#85a78a');
-    if (index % 2 === 0) drawBuffalo(context, screenX + 126, 387);
-  }
-
-  context.fillStyle = '#4d794b';
-  context.fillRect(0, GROUND_Y, VIEW_WIDTH, VIEW_HEIGHT - GROUND_Y);
-  context.fillStyle = '#315d3e';
-  context.fillRect(0, GROUND_Y, VIEW_WIDTH, 10);
-  context.fillStyle = '#80583b';
-  for (let x = -((camera * 0.9) % 72); x < VIEW_WIDTH; x += 72) context.fillRect(x, GROUND_Y + 36, 45, 5);
-
-  hazards.forEach((hazard) => {
-    let worldX = hazard.x;
-    if (hazard.kind === 'goat') {
-      const timeScale = game.teaUntil > game.elapsed ? 0.35 : 1;
-      worldX += Math.sin(game.elapsed * 2.2 * timeScale + hazard.x) * 34;
-    }
-    const x = worldX - camera;
-    if (x < -180 || x > VIEW_WIDTH + 180) return;
-    if (hazard.kind === 'stream') {
-      context.fillStyle = '#5aa5aa';
-      context.fillRect(x, GROUND_Y - 2, hazard.width, VIEW_HEIGHT - GROUND_Y + 2);
-      context.fillStyle = 'rgba(231, 248, 226, .55)';
-      for (let wave = 8; wave < hazard.width; wave += 28) context.fillRect(x + wave, GROUND_Y + 12 + (wave % 3), 14, 3);
-    } else if (hazard.kind === 'basket') {
-      context.fillStyle = '#9c6b38';
-      context.fillRect(x, GROUND_Y - 38, hazard.width, 38);
-      context.fillStyle = '#d2a65a';
-      for (let stripe = 7; stripe < hazard.width; stripe += 13) context.fillRect(x + stripe, GROUND_Y - 36, 4, 34);
-    } else {
-      context.fillStyle = '#eee5cf';
-      context.fillRect(x, GROUND_Y - 29, 54, 29);
-      context.fillRect(x + 41, GROUND_Y - 39, 26, 25);
-      context.fillStyle = '#624c3d';
-      context.fillRect(x + 8, GROUND_Y - 3, 6, 18);
-      context.fillRect(x + 41, GROUND_Y - 3, 6, 18);
-    }
-  });
-
-  collectibles.forEach((item) => {
-    if (game.collected.has(item.id)) return;
-    const x = item.x - camera;
-    if (x > -60 && x < VIEW_WIDTH + 60) drawCollectible(context, item, x, game.elapsed);
-  });
-
-  const finishX = LEVEL_END - camera;
-  if (finishX > -80 && finishX < VIEW_WIDTH + 100) {
-    context.fillStyle = '#553925';
-    context.fillRect(finishX, GROUND_Y - 150, 9, 150);
-    context.fillStyle = '#e8cf76';
-    context.fillRect(finishX + 9, GROUND_Y - 145, 92, 44);
-    context.fillStyle = '#334f39';
-    context.font = '900 14px sans-serif';
-    context.fillText('PHIÊNG LƠI', finishX + 17, GROUND_Y - 118);
-  }
-
-  const player = game.player;
-  const playerX = player.x - camera;
-  const growth = game.squashUntil > game.elapsed ? 1.18 : 1;
-  const blink = game.invulnerableUntil > game.elapsed && Math.floor(game.elapsed * 12) % 2 === 0;
-  if (!blink) {
-    context.save();
-    context.translate(playerX + player.width / 2, player.y + player.height);
-    context.scale(growth, growth);
-    context.translate(-(playerX + player.width / 2), -(player.y + player.height));
-    if (game.shield) {
-      context.strokeStyle = '#f4d985';
-      context.lineWidth = 4;
-      context.strokeRect(playerX - 9, player.y - 8, player.width + 18, player.height + 14);
-    }
-    context.fillStyle = '#253e36';
-    context.fillRect(playerX + 5, player.y + 18, 25, 31);
-    context.fillStyle = '#d8a469';
-    context.fillRect(playerX + 9, player.y + 3, 17, 17);
-    context.fillStyle = '#b94e35';
-    context.fillRect(playerX + 5, player.y, 26, 7);
-    context.fillStyle = '#e7d17b';
-    context.fillRect(playerX + 1, player.y + 21, 8, 21);
-    context.fillStyle = '#17251f';
-    context.fillRect(playerX + 5, player.y + 46, 9, 8);
-    context.fillRect(playerX + 21, player.y + 46, 9, 8);
-    context.restore();
-  }
-};
-
-const getHazardRect = (hazard: Hazard, game: GameState) => {
-  let x = hazard.x;
-  if (hazard.kind === 'goat') {
-    const timeScale = game.teaUntil > game.elapsed ? 0.35 : 1;
-    x += Math.sin(game.elapsed * 2.2 * timeScale + hazard.x) * 34;
-  }
-  return hazard.kind === 'stream'
-    ? { x, y: GROUND_Y - 5, width: hazard.width, height: 80 }
-    : hazard.kind === 'basket'
-      ? { x, y: GROUND_Y - 38, width: hazard.width, height: 38 }
-      : { x, y: GROUND_Y - 42, width: 67, height: 42 };
-};
-
-export const PhiengLoiGamePage = ({ language, setLanguage }: PhiengLoiGamePageProps) => {
+export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePageProps) {
   const vi = language === 'vi';
+  const [profile] = useState(getDeviceProfile);
+  const [initialGame] = useState(() => createGame(profile.quality, profile.reducedMotion));
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const gameRef = useRef<GameState>(createGame());
+  const gameRef = useRef<GameState>(initialGame);
   const inputRef = useRef<InputState>({ left: false, right: false, jumpQueued: false });
+  const audioRef = useRef<PhiengLoiAudioDirector | null>(null);
   const animationRef = useRef<number | null>(null);
   const uiSyncAtRef = useRef(0);
+
   const [status, setStatus] = useState<GameStatus>('intro');
-  const [ui, setUi] = useState<UiSnapshot>(initialSnapshot);
+  const [ui, setUi] = useState<UiSnapshot>(() => createUiSnapshot(initialGame));
+  const [muted, setMuted] = useState(false);
+  const [needsLandscape, setNeedsLandscape] = useState(false);
 
   const syncUi = useCallback((game: GameState, force = false) => {
-    if (!force && game.elapsed - uiSyncAtRef.current < 0.18) return;
+    if (!force && game.elapsed - uiSyncAtRef.current < 0.08) return;
     uiSyncAtRef.current = game.elapsed;
-    const powers: PowerKind[] = [];
-    if (game.squashUntil > game.elapsed) powers.push('squash');
-    if (game.coffeeUntil > game.elapsed) powers.push('coffee');
-    if (game.teaUntil > game.elapsed) powers.push('tea');
-    setUi({
-      lives: game.lives,
-      collected: game.collected.size,
-      progress: clamp(game.player.x / LEVEL_END, 0, 1),
-      powers,
-      shield: game.shield,
+    setUi(createUiSnapshot(game));
+  }, []);
+
+  const ensureAudio = useCallback(() => {
+    if (!audioRef.current) audioRef.current = createPhiengLoiAudio();
+    audioRef.current?.setMuted(muted);
+    void audioRef.current?.resume();
+    return audioRef.current;
+  }, [muted]);
+
+  const startGame = useCallback(() => {
+    requestLandscape();
+    ensureAudio();
+    const game = createGame(profile.quality, profile.reducedMotion);
+    gameRef.current = game;
+    inputRef.current = { left: false, right: false, jumpQueued: false };
+    uiSyncAtRef.current = 0;
+    setUi(createUiSnapshot(game));
+    setStatus('playing');
+  }, [ensureAudio, profile.quality, profile.reducedMotion]);
+
+  const togglePause = useCallback(() => {
+    if (status === 'playing') {
+      inputRef.current = { left: false, right: false, jumpQueued: false };
+      void audioRef.current?.suspend();
+      setStatus('paused');
+      return;
+    }
+    ensureAudio();
+    setStatus('playing');
+  }, [ensureAudio, status]);
+
+  const toggleMute = useCallback(() => {
+    setMuted((current) => {
+      const next = !current;
+      audioRef.current?.setMuted(next);
+      return next;
     });
   }, []);
 
-  const resetGame = useCallback(() => {
-    gameRef.current = createGame();
-    inputRef.current = { left: false, right: false, jumpQueued: false };
-    uiSyncAtRef.current = 0;
-    setUi(initialSnapshot);
-    setStatus('playing');
+  useEffect(() => {
+    const portrait = window.matchMedia('(orientation: portrait)');
+    const coarse = window.matchMedia('(pointer: coarse)');
+    const update = () => setNeedsLandscape(portrait.matches && coarse.matches);
+    update();
+    portrait.addEventListener('change', update);
+    coarse.addEventListener('change', update);
+    return () => {
+      portrait.removeEventListener('change', update);
+      coarse.removeEventListener('change', update);
+    };
+  }, []);
+
+  useEffect(() => () => {
+    if (animationRef.current !== null) window.cancelAnimationFrame(animationRef.current);
+    void audioRef.current?.dispose();
+    audioRef.current = null;
   }, []);
 
   useEffect(() => {
-    const context = canvasRef.current?.getContext('2d');
-    if (!context) return;
-    context.imageSmoothingEnabled = false;
+    const context = canvasRef.current?.getContext('2d', { alpha: false });
+    const game = gameRef.current;
+    if (!context || !game) return;
+    context.imageSmoothingEnabled = true;
 
     if (status !== 'playing') {
-      drawWorld(context, gameRef.current);
+      renderGame(context, game);
       return;
     }
 
     let previousTime = performance.now();
     let active = true;
+    const clearInput = () => { inputRef.current = { left: false, right: false, jumpQueued: false }; };
     const keyDown = (event: KeyboardEvent) => {
-      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', ' ', 'a', 'd', 'w'].includes(event.key)) event.preventDefault();
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', ' ', 'a', 'd', 'w', 'A', 'D', 'W'].includes(event.key)) event.preventDefault();
+      if (event.key === 'Escape') {
+        clearInput();
+        void audioRef.current?.suspend();
+        setStatus('paused');
+        return;
+      }
       if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') inputRef.current.left = true;
       if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') inputRef.current.right = true;
       if ((event.key === 'ArrowUp' || event.key === ' ' || event.key.toLowerCase() === 'w') && !event.repeat) inputRef.current.jumpQueued = true;
@@ -392,89 +217,43 @@ export const PhiengLoiGamePage = ({ language, setLanguage }: PhiengLoiGamePagePr
       if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') inputRef.current.left = false;
       if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') inputRef.current.right = false;
     };
-    const clearInput = () => { inputRef.current = { left: false, right: false, jumpQueued: false }; };
+    const visibilityChange = () => {
+      if (!document.hidden) return;
+      clearInput();
+      void audioRef.current?.suspend();
+      setStatus('paused');
+    };
 
     window.addEventListener('keydown', keyDown, { passive: false });
     window.addEventListener('keyup', keyUp);
     window.addEventListener('blur', clearInput);
+    document.addEventListener('visibilitychange', visibilityChange);
 
     const frame = (time: number) => {
       if (!active) return;
-      const dt = Math.min(0.032, Math.max(0.001, (time - previousTime) / 1000));
+      const current = gameRef.current;
+      if (!current) return;
+      const dt = Math.min(0.032, Math.max(0.001, (time - previousTime) / 1_000));
       previousTime = time;
-      const game = gameRef.current;
-      const player = game.player;
-      const input = inputRef.current;
-      game.elapsed += dt;
-
-      const direction = (input.right ? 1 : 0) - (input.left ? 1 : 0);
-      const targetSpeed = direction * (game.coffeeUntil > game.elapsed ? 340 : 225);
-      player.vx += (targetSpeed - player.vx) * Math.min(1, dt * 9);
-      if (input.jumpQueued && player.grounded) {
-        player.vy = game.squashUntil > game.elapsed ? -665 : -565;
-        player.grounded = false;
-      }
-      input.jumpQueued = false;
-      player.vy += 1_420 * dt;
-      player.x = clamp(player.x + player.vx * dt, 0, LEVEL_END + 40);
-      player.y += player.vy * dt;
-      if (player.y + player.height >= GROUND_Y) {
-        player.y = GROUND_Y - player.height;
-        player.vy = 0;
-        player.grounded = true;
-      }
-
-      const checkpoint = Math.floor(player.x / 2_200) * 2_200 + PLAYER_START_X;
-      if (checkpoint > game.checkpoint && checkpoint < LEVEL_END - 600) game.checkpoint = checkpoint;
-
-      const playerRect = { x: player.x, y: player.y, width: player.width, height: player.height };
-      collectibles.forEach((item) => {
-        if (game.collected.has(item.id)) return;
-        if (!overlaps(playerRect, { x: item.x, y: item.y - 8, width: 30, height: 46 })) return;
-        game.collected.add(item.id);
-        if (item.kind === 'squash') game.squashUntil = game.elapsed + 8;
-        if (item.kind === 'coffee') game.coffeeUntil = game.elapsed + 8;
-        if (item.kind === 'tea') game.teaUntil = game.elapsed + 8;
-        if (item.kind === 'macadamia') game.shield = true;
-        syncUi(game, true);
+      const events = stepGame(current, inputRef.current, dt);
+      events.forEach((event) => audioRef.current?.handle(event));
+      const snapshot = createUiSnapshot(current);
+      audioRef.current?.update({
+        elapsed: current.elapsed,
+        zone: current.zone,
+        powers: snapshot.powers.map((power) => power.kind),
       });
+      renderGame(context, current);
+      syncUi(current, events.length > 0);
 
-      if (game.invulnerableUntil <= game.elapsed) {
-        const hitHazard = hazards.some((hazard) => overlaps(playerRect, getHazardRect(hazard, game)));
-        if (hitHazard) {
-          if (game.shield) {
-            game.shield = false;
-            game.invulnerableUntil = game.elapsed + 1.4;
-            player.vy = -360;
-            player.vx = -150;
-          } else {
-            game.lives -= 1;
-            game.invulnerableUntil = game.elapsed + 1.5;
-            player.x = game.checkpoint;
-            player.y = GROUND_Y - player.height;
-            player.vx = 0;
-            player.vy = 0;
-            if (game.lives <= 0) {
-              syncUi(game, true);
-              setStatus('failed');
-              drawWorld(context, game);
-              return;
-            }
-          }
-          syncUi(game, true);
-        }
-      }
-
-      if (player.x >= LEVEL_END) {
-        player.x = LEVEL_END;
-        syncUi(game, true);
-        setStatus('completed');
-        drawWorld(context, game);
+      if (current.failed) {
+        setStatus('failed');
         return;
       }
-
-      drawWorld(context, game);
-      syncUi(game);
+      if (current.complete) {
+        setStatus('completed');
+        return;
+      }
       animationRef.current = window.requestAnimationFrame(frame);
     };
 
@@ -486,23 +265,36 @@ export const PhiengLoiGamePage = ({ language, setLanguage }: PhiengLoiGamePagePr
       window.removeEventListener('keydown', keyDown);
       window.removeEventListener('keyup', keyUp);
       window.removeEventListener('blur', clearInput);
+      document.removeEventListener('visibilitychange', visibilityChange);
       clearInput();
     };
   }, [status, syncUi]);
 
-  const getTouchDirection = (event: ReactPointerEvent<HTMLButtonElement>): 'left' | 'right' => (
+  const moveDirection = (event: ReactPointerEvent<HTMLButtonElement>): 'left' | 'right' => (
     event.currentTarget.dataset.direction === 'left' ? 'left' : 'right'
   );
 
-  const releaseTouch = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    inputRef.current[getTouchDirection(event)] = false;
+  const pressMove = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    inputRef.current[moveDirection(event)] = true;
+  };
+
+  const releaseMove = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    inputRef.current[moveDirection(event)] = false;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
-  const pressTouch = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
-    inputRef.current[getTouchDirection(event)] = true;
+  const queueJump = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    inputRef.current.jumpQueued = true;
   };
+
+  const activeCallout = ui.callout ? POWER_COPY[ui.callout] : null;
+  const isPlaying = status === 'playing';
+  const showArrival = isPlaying && ui.elapsed > 0.45 && ui.elapsed < 3.8;
+  const showTouchGuide = isPlaying && ui.elapsed < 5.2;
 
   return (
     <main className="phieng-game" aria-labelledby="phieng-game-title">
@@ -516,79 +308,167 @@ export const PhiengLoiGamePage = ({ language, setLanguage }: PhiengLoiGamePagePr
 
       <section className="phieng-game__title">
         <div>
-          <p>{vi ? 'CHƯƠNG VĂN HOÁ · MỘT MÀN 2D NHẸ' : 'CULTURE CHAPTER · A LIGHT 2D LEVEL'}</p>
+          <p>{vi ? 'CHƯƠNG VĂN HOÁ · MOBILE GAME 2D' : 'CULTURE CHAPTER · 2D MOBILE GAME'}</p>
           <h1 id="phieng-game-title">{vi ? 'Nhịp bản Phiêng Lơi' : 'Phiêng Lơi Village Rhythm'}</h1>
         </div>
-        <p>{vi ? 'Chạy qua nương, suối và nếp nhà. Nhặt sản vật để thay đổi cách bạn di chuyển.' : 'Run past fields, streams and stilt houses. Collect local produce to change how you move.'}</p>
+        <p>{vi ? 'Một hành trình ngắn qua nhà sàn, ruộng, suối và sân bản. Mỗi sản vật Điện Biên làm bạn biến đổi theo một cách riêng.' : 'A short journey through stilt houses, fields, water and the village courtyard. Each Dien Bien product changes you in a different way.'}</p>
       </section>
 
       <section className="phieng-game__console" aria-label={vi ? 'Trò chơi Phiêng Lơi' : 'Phiêng Lơi game'}>
-        <div className="phieng-game__hud">
-          <span aria-label={vi ? `${ui.lives} lượt còn lại` : `${ui.lives} lives left`}>{'♥'.repeat(Math.max(0, ui.lives))}</span>
-          <div className="phieng-game__progress" aria-label={vi ? `Tiến độ ${Math.round(ui.progress * 100)}%` : `${Math.round(ui.progress * 100)}% progress`}>
-            <i style={{ width: `${ui.progress * 100}%` }} />
-          </div>
-          <span>{ui.collected}/{collectibles.length}</span>
-        </div>
-
         <div className="phieng-game__stage">
-          <canvas ref={canvasRef} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={vi ? 'Màn chơi cuộn ngang qua bản Phiêng Lơi' : 'Side-scrolling level through Phiêng Lơi village'} />
+          <canvas ref={canvasRef} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={vi ? 'Màn chơi cuộn ngang qua bản Phiêng Lơi' : 'Side-scrolling journey through Phiêng Lơi village'} />
+
+          <div className="phieng-game__hud">
+            <span className="phieng-game__hearts" aria-label={vi ? `${ui.lives} lượt còn lại` : `${ui.lives} lives left`}>{'♥'.repeat(Math.max(0, ui.lives))}</span>
+            <ol className="phieng-game__zones" aria-label={vi ? 'Các chặng của hành trình' : 'Journey zones'}>
+              {([0, 1, 2, 3] as ZoneKind[]).map((zone) => (
+                <li key={zone} className={zone === ui.zone ? 'is-current' : zone < ui.zone ? 'is-done' : undefined}>
+                  <i aria-hidden="true" /><span>{ZONE_COPY[zone][language]}</span>
+                </li>
+              ))}
+            </ol>
+            <div className="phieng-game__hud-actions">
+              <button type="button" onClick={toggleMute} aria-label={muted ? (vi ? 'Bật âm thanh' : 'Turn sound on') : (vi ? 'Tắt âm thanh' : 'Mute sound')}>
+                {muted ? <VolumeX aria-hidden="true" /> : <Volume2 aria-hidden="true" />}
+              </button>
+              {(status === 'playing' || status === 'paused') ? (
+                <button type="button" onClick={togglePause} aria-label={status === 'playing' ? (vi ? 'Tạm dừng' : 'Pause') : (vi ? 'Tiếp tục' : 'Resume')}>
+                  {status === 'playing' ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+                </button>
+              ) : null}
+            </div>
+            <div className="phieng-game__progress" aria-label={vi ? `Tiến độ ${Math.round(ui.progress * 100)}%` : `${Math.round(ui.progress * 100)}% progress`}>
+              <i style={{ width: `${ui.progress * 100}%` }} />
+            </div>
+          </div>
+
+          {ui.powers.length > 0 ? (
+            <div className="phieng-game__power-hud" aria-live="polite">
+              {ui.powers.map((power) => (
+                <div key={power.kind} className={`is-${power.kind}`}>
+                  <span>{POWER_COPY[power.kind].name[language]}</span>
+                  <i><b style={{ width: `${power.remaining * 100}%` }} /></i>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {showArrival ? (
+            <div className="phieng-game__arrival" aria-live="polite">
+              <p>{vi ? 'RƠI XUỐNG TỪ CHUYẾN TÀU THỜI GIAN' : 'DROPPED FROM THE TIME TRAIN'}</p>
+              <strong>PHIÊNG LƠI</strong>
+              <span>{vi ? 'Đi qua bản trước khi trời tối' : 'Cross the village before nightfall'}</span>
+            </div>
+          ) : null}
+
+          {ui.heroZone !== null && status === 'playing' ? (
+            <div className="phieng-game__hero" aria-live="polite">
+              <span>0{ui.heroZone + 1}</span>
+              <div><strong>{HERO_COPY[ui.heroZone].title[language]}</strong><small>{HERO_COPY[ui.heroZone].detail[language]}</small></div>
+            </div>
+          ) : null}
+
+          {activeCallout && ui.callout ? (
+            <div className={`phieng-game__power-callout is-${ui.callout}`} role="status">
+              <span>{activeCallout.effect[language]}</span>
+              <strong>{activeCallout.name[language]}</strong>
+              <small>{activeCallout.tagline[language]}</small>
+            </div>
+          ) : null}
+
+          {ui.flash ? <div className={`phieng-game__flash is-${ui.flash}`} aria-hidden="true" /> : null}
 
           {status === 'intro' ? (
-            <div className="phieng-game__overlay">
-              <p>{vi ? 'MỘT CHUYẾN ĐI NHỎ' : 'A SMALL JOURNEY'}</p>
-              <h2>{vi ? 'Từ đầu bản đến cổng Phiêng Lơi' : 'From the first house to the Phiêng Lơi gate'}</h2>
-              <div>{vi ? '← → để di chuyển · ↑ hoặc Space để nhảy' : '← → to move · ↑ or Space to jump'}</div>
-              <button type="button" onClick={resetGame}>{vi ? 'Bắt đầu' : 'Start'}<ArrowRight aria-hidden="true" /></button>
+            <div className="phieng-game__overlay is-intro">
+              <p>{vi ? 'MỘT CHUYẾN ĐI 2D QUA BẢN' : 'A 2D JOURNEY THROUGH THE VILLAGE'}</p>
+              <h2>{vi ? 'Đi qua Phiêng Lơi trước khi trời tối.' : 'Cross Phiêng Lơi before nightfall.'}</h2>
+              <div>{vi ? 'Bạn sẽ rơi xuống từ Chuyến tàu thời gian, gặp năm sản vật và đi qua bốn không gian có thật.' : 'Drop in from the Time Train, meet five local products and cross four living landscapes.'}</div>
+              <div className="phieng-game__intro-controls">
+                <span>← → / A D</span><span>{vi ? 'Space để nhảy' : 'Space to jump'}</span>
+              </div>
+              <button type="button" onClick={startGame}>{vi ? 'Bắt đầu hành trình' : 'Start the journey'}<ArrowLeft className="is-forward" aria-hidden="true" /></button>
+            </div>
+          ) : null}
+
+          {status === 'paused' ? (
+            <div className="phieng-game__overlay is-pause">
+              <p>{vi ? 'ĐANG TẠM DỪNG' : 'PAUSED'}</p>
+              <h2>{ZONE_COPY[ui.zone][language]}</h2>
+              <button type="button" onClick={togglePause}><Play aria-hidden="true" />{vi ? 'Đi tiếp' : 'Continue'}</button>
             </div>
           ) : null}
 
           {status === 'completed' ? (
             <div className="phieng-game__overlay is-result">
               <Sparkles aria-hidden="true" />
-              <p>{vi ? 'ĐÃ ĐẾN PHIÊNG LƠI' : 'WELCOME TO PHIÊNG LƠI'}</p>
-              <h2>{vi ? 'Bạn đã đi hết nhịp bản.' : 'You reached the end of the village rhythm.'}</h2>
-              <div>{vi ? 'Bây giờ bạn có thể ghé điểm thật bằng thử thách GPS, hoặc đi thẳng tới cuốn sách.' : 'Visit the real place through its GPS challenge, or continue directly to the book.'}</div>
+              <p>{vi ? 'ĐÃ ĐI QUA BẢN' : 'JOURNEY COMPLETE'}</p>
+              <h2>PHIÊNG LƠI</h2>
+              <div>{vi ? 'Một bản của người Thái bên lòng chảo Điện Biên.' : 'A Thai village beside the Dien Bien basin.'}</div>
+              <ul className="phieng-game__memory-list">
+                <li>{vi ? 'Nhà sàn' : 'Stilt houses'}</li>
+                <li>{vi ? 'Ruộng' : 'Fields'}</li>
+                <li>{vi ? 'Suối' : 'Stream'}</li>
+                <li>{vi ? 'Sản vật Điện Biên' : 'Dien Bien produce'}</li>
+                <li>{vi ? 'Đời sống bản' : 'Village life'}</li>
+              </ul>
               <nav>
-                <Link to={PHIENG_LOI_CHALLENGE_PATH}><MapPin aria-hidden="true" />GPS Phiêng Lơi</Link>
-                <Link to="/book"><BookOpen aria-hidden="true" />{vi ? 'Mở Book' : 'Open Book'}</Link>
-                <button type="button" onClick={resetGame}><RotateCcw aria-hidden="true" />{vi ? 'Chơi lại' : 'Play again'}</button>
+                <Link to="/book"><BookOpen aria-hidden="true" />{vi ? 'Đi tiếp vào Book' : 'Continue to Book'}</Link>
+                <button type="button" onClick={startGame}><RotateCcw aria-hidden="true" />{vi ? 'Chơi lại' : 'Play again'}</button>
+                <Link to={PHIENG_LOI_CHALLENGE_PATH} className="is-tertiary"><MapPin aria-hidden="true" />{vi ? 'Ghé điểm thật' : 'Visit the real place'}</Link>
               </nav>
             </div>
           ) : null}
 
           {status === 'failed' ? (
             <div className="phieng-game__overlay is-result">
-              <p>{vi ? 'TẠM DỪNG BÊN ĐƯỜNG' : 'A PAUSE ON THE ROAD'}</p>
-              <h2>{vi ? 'Thử lại từ đầu bản nhé.' : 'Try the path once more.'}</h2>
-              <button type="button" onClick={resetGame}><RotateCcw aria-hidden="true" />{vi ? 'Thử lại' : 'Try again'}</button>
+              <p>{vi ? 'DỪNG CHÂN MỘT CHÚT' : 'TAKE A BREATH'}</p>
+              <h2>{vi ? 'Con đường vẫn ở đây.' : 'The path is still here.'}</h2>
+              <div>{vi ? 'Thử lại từ đầu bản — những sản vật bạn gặp sẽ vẫn theo đúng thứ tự.' : 'Try again from the village entrance — each power-up will return in the same order.'}</div>
+              <button type="button" onClick={startGame}><RotateCcw aria-hidden="true" />{vi ? 'Thử lại' : 'Try again'}</button>
             </div>
           ) : null}
-        </div>
 
-        <div className="phieng-game__powers" aria-live="polite">
-          {ui.powers.map((power) => <span key={power} className={`is-${power}`}>{powerLabels[power][language]}</span>)}
-          {ui.shield ? <span className="is-macadamia">{powerLabels.macadamia[language]}</span> : null}
-          {ui.powers.length === 0 && !ui.shield ? <span>{vi ? 'Nhặt sản vật trên đường để nhận sức mạnh' : 'Collect produce along the way for power-ups'}</span> : null}
-        </div>
-
-        <div className="phieng-game__touch" aria-label={vi ? 'Điều khiển cảm ứng' : 'Touch controls'}>
-          <button type="button" data-direction="left" aria-label={vi ? 'Đi sang trái' : 'Move left'} onPointerDown={pressTouch} onPointerUp={releaseTouch} onPointerCancel={releaseTouch}>
-            <ArrowLeft aria-hidden="true" />
-          </button>
-          <button type="button" data-direction="right" aria-label={vi ? 'Đi sang phải' : 'Move right'} onPointerDown={pressTouch} onPointerUp={releaseTouch} onPointerCancel={releaseTouch}>
-            <ArrowRight aria-hidden="true" />
-          </button>
-          <button type="button" className="is-jump" aria-label={vi ? 'Nhảy' : 'Jump'} onPointerDown={() => { inputRef.current.jumpQueued = true; }}>
-            {vi ? 'NHẢY' : 'JUMP'}
-          </button>
+          {status === 'playing' ? (
+            <div className={`phieng-game__touch-surface${showTouchGuide ? ' is-guiding' : ''}`} aria-label={vi ? 'Điều khiển cảm ứng' : 'Touch controls'}>
+              <button
+                type="button"
+                data-direction="left"
+                aria-label={vi ? 'Đi sang trái' : 'Move left'}
+                onPointerDown={pressMove}
+                onPointerUp={releaseMove}
+                onPointerCancel={releaseMove}
+                onLostPointerCapture={releaseMove}
+              ><span>←</span></button>
+              <button
+                type="button"
+                data-direction="right"
+                aria-label={vi ? 'Đi sang phải' : 'Move right'}
+                onPointerDown={pressMove}
+                onPointerUp={releaseMove}
+                onPointerCancel={releaseMove}
+                onLostPointerCapture={releaseMove}
+              ><span>→</span></button>
+              <button type="button" className="is-jump" aria-label={vi ? 'Nhảy' : 'Jump'} onPointerDown={queueJump}>
+                <span>{vi ? 'CHẠM ĐỂ NHẢY' : 'TAP TO JUMP'}</span>
+              </button>
+              {showTouchGuide ? <p>{vi ? 'Chạm bên trái để di chuyển · Chạm bên phải để nhảy' : 'Touch left to move · Touch right to jump'}</p> : null}
+            </div>
+          ) : null}
         </div>
       </section>
 
       <footer className="phieng-game__footer">
-        <span>{vi ? 'Prototype một màn · không tải game engine' : 'One-level prototype · no game engine loaded'}</span>
+        <span>{vi ? `Canvas 2D nhẹ · ${profile.quality === 'low' ? 'chất lượng thích ứng' : 'chi tiết cao'}` : `Lightweight 2D canvas · ${profile.quality === 'low' ? 'adaptive quality' : 'high detail'}`}</span>
         <nav><Link to="/1954">1954</Link><Link to="/book">BOOK</Link></nav>
       </footer>
+
+      {needsLandscape ? (
+        <div className="phieng-game__rotate" role="dialog" aria-modal="true" aria-label={vi ? 'Xoay điện thoại' : 'Rotate your phone'}>
+          <RotateCw aria-hidden="true" />
+          <strong>{vi ? 'Xoay điện thoại sang ngang' : 'Rotate your phone'}</strong>
+          <span>{vi ? 'Phiêng Lơi được thiết kế để chơi ở chế độ landscape.' : 'Phiêng Lơi is designed for landscape play.'}</span>
+        </div>
+      ) : null}
     </main>
   );
-};
+}

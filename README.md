@@ -37,7 +37,7 @@ Audio uses separate HRTF `PannerNode` sources. Empty asset slots fail silently; 
 
 ## Nhịp bản Phiêng Lơi
 
-`/phieng-loi` is a self-contained Canvas 2D prototype with keyboard and touch controls, checkpoints, restrained hazards, collectibles and four short power-ups based on Điện Biên produce: Tìa Dình squash, Mường Ảng coffee, macadamia and Tủa Chùa Shan Tuyết tea. It uses no game-engine dependency and cancels its animation frame and input listeners on unmount.
+`/phieng-loi` is a self-contained, mobile-first Canvas 2D game with four visual zones, landscape touch controls, checkpoints, environmental hazards, impact feedback and five staged power-ups based on Điện Biên produce: Tìa Dình squash, Mường Ảng coffee, Điện Biên macadamia, Tủa Chùa Shan Tuyết tea and smoked buffalo. Each product has a distinct transformation, gameplay use, callout and synthesized sound motif. The route uses no game-engine or audio-file dependency, adapts particles/detail for constrained devices, and releases its animation/audio/input resources on unmount.
 
 The optional GPS continuation links to the exact existing `ban-phieng-loi-mthen` task. It bypasses only the generic level menu when launched from this featured experience; GPS verification, task data and Challenge persistence remain authoritative.
 
