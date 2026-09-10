@@ -47,7 +47,7 @@ const ACTOR_WIDTH = {
   hanuPose: 47,
   hanuWalk: 36,
   feast: 82,
-  streamGroup: 68,
+  streamGroup: 54,
   vuongMe: 52,
   chicken: 18,
   dog: 32,
