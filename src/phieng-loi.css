@@ -133,6 +133,8 @@
   width: 100%;
   height: auto;
   aspect-ratio: 16 / 9;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
 }
 
 .phieng-game__hud {
@@ -325,10 +327,64 @@
 
 .phieng-game__arrival,
 .phieng-game__hero,
+.phieng-game__landmark,
 .phieng-game__power-callout {
   position: absolute;
   z-index: 10;
   pointer-events: none;
+}
+
+.phieng-game__landmark {
+  --landmark: #f0cf75;
+  bottom: 20%;
+  left: clamp(.8rem, 3vw, 2.4rem);
+  display: grid;
+  width: min(25rem, 50%);
+  gap: .2rem;
+  border: 1px solid color-mix(in srgb, var(--landmark), transparent 45%);
+  border-left: .3rem solid var(--landmark);
+  border-radius: .25rem .8rem .8rem .25rem;
+  padding: .62rem .82rem .68rem;
+  background:
+    linear-gradient(100deg, rgba(18, 41, 34, .92), rgba(27, 55, 44, .7)),
+    repeating-linear-gradient(0deg, transparent 0 4px, rgba(255,255,255,.035) 4px 5px);
+  box-shadow: .35rem .55rem 0 rgba(17, 35, 29, .18), 0 1rem 2rem rgba(17, 35, 29, .22);
+  color: #fff5d2;
+  text-shadow: 0 .1rem .55rem rgba(13, 31, 25, .7);
+  backdrop-filter: blur(6px);
+  animation: phieng-landmark 3.15s both;
+}
+
+.phieng-game__landmark.is-stream-girl {
+  --landmark: #efaf9b;
+  animation-duration: 3.8s;
+}
+
+.phieng-game__landmark.is-waterwheel { --landmark: #d9b36a; }
+.phieng-game__landmark.is-cornfield,
+.phieng-game__landmark.is-terraces { --landmark: #d7dc78; }
+.phieng-game__landmark.is-museum,
+.phieng-game__landmark.is-monument { --landmark: #e8c57a; }
+
+.phieng-game__landmark > span {
+  color: var(--landmark);
+  font-size: clamp(.43rem, .72vw, .59rem);
+  font-weight: 950;
+  letter-spacing: .16em;
+}
+
+.phieng-game__landmark strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1rem, 2.25vw, 1.75rem);
+  font-weight: 600;
+  line-height: 1.03;
+}
+
+.phieng-game__landmark small {
+  color: rgba(255, 245, 210, .76);
+  font-size: clamp(.48rem, .82vw, .66rem);
+  font-weight: 650;
+  line-height: 1.35;
 }
 
 .phieng-game__arrival {
@@ -755,6 +811,12 @@
   100% { opacity: 0; transform: translateX(-.4rem); }
 }
 
+@keyframes phieng-landmark {
+  0% { opacity: 0; transform: translateX(-1.5rem); }
+  10%, 78% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(.55rem); }
+}
+
 @keyframes phieng-power-pop {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(.62); }
   10% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
@@ -1091,6 +1153,13 @@
     top: 48%;
     width: min(28rem, 62%);
     padding: .55rem .75rem;
+  }
+
+  .phieng-game__landmark {
+    bottom: 22%;
+    left: .55rem;
+    width: min(22rem, 43%);
+    padding: .42rem .58rem .46rem;
   }
 }
 

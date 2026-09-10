@@ -5,7 +5,7 @@ const GROUND_Y = 438;
 const PLAYER_START_X = 240;
 const ZONE_LENGTH = 6_400;
 export const LEVEL_END = ZONE_LENGTH * 4;
-const FEAST_X = 20_620;
+const FEAST_X = 1_650;
 const FEAST_DURATION = 2.75;
 const DASH_DURATION = 0.34;
 const DASH_COOLDOWN = 3.2;
@@ -15,6 +15,7 @@ const CHEER_COOLDOWN = 10;
 export type PowerKind = 'squash' | 'coffee' | 'macadamia' | 'tea' | 'buffalo';
 export type ZoneKind = 0 | 1 | 2 | 3;
 export type GameQuality = 'low' | 'high';
+export type LandmarkKind = 'cornfield' | 'terraces' | 'waterwheel' | 'stream-girl' | 'museum' | 'monument';
 
 export type InputState = {
   left: boolean;
@@ -70,7 +71,8 @@ type TrailPoint = { x: number; y: number; life: number };
 export type GameEvent =
   | { type: 'jump' | 'land' | 'token' | 'hit' | 'shield-break' | 'break' | 'complete' | 'dash' | 'feast-start' | 'feast-finish' | 'cheer' }
   | { type: 'power-start' | 'power-end'; power: PowerKind }
-  | { type: 'zone-change'; zone: ZoneKind };
+  | { type: 'zone-change'; zone: ZoneKind }
+  | { type: 'landmark'; landmark: LandmarkKind };
 
 export type ActivePower = { kind: PowerKind; remaining: number };
 
@@ -89,6 +91,7 @@ export type UiSnapshot = {
   cheerUnlocked: boolean;
   cheerActive: boolean;
   feastPhase: 'meeting' | 'unlocked' | null;
+  landmark: LandmarkKind | null;
 };
 
 export type GameState = {
@@ -121,6 +124,9 @@ export type GameState = {
   feastStarted: boolean;
   feastUntil: number;
   feastNoticeUntil: number;
+  seenLandmarks: Set<LandmarkKind>;
+  landmarkKind: LandmarkKind | null;
+  landmarkUntil: number;
   lastDustAt: number;
   lastTrailAt: number;
   quality: GameQuality;
@@ -138,6 +144,15 @@ export const POWER_DURATION: Record<PowerKind, number> = {
 };
 
 export const POWER_KINDS: PowerKind[] = ['squash', 'coffee', 'macadamia', 'tea', 'buffalo'];
+
+const landmarkMoments: Array<{ kind: LandmarkKind; x: number }> = [
+  { kind: 'cornfield', x: 5_050 },
+  { kind: 'terraces', x: 7_850 },
+  { kind: 'waterwheel', x: 13_380 },
+  { kind: 'stream-girl', x: 15_470 },
+  { kind: 'museum', x: 21_020 },
+  { kind: 'monument', x: 23_640 },
+];
 
 const pickups: Pickup[] = [
   { id: 'token-01', x: 900, y: 366, kind: 'token' },
@@ -322,6 +337,9 @@ export const createGame = (quality: GameQuality, reducedMotion: boolean): GameSt
   feastStarted: false,
   feastUntil: 0,
   feastNoticeUntil: 0,
+  seenLandmarks: new Set(),
+  landmarkKind: null,
+  landmarkUntil: 0,
   lastDustAt: 0,
   lastTrailAt: 0,
   quality,
@@ -354,6 +372,7 @@ export const createUiSnapshot = (game: GameState): UiSnapshot => ({
     : game.feastNoticeUntil > game.elapsed
       ? 'unlocked'
       : null,
+  landmark: game.landmarkUntil > game.elapsed ? game.landmarkKind : null,
 });
 
 const activatePower = (game: GameState, power: PowerKind) => {
@@ -523,6 +542,22 @@ export const stepGame = (game: GameState, input: InputState, dt: number): GameEv
     events.push({ type: 'feast-start' });
     updateCamera(game, dt, false);
     return events;
+  }
+
+  for (const moment of landmarkMoments) {
+    if (player.x < moment.x || game.seenLandmarks.has(moment.kind)) continue;
+    game.seenLandmarks.add(moment.kind);
+    game.landmarkKind = moment.kind;
+    game.landmarkUntil = game.elapsed + (moment.kind === 'stream-girl' ? 3.8 : 3.15);
+    if (moment.kind === 'stream-girl') {
+      player.vx *= 0.34;
+      game.freezeUntil = Math.max(game.freezeUntil, game.elapsed + (game.reducedMotion ? 0.04 : 0.16));
+    }
+    if (moment.kind === 'museum' || moment.kind === 'monument') {
+      game.shakeUntil = Math.max(game.shakeUntil, game.elapsed + (game.reducedMotion ? 0.04 : 0.16));
+    }
+    events.push({ type: 'landmark', landmark: moment.kind });
+    break;
   }
 
   const playerRect = { x: player.x, y: player.y, width: player.width, height: player.height };
@@ -914,13 +949,12 @@ const drawMonumentalLandscape = (context: CanvasRenderingContext2D, camera: numb
 
   const structures = [
     { worldX: 8_900, parallax: 0.48, baseY: 364, scale: 1.62, accent: '#c6a657' },
-    { worldX: 21_900, parallax: 0.58, baseY: 388, scale: 2.02, accent: '#d18f52' },
   ];
-  structures.forEach((structure, index) => {
+  structures.forEach((structure) => {
     const x = VIEW_WIDTH / 2 + (structure.worldX - camera) * structure.parallax;
     if (x < -360 || x > VIEW_WIDTH + 330) return;
     context.save();
-    context.globalAlpha = index === 0 ? 0.58 : 0.7;
+    context.globalAlpha = 0.58;
     context.fillStyle = 'rgba(39, 57, 42, .28)';
     context.beginPath();
     context.moveTo(x - 170, structure.baseY + 8);
@@ -967,7 +1001,8 @@ const drawVillage = (context: CanvasRenderingContext2D, camera: number, time: nu
     if (x < -190 || x > VIEW_WIDTH + 160) return;
     drawStiltHouse(context, x, 397, index % 2 === 0 ? 1.02 : 0.9, index % 2 === 0 ? '#d2b24f' : '#6c9188', time, quality === 'high');
     drawFence(context, x - 35, 170, 428);
-    if (index === 1 || index === 3) drawMotorbike(context, x + 48, 416);
+    // Keep the first roadside gathering readable instead of parking a bike in it.
+    if (index === 3) drawMotorbike(context, x + 48, 416);
     if (index % 2 === 0) drawPerson(context, x + 152, 418, '#466e69', time);
   });
   [1_070, 3_380, 4_780].forEach((worldX) => {
@@ -976,6 +1011,59 @@ const drawVillage = (context: CanvasRenderingContext2D, camera: number, time: nu
   });
   const dogX = 4_930 - camera;
   if (dogX > -60 && dogX < VIEW_WIDTH + 60) drawDog(context, dogX, 411, time);
+};
+
+const drawCornfield = (context: CanvasRenderingContext2D, camera: number, time: number, quality: GameQuality) => {
+  const start = 4_450;
+  const end = 6_360;
+  const visibleStart = Math.max(-50, start - camera);
+  const visibleEnd = Math.min(VIEW_WIDTH + 50, end - camera);
+  if (visibleEnd <= visibleStart) return;
+
+  context.save();
+  context.beginPath();
+  context.rect(visibleStart, 318, visibleEnd - visibleStart, 120);
+  context.clip();
+  context.fillStyle = '#708f48';
+  context.fillRect(visibleStart, 342, visibleEnd - visibleStart, 96);
+  context.fillStyle = '#9eaa4d';
+  context.fillRect(visibleStart, 372, visibleEnd - visibleStart, 66);
+
+  const spacing = quality === 'low' ? 34 : 25;
+  const first = Math.max(0, Math.floor((camera - start - 60) / spacing));
+  const last = Math.ceil((camera + VIEW_WIDTH - start + 60) / spacing);
+  for (let index = first; index <= last; index += 1) {
+    const worldX = start + index * spacing;
+    if (worldX > end) break;
+    const x = Math.round(worldX - camera);
+    const baseY = 433 - (index % 3) * 3;
+    const height = 58 + (index % 4) * 7;
+    const sway = Math.round(Math.sin(time * 1.8 + index * 0.8) * 3);
+    context.fillStyle = index % 2 ? '#315f3b' : '#3b713e';
+    context.fillRect(x, baseY - height, 5, height);
+    context.fillRect(x - 11 + sway, baseY - height + 18, 13, 5);
+    context.fillRect(x + 3, baseY - height + 32, 14 + sway, 5);
+    context.fillStyle = '#d6ad45';
+    context.fillRect(x + 3, baseY - height + 12, 9, 18);
+    context.fillStyle = '#ead071';
+    context.fillRect(x + 5, baseY - height + 15, 5, 12);
+    context.fillStyle = '#477845';
+    context.fillRect(x + 2, baseY - height + 8, 12, 6);
+  }
+
+  const signX = 4_790 - camera;
+  if (signX > -140 && signX < VIEW_WIDTH + 140) {
+    context.fillStyle = '#59422f';
+    context.fillRect(signX, 337, 7, 94);
+    context.fillRect(signX + 105, 337, 7, 94);
+    context.fillStyle = '#d4a951';
+    context.fillRect(signX - 8, 329, 128, 34);
+    context.fillStyle = '#2a4937';
+    context.font = '900 12px "Segoe UI", sans-serif';
+    context.textAlign = 'center';
+    context.fillText('ĐỒNG NGÔ', signX + 56, 351);
+  }
+  context.restore();
 };
 
 const drawFields = (context: CanvasRenderingContext2D, camera: number, time: number) => {
@@ -988,21 +1076,44 @@ const drawFields = (context: CanvasRenderingContext2D, camera: number, time: num
   context.beginPath();
   context.rect(visibleStart, 318, visibleEnd - visibleStart, 121);
   context.clip();
-  const fieldGradient = context.createLinearGradient(0, 318, 0, 439);
-  fieldGradient.addColorStop(0, '#c6c870');
-  fieldGradient.addColorStop(1, '#7f9e48');
-  context.fillStyle = fieldGradient;
+  context.fillStyle = '#7f984d';
   context.fillRect(visibleStart, 318, visibleEnd - visibleStart, 121);
-  for (let row = 0; row < 6; row += 1) {
-    const y = 326 + row * 22;
-    context.strokeStyle = row % 2 === 0 ? 'rgba(241, 220, 128, .75)' : 'rgba(68, 105, 49, .62)';
-    context.lineWidth = 4;
-    context.beginPath();
-    context.moveTo(visibleStart, y);
-    context.quadraticCurveTo((visibleStart + visibleEnd) / 2, y + Math.sin(time * 0.4 + row) * 7, visibleEnd, y + 4);
-    context.stroke();
+
+  // Large stepped ribbons make the landscape read as terraces even on a phone.
+  const terraceColors = ['#d8c865', '#aec15e', '#8fac50', '#739343', '#5f7f3d'];
+  for (let segment = 0; segment < 13; segment += 1) {
+    const segmentX = 6_080 + segment * 560 - camera;
+    for (let level = 0; level < 5; level += 1) {
+      const y = 319 + level * 24;
+      const offset = (segment % 2 === 0 ? level * 17 : (4 - level) * 12);
+      const x = Math.round(segmentX + offset);
+      const width = 530 - level * 18;
+      context.fillStyle = terraceColors[level];
+      context.fillRect(x, y, width, 18);
+      context.fillStyle = level % 2 ? '#536f38' : '#725f36';
+      context.fillRect(x, y + 17, width, 5);
+      context.fillStyle = 'rgba(239, 224, 133, .72)';
+      context.fillRect(x + 8, y + 3, width - 16, 3);
+      for (let rice = 20; rice < width - 20; rice += 58) {
+        const bend = Math.round(Math.sin(time * 1.2 + rice + segment) * 2);
+        context.fillStyle = '#3f743f';
+        context.fillRect(x + rice, y + 6, 3, 9);
+        context.fillRect(x + rice - 3 + bend, y + 7, 5, 3);
+      }
+    }
   }
   context.restore();
+  const terraceLabelX = 8_000 - camera;
+  if (terraceLabelX > -210 && terraceLabelX < VIEW_WIDTH + 210) {
+    context.fillStyle = 'rgba(27, 55, 43, .88)';
+    roundedRect(context, terraceLabelX - 92, 278, 184, 29, 5);
+    context.fill();
+    context.fillStyle = '#ffe09a';
+    context.font = '900 12px "Segoe UI", sans-serif';
+    context.textAlign = 'center';
+    context.fillText('RUỘNG BẬC THANG', terraceLabelX, 297);
+    context.textAlign = 'start';
+  }
   [6_900, 8_850, 11_120].forEach((worldX, index) => {
     const x = worldX - camera;
     if (x > -80 && x < VIEW_WIDTH + 80) drawPerson(context, x, 404, index % 2 ? '#7c504c' : '#385d63', time);
@@ -1020,6 +1131,129 @@ const drawFields = (context: CanvasRenderingContext2D, camera: number, time: num
     context.lineWidth = 2;
     context.stroke();
   }
+};
+
+const drawWaterWheel = (context: CanvasRenderingContext2D, camera: number, time: number, quality: GameQuality) => {
+  const x = 13_650 - camera;
+  if (x < -150 || x > VIEW_WIDTH + 150) return;
+  const centerY = 356;
+  const radius = 67;
+  context.save();
+
+  context.fillStyle = '#68492f';
+  context.fillRect(x - 87, centerY + 58, 12, 80);
+  context.fillRect(x + 74, centerY + 58, 12, 80);
+  context.fillRect(x - 94, centerY + 65, 187, 9);
+  context.strokeStyle = '#8a6239';
+  context.lineWidth = 6;
+  context.beginPath();
+  context.moveTo(x - 76, centerY + 68);
+  context.lineTo(x, centerY);
+  context.lineTo(x + 78, centerY + 68);
+  context.stroke();
+
+  context.translate(x, centerY);
+  context.rotate(time * 0.34);
+  context.strokeStyle = '#8b673e';
+  context.lineWidth = 8;
+  context.beginPath();
+  context.arc(0, 0, radius, 0, Math.PI * 2);
+  context.stroke();
+  context.strokeStyle = '#d0a966';
+  context.lineWidth = 3;
+  context.beginPath();
+  context.arc(0, 0, radius - 9, 0, Math.PI * 2);
+  context.stroke();
+  const spokeCount = quality === 'low' ? 8 : 12;
+  for (let spoke = 0; spoke < spokeCount; spoke += 1) {
+    context.save();
+    context.rotate((Math.PI * 2 * spoke) / spokeCount);
+    context.fillStyle = '#765333';
+    context.fillRect(-3, -4, radius + 3, 7);
+    context.fillStyle = '#bc8a4d';
+    context.fillRect(radius - 5, -10, 18, 20);
+    context.fillStyle = '#e1bc70';
+    context.fillRect(radius + 7, -7, 6, 14);
+    context.restore();
+  }
+  context.fillStyle = '#513722';
+  context.fillRect(-12, -12, 24, 24);
+  context.fillStyle = '#d7ad62';
+  context.fillRect(-5, -5, 10, 10);
+  context.restore();
+
+  context.save();
+  context.fillStyle = 'rgba(227, 245, 222, .74)';
+  for (let splash = 0; splash < 6; splash += 1) {
+    const px = x + 45 + splash * 9;
+    const py = 405 + Math.round(Math.sin(time * 3.2 + splash) * 6);
+    context.fillRect(px, py, 6, 4);
+  }
+  context.fillStyle = 'rgba(27, 55, 45, .86)';
+  roundedRect(context, x - 76, 255, 152, 27, 5);
+  context.fill();
+  context.fillStyle = '#ffe09a';
+  context.font = '900 12px "Segoe UI", sans-serif';
+  context.textAlign = 'center';
+  context.fillText('CỌN NƯỚC BÊN SUỐI', x, 273);
+  context.restore();
+};
+
+const drawStreamGirl = (context: CanvasRenderingContext2D, camera: number, time: number) => {
+  const x = 15_720 - camera;
+  if (x < -130 || x > VIEW_WIDTH + 130) return;
+  const bob = Math.round(Math.sin(time * 1.7) * 2);
+  context.save();
+
+  context.fillStyle = 'rgba(224, 245, 225, .46)';
+  context.fillRect(x - 62, 414, 126, 5);
+  context.fillRect(x - 42, 425, 88, 4);
+  context.fillStyle = '#d7a071';
+  context.fillRect(x - 9, 371 + bob, 8, 47);
+  context.fillRect(x + 7, 371 + bob, 8, 47);
+  context.fillStyle = '#272b2a';
+  context.fillRect(x - 18, 341 + bob, 40, 40);
+  context.fillStyle = '#40433e';
+  context.fillRect(x - 20, 369 + bob, 44, 10);
+  context.fillStyle = '#b33f47';
+  context.fillRect(x - 20, 310 + bob, 44, 39);
+  context.fillStyle = '#e2c36f';
+  context.fillRect(x - 20, 342 + bob, 44, 6);
+  context.fillStyle = '#f1d594';
+  context.fillRect(x - 14, 317 + bob, 5, 5);
+  context.fillRect(x + 2, 317 + bob, 5, 5);
+  context.fillRect(x + 14, 317 + bob, 5, 5);
+  context.fillStyle = '#d7a071';
+  context.fillRect(x - 11, 287 + bob, 25, 25);
+  context.fillRect(x - 29, 317 + bob, 10, 35);
+  context.fillRect(x + 23, 316 + bob, 10, 43);
+  context.fillRect(x + 29, 353 + bob, 20, 8);
+  context.fillStyle = '#242827';
+  context.fillRect(x - 15, 281 + bob, 33, 12);
+  context.fillRect(x + 8, 270 + bob, 17, 18);
+  context.fillStyle = '#d6dde0';
+  context.fillRect(x - 18, 307 + bob, 40, 4);
+  context.fillRect(x - 16, 330 + bob, 36, 3);
+  context.fillStyle = '#f4eee0';
+  context.fillRect(x + 46, 352 + bob, 20, 10);
+  context.fillStyle = '#c8e5df';
+  context.fillRect(x + 49, 354 + bob, 14, 3);
+
+  // Fish gather around her feet — a gentle visual nod to the folk lyric.
+  context.fillStyle = '#e6c15a';
+  for (let fish = 0; fish < 4; fish += 1) {
+    const fishX = x - 53 + fish * 34 + Math.round(Math.sin(time * 1.4 + fish) * 8);
+    context.fillRect(fishX, 421 + (fish % 2) * 8, 12, 5);
+    context.fillRect(fishX - 5, 419 + (fish % 2) * 8, 5, 9);
+  }
+  context.fillStyle = 'rgba(25, 53, 44, .86)';
+  roundedRect(context, x - 94, 237, 188, 27, 5);
+  context.fill();
+  context.fillStyle = '#ffe09a';
+  context.font = '900 12px "Segoe UI", sans-serif';
+  context.textAlign = 'center';
+  context.fillText('CÔ GÁI THÁI BÊN SUỐI', x, 255);
+  context.restore();
 };
 
 const drawStreamZone = (context: CanvasRenderingContext2D, camera: number, time: number, quality: GameQuality) => {
@@ -1082,10 +1316,130 @@ const drawStreamZone = (context: CanvasRenderingContext2D, camera: number, time:
       context.fill();
     }
   }
+  drawWaterWheel(context, camera, time, quality);
+  drawStreamGirl(context, camera, time);
+};
+
+const drawDienBienMuseum = (context: CanvasRenderingContext2D, camera: number, quality: GameQuality) => {
+  const x = 21_300 - camera;
+  if (x < -260 || x > VIEW_WIDTH + 260) return;
+  const topY = 274;
+  const baseY = 426;
+  context.save();
+  context.fillStyle = 'rgba(30, 45, 39, .24)';
+  context.fillRect(x - 172, baseY + 3, 344, 13);
+
+  context.fillStyle = '#c9c2ad';
+  context.beginPath();
+  context.moveTo(x - 104, topY);
+  context.lineTo(x + 104, topY);
+  context.lineTo(x + 158, baseY);
+  context.lineTo(x - 158, baseY);
+  context.closePath();
+  context.fill();
+  context.fillStyle = '#ddd6bd';
+  context.fillRect(x - 110, topY - 12, 220, 18);
+  context.fillStyle = '#857c69';
+  context.fillRect(x - 158, baseY - 13, 316, 13);
+
+  context.save();
+  context.beginPath();
+  context.moveTo(x - 101, topY + 7);
+  context.lineTo(x + 101, topY + 7);
+  context.lineTo(x + 151, baseY - 15);
+  context.lineTo(x - 151, baseY - 15);
+  context.closePath();
+  context.clip();
+  context.strokeStyle = 'rgba(88, 87, 71, .52)';
+  context.lineWidth = quality === 'low' ? 5 : 3;
+  const meshStep = quality === 'low' ? 34 : 23;
+  for (let line = -310; line < 330; line += meshStep) {
+    context.beginPath();
+    context.moveTo(x + line, topY - 5);
+    context.lineTo(x + line + 150, baseY);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(x + line, baseY);
+    context.lineTo(x + line + 150, topY - 5);
+    context.stroke();
+  }
+  context.restore();
+
+  context.fillStyle = '#283c38';
+  context.fillRect(x - 34, 349, 68, 64);
+  context.fillStyle = '#a9463c';
+  context.fillRect(x - 16, 289, 32, 32);
+  context.fillStyle = '#f2cf68';
+  context.font = '900 20px Georgia, serif';
+  context.textAlign = 'center';
+  context.fillText('★', x, 313);
+  context.fillStyle = 'rgba(24, 48, 40, .9)';
+  roundedRect(context, x - 112, 233, 224, 29, 5);
+  context.fill();
+  context.fillStyle = '#ffe4a2';
+  context.font = '900 12px "Segoe UI", sans-serif';
+  context.fillText('BẢO TÀNG ĐIỆN BIÊN PHỦ', x, 252);
+  context.restore();
+};
+
+const drawVictoryMonument = (context: CanvasRenderingContext2D, camera: number) => {
+  const x = 23_960 - camera;
+  if (x < -220 || x > VIEW_WIDTH + 220) return;
+  context.save();
+  context.fillStyle = '#776746';
+  context.fillRect(x - 128, 402, 256, 26);
+  context.fillStyle = '#9c8a61';
+  context.fillRect(x - 102, 380, 204, 22);
+  context.fillStyle = '#b5a275';
+  context.fillRect(x - 78, 360, 156, 20);
+
+  const bronze = '#927040';
+  const lightBronze = '#b58d4c';
+  [-35, 0, 35].forEach((offset, index) => {
+    const headY = index === 1 ? 246 : 260;
+    context.fillStyle = lightBronze;
+    context.fillRect(x + offset - 8, headY, 17, 18);
+    context.fillStyle = bronze;
+    context.fillRect(x + offset - 13, headY + 18, 27, 66);
+    context.fillRect(x + offset - 16, headY + 82, 12, 40);
+    context.fillRect(x + offset + 5, headY + 82, 12, 40);
+  });
+  context.fillStyle = bronze;
+  context.fillRect(x - 54, 279, 24, 10);
+  context.fillRect(x + 31, 280, 24, 10);
+
+  // Small Thai child beside the soldier group, part of the monument ensemble.
+  context.fillStyle = '#a78148';
+  context.fillRect(x + 68, 314, 13, 15);
+  context.fillRect(x + 64, 329, 21, 34);
+  context.fillRect(x + 65, 362, 7, 20);
+  context.fillRect(x + 78, 362, 7, 20);
+
+  context.fillStyle = '#76542f';
+  context.fillRect(x + 1, 160, 8, 204);
+  context.fillStyle = '#bd3f3d';
+  context.beginPath();
+  context.moveTo(x + 9, 165);
+  context.lineTo(x + 112, 184);
+  context.lineTo(x + 9, 229);
+  context.closePath();
+  context.fill();
+  context.fillStyle = '#f3d264';
+  context.font = '900 21px Georgia, serif';
+  context.textAlign = 'center';
+  context.fillText('★', x + 48, 204);
+
+  context.fillStyle = 'rgba(24, 48, 40, .9)';
+  roundedRect(context, x - 103, 119, 206, 29, 5);
+  context.fill();
+  context.fillStyle = '#ffe4a2';
+  context.font = '900 12px "Segoe UI", sans-serif';
+  context.fillText('TƯỢNG ĐÀI CHIẾN THẮNG', x, 138);
+  context.restore();
 };
 
 const drawCommunity = (context: CanvasRenderingContext2D, camera: number, time: number, quality: GameQuality) => {
-  const houses = [19_700, 22_150, 24_500];
+  const houses = [19_700, 22_700, 25_120];
   houses.forEach((worldX, index) => {
     const x = worldX - camera;
     if (x < -190 || x > VIEW_WIDTH + 170) return;
@@ -1156,37 +1510,49 @@ const drawSeatedNeighbor = (
 
 const drawRoadsideFeast = (context: CanvasRenderingContext2D, game: GameState, camera: number) => {
   const x = FEAST_X - camera;
-  if (x < -250 || x > VIEW_WIDTH + 250) return;
+  if (x < -300 || x > VIEW_WIDTH + 300) return;
   const cheering = game.cheerUntil > game.elapsed || (game.feastNoticeUntil > game.elapsed && game.feastUntil <= game.elapsed);
   context.save();
   context.fillStyle = 'rgba(55, 49, 35, .22)';
   context.beginPath();
-  context.ellipse(x + 18, GROUND_Y + 7, 112, 24, -0.02, 0, Math.PI * 2);
+  context.ellipse(x + 20, GROUND_Y + 6, 150, 30, -0.02, 0, Math.PI * 2);
   context.fill();
-  context.fillStyle = '#b76e48';
+  context.fillStyle = '#b45e45';
+  context.fillRect(x - 91, GROUND_Y - 11, 218, 15);
+  context.fillStyle = '#d69e55';
+  context.fillRect(x - 77, GROUND_Y - 8, 190, 8);
+
+  context.save();
+  context.translate(x + 12, GROUND_Y - 29);
+  context.scale(1.24, 1.24);
+  context.fillStyle = '#9a5438';
   context.beginPath();
-  context.ellipse(x + 12, GROUND_Y - 20, 48, 14, 0, 0, Math.PI * 2);
+  context.ellipse(0, 0, 55, 17, 0, 0, Math.PI * 2);
   context.fill();
   context.fillStyle = '#e5b968';
   context.beginPath();
-  context.ellipse(x + 12, GROUND_Y - 23, 39, 8, 0, 0, Math.PI * 2);
+  context.ellipse(0, -4, 46, 10, 0, 0, Math.PI * 2);
   context.fill();
   context.fillStyle = '#6c8b5e';
-  context.beginPath();
-  context.arc(x - 2, GROUND_Y - 25, 5, 0, Math.PI * 2);
-  context.arc(x + 17, GROUND_Y - 24, 4, 0, Math.PI * 2);
-  context.fill();
-  drawSeatedNeighbor(context, x - 48, GROUND_Y - 2, '#a04d3d', game.worldTime, cheering);
-  drawSeatedNeighbor(context, x + 72, GROUND_Y - 2, '#376a67', game.worldTime, cheering);
-  drawSeatedNeighbor(context, x + 24, GROUND_Y - 58, '#746248', game.worldTime, cheering);
+  context.fillRect(-26, -10, 11, 8);
+  context.fillRect(3, -9, 9, 7);
+  context.fillStyle = '#f3dfad';
+  [-38, -17, 19, 38].forEach((cupX) => context.fillRect(cupX, -13, 7, 9));
+  context.restore();
+
+  drawSeatedNeighbor(context, x - 72, GROUND_Y - 3, '#a04d3d', game.worldTime, cheering);
+  drawSeatedNeighbor(context, x + 101, GROUND_Y - 3, '#376a67', game.worldTime, cheering);
+  drawSeatedNeighbor(context, x - 24, GROUND_Y - 73, '#315c63', game.worldTime, cheering);
+  drawSeatedNeighbor(context, x + 43, GROUND_Y - 76, '#746248', game.worldTime, cheering);
+  drawSeatedNeighbor(context, x + 132, GROUND_Y - 59, '#9d5943', game.worldTime, cheering);
 
   context.fillStyle = 'rgba(30, 52, 42, .82)';
-  roundedRect(context, x - 68, GROUND_Y - 107, 158, 28, 12);
+  roundedRect(context, x - 100, GROUND_Y - 149, 230, 34, 7);
   context.fill();
   context.fillStyle = '#ffe6a1';
-  context.font = '900 11px "Segoe UI", sans-serif';
+  context.font = '900 13px "Segoe UI", sans-serif';
   context.textAlign = 'center';
-  context.fillText(game.cheerUnlocked ? 'MÂM NHẬU VEN ĐƯỜNG · DZÔ!' : 'MÂM NHẬU VEN ĐƯỜNG', x + 11, GROUND_Y - 89);
+  context.fillText(game.cheerUnlocked ? 'MÂM NHẬU · KỸ NĂNG DZÔ!' : 'MÂM NHẬU · MỜI NGỒI!', x + 15, GROUND_Y - 127);
   context.textAlign = 'start';
   context.restore();
 };
@@ -1634,10 +2000,13 @@ export const renderGame = (context: CanvasRenderingContext2D, game: GameState) =
   drawMountainLayer(context, camera, 0.16, 337, mixColor('#52765d', '#52596a', dayProgress), 190);
 
   drawMonumentalLandscape(context, camera, game.worldTime, game.quality);
+  drawCornfield(context, camera, game.worldTime, game.quality);
   drawFields(context, camera, game.worldTime);
   drawStreamZone(context, camera, game.worldTime, game.quality);
   drawVillage(context, camera, game.worldTime, game.quality);
   drawCommunity(context, camera, game.worldTime, game.quality);
+  drawDienBienMuseum(context, camera, game.quality);
+  drawVictoryMonument(context, camera);
 
   context.fillStyle = theme.ground;
   context.fillRect(0, GROUND_Y, VIEW_WIDTH, VIEW_HEIGHT - GROUND_Y);

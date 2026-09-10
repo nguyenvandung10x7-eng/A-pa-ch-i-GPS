@@ -8,14 +8,16 @@ type AudioUpdate = {
   powers: PowerKind[];
 };
 
+// A short, original Web Audio piano arrangement follows the F-major pentatonic
+// contour of the traditional Thai folk song “Ính lả ơi”; no recording is bundled.
 const zoneNotes: Record<ZoneKind, number[]> = {
-  0: [293.66, 349.23, 440, 523.25, 440, 349.23, 329.63, 293.66],
-  1: [261.63, 329.63, 392, 493.88, 392, 329.63, 293.66, 329.63],
-  2: [293.66, 392, 440, 587.33, 440, 392, 329.63, 392],
-  3: [329.63, 392, 493.88, 587.33, 659.25, 587.33, 493.88, 392],
+  0: [349.23, 440, 523.25, 440, 392, 440, 349.23, 293.66, 349.23, 440, 523.25, 587.33, 523.25, 440, 392, 349.23],
+  1: [349.23, 392, 440, 523.25, 440, 392, 349.23, 392, 440, 523.25, 587.33, 523.25, 440, 392, 349.23, 349.23],
+  2: [523.25, 440, 392, 349.23, 440, 523.25, 440, 392, 349.23, 392, 440, 523.25, 440, 392, 349.23, 349.23],
+  3: [349.23, 440, 523.25, 587.33, 523.25, 440, 392, 349.23, 392, 440, 523.25, 440, 392, 349.23, 523.25, 349.23],
 };
 
-const zoneTempo: Record<ZoneKind, number> = { 0: 98, 1: 106, 2: 92, 3: 112 };
+const zoneTempo: Record<ZoneKind, number> = { 0: 84, 1: 88, 2: 80, 3: 92 };
 
 export class PhiengLoiAudioDirector {
   private context: AudioContext;
@@ -115,6 +117,52 @@ export class PhiengLoiAudioDirector {
     source.stop(start + duration + 0.02);
   }
 
+  private piano(frequency: number, duration: number, volume: number, destination?: AudioNode, delay = 0) {
+    if (this.disposed || this.context.state !== 'running') return;
+    const start = this.context.currentTime + delay;
+    const target = destination ?? this.musicBus;
+    const filter = this.context.createBiquadFilter();
+    const envelope = this.context.createGain();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(Math.min(5_400, frequency * 7), start);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(900, frequency * 2.4), start + duration);
+    filter.Q.value = 0.7;
+    envelope.gain.setValueAtTime(0.0001, start);
+    envelope.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), start + 0.008);
+    envelope.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume * 0.28), start + Math.min(0.13, duration * 0.34));
+    envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    filter.connect(envelope);
+    envelope.connect(target);
+
+    const partials: Array<[number, OscillatorType, number, number]> = [
+      [1, 'triangle', 1, -2],
+      [2, 'sine', 0.22, 3],
+      [3, 'sine', 0.08, -4],
+    ];
+    let endedPartials = 0;
+    partials.forEach(([ratio, type, level, detune]) => {
+      const oscillator = this.context.createOscillator();
+      const partialGain = this.context.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency * ratio, start);
+      oscillator.detune.value = detune;
+      partialGain.gain.value = level;
+      oscillator.connect(partialGain);
+      partialGain.connect(filter);
+      oscillator.onended = () => {
+        oscillator.disconnect();
+        partialGain.disconnect();
+        endedPartials += 1;
+        if (endedPartials === partials.length) {
+          filter.disconnect();
+          envelope.disconnect();
+        }
+      };
+      oscillator.start(start);
+      oscillator.stop(start + duration + 0.03);
+    });
+  }
+
   private chord(notes: number[], duration = 0.34, type: OscillatorType = 'triangle', volume = 0.055) {
     notes.forEach((note, index) => this.tone(note, duration, type, volume / notes.length, this.sfxBus, index * 0.028));
   }
@@ -141,6 +189,22 @@ export class PhiengLoiAudioDirector {
       this.chord([110, 164.81, 220], 0.52, 'sawtooth', 0.15);
       this.noise(0.28, 0.11, 1_900);
       this.tone(330, 0.42, 'triangle', 0.08, this.sfxBus, 0.08, 690);
+      return;
+    }
+    if (event.type === 'landmark') {
+      if (event.landmark === 'waterwheel') {
+        this.noise(0.38, 0.035, 2_400);
+        [196, 246.94, 293.66].forEach((note, index) => this.tone(note, 0.09, 'triangle', 0.045, this.sfxBus, index * 0.095));
+      } else if (event.landmark === 'stream-girl') {
+        [523.25, 659.25, 783.99, 1_046.5].forEach((note, index) => this.piano(note, 0.52, 0.065, this.sfxBus, index * 0.105));
+        this.noise(0.42, 0.025, 3_800, 0.05);
+      } else if (event.landmark === 'museum') {
+        [174.61, 261.63, 349.23].forEach((note, index) => this.piano(note, 0.82, 0.07, this.sfxBus, index * 0.055));
+      } else if (event.landmark === 'monument') {
+        [87.31, 174.61, 261.63, 349.23].forEach((note, index) => this.piano(note, 1.05, 0.075, this.sfxBus, index * 0.075));
+      } else {
+        [349.23, 440, 523.25].forEach((note, index) => this.piano(note, 0.48, 0.052, this.sfxBus, index * 0.09));
+      }
       return;
     }
     if (event.type === 'jump') {
@@ -225,12 +289,11 @@ export class PhiengLoiAudioDirector {
     const sequence = zoneNotes[zone];
     const note = sequence[this.beatIndex % sequence.length];
     const strongBeat = this.beatIndex % 4 === 0;
-    const destination = this.musicBus;
-    this.tone(note, tea ? 0.52 : 0.26, zone === 2 ? 'sine' : 'triangle', strongBeat ? 0.13 : 0.085, destination);
-    if (strongBeat) this.tone(note / 2, 0.34, 'sine', buffalo ? 0.11 : 0.07, destination);
+    this.piano(note, tea ? 0.88 : 0.58, strongBeat ? 0.16 : 0.11, this.musicBus);
+    if (strongBeat) this.piano(note / 2, 0.72, buffalo ? 0.105 : 0.075, this.musicBus);
     if (coffee && this.beatIndex % 2 === 1) {
       this.noise(0.035, 0.022, 4_800);
-      this.tone(note * 2, 0.07, 'square', 0.018, destination);
+      this.tone(note * 2, 0.07, 'square', 0.018, this.musicBus);
     }
     this.beatIndex += 1;
   }
@@ -257,7 +320,7 @@ export class PhiengLoiAudioDirector {
     const tea = powers.includes('tea');
     const buffalo = powers.includes('buffalo');
     const tempo = zoneTempo[zone] * (coffee ? 1.28 : tea ? 0.82 : 1);
-    const beatDuration = 60 / tempo;
+    const beatDuration = 30 / tempo;
     if (elapsed < this.nextBeatAt - 1) this.nextBeatAt = elapsed;
     if (elapsed >= this.nextBeatAt) {
       this.playMusicBeat(zone, coffee, tea, buffalo);

@@ -24,6 +24,7 @@ import {
   type GameQuality,
   type GameState,
   type InputState,
+  type LandmarkKind,
   type PowerKind,
   type UiSnapshot,
   type ZoneKind,
@@ -91,6 +92,39 @@ const HERO_COPY: Record<ZoneKind, { title: LocalizedCopy; detail: LocalizedCopy 
   3: {
     title: { vi: 'Sân bản cuối chiều', en: 'Village courtyard at dusk' },
     detail: { vi: 'Ánh đèn, tiếng nhạc và mọi người trở về.', en: 'Lanterns, music and people coming home.' },
+  },
+};
+
+const LANDMARK_COPY: Record<LandmarkKind, { eyebrow: LocalizedCopy; title: LocalizedCopy; detail: LocalizedCopy }> = {
+  cornfield: {
+    eyebrow: { vi: 'CẢNH SẮC ĐIỆN BIÊN', en: 'A DIEN BIEN LANDSCAPE' },
+    title: { vi: 'Đồng ngô cuối bản', en: 'Cornfield at the village edge' },
+    detail: { vi: 'Gió chạy thành từng hàng qua lá ngô.', en: 'Wind moves through the corn in long green rows.' },
+  },
+  terraces: {
+    eyebrow: { vi: 'CẢNH SẮC ĐIỆN BIÊN', en: 'A DIEN BIEN LANDSCAPE' },
+    title: { vi: 'Ruộng bậc thang', en: 'Terraced rice fields' },
+    detail: { vi: 'Mặt núi được xếp lại thành từng mùa lúa.', en: 'The mountainside is shaped into seasons of rice.' },
+  },
+  waterwheel: {
+    eyebrow: { vi: 'CÔNG TRÌNH BẢN THÁI', en: 'THAI VILLAGE CRAFT' },
+    title: { vi: 'Cọn nước bên suối', en: 'Waterwheel by the stream' },
+    detail: { vi: 'Tre, dòng chảy và một cách đưa nước lên nương.', en: 'Bamboo and current lift water toward the fields.' },
+  },
+  'stream-girl': {
+    eyebrow: { vi: 'CUỘC GẶP BÊN SUỐI', en: 'A MEETING BY THE STREAM' },
+    title: { vi: 'Cô gái Thái bên dòng nước', en: 'A Thai woman by the water' },
+    detail: { vi: 'Cô xuống suối tắm; đàn cá lấp lánh tìm về.', en: 'She bathes in the stream as silver fish gather nearby.' },
+  },
+  museum: {
+    eyebrow: { vi: 'DẤU ẤN THÀNH PHỐ', en: 'CITY LANDMARK' },
+    title: { vi: 'Bảo tàng Chiến thắng Điện Biên Phủ', en: 'Dien Bien Phu Victory Museum' },
+    detail: { vi: 'Mái nón nan và lớp lưới quả trám hiện lên giữa lòng chảo.', en: 'A woven-helmet form and diamond lattice rise in the basin.' },
+  },
+  monument: {
+    eyebrow: { vi: 'DẤU ẤN THÀNH PHỐ', en: 'CITY LANDMARK' },
+    title: { vi: 'Tượng đài Chiến thắng', en: 'Victory Monument' },
+    detail: { vi: 'Ba người lính nâng lá cờ lên khỏi lòng chảo.', en: 'Three soldiers raise the flag above the valley.' },
   },
 };
 
@@ -203,7 +237,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     const context = canvasRef.current?.getContext('2d', { alpha: false });
     const game = gameRef.current;
     if (!context || !game) return;
-    context.imageSmoothingEnabled = true;
+    context.imageSmoothingEnabled = false;
 
     if (status !== 'playing') {
       renderGame(context, game);
@@ -337,6 +371,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   };
 
   const activeCallout = ui.callout ? POWER_COPY[ui.callout] : null;
+  const activeLandmark = ui.landmark ? LANDMARK_COPY[ui.landmark] : null;
   const isPlaying = status === 'playing';
   const showArrival = isPlaying && ui.elapsed > 0.45 && ui.elapsed < 3.8;
   const showTouchGuide = isPlaying && ui.elapsed < 5.2;
@@ -356,7 +391,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
           <p>{vi ? 'CHƯƠNG VĂN HOÁ · MOBILE GAME 2D' : 'CULTURE CHAPTER · 2D MOBILE GAME'}</p>
           <h1 id="phieng-game-title">{vi ? 'Nhịp bản Phiêng Lơi' : 'Phiêng Lơi Village Rhythm'}</h1>
         </div>
-        <p>{vi ? 'Một hành trình ngắn qua nhà sàn, ruộng, thác suối và sân bản. Sản vật — cùng một cuộc gặp ven đường — sẽ làm bạn biến đổi theo những cách khó đoán.' : 'A short journey through stilt houses, fields, waterfalls and the village courtyard. Local produce — and one roadside encounter — change you in unexpected ways.'}</p>
+        <p>{vi ? 'Một hành trình pixel qua đồng ngô, ruộng bậc thang, cọn nước, bến suối và những dấu ấn của Điện Biên. Sản vật — cùng một cuộc gặp ven đường — sẽ làm bạn biến đổi theo những cách khó đoán.' : 'A pixel journey through cornfields, terraces, waterwheels, the stream and Dien Bien landmarks. Local produce — and one roadside encounter — change you in unexpected ways.'}</p>
       </section>
 
       <section className="phieng-game__console" aria-label={vi ? 'Trò chơi Phiêng Lơi' : 'Phiêng Lơi game'}>
@@ -413,6 +448,14 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
             </div>
           ) : null}
 
+          {activeLandmark && ui.landmark && status === 'playing' ? (
+            <div className={`phieng-game__landmark is-${ui.landmark}`} role="status">
+              <span>{activeLandmark.eyebrow[language]}</span>
+              <strong>{activeLandmark.title[language]}</strong>
+              <small>{activeLandmark.detail[language]}</small>
+            </div>
+          ) : null}
+
           {activeCallout && ui.callout ? (
             <div className={`phieng-game__power-callout is-${ui.callout}`} role="status">
               <span>{activeCallout.effect[language]}</span>
@@ -441,9 +484,9 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
             <div className="phieng-game__overlay is-intro">
               <p>{vi ? 'MỘT CHUYẾN ĐI 2D QUA BẢN' : 'A 2D JOURNEY THROUGH THE VILLAGE'}</p>
               <h2>{vi ? 'Đi qua Phiêng Lơi trước khi trời tối.' : 'Cross Phiêng Lơi before nightfall.'}</h2>
-              <div>{vi ? 'Bạn sẽ rơi xuống từ Chuyến tàu thời gian, gặp năm sản vật, một mâm nhậu ven đường và đi qua bốn không gian có thật.' : 'Drop in from the Time Train, meet five local products, one roadside gathering and cross four living landscapes.'}</div>
+              <div>{vi ? 'Bạn sẽ gặp mâm nhậu ngay đầu bản, rồi đi qua đồng ngô, ruộng bậc thang, cọn nước, bến suối, bảo tàng và tượng đài.' : 'Meet a roadside gathering near the village entrance, then cross cornfields, terraces, a waterwheel, the stream, museum and monument.'}</div>
               <div className="phieng-game__intro-controls">
-                <span>← → / A D</span><span>{vi ? 'Space · Nhảy' : 'Space · Jump'}</span><span>Shift · {vi ? 'Lướt' : 'Dash'}</span><span>E · DZÔ!</span>
+                <span>← → / A D</span><span>{vi ? 'Space · Nhảy' : 'Space · Jump'}</span><span>Shift · {vi ? 'Lướt' : 'Dash'}</span><span>E · DZÔ!</span><span>♬ Piano · Ính lả ơi</span>
               </div>
               <button type="button" onClick={startGame}>{vi ? 'Bắt đầu hành trình' : 'Start the journey'}<ArrowLeft className="is-forward" aria-hidden="true" /></button>
             </div>
@@ -465,10 +508,13 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
               <div>{vi ? 'Một bản của người Thái bên lòng chảo Điện Biên.' : 'A Thai village beside the Dien Bien basin.'}</div>
               <ul className="phieng-game__memory-list">
                 <li>{vi ? 'Nhà sàn' : 'Stilt houses'}</li>
-                <li>{vi ? 'Ruộng' : 'Fields'}</li>
-                <li>{vi ? 'Suối' : 'Stream'}</li>
-                <li>{vi ? 'Sản vật Điện Biên' : 'Dien Bien produce'}</li>
-                <li>{vi ? 'Đời sống bản' : 'Village life'}</li>
+                <li>{vi ? 'Đồng ngô' : 'Cornfields'}</li>
+                <li>{vi ? 'Ruộng bậc thang' : 'Rice terraces'}</li>
+                <li>{vi ? 'Cọn nước' : 'Waterwheel'}</li>
+                <li>{vi ? 'Bến suối' : 'Stream'}</li>
+                <li>{vi ? 'Mâm nhậu ven đường' : 'Roadside gathering'}</li>
+                <li>{vi ? 'Bảo tàng' : 'Museum'}</li>
+                <li>{vi ? 'Tượng đài' : 'Monument'}</li>
               </ul>
               <nav>
                 <Link to="/book"><BookOpen aria-hidden="true" />{vi ? 'Đi tiếp vào Book' : 'Continue to Book'}</Link>
@@ -540,7 +586,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
       </section>
 
       <footer className="phieng-game__footer">
-        <span>{vi ? `Canvas 2D nhẹ · ${profile.quality === 'low' ? 'chất lượng thích ứng' : 'chi tiết cao'}` : `Lightweight 2D canvas · ${profile.quality === 'low' ? 'adaptive quality' : 'high detail'}`}</span>
+        <span>{vi ? `Pixel Canvas 2D · Piano Ính lả ơi · ${profile.quality === 'low' ? 'chất lượng thích ứng' : 'chi tiết cao'}` : `Pixel Canvas 2D · Ính lả ơi piano · ${profile.quality === 'low' ? 'adaptive quality' : 'high detail'}`}</span>
         <nav><Link to="/1954">1954</Link><Link to="/book">BOOK</Link></nav>
       </footer>
 
