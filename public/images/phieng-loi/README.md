@@ -19,6 +19,12 @@ project owner; the raw references are intentionally not committed.
 - `feast-loop-v2.webp`: 1776×888 transparent 4×2 roadside-table toast/laugh cycle.
 - `stream-loop-v2.webp`: 1776×888 transparent 4×2 adult stream-community cycle.
 - `vuongme-dance-v1.webp`: 1776×888 transparent 4×2 VươngMe karaoke/dance cycle.
+- `heesun-wife-atlas-v1.webp`: 1536×1024 transparent 4×2 original fictional
+  HeeSun-wife entrance/command/exit pose atlas.
+- `dien-bien-victory-monument-v1.webp`: 640×430 transparent, original stylized
+  distant silhouette inspired by the recognizable Victory Monument form.
+- `dien-bien-victory-museum-v1.webp`: 720×337 transparent, original stylized
+  distant silhouette inspired by the recognizable circular Victory Museum form.
 - `heesun-menu-v1.webp`, `hanu-menu-v1.webp`: transparent menu cutouts.
 
 Runtime mapping and preload behavior live in

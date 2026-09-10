@@ -55,6 +55,9 @@ All runtime URLs live in `visualAssets.ts`.
 | `feast-loop-v2.webp` | 4×2 | Five-man roadside-table toast and laugh cycle. |
 | `stream-loop-v2.webp` | 4×2 | Four-adult stream-community idle and reaction cycle. |
 | `vuongme-dance-v1.webp` | 4×2 | VươngMe karaoke/dance cycle, staged as a rare visual response to PHÀ ƠI. |
+| `heesun-wife-atlas-v1.webp` | 4×2 | Original HeeSun-wife entrance, stern command and exit poses. |
+| `dien-bien-victory-monument-v1.webp` | cutout | Hazy static Victory Monument silhouette in the distant city ridge. |
+| `dien-bien-victory-museum-v1.webp` | cutout | Hazy static Victory Museum silhouette in the distant city ridge. |
 | `heesun-menu-v1.webp` | cutout | Waiting-menu left character. |
 | `hanu-menu-v1.webp` | cutout | Waiting-menu right character. |
 
@@ -83,8 +86,10 @@ and then projected to the closest authored route.
   traversal boundaries.
 - HANU follows the connected dirt road and wooden crossing. HeeSun starts at the
   edge of the entry road and chases through the same navigation graph.
-- VươngMe uses the right-side karaoke clearing when staged, while the dog and
-  buffalo sit beside a house and in the terraces respectively.
+- VươngMe enters near the player only when the Event Director selects the rare
+  karaoke outcome; the dog and buffalo sit beside a house and in the terraces.
+- HeeSun's wife appears beside the active HeeSun/feast commotion, never as a
+  permanently wandering or quest NPC.
 
 This follows compact comedy-game staging practice: anchor social NPCs to props,
 keep the critical movement lane readable, cluster reactions locally and use
@@ -98,6 +103,9 @@ silhouette/pose—not oversized sprites—to establish importance.
   tank top, black shorts, sandals, smartphone visible in every pose, permanently
   distracted.
 - Player: smaller, quieter palette and simpler face than both named characters.
+- HeeSun's wife: fictional adult village character with a sturdy angular
+  silhouette, high bun, indigo-black jacket, restrained woven trim and a
+  competent, unimpressed expression. She is not based on a supplied likeness.
 
 Owner-supplied reference boards guide likeness only. Raw photographs are not
 bundled. Future replacements must remain original, fictionalized game art and
@@ -112,18 +120,20 @@ must not introduce commercial IP.
 - Bottom left: one large joystick.
 - Bottom right: one dominant PHÀ ƠI! action.
 
-Messages use a single comic-paper bubble. Temporary encounter/status data is kept
-small and disappears when inactive.
+Messages use a single comic-paper bubble, allowlisted only for the player,
+HeeSun, HANU and VuongMe. Other actors communicate through pose, motion, audio,
+the small chief card or cinematic copy. Temporary status data stays compact.
 
 ## Supporting cast checkpoint
 
 Trưởng bản, the roadside-table group and the adult stream group no longer reuse
 single support-atlas poses. Each has a dedicated eight-frame transparent cutout
-cycle. VươngMe is a dedicated animated visual guest: every fifth successful
-normal PHÀ ƠI call can stage his short karaoke entrance. A TRUE NOTHING call is
-explicitly excluded, so the visual layer cannot secretly compensate for the null
-outcome. The food-box slot, dog reaction, fish-rate escalation and existing actor
-states expose the Event Director without changing the locked art direction.
+cycle. VươngMe is a dedicated animated rare-event guest selected by the Director,
+never by a visual-layer call counter and never by TRUE NOTHING. During the short
+event, bounded CSS lights turn the current village into cheap karaoke, personality
+specific dance loops replace routine poses, and the stream group gathers without
+crowd AI. Static original cutouts of the Điện Biên Phủ Victory Monument and
+Victory Museum add recognizable city memory to the far background.
 
 ## Next art tasks
 

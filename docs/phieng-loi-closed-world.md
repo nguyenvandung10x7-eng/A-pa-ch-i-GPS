@@ -50,11 +50,11 @@ previous family, then rolls the null outcome.
 - Exactly 20% of rolls are **TRUE NOTHING**. The player still calls, but the call
   creates no NPC response, object change, dialogue, particles, secondary event,
   chain or delayed compensation. Existing routines and chases continue.
-- TRUE NOTHING alone disables PHÀ ƠI for 60 seconds. The button stays in place,
-  becomes visually quiet and recharges without a numeric countdown. Save/restore
-  retains the remaining lock.
-- The other 80% resolves against local context. A normal result never starts the
-  global 60-second lock, so the button remains immediately reusable.
+- Every accepted press disables PHÀ ƠI for 5 seconds. The short, non-numeric
+  recharge gives the player time to read the outcome; save/restore retains the
+  remaining lock. Movement and all already-running routines continue.
+- The other 80% resolves against local context. It uses the same 5-second
+  observation window and can start local, chained, delayed or rare outcomes.
 
 The runtime reserves normal, long, panicked, whisper and rare silly recording
 families. Missing signature recordings fail silent; no TTS or synthetic voice is
@@ -111,17 +111,30 @@ HANU → player → HeeSun can coexist with a chasing feast and crossing chicken
 - The stream keeps its distant, fully clothed community framing. Normal calls can
   increase fish activity; TRUE NOTHING cannot.
 
-A rare off-screen “Về.” disperses the feast and sends HeeSun away. Rare macro
+A rare arrival by HeeSun's wife disperses the feast and sends HeeSun away. She
+has a dedicated original pose atlas and a brief visual “VỀ.” placard rather than
+another gameplay speech bubble. Rare macro
 beats include growth figures, a dry world-news subtitle, two simultaneous HeeSuns
 and the theoretical right to leave. They are deliberately low-weight and share an
 anti-repeat group, keeping the dominant tone everyday and slapstick.
 
 ## Dialogue and audio
 
-Dialogue is event data, not an RPG conversation system. A bounded five-item queue
-supports short anchored comic bubbles with priority and interruption rules.
-Critical/capture beats can displace low-priority gags; two cinematic sequences
-cannot simultaneously lock the player.
+Dialogue is event data, not an RPG conversation system. Anchored speech bubbles
+are allowlisted to the player, HeeSun, HANU and VuongMe. Reactions from the feast,
+chief, stream and ambient world stay in animation, audio, the compact chief HUD or
+cinematic copy, so simultaneous routines do not cover the playfield.
+
+## Rare VuongMe karaoke event
+
+`vuongme-karaoke-disco` is a low-weight, long-cooldown major event eligible only
+from the 80% normal PHÀ ƠI branch and never from TRUE NOTHING. It keeps the current
+map and player position, pauses bounded NPC routine clocks for 10.5 seconds, moves
+the stream group into the gathering with a simple visual interpolation, and uses
+CSS light beams/dots plus procedural original disco audio. The player remains
+controllable. The hard cut restores HeeSun chase, HANU delivery, feast, chickens
+and chief speech without duplicating actors or delivery state. The shipped lyric
+is project-original rather than the uncleared reference lyric.
 
 Only cleared project recordings may be marked `ready` in `audioManifest.ts`.
 Generic effects can use the existing procedural development fallback. Signature
@@ -150,7 +163,8 @@ audio resources.
   steering. HeeSun navigation is sampled rather than recomputed every frame.
 - Actor count, dialogue, particles, active events and delayed queues are bounded.
 - `npm run verify:phieng-loi` directly tests TRUE NOTHING probability and purity,
-  normal-call reuse, cooldown continuity, anti-repeat, director bounds, HeeSun,
+  the 5-second cooldown on both branches, bubble allowlisting, VuongMe state
+  pause/resume, cooldown continuity, anti-repeat, director bounds, HeeSun,
   HANU delivery/variations, feast, chickens, chains, sparse evaluation, saves,
   legacy migration and exit.
 - Release gates remain `npm run lint`, `npm run typecheck`, `npm run build` and

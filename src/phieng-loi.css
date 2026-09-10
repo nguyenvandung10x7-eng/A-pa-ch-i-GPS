@@ -273,6 +273,7 @@
 
 .phieng-game__message.is-heesun { --bubble: #ef6b45; }
 .phieng-game__message.is-hanu { --bubble: #78d1b8; }
+.phieng-game__message.is-vuongme { --bubble: #c987f4; }
 .phieng-game__message.is-chief { --bubble: #e1c165; }
 .phieng-game__message.is-stream { --bubble: #ef9caf; }
 .phieng-game__message.is-ocop { --bubble: #b7dc6c; }
@@ -976,6 +977,32 @@
   will-change: transform;
 }
 
+.phieng-visual__landmark {
+  position: absolute;
+  z-index: 330;
+  opacity: .74;
+  filter: saturate(.82) contrast(.96) drop-shadow(0 5px 7px rgba(39, 55, 39, .24));
+  pointer-events: none;
+}
+
+.phieng-visual__landmark img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.phieng-visual__landmark.is-monument {
+  top: 350px;
+  left: 1540px;
+  width: 158px;
+}
+
+.phieng-visual__landmark.is-museum {
+  top: 408px;
+  left: 1792px;
+  width: 196px;
+}
+
 .phieng-visual__actor {
   position: absolute;
   top: 0;
@@ -1040,6 +1067,38 @@
   left: -14px;
   width: 28px;
   background: rgba(22, 26, 24, .32);
+}
+
+.phieng-visual__actor.is-heesun-wife::before {
+  left: -12px;
+  width: 24px;
+  background: rgba(26, 37, 25, .3);
+}
+
+.phieng-visual__wife-command {
+  position: absolute;
+  z-index: 4;
+  top: -62px;
+  left: 12px;
+  padding: 2px 5px;
+  border: 2px solid #3f2a20;
+  border-radius: 3px;
+  background: #fff0bd;
+  box-shadow: 2px 2px 0 rgba(61, 39, 26, .52);
+  color: #712e25;
+  font: 1000 8px/1 "Be Vietnam Pro", sans-serif;
+  letter-spacing: .08em;
+  opacity: 0;
+  transform: rotate(-4deg);
+  white-space: nowrap;
+}
+
+.phieng-visual__actor.is-heesun-wife[data-motion="command"] .phieng-visual__wife-command {
+  opacity: 1;
+}
+
+.phieng-visual__actor.is-heesun-wife[data-motion="command"] .phieng-visual__sprite {
+  animation: phieng-wife-command .28s cubic-bezier(.2,.9,.3,1.3) both;
 }
 
 .phieng-visual__actor.is-chicken::before {
@@ -1134,6 +1193,53 @@
   transition: opacity .18s ease-out;
 }
 
+.phieng-visual__karaoke-lights i,
+.phieng-visual__karaoke-lights b {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.phieng-visual__karaoke-lights .is-ball {
+  top: -3.5%;
+  left: 50%;
+  width: clamp(2.8rem, 7vw, 5.6rem);
+  aspect-ratio: 1;
+  border: .16rem solid rgba(255, 246, 209, .72);
+  border-radius: 50%;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 18%, rgba(255,255,255,.46) 19% 22%),
+    repeating-linear-gradient(90deg, #88d8ee 0 15%, #f48ab5 16% 30%, #f7d75c 31% 45%);
+  box-shadow: 0 0 1.4rem #fff, 0 0 3.8rem rgba(111, 212, 255, .78);
+  transform: translateX(-50%);
+}
+
+.phieng-visual__karaoke-lights [class^="is-beam"] {
+  top: -8%;
+  left: 50%;
+  width: 14%;
+  height: 116%;
+  background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,85,180,.13) 44%, transparent 82%);
+  clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%);
+  mix-blend-mode: screen;
+  opacity: .7;
+  transform-origin: 50% 0;
+}
+
+.phieng-visual__karaoke-lights .is-beam-a { transform: translateX(-50%) rotate(-30deg); }
+.phieng-visual__karaoke-lights .is-beam-b { transform: translateX(-50%) rotate(8deg); filter: hue-rotate(95deg); }
+.phieng-visual__karaoke-lights .is-beam-c { transform: translateX(-50%) rotate(33deg); filter: hue-rotate(205deg); }
+
+.phieng-visual__karaoke-lights b {
+  top: var(--dot-y);
+  left: var(--dot-x);
+  width: var(--dot-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: hsl(calc(var(--dot) * 47deg) 94% 68%);
+  box-shadow: 0 0 9px currentColor;
+}
+
 .phieng-visual.is-karaoke .phieng-visual__karaoke-lights {
   animation: phieng-karaoke-sweep 1.15s ease-in-out infinite alternate;
   opacity: .58;
@@ -1141,6 +1247,80 @@
 
 .phieng-visual.is-karaoke .phieng-visual__actor[data-motion="karaoke"] .phieng-visual__sprite {
   filter: drop-shadow(0 0 5px rgba(255, 221, 115, .62));
+}
+
+.phieng-visual.is-karaoke .phieng-visual__karaoke-lights .is-ball {
+  animation: phieng-disco-ball .9s linear infinite;
+}
+
+.phieng-visual.is-karaoke .phieng-visual__karaoke-lights [class^="is-beam"] {
+  animation: phieng-disco-beam .72s ease-in-out infinite alternate;
+}
+
+.phieng-visual.is-karaoke .phieng-visual__karaoke-lights b {
+  animation: phieng-disco-dot .62s ease-in-out calc(var(--dot) * -71ms) infinite alternate;
+}
+
+.phieng-visual.is-karaoke .phieng-visual__actor.is-player[data-motion="karaoke"] .phieng-visual__sprite,
+.phieng-visual.is-karaoke .phieng-visual__actor.is-vuongme[data-motion="karaoke"] .phieng-visual__sprite {
+  animation: phieng-dance-bounce .32s cubic-bezier(.22,.8,.3,1) infinite alternate;
+}
+
+.phieng-visual.is-karaoke .phieng-visual__actor.is-heesun[data-motion="karaoke"] .phieng-visual__sprite {
+  animation: phieng-dance-heesun .4s steps(2, end) infinite alternate;
+}
+
+.phieng-visual.is-karaoke .phieng-visual__actor.is-hanu[data-motion="karaoke"] .phieng-visual__sprite {
+  animation: phieng-dance-hanu .48s ease-in-out infinite alternate;
+}
+
+.phieng-visual.is-karaoke .phieng-visual__actor.is-chief[data-motion="karaoke"] .phieng-visual__sprite {
+  animation: phieng-dance-chief .5s steps(2, end) infinite alternate;
+}
+
+.phieng-visual.is-karaoke .phieng-visual__actor.is-feast[data-motion="karaoke"] .phieng-visual__sprite,
+.phieng-visual.is-karaoke .phieng-visual__actor.is-stream-group[data-motion="karaoke"] .phieng-visual__sprite {
+  animation: phieng-dance-crowd .28s ease-in-out infinite alternate;
+}
+
+.phieng-visual.is-karaoke .phieng-visual__actor.is-dog[data-motion="karaoke"] .phieng-visual__sprite,
+.phieng-visual.is-karaoke .phieng-visual__actor.is-chicken[data-motion="karaoke"] .phieng-visual__sprite {
+  animation: phieng-dance-animal .2s steps(2, end) infinite alternate;
+}
+
+.phieng-game.is-karaoke .phieng-game__frame::after {
+  box-shadow: inset 0 0 3.2rem rgba(244, 62, 176, .33), inset 0 0 6rem rgba(41, 205, 255, .18);
+  animation: phieng-disco-frame .46s steps(2, end) infinite alternate;
+}
+
+.phieng-game__karaoke-lyrics {
+  position: absolute;
+  z-index: 26;
+  right: 17%;
+  bottom: 5.2%;
+  left: 17%;
+  display: grid;
+  gap: .08rem;
+  color: transparent;
+  font-size: clamp(.72rem, 1.8vw, 1.3rem);
+  font-weight: 1000;
+  line-height: 1.18;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #4d2458, -1px -1px 0 rgba(255,255,255,.54), 0 0 .7rem rgba(255, 80, 184, .82);
+  pointer-events: none;
+  transform: rotate(-.45deg);
+}
+
+.phieng-game__karaoke-lyrics span,
+.phieng-game__karaoke-lyrics strong {
+  background: linear-gradient(90deg, #fff35d 0 var(--karaoke-progress), #fff var(--karaoke-progress) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.phieng-game__karaoke-lyrics strong {
+  font-size: .82em;
 }
 
 .phieng-visual__foreground {
@@ -1489,6 +1669,61 @@
   to { transform: translate3d(5%, -1%, 0) scale(1.12) rotate(1deg); }
 }
 
+@keyframes phieng-disco-ball {
+  from { transform: translateX(-50%) rotate(0); }
+  to { transform: translateX(-50%) rotate(360deg); }
+}
+
+@keyframes phieng-disco-beam {
+  from { opacity: .35; translate: -4% 0; rotate: -9deg; }
+  to { opacity: .82; translate: 4% 0; rotate: 9deg; }
+}
+
+@keyframes phieng-disco-dot {
+  from { opacity: .28; transform: scale(.55); }
+  to { opacity: 1; transform: scale(1.65); }
+}
+
+@keyframes phieng-dance-bounce {
+  from { translate: 0 0; rotate: -3deg; }
+  to { translate: 0 -6px; rotate: 3deg; }
+}
+
+@keyframes phieng-dance-heesun {
+  from { translate: -3px -1px; rotate: -6deg; }
+  to { translate: 3px -5px; rotate: 6deg; }
+}
+
+@keyframes phieng-dance-hanu {
+  from { translate: -2px 0; rotate: -2deg; }
+  to { translate: 2px -3px; rotate: 5deg; }
+}
+
+@keyframes phieng-dance-chief {
+  from { translate: 0 0; rotate: -1deg; }
+  to { translate: 0 -3px; rotate: 1deg; }
+}
+
+@keyframes phieng-dance-crowd {
+  from { translate: -2px 0; rotate: -1.5deg; }
+  to { translate: 2px -4px; rotate: 1.5deg; }
+}
+
+@keyframes phieng-dance-animal {
+  from { translate: 0 0; rotate: -8deg; }
+  to { translate: 0 -5px; rotate: 8deg; }
+}
+
+@keyframes phieng-disco-frame {
+  from { opacity: .72; }
+  to { opacity: 1; }
+}
+
+@keyframes phieng-wife-command {
+  from { translate: 8px 0; rotate: 3deg; }
+  to { translate: 0 -2px; rotate: -1deg; }
+}
+
 @media (max-width: 760px) {
   .phieng-game__hud {
     inset: .34rem .38rem auto;
@@ -1522,7 +1757,9 @@
   .phieng-visual__world,
   .phieng-visual__actor,
   .phieng-visual__sprite,
-  .phieng-visual__karaoke-lights {
+  .phieng-visual__karaoke-lights,
+  .phieng-visual__karaoke-lights *,
+  .phieng-game__karaoke-lyrics {
     animation: none !important;
     transition: none !important;
   }

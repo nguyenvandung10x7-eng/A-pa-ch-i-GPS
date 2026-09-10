@@ -300,6 +300,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
         elapsed: current.elapsed,
         chasing: snapshot.chasing,
         power: snapshot.power,
+        karaoke: snapshot.karaokeActive,
         nearStream: Math.hypot(
           current.player.x - PHIENG_LOI_LANDMARKS.stream.x,
           current.player.y - PHIENG_LOI_LANDMARKS.stream.y,
@@ -374,7 +375,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   const showCinematic = Boolean(ui.cinematicVi || ui.cinematicEn);
 
   return (
-    <main className={`phieng-game${ui.chasing ? ' is-chasing' : ''}`} aria-labelledby="phieng-game-title">
+    <main className={`phieng-game${ui.chasing && !ui.karaokeActive ? ' is-chasing' : ''}${ui.karaokeActive ? ' is-karaoke' : ''}`} aria-labelledby="phieng-game-title">
       <section className="phieng-game__frame" aria-label={vi ? 'Trò chơi Phiêng Lơi' : 'Phiêng Lơi game'}>
         <PhiengLoiVisualScene ref={visualRef} initialGame={initialGame} />
 
@@ -394,7 +395,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
           </nav>
         </header>
 
-        {(ui.chasing || ui.feastChasing || ui.hanuDeliveryActive) && status === 'playing' ? (
+        {(ui.chasing || ui.feastChasing || ui.hanuDeliveryActive) && status === 'playing' && !ui.karaokeActive ? (
           <div className="phieng-game__chase" role="status">
             <span>
               {ui.hanuDeliveryActive && ui.chasing
@@ -409,15 +410,15 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
           </div>
         ) : null}
 
-        {ui.chiefSpeaking && ui.leaderClock ? (
+        {ui.chiefSpeaking && ui.leaderClock && !ui.karaokeActive ? (
           <div className="phieng-game__chief" aria-live="polite">
             <span>{vi ? 'TRƯỞNG BẢN · “TÔI XIN NÓI NGẮN GỌN”' : 'VILLAGE CHIEF · “I WILL BE BRIEF”'}</span>
             <strong>{ui.leaderClock}</strong>
-            <small>{vi ? 'Thứ nhất…' : 'Firstly…'}</small>
+            <small>{vi ? ui.leaderLineVi : ui.leaderLineEn}</small>
           </div>
         ) : null}
 
-        {ui.power ? (
+        {ui.power && !ui.karaokeActive ? (
           <div className={`phieng-game__power is-${ui.power}`} role="status">
             <strong>{POWER_COPY[ui.power][language]}</strong>
             <i><b style={{ width: `${ui.powerRemaining * 100}%` }} /></i>
@@ -438,6 +439,17 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
 
         {ui.callActive && status === 'playing' ? (
           <div key={ui.callSerial} className="phieng-game__call-text" aria-hidden="true">PHÀ ƠI!</div>
+        ) : null}
+
+        {ui.karaokeActive && status === 'playing' ? (
+          <div
+            className="phieng-game__karaoke-lyrics"
+            style={{ '--karaoke-progress': `${ui.karaokeProgress * 100}%` } as CSSProperties}
+            aria-label={vi ? 'Phiêng Lơi đang hát karaoke' : 'Phiêng Lơi is singing karaoke'}
+          >
+            <span>{vi ? 'Phiêng Lơi ơi, đèn xoay qua mái nhà' : 'Phiêng Lơi, lights sweep across the roofs'}</span>
+            <strong>{vi ? 'Ai đang đi cũng tự nhiên nhảy ba vòng' : 'Everybody walking suddenly dances three rounds'}</strong>
+          </div>
         ) : null}
 
         {showCinematic ? (
@@ -466,7 +478,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
               onPointerDown={queueCall}
               disabled={!ui.callReady || ui.scene === 'capture'}
               style={{ '--recharge': `${ui.callCooldownProgress * 360}deg` } as CSSProperties}
-              aria-label={ui.callReady ? (vi ? 'Gọi Phà ơi' : 'Call out Pha oi') : (vi ? 'Phà ơi đang tịt' : 'Pha oi is recharging')}
+              aria-label={ui.callReady ? (vi ? 'Gọi Phà ơi' : 'Call out Pha oi') : (vi ? 'Phà ơi đang hồi' : 'Pha oi is recharging')}
             >
               <strong>PHÀ ƠI!</strong>
             </button>

@@ -17,6 +17,7 @@ import {
   createGame,
   createSave,
   createUiSnapshot,
+  isGameplayBubble,
   stepGame,
   triggerDirectedEvent,
 } from '../src/experiences/phieng-loi/gameEngine.ts';
@@ -81,7 +82,11 @@ assert.doesNotMatch(engineSource, /CanvasRenderingContext2D|\.fillRect\(|\.begin
 assert.doesNotMatch(pageSource, /<canvas|renderGame\(/);
 assert.match(pageSource, /disabled=\{!ui\.callReady/);
 assert.match(visualSource, /PHIENG_LOI_VISUAL_ASSETS\.hanuFood/);
-assert.match(visualSource, /game\.phaOiCooldownUntil <= game\.elapsed && game\.normalCallCount/);
+assert.match(visualSource, /game\.karaoke\.active/);
+assert.doesNotMatch(visualSource, /VUONGME_CALL_INTERVAL|normalCallCount\s*%/);
+assert.match(visualSource, /PHIENG_LOI_VISUAL_ASSETS\.victoryMonument/);
+assert.match(visualSource, /PHIENG_LOI_VISUAL_ASSETS\.victoryMuseum/);
+assert.match(visualSource, /heesunWife/);
 assert.doesNotMatch(pageSource, /GỌI \/ ĂN \/ CHẠM|CALL \/ EAT \/ ACT/);
 assert.doesNotMatch(pageSource, /Ngón trái để đi · Ngón phải|Move with your left thumb/);
 assert.doesNotMatch(pageSource, /BẮT HANU|CATCH HANU|catch button/i);
@@ -100,6 +105,14 @@ assert.equal(DIRECTOR_LIMITS.delayedQueue, 6);
 assert.equal(DIRECTOR_LIMITS.chainDepth, 5);
 
 assert.equal(TRUE_NOTHING_PROBABILITY, 0.2);
+assert.equal(PHA_OI_COOLDOWN_SECONDS, 5);
+assert.equal(isGameplayBubble('player', 'plain'), true);
+assert.equal(isGameplayBubble('heesun', 'heesun'), true);
+assert.equal(isGameplayBubble('hanu', 'hanu'), true);
+assert.equal(isGameplayBubble('vuongme', 'vuongme'), true);
+for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream', 'stream'], ['world', 'world'], ['player', 'ocop']]) {
+  assert.equal(isGameplayBubble(anchor, tone), false, `${anchor}/${tone} must not occupy a gameplay bubble`);
+}
 {
   const random = lcg();
   let trueNothing = 0;
@@ -133,6 +146,7 @@ assert.equal(TRUE_NOTHING_PROBABILITY, 0.2);
   assert.equal(game.chicken.mode, before.chicken);
   assert.equal(game.shakeUntil, before.shakeUntil);
   assert.equal(game.normalCallCount, before.normalCallCount);
+  assert.equal(game.karaoke.active, false);
   assert.ok(Math.abs(game.phaOiCooldownUntil - game.elapsed - PHA_OI_COOLDOWN_SECONDS) < 0.001);
   const calls = game.callCount;
   assert.equal(call(game).some(({ type }) => type === 'pha-oi'), false);
@@ -154,7 +168,7 @@ assert.equal(TRUE_NOTHING_PROBABILITY, 0.2);
   assert.notEqual(game.hanu.x, hanuX);
 
   const restored = createGame('high', false, createSave(game), { random: () => 0.8 });
-  assert.ok(restored.phaOiCooldownUntil - restored.elapsed > 57);
+  assert.ok(restored.phaOiCooldownUntil - restored.elapsed > 2.9);
   restored.heesun.mode = 'drinking';
   restored.heesun.modeUntil = 99_999;
   restored.hanu.mode = 'delivery-paused';
@@ -173,13 +187,15 @@ assert.equal(TRUE_NOTHING_PROBABILITY, 0.2);
   assert.ok(first.some((event) => event.type === 'pha-oi' && event.outcome === 'normal'));
   assert.ok(first.some((event) => event.type === 'director-event'));
   assert.equal(game.normalCallCount, 1);
-  assert.equal(game.phaOiCooldownUntil, 0);
+  assert.ok(game.phaOiCooldownUntil - game.elapsed > 4.9);
   const firstVoice = first.find(({ type }) => type === 'pha-oi').voice;
   tick(game, 0.08);
+  assert.equal(call(game).some(({ type }) => type === 'pha-oi'), false);
+  tick(game, PHA_OI_COOLDOWN_SECONDS);
   const second = call(game);
   assert.ok(second.some((event) => event.type === 'pha-oi'));
   assert.notEqual(second.find(({ type }) => type === 'pha-oi').voice, firstVoice);
-  assert.equal(game.phaOiCooldownUntil, 0);
+  assert.ok(game.phaOiCooldownUntil > game.elapsed);
 }
 
 {
@@ -311,7 +327,7 @@ assert.equal(TRUE_NOTHING_PROBABILITY, 0.2);
   game.player.y = game.feast.y;
   tick(game, 0.02);
   assert.equal(game.feast.mode, 'invite');
-  assert.equal(game.message?.textVi, 'Vào làm chén.');
+  assert.equal(game.message, null, 'the feast reacts without covering gameplay with a bubble');
   game.director.activeMicro = [];
   triggerDirectedEvent(game, 'feast-stare');
   assert.equal(game.feast.mode, 'stare');
@@ -357,10 +373,61 @@ assert.equal(TRUE_NOTHING_PROBABILITY, 0.2);
   triggerDirectedEvent(game, 'heesun-wife');
   assert.equal(game.heesun.mode, 'rare-flee');
   assert.equal(game.feast.mode, 'resetting');
+  assert.ok(game.wife.visibleUntil > game.elapsed);
+  assert.notEqual(game.message?.speakerVi, 'VỢ HEESUN');
   game.director.activeMicro = [];
   triggerDirectedEvent(game, 'macro-philosophy');
   assert.equal(game.worldGag.macro, 'philosophy');
   assert.match(createUiSnapshot(game).cinematicVi ?? '', /Về lý thuyết/);
+}
+
+{
+  const karaokeDefinition = ABSURD_EVENT_REGISTRY.find(({ id }) => id === 'vuongme-karaoke-disco');
+  assert.ok(karaokeDefinition);
+  assert.deepEqual(karaokeDefinition.signals, ['pha-oi']);
+  assert.ok(karaokeDefinition.contextRequirements.all.includes('karaoke-eligible'));
+  assert.ok(karaokeDefinition.cooldown >= 120);
+
+  const game = createGame('high', false, null, { random: () => .74 });
+  stabilize(game);
+  Object.assign(game.heesun, {
+    x: game.player.x + 280, y: game.player.y, mode: 'chasing', target: 'player',
+    chaseStartedAt: game.elapsed || .001, chaseTimeoutAt: game.elapsed + 30, met: true,
+  });
+  Object.assign(game.hanu, {
+    x: game.player.x + 170, y: game.player.y, mode: 'delivering', carryingFood: true,
+    deliveryTimeoutAt: game.elapsed + 45,
+  });
+  Object.assign(game.feast, { mode: 'chasing', modeUntil: game.elapsed + 8, chaseStartedAt: game.elapsed || .001 });
+  Object.assign(game.chief, { startedAt: game.elapsed || .001, stage: 1, nextLineAt: game.elapsed + 7 });
+  game.director.activeMajor = null;
+  const heesunX = game.heesun.x;
+  const hanuX = game.hanu.x;
+  const heesunTimeout = game.heesun.chaseTimeoutAt;
+  const deliveryTimeout = game.hanu.deliveryTimeoutAt;
+  const startX = game.player.x;
+  const startEvents = triggerDirectedEvent(game, 'vuongme-karaoke-disco');
+  assert.ok(startEvents.some(({ type }) => type === 'karaoke-start'));
+  assert.equal(game.karaoke.active, true);
+  tick(game, .4);
+  assert.equal(game.message?.speakerVi, 'VUONGME');
+  const duringEvents = tick(game, 2, { ...freshInput(), moveX: 1 });
+  assert.equal(duringEvents.some(({ type }) => type === 'karaoke-stop'), false);
+  assert.notEqual(game.player.x, startX, 'player remains controllable during karaoke');
+  assert.equal(game.heesun.x, heesunX);
+  assert.equal(game.hanu.x, hanuX);
+  assert.equal(game.heesun.mode, 'chasing');
+  assert.equal(game.hanu.mode, 'delivering');
+  assert.ok(game.heesun.chaseTimeoutAt >= heesunTimeout + 1.95);
+  assert.ok(game.hanu.deliveryTimeoutAt >= deliveryTimeout + 1.95);
+  game.player.x = startX;
+  game.player.y = PHIENG_LOI_LANDMARKS.playerStart.y;
+  const stopEvents = tick(game, 8.6);
+  assert.ok(stopEvents.some(({ type }) => type === 'karaoke-stop'));
+  assert.equal(game.karaoke.active, false);
+  assert.equal(game.heesun.mode, 'chasing');
+  assert.equal(game.hanu.mode, 'delivering');
+  assert.ok(createUiSnapshot(game).leaderLineVi.startsWith('Thứ hai'));
 }
 
 {
@@ -434,7 +501,8 @@ assert.equal(TRUE_NOTHING_PROBABILITY, 0.2);
   game.recurringFlags.add('hanu-delivery-started');
   game.absurdityScore = 19;
   game.absurdityLevel = 4;
-  game.phaOiCooldownUntil = game.elapsed + 33;
+  game.phaOiCooldownStartedAt = game.elapsed;
+  game.phaOiCooldownUntil = game.elapsed + 4;
   game.director.delayedQueue.push({ id: 'chicken-crossing', dueAt: game.elapsed + 5, chainDepth: 1, sourceId: 'delayed-chicken-crossing' });
   const save = createSave(game);
   assert.equal(save.version, GAME_SAVE_VERSION);
@@ -443,7 +511,7 @@ assert.equal(TRUE_NOTHING_PROBABILITY, 0.2);
   assert.equal(restored.heesun.mode, 'chasing');
   assert.equal(restored.absurdityLevel, 4);
   assert.ok(restored.recurringFlags.has('hanu-delivery-started'));
-  assert.ok(restored.phaOiCooldownUntil - restored.elapsed > 32.9);
+  assert.ok(restored.phaOiCooldownUntil - restored.elapsed > 3.9);
   assert.equal(restored.director.delayedQueue.length, 0);
   save.version = 1;
   save.player = { x: 1_330, y: 720, facingX: 1, facingY: 0 };
@@ -485,4 +553,4 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
   assert.ok(cue.durationSeconds[0] > 0 && cue.durationSeconds[1] >= cue.durationSeconds[0]);
 });
 
-console.log('Phiêng Lơi director simulation passed: TRUE NOTHING, cooldown, registry, chains, HeeSun, HANU delivery, feast, chickens, save and bounded runtime.');
+console.log('Phiêng Lơi director simulation passed: 5s PHÀ ƠI cooldown, TRUE NOTHING purity, bubble allowlist, VuongMe karaoke, HeeSun wife, chains, save and bounded runtime.');

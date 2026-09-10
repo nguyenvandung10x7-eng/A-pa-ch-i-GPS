@@ -12,6 +12,9 @@ export const PHIENG_LOI_VISUAL_ASSETS = {
   feastLoopAtlas: '/images/phieng-loi/feast-loop-v2.webp',
   streamLoopAtlas: '/images/phieng-loi/stream-loop-v2.webp',
   vuongMeDanceAtlas: '/images/phieng-loi/vuongme-dance-v1.webp',
+  heesunWifeAtlas: '/images/phieng-loi/heesun-wife-atlas-v1.webp',
+  victoryMonument: '/images/phieng-loi/dien-bien-victory-monument-v1.webp',
+  victoryMuseum: '/images/phieng-loi/dien-bien-victory-museum-v1.webp',
   hanuFood: '/images/phieng-loi/hanu-food-box-v1.svg',
   heesunMenu: '/images/phieng-loi/heesun-menu-v1.webp',
   hanuMenu: '/images/phieng-loi/hanu-menu-v1.webp',
@@ -27,7 +30,8 @@ export type AtlasName =
   | 'chiefTalk'
   | 'feastLoop'
   | 'streamLoop'
-  | 'vuongMeDance';
+  | 'vuongMeDance'
+  | 'heesunWife';
 
 const ATLAS_CONFIG = {
   heesun: { url: PHIENG_LOI_VISUAL_ASSETS.heesunAtlas, columns: 3, rows: 2, frameAspect: 1 },
@@ -40,6 +44,7 @@ const ATLAS_CONFIG = {
   feastLoop: { url: PHIENG_LOI_VISUAL_ASSETS.feastLoopAtlas, columns: 4, rows: 2, frameAspect: 1 },
   streamLoop: { url: PHIENG_LOI_VISUAL_ASSETS.streamLoopAtlas, columns: 4, rows: 2, frameAspect: 1 },
   vuongMeDance: { url: PHIENG_LOI_VISUAL_ASSETS.vuongMeDanceAtlas, columns: 4, rows: 2, frameAspect: 1 },
+  heesunWife: { url: PHIENG_LOI_VISUAL_ASSETS.heesunWifeAtlas, columns: 4, rows: 2, frameAspect: 0.75 },
 } as const;
 
 export const atlasFrameStyle = (atlas: AtlasName, frame: number): CSSProperties => {

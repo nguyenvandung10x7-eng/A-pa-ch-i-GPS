@@ -1,5 +1,5 @@
 export const TRUE_NOTHING_PROBABILITY = 0.2;
-export const PHA_OI_COOLDOWN_SECONDS = 60;
+export const PHA_OI_COOLDOWN_SECONDS = 5;
 
 export const DIRECTOR_LIMITS = {
   activeMajor: 1,
@@ -13,8 +13,8 @@ export type AbsurdityLevel = 0 | 1 | 2 | 3 | 4 | 5;
 export type DirectorSignal = 'pha-oi' | 'zone' | 'waypoint' | 'event-end' | 'collision' | 'delayed' | 'world-tick';
 export type EventTier = 'micro' | 'medium' | 'major' | 'rare' | 'macro';
 export type EventPriority = 'low' | 'medium' | 'high';
-export type DialogueAnchor = 'player' | 'heesun' | 'hanu' | 'feast' | 'chief' | 'stream' | 'world';
-export type DialogueTone = 'plain' | 'heesun' | 'hanu' | 'chief' | 'stream' | 'ocop' | 'world';
+export type DialogueAnchor = 'player' | 'heesun' | 'hanu' | 'vuongme' | 'feast' | 'chief' | 'stream' | 'world';
+export type DialogueTone = 'plain' | 'heesun' | 'hanu' | 'vuongme' | 'chief' | 'stream' | 'ocop' | 'world';
 
 export type DirectorContextKey =
   | 'near-house'
@@ -33,6 +33,7 @@ export type DirectorContextKey =
   | 'chickens-running'
   | 'chief-speaking'
   | 'multiple-chase'
+  | 'karaoke-eligible'
   | 'major-quiet'
   | 'world-quiet';
 
@@ -393,11 +394,19 @@ export const ABSURD_EVENT_REGISTRY = [
     dialogueBubbles: [bubble('feast', 'MÂM NHẬU', 'THE DRINKING TABLE', 'Cơm à?', 'Food?', 'world', 1.1, 0, 'medium')],
   },
   {
+    id: 'vuongme-karaoke-disco', tier: 'major', signals: ['pha-oi'], weight: .34, minimumAbsurdity: 2,
+    contextRequirements: { all: ['karaoke-eligible'] }, cooldown: 180, antiRepeatGroup: 'vuongme-rare',
+    priority: 'high', canInterrupt: true, canBeInterrupted: false, duration: 10.5,
+    actorStateChanges: ['all:temporary-dance'], worldStateChanges: ['karaoke:disco-overlay'],
+    animationCue: 'karaoke-disco',
+    dialogueBubbles: [bubble('vuongme', 'VUONGME', 'VUONGME', 'Phà ơi! Lên nhạc!', 'PHÀ ƠI! Music!', 'vuongme', 1.65, .35, 'high', false)],
+  },
+  {
     id: 'heesun-wife', tier: 'rare', signals: ['collision', 'world-tick'], weight: .55, minimumAbsurdity: 4,
     contextRequirements: { any: ['feast-chasing', 'heesun-chasing'] }, cooldown: 150, antiRepeatGroup: 'heesun-rare',
     priority: 'high', canInterrupt: true, canBeInterrupted: false, duration: 4.8,
     actorStateChanges: ['heesun:flee', 'feast:disperse'], worldStateChanges: ['wife:offscreen-arrival'], animationCue: 'heesun-flee',
-    dialogueBubbles: [bubble('world', 'VỢ HEESUN', 'HEESUN’S WIFE', 'Về.', 'Home.', 'plain', 1.4, 0, 'high', false)],
+    dialogueBubbles: [],
   },
   {
     id: 'heesun-flee', tier: 'rare', signals: ['world-tick'], weight: 1, minimumAbsurdity: 3,

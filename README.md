@@ -35,7 +35,7 @@ The loop is deliberately short:
 > ĐI → GẶP CHUYỆN NGỚ NGẨN → PHÀ ƠI / CHẠY / ĐỨNG NHÌN → HẬU QUẢ → ĐI TIẾP
 
 HeeSun is the comic threat and capture/reset mechanic. HaNu is an independent
-walking chaos generator. An internal, invisible four-step absurdity state makes
+walking chaos generator. An internal, invisible 0–5 absurdity state makes
 the village progressively less reasonable. The implementation contract and full
 event inventory live in [`docs/phieng-loi-closed-world.md`](docs/phieng-loi-closed-world.md).
 
@@ -68,7 +68,7 @@ staff tools are preserved. Book is not a quest log and does not mutate game stat
 ## Rendering, lifecycle, and persistence
 
 - The game route stays lazy-loaded; no game-engine dependency is added.
-- A 480×270 logical camera drives a responsive 16:9 DOM/CSS world compositor;
+- A 640×360 logical camera drives a responsive 16:9 DOM/CSS world compositor;
   camera and actor transforms run directly on `requestAnimationFrame`, while the
   lightweight React HUD refreshes separately.
 - Character movement comes from transparent eight-frame WebP cycles, semantic

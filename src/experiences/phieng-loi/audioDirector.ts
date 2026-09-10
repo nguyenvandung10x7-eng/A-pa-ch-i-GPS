@@ -10,6 +10,7 @@ type AudioContextConstructor = typeof AudioContext;
 type AudioUpdate = {
   elapsed: number;
   chasing: boolean;
+  karaoke: boolean;
   power: PowerKind | null;
   nearStream: boolean;
 };
@@ -53,6 +54,8 @@ export class PhiengLoiAudioDirector {
   private nextDogAt = 10;
   private nextChaseBeatAt = 0;
   private chaseBeat = 0;
+  private nextKaraokeBeatAt = 0;
+  private karaokeBeat = 0;
   private phoneSerial = 0;
   private sampleSerial = 0;
   private sampleBuffers = new Map<PhiengLoiAudioCueId, AudioBuffer[]>();
@@ -317,6 +320,17 @@ export class PhiengLoiAudioDirector {
       this.tone(440, 0.13, 'triangle', 0.02, 0.07);
       return;
     }
+    if (event.type === 'karaoke-start') {
+      [196, 294, 392, 587].forEach((note, index) => this.tone(note, .22, index % 2 ? 'square' : 'sawtooth', .038, index * .055, note * 1.16));
+      this.noise(.18, .045, 3_800, .12);
+      return;
+    }
+    if (event.type === 'karaoke-stop') {
+      this.tone(196, .11, 'square', .038, 0, 58);
+      this.nextKaraokeBeatAt = 0;
+      this.karaokeBeat = 0;
+      return;
+    }
     if (event.type === 'delivery-start') {
       this.tone(620, 0.08, 'sine', 0.024);
       this.tone(820, 0.1, 'sine', 0.02, 0.09);
@@ -380,7 +394,7 @@ export class PhiengLoiAudioDirector {
     }
   }
 
-  update({ elapsed, chasing, power, nearStream }: AudioUpdate) {
+  update({ elapsed, chasing, karaoke, power, nearStream }: AudioUpdate) {
     if (this.disposed || this.context.state !== 'running') return;
     if (elapsed >= this.nextAmbientAt) {
       this.noise(0.7, 0.009, 1_400, 0, this.ambienceBus);
@@ -393,7 +407,7 @@ export class PhiengLoiAudioDirector {
     } else if (!nearStream) {
       this.nextStreamAt = elapsed;
     }
-    if (elapsed >= this.nextDogAt) {
+    if (!karaoke && elapsed >= this.nextDogAt) {
       if (!this.playSample('dog_reply', { gain: 0.3, pan: -0.45, distance: 0.58, pitchVariance: 0.03, reverb: 0.18 })) {
         this.noise(0.09, 0.032, 1_050, 0, this.ambienceBus);
         this.tone(245, 0.1, 'square', 0.018, 0, 195, this.ambienceBus);
@@ -401,19 +415,33 @@ export class PhiengLoiAudioDirector {
       }
       this.nextDogAt = elapsed + 14 + Math.random() * 13;
     }
-    if (chasing && elapsed >= this.nextChaseBeatAt) {
+    if (karaoke && elapsed >= this.nextKaraokeBeatAt) {
+      const bass = [98, 98, 123, 110][this.karaokeBeat % 4] ?? 98;
+      const sparkle = [392, 494, 587, 784][this.karaokeBeat % 4] ?? 392;
+      this.tone(bass, .18, 'sawtooth', .042, 0, bass * .72, this.ambienceBus);
+      this.tone(sparkle, .12, 'square', .018, .025, sparkle * 1.04, this.ambienceBus);
+      if (this.karaokeBeat % 2 === 1) this.noise(.055, .034, 4_200, 0, this.ambienceBus);
+      this.karaokeBeat += 1;
+      this.nextKaraokeBeatAt = elapsed + .23;
+      this.nextChaseBeatAt = elapsed;
+      this.chaseBeat = 0;
+    } else if (!karaoke) {
+      this.nextKaraokeBeatAt = elapsed;
+      this.karaokeBeat = 0;
+    }
+    if (!karaoke && chasing && elapsed >= this.nextChaseBeatAt) {
       const notes = [82, 98, 82, 123];
       const note = notes[this.chaseBeat % notes.length];
       this.tone(note, 0.16, 'square', 0.035, 0, note * 0.75, this.ambienceBus);
       if (this.chaseBeat % 2 === 0) this.noise(0.06, 0.026, 480, 0, this.ambienceBus);
       this.chaseBeat += 1;
       this.nextChaseBeatAt = elapsed + 0.24;
-    } else if (!chasing) {
+    } else if (!karaoke && !chasing) {
       this.nextChaseBeatAt = elapsed;
       this.chaseBeat = 0;
     }
     const now = this.context.currentTime;
-    this.ambienceBus.gain.setTargetAtTime(chasing ? 0.24 : power === 'coffee' ? 0.08 : 0.16, now, 0.12);
+    this.ambienceBus.gain.setTargetAtTime(karaoke ? 0.27 : chasing ? 0.24 : power === 'coffee' ? 0.08 : 0.16, now, 0.12);
   }
 
   async dispose() {

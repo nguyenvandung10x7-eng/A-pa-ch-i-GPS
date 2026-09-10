@@ -162,6 +162,19 @@ export type ChickenState = {
 
 type ChiefState = { startedAt: number; stage: number; nextLineAt: number; pausedUntil: number };
 type SceneState = { kind: SceneKind; startedAt: number; stage: number };
+export type KaraokeState = {
+  active: boolean;
+  startedAt: number;
+  endsAt: number;
+  x: number;
+  y: number;
+};
+export type HeeSunWifeState = {
+  visibleUntil: number;
+  commandUntil: number;
+  x: number;
+  y: number;
+};
 type WorldGagState = {
   chairFallenUntil: number;
   shoeAirborneUntil: number;
@@ -186,7 +199,7 @@ export type Particle = {
 export type GameEvent =
   | { type: 'pha-oi'; voice: PhaOiVoiceKind; outcome: 'normal' | 'true-nothing' }
   | { type: 'director-event'; id: DirectedEventId; soundCue?: string }
-  | { type: 'footstep' | 'crunch' | 'chicken-panic' | 'chase-start' | 'chase-stop' | 'capture' | 'reset' | 'phone' | 'domino' | 'stream' | 'feast' | 'feast-chase' | 'delivery-start' | 'delivery-complete' | 'call-ready' | 'exit' }
+  | { type: 'footstep' | 'crunch' | 'chicken-panic' | 'chase-start' | 'chase-stop' | 'capture' | 'reset' | 'phone' | 'domino' | 'stream' | 'feast' | 'feast-chase' | 'delivery-start' | 'delivery-complete' | 'call-ready' | 'karaoke-start' | 'karaoke-stop' | 'exit' }
   | { type: 'power-start' | 'power-end'; power: PowerKind };
 
 export type GameSave = {
@@ -233,6 +246,10 @@ export type UiSnapshot = {
   sceneAge: number;
   leaderClock: string | null;
   chiefSpeaking: boolean;
+  leaderLineVi: string;
+  leaderLineEn: string;
+  karaokeActive: boolean;
+  karaokeProgress: number;
   power: PowerKind | null;
   powerRemaining: number;
   chasing: boolean;
@@ -251,6 +268,8 @@ export type GameState = {
   chicken: ChickenState;
   chief: ChiefState;
   scene: SceneState;
+  karaoke: KaraokeState;
+  wife: HeeSunWifeState;
   worldGag: WorldGagState;
   director: DirectorState;
   elapsed: number;
@@ -314,6 +333,17 @@ const addAbsurdity = (game: GameState, amount: number) => {
   game.absurdityLevel = absurdityFromScore(game.absurdityScore);
 };
 
+/**
+ * Gameplay bubbles are deliberately reserved for the four comic leads. Other
+ * world reactions stay visual/audio or use the compact HUD/cinematic channels.
+ */
+export const isGameplayBubble = (anchor: DialogueAnchor, tone: MessageTone) => (
+  (anchor === 'player' && tone === 'plain')
+  || (anchor === 'heesun' && tone === 'heesun')
+  || (anchor === 'hanu' && tone === 'hanu')
+  || (anchor === 'vuongme' && tone === 'vuongme')
+);
+
 const setMessage = (
   game: GameState,
   speakerVi: string,
@@ -326,6 +356,7 @@ const setMessage = (
   priority: EventPriority = 'low',
   interruptible = true,
 ) => {
+  if (!isGameplayBubble(anchor, tone)) return false;
   const current = game.message && game.message.expiresAt > game.elapsed ? game.message : null;
   if (current && ((!current.interruptible && PRIORITY_VALUE[priority] <= PRIORITY_VALUE[current.priority]) || PRIORITY_VALUE[priority] < PRIORITY_VALUE[current.priority])) return false;
   game.messageSerial += 1;
@@ -334,6 +365,7 @@ const setMessage = (
 };
 
 const queueDialogue = (game: GameState, dialogue: EventDialogue) => {
+  if (!isGameplayBubble(dialogue.anchor, dialogue.styleVariant)) return;
   if (dialogue.delay <= 0) {
     setMessage(game, dialogue.speakerVi, dialogue.speakerEn, dialogue.textVi, dialogue.textEn, dialogue.styleVariant, dialogue.duration, dialogue.anchor, dialogue.priority, dialogue.interruptible);
     return;
@@ -390,6 +422,8 @@ const defaultGame = (quality: GameQuality, reducedMotion: boolean, random: () =>
   chicken: { mode: 'peck', modeStartedAt: 0, modeUntil: 0, panicStartedAt: 0, panicUntil: 0, visibleCount: 4, directionX: 1, directionY: 0 },
   chief: { startedAt: 0, stage: 0, nextLineAt: 0, pausedUntil: 0 },
   scene: { kind: 'none', startedAt: 0, stage: 0 },
+  karaoke: { active: false, startedAt: 0, endsAt: 0, x: PHIENG_LOI_LANDMARKS.vuongMeStage.x, y: PHIENG_LOI_LANDMARKS.vuongMeStage.y },
+  wife: { visibleUntil: 0, commandUntil: 0, x: PHIENG_LOI_LANDMARKS.feastStart.x, y: PHIENG_LOI_LANDMARKS.feastStart.y },
   worldGag: { chairFallenUntil: 0, shoeAirborneUntil: 0, dogAwakeUntil: 0, macro: 'none', macroUntil: 0, heesunTwinUntil: 0 },
   director: createDirectorState(),
   elapsed: 0, worldTime: 0, cameraX: 0,
@@ -532,7 +566,16 @@ const chiefClock = (game: GameState) => {
   return `${String(Math.min(99, 19 + Math.floor(age / 12))).padStart(2, '0')}:${String(Math.floor(age * 7) % 60).padStart(2, '0')}`;
 };
 
+const chiefLine = (stage: number) => {
+  if (stage <= 0) return { vi: 'Tôi xin nói ngắn gọn…', en: 'I will be brief…' };
+  if (stage === 1) return { vi: 'Thứ nhất…', en: 'Firstly…' };
+  if (stage === 2) return { vi: 'Thứ hai…', en: 'Secondly…' };
+  if (stage === 3) return { vi: 'Thứ ba…', en: 'Thirdly…' };
+  return { vi: `Điểm thứ ${stage}…`, en: `Point number ${stage}…` };
+};
+
 const cinematicCopy = (game: GameState): { vi: string; en: string } | null => {
+  if (game.karaoke.active) return null;
   if (game.scene.kind === 'capture') {
     const age = game.elapsed - game.scene.startedAt;
     if (age < 1.05) return { vi: '3 GIỜ SAU', en: '3 HOURS LATER' };
@@ -556,6 +599,7 @@ const anchorPosition = (game: GameState, anchor: DialogueAnchor): WorldPoint | n
   if (anchor === 'player') return game.player;
   if (anchor === 'heesun') return game.heesun;
   if (anchor === 'hanu') return game.hanu;
+  if (anchor === 'vuongme') return game.karaoke;
   if (anchor === 'feast') return game.feast;
   if (anchor === 'chief') return PHIENG_LOI_LANDMARKS.chief;
   if (anchor === 'stream') return PHIENG_LOI_LANDMARKS.streamGroup;
@@ -567,6 +611,8 @@ export const createUiSnapshot = (game: GameState): UiSnapshot => {
   const cinematic = cinematicCopy(game);
   const anchor = game.message ? anchorPosition(game, game.message.anchor) : null;
   const cooldownRemaining = Math.max(0, game.phaOiCooldownUntil - game.elapsed);
+  const karaokeDuration = Math.max(.001, game.karaoke.endsAt - game.karaoke.startedAt);
+  const leaderLine = chiefLine(game.chief.stage);
   return {
     elapsed: game.elapsed,
     message: game.message && game.message.expiresAt > game.elapsed ? game.message : null,
@@ -584,6 +630,10 @@ export const createUiSnapshot = (game: GameState): UiSnapshot => {
     sceneAge: game.scene.kind === 'none' ? 0 : game.elapsed - game.scene.startedAt,
     leaderClock: chiefClock(game),
     chiefSpeaking: game.chief.startedAt !== 0,
+    leaderLineVi: leaderLine.vi,
+    leaderLineEn: leaderLine.en,
+    karaokeActive: game.karaoke.active,
+    karaokeProgress: game.karaoke.active ? clamp((game.elapsed - game.karaoke.startedAt) / karaokeDuration, 0, 1) : 0,
     power,
     powerRemaining: power ? clamp((game.powerUntil[power] - game.elapsed) / POWER_DURATION[power], 0, 1) : 0,
     chasing: game.heesun.mode === 'chasing' || game.heesun.mode === 'distracted',
@@ -758,6 +808,7 @@ const directorContext = (game: GameState): Set<DirectorContextKey> => {
   if (['peck', 'look', 'triple-look'].includes(game.chicken.mode)) context.add('chickens-calm'); else context.add('chickens-running');
   if (game.chief.startedAt !== 0) context.add('chief-speaking');
   if ((context.has('heesun-chasing') && context.has('hanu-delivering')) || (context.has('heesun-chasing') && context.has('feast-chasing'))) context.add('multiple-chase');
+  if (game.scene.kind === 'none' && !game.karaoke.active && !game.complete) context.add('karaoke-eligible');
   if (game.elapsed - game.director.lastMajorAt > 20) context.add('major-quiet');
   if (game.scene.kind === 'none' && !game.director.activeMajor && !game.message) context.add('world-quiet');
   return context;
@@ -770,6 +821,10 @@ const startFeastChase = (game: GameState, events: GameEvent[], target: FeastStat
 
 export const applyDirectedEvent = (game: GameState, resolution: DirectorResolution, events: GameEvent[] = []): GameEvent[] => {
   const { definition } = resolution;
+  if (definition.id === 'vuongme-karaoke-disco') {
+    game.message = null;
+    game.dialogueQueue = [];
+  }
   definition.dialogueBubbles.forEach((dialogue) => queueDialogue(game, dialogue));
   addAbsurdity(game, definition.tier === 'macro' ? 0.75 : definition.tier === 'major' ? 0.62 : definition.tier === 'medium' ? 0.34 : 0.12);
   events.push({ type: 'director-event', id: definition.id, soundCue: definition.soundCue });
@@ -825,10 +880,21 @@ export const applyDirectedEvent = (game: GameState, resolution: DirectorResoluti
       Object.assign(game.heesun, corner, { mode: 'notice', modeUntil: game.elapsed + 2.8, met: true, vx: 0, vy: 0 });
       break;
     }
-    case 'heesun-wife':
+    case 'vuongme-karaoke-disco': {
+      const side = game.player.facingX < 0 ? -1 : 1;
+      const stage = nearestWalkablePoint({ x: game.player.x + side * 112, y: game.player.y - 20 });
+      Object.assign(game.karaoke, { active: true, startedAt: game.elapsed, endsAt: game.elapsed + definition.duration, ...stage });
+      game.shakeUntil = game.elapsed + .32;
+      events.push({ type: 'karaoke-start' });
+      break;
+    }
+    case 'heesun-wife': {
+      const wife = nearestWalkablePoint({ x: game.heesun.x + (game.heesun.x < game.player.x ? -42 : 42), y: game.heesun.y + 10 });
+      Object.assign(game.wife, { ...wife, visibleUntil: game.elapsed + 4.8, commandUntil: game.elapsed + 1.4 });
       Object.assign(game.heesun, { mode: 'rare-flee', target: 'exit', modeUntil: game.elapsed + 4.8 });
       Object.assign(game.feast, { mode: 'resetting', modeUntil: game.elapsed + 1, target: 'player', vx: 0, vy: 0 });
       break;
+    }
     case 'heesun-flee': Object.assign(game.heesun, { mode: 'rare-flee', target: 'exit', modeUntil: game.elapsed + 5.5 }); break;
     case 'macro-growth': Object.assign(game.worldGag, { macro: 'growth', macroUntil: game.elapsed + 5.5 }); break;
     case 'macro-world-news': Object.assign(game.worldGag, { macro: 'world-news', macroUntil: game.elapsed + 4.5 }); break;
@@ -862,10 +928,10 @@ const handleCall = (game: GameState, events: GameEvent[]) => {
   game.callSerial += 1;
   game.callCount += 1;
   game.callPulseUntil = game.elapsed + 1.05;
+  game.phaOiCooldownStartedAt = game.elapsed;
+  game.phaOiCooldownUntil = game.elapsed + PHA_OI_COOLDOWN_SECONDS;
   const voice = chooseVoice(game);
   if (isTrueNothingRoll(game.random())) {
-    game.phaOiCooldownStartedAt = game.elapsed;
-    game.phaOiCooldownUntil = game.elapsed + PHA_OI_COOLDOWN_SECONDS;
     events.push({ type: 'pha-oi', voice, outcome: 'true-nothing' });
     return;
   }
@@ -898,6 +964,84 @@ const updatePhaOiCooldown = (game: GameState, previousElapsed: number, events: G
     game.callRechargePulseUntil = game.elapsed + 0.75;
     events.push({ type: 'call-ready' });
   }
+};
+
+const shifted = (timestamp: number, dt: number) => timestamp > 0 ? timestamp + dt : timestamp;
+
+/** Keep finite-state routines exactly where they were while the village dances. */
+const pauseWorldForKaraoke = (game: GameState, dt: number) => {
+  const heesun = game.heesun;
+  heesun.modeUntil = shifted(heesun.modeUntil, dt);
+  heesun.speedBoostUntil = shifted(heesun.speedBoostUntil, dt);
+  heesun.nextAmbushAt = shifted(heesun.nextAmbushAt, dt);
+  heesun.chaseStartedAt = shifted(heesun.chaseStartedAt, dt);
+  heesun.chaseTimeoutAt = shifted(heesun.chaseTimeoutAt, dt);
+  heesun.lostSince = shifted(heesun.lostSince, dt);
+  heesun.nextWanderAt = shifted(heesun.nextWanderAt, dt);
+  heesun.nextNavigationAt = shifted(heesun.nextNavigationAt, dt);
+
+  const hanu = game.hanu;
+  hanu.nextLineAt = shifted(hanu.nextLineAt, dt);
+  hanu.revealReadyAt = shifted(hanu.revealReadyAt, dt);
+  hanu.lastCollisionAt = shifted(hanu.lastCollisionAt, dt);
+  hanu.modeUntil = shifted(hanu.modeUntil, dt);
+  hanu.nextPromiseAt = shifted(hanu.nextPromiseAt, dt);
+  hanu.deliveryStartAt = shifted(hanu.deliveryStartAt, dt);
+  hanu.deliveryTimeoutAt = shifted(hanu.deliveryTimeoutAt, dt);
+  hanu.speedBoostUntil = shifted(hanu.speedBoostUntil, dt);
+  hanu.headTurnUntil = shifted(hanu.headTurnUntil, dt);
+  hanu.nextPauseAt = shifted(hanu.nextPauseAt, dt);
+
+  const feast = game.feast;
+  feast.relocateAt = shifted(feast.relocateAt, dt);
+  feast.nextTriggerAt = shifted(feast.nextTriggerAt, dt);
+  feast.modeUntil = shifted(feast.modeUntil, dt);
+  feast.chaseStartedAt = shifted(feast.chaseStartedAt, dt);
+  feast.nextRoutineAt = shifted(feast.nextRoutineAt, dt);
+
+  const chicken = game.chicken;
+  chicken.modeStartedAt = shifted(chicken.modeStartedAt, dt);
+  chicken.modeUntil = shifted(chicken.modeUntil, dt);
+  chicken.panicStartedAt = shifted(chicken.panicStartedAt, dt);
+  chicken.panicUntil = shifted(chicken.panicUntil, dt);
+
+  const chief = game.chief;
+  chief.startedAt = shifted(chief.startedAt, dt);
+  chief.nextLineAt = shifted(chief.nextLineAt, dt);
+  chief.pausedUntil = shifted(chief.pausedUntil, dt);
+
+  game.streamStartedAt = shifted(game.streamStartedAt, dt);
+  game.dominoStartedAt = shifted(game.dominoStartedAt, dt);
+  game.wife.visibleUntil = shifted(game.wife.visibleUntil, dt);
+  game.wife.commandUntil = shifted(game.wife.commandUntil, dt);
+  game.worldGag.chairFallenUntil = shifted(game.worldGag.chairFallenUntil, dt);
+  game.worldGag.shoeAirborneUntil = shifted(game.worldGag.shoeAirborneUntil, dt);
+  game.worldGag.dogAwakeUntil = shifted(game.worldGag.dogAwakeUntil, dt);
+  game.worldGag.macroUntil = shifted(game.worldGag.macroUntil, dt);
+  game.worldGag.heesunTwinUntil = shifted(game.worldGag.heesunTwinUntil, dt);
+
+  game.director.activeMicro.forEach((event) => { event.endsAt += dt; });
+  game.director.delayedQueue.forEach((event) => { event.dueAt += dt; });
+  game.director.nextWorldTickAt += dt;
+  game.nextTimeEscalationAt += dt;
+  game.nextCollisionCheckAt += dt;
+  game.nextCollisionSignalAt += dt;
+};
+
+const updateKaraoke = (game: GameState, dt: number, events: GameEvent[]) => {
+  if (!game.karaoke.active) return false;
+  if (game.elapsed < game.karaoke.endsAt) {
+    pauseWorldForKaraoke(game, dt);
+    return true;
+  }
+  game.karaoke.active = false;
+  if (game.chief.startedAt > 0) {
+    game.chief.stage = Math.max(2, game.chief.stage);
+    game.chief.pausedUntil = game.elapsed + .5;
+    game.chief.nextLineAt = game.elapsed + 6;
+  }
+  events.push({ type: 'karaoke-stop' });
+  return false;
 };
 
 const updatePowers = (game: GameState, previousElapsed: number, moving: boolean, events: GameEvent[]) => {
@@ -1254,6 +1398,7 @@ export const stepGame = (game: GameState, input: InputState, dt: number): GameEv
   updatePhaOiCooldown(game, previousElapsed, events);
   updateDialogue(game);
   updateScene(game, events);
+  const karaokePausesWorld = updateKaraoke(game, dt, events);
 
   let moveX = input.moveX;
   let moveY = input.moveY;
@@ -1288,15 +1433,17 @@ export const stepGame = (game: GameState, input: InputState, dt: number): GameEv
   } else { game.player.vx = 0; game.player.vy = 0; }
 
   updatePowers(game, previousElapsed, moving, events);
-  updateFeast(game, dt, events);
-  updateLeader(game);
-  updateStream(game, events);
-  updateHaNu(game, dt, events);
-  updateHeeSun(game, dt, events);
-  updateChicken(game);
-  if (game.worldGag.macro !== 'none' && game.elapsed >= game.worldGag.macroUntil) game.worldGag.macro = 'none';
-  updateDirector(game, events);
-  if (game.elapsed >= game.nextTimeEscalationAt) { game.nextTimeEscalationAt = game.elapsed + 45; addAbsurdity(game, 0.35); }
+  if (!karaokePausesWorld) {
+    updateFeast(game, dt, events);
+    updateLeader(game);
+    updateStream(game, events);
+    updateHaNu(game, dt, events);
+    updateHeeSun(game, dt, events);
+    updateChicken(game);
+    if (game.worldGag.macro !== 'none' && game.elapsed >= game.worldGag.macroUntil) game.worldGag.macro = 'none';
+    updateDirector(game, events);
+    if (game.elapsed >= game.nextTimeEscalationAt) { game.nextTimeEscalationAt = game.elapsed + 45; addAbsurdity(game, 0.35); }
+  }
   if (input.callQueued && game.scene.kind !== 'capture' && !game.complete) handleCall(game, events);
   if (!game.complete && distance(game.player.x, game.player.y, PHIENG_LOI_LANDMARKS.exit.x, PHIENG_LOI_LANDMARKS.exit.y) < 34) {
     game.complete = true;
