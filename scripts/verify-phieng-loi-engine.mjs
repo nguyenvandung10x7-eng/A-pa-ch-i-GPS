@@ -81,6 +81,8 @@ const visualSource = readFileSync(new URL('../src/experiences/phieng-loi/PhiengL
 assert.doesNotMatch(engineSource, /CanvasRenderingContext2D|\.fillRect\(|\.beginPath\(/);
 assert.doesNotMatch(pageSource, /<canvas|renderGame\(/);
 assert.match(pageSource, /disabled=\{!ui\.callReady/);
+assert.match(pageSource, /while \(remaining > 0\.0001\)/);
+assert.match(pageSource, /MAX_VISIBLE_FRAME_CATCH_UP_SECONDS/);
 assert.match(visualSource, /PHIENG_LOI_VISUAL_ASSETS\.hanuFood/);
 assert.match(visualSource, /game\.karaoke\.active/);
 assert.doesNotMatch(visualSource, /VUONGME_CALL_INTERVAL|normalCallCount\s*%/);
@@ -178,6 +180,12 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   const readyEvents = tick(restored, restored.phaOiCooldownUntil - restored.elapsed + 0.05);
   assert.ok(readyEvents.some(({ type }) => type === 'call-ready'));
   assert.equal(createUiSnapshot(restored).callReady, true);
+
+  const legacyLongCooldown = createSave(game);
+  legacyLongCooldown.version = 2;
+  legacyLongCooldown.phaOiCooldownRemaining = 60;
+  const cappedLegacy = createGame('high', false, legacyLongCooldown, { random: () => 0.8 });
+  assert.ok(cappedLegacy.phaOiCooldownUntil - cappedLegacy.elapsed <= PHA_OI_COOLDOWN_SECONDS);
 }
 
 {

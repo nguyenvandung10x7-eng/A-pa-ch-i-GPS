@@ -25,6 +25,7 @@ import {
   createUiSnapshot,
   GAME_SAVE_VERSION,
   stepGame,
+  type GameEvent,
   type GameQuality,
   type GameSave,
   type GameState,
@@ -53,6 +54,9 @@ type PhiengLoiGamePageProps = {
 };
 
 type GameStatus = 'intro' | 'playing' | 'paused' | 'completed';
+
+const MAX_SIMULATION_STEP_SECONDS = 0.032;
+const MAX_VISIBLE_FRAME_CATCH_UP_SECONDS = 1;
 
 const POWER_COPY: Record<PowerKind, Record<LanguageCode, string>> = {
   squash: { vi: 'BÍ XANH TÌA DÌNH · PHÌNH TO', en: 'TIA DINH SQUASH · SWELL UP' },
@@ -289,9 +293,15 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     const frame = (time: number) => {
       if (!active) return;
       const current = gameRef.current;
-      const dt = Math.min(0.032, Math.max(0.001, (time - previousTime) / 1_000));
+      const frameDelta = Math.min(MAX_VISIBLE_FRAME_CATCH_UP_SECONDS, Math.max(0.001, (time - previousTime) / 1_000));
       previousTime = time;
-      const events = stepGame(current, inputRef.current, dt);
+      const events: GameEvent[] = [];
+      let remaining = frameDelta;
+      while (remaining > 0.0001) {
+        const simulationStep = Math.min(MAX_SIMULATION_STEP_SECONDS, remaining);
+        events.push(...stepGame(current, inputRef.current, simulationStep));
+        remaining -= simulationStep;
+      }
       visualRef.current?.render(current);
       const audio = audioRef.current;
       events.forEach((event) => audio?.handle(event));

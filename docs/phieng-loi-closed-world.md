@@ -161,6 +161,9 @@ audio resources.
   by this logic pass; no Canvas primitive renderer was reintroduced.
 - Named actors use bounded finite-state machines, authored waypoints and simple
   steering. HeeSun navigation is sampled rather than recomputed every frame.
+- A visible dropped frame is recovered with bounded 32 ms simulation substeps
+  (at most one second per browser frame). Cooldowns stay tied to real elapsed
+  time while movement and collision checks avoid a single large tunnelling step.
 - Actor count, dialogue, particles, active events and delayed queues are bounded.
 - `npm run verify:phieng-loi` directly tests TRUE NOTHING probability and purity,
   the 5-second cooldown on both branches, bubble allowlisting, VuongMe state
