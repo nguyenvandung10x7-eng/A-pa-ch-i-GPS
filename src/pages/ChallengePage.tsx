@@ -22,7 +22,12 @@ import {
   isLevelOneTaskId,
 } from '../services/challengeLevels';
 import { CHALLENGE_GATE_RESET_EVENT } from '../services/challengeGateEvents';
-import { getEligibleTasksForExperience, getScopedExperienceModeFromSearch } from '../services/experienceFilters';
+import {
+  getEligibleTasksForExperience,
+  getScopedExperienceModeFromSearch,
+  SPECIALIZED_TASK_IDS,
+} from '../services/experienceFilters';
+import { TIME_TRAIN_EXPERIENCE_MODE } from '../hooks/useTimeTrainUnlock';
 import {
   GAMEPLAY_MUSIC_ADVANCE_EVENT,
   GAMEPLAY_MUSIC_CANCEL_EVENT,
@@ -137,15 +142,17 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     () => scopedExperienceMode ? getEligibleTasksForExperience(activeTasks, scopedExperienceMode) : activeTasks,
     [activeTasks, scopedExperienceMode],
   );
+  const isOpeningTimeTrainScope = scopedExperienceMode === TIME_TRAIN_EXPERIENCE_MODE;
   const eligibleTasks = useMemo(() => {
-    const accessScope = isLevelTwo ? activeTasks : levelOneTasks;
+    const accessScope = isOpeningTimeTrainScope || isLevelTwo ? activeTasks : levelOneTasks;
     if (!scopedExperienceMode) return accessScope;
     const accessibleTaskIds = new Set(accessScope.map((candidate) => candidate.id));
     return scopedCatalogTasks.filter((candidate) => accessibleTaskIds.has(candidate.id));
-  }, [activeTasks, isLevelTwo, levelOneTasks, scopedCatalogTasks, scopedExperienceMode]);
+  }, [activeTasks, isLevelTwo, isOpeningTimeTrainScope, levelOneTasks, scopedCatalogTasks, scopedExperienceMode]);
   const isScopedMode = scopedExperienceMode !== null;
   const isScopedLocked = Boolean(
     isScopedMode
+    && !isOpeningTimeTrainScope
     && !isLevelTwo
     && scopedCatalogTasks.length > 0
     && scopedCatalogTasks.every((candidate) => !isLevelOneTaskId(candidate.id)),
@@ -159,7 +166,9 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const showLevelHome = canPlay && (isScopedLocked || showLevelOneMenu);
   const isFinished = summary.enabledCount > 0 && summary.remainingCount === 0 && !canComplete;
   const isScopedCompleted = isScopedMode && isFinished;
-  const scopeCompletionPrimaryLabel = language === 'vi' ? 'Quay lại Sách' : 'Back to Book';
+  const scopeCompletionPrimaryLabel = isOpeningTimeTrainScope
+    ? (language === 'vi' ? 'Mở Book of Dien Bien' : 'Open Book of Dien Bien')
+    : (language === 'vi' ? 'Quay lại Sách' : 'Back to Book');
 
   const scopeContext = useMemo(() => [
     scopedExperienceMode ?? 'all',
@@ -522,8 +531,11 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     return (
       <ChallengeCoolGate
         language={language}
-        onAccept={() => setChallengeGateAccepted(true)}
-        onDecline={() => { void navigate('/book'); }}
+        onAccept={() => {
+          setChallengeGateAccepted(true);
+          if (isOpeningTimeTrainScope) void chooseExperience([SPECIALIZED_TASK_IDS.timeTrain]);
+        }}
+        onDecline={() => { void navigate(isOpeningTimeTrainScope ? '/' : '/book'); }}
       />
     );
   }

@@ -7,7 +7,8 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import { ArrowRight, Eye, Headphones, Languages, Move, Smartphone, Volume2, VolumeX } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { TIME_TRAIN_CHALLENGE_PATH, useTimeTrainUnlock } from '../hooks/useTimeTrainUnlock';
 import { createTemporalAudio } from '../services/temporalAudio';
 import type { LanguageCode } from '../types/task';
 import { createTemporalWorld, type TemporalFocus, type TemporalView, type TemporalWorld } from './temporal3d/createTemporalWorld';
@@ -69,19 +70,17 @@ const TemporalFallback = ({
     onPointerUp={onPointerUp}
     onPointerCancel={onPointerUp}
   >
-    <div className="temporal-fallback__sky" />
     <div className="temporal-fallback__aurora"><i /><i /><i /></div>
-    <div className="temporal-fallback__far-hills" />
     <div className="temporal-fallback__a1"><i /><i /><i /></div>
     <div className="temporal-fallback__trenches"><i /><i /><i /></div>
     <div className="temporal-fallback__cemetery">{Array.from({ length: 18 }, (_, index) => <i key={index} />)}</div>
-    <div className="temporal-fallback__houses">{Array.from({ length: 5 }, (_, index) => <i key={index}><b /></i>)}</div>
-    <div className="temporal-fallback__road"><i /><b /></div>
+    <div className="temporal-fallback__boundary"><i /><i /><i /></div>
     <div className="temporal-fallback__mist" />
   </div>
 );
 
 export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => {
+  const navigate = useNavigate();
   const vi = language === 'vi';
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const worldRef = useRef<TemporalWorld | null>(null);
@@ -91,14 +90,18 @@ export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => 
   const orientationActive = useRef(false);
   const fallbackPointer = useRef<{ id: number; x: number } | null>(null);
   const fallbackOrientationOrigin = useRef<number | null>(null);
+  const departureTimer = useRef<number | null>(null);
   const [mode, setMode] = useState<'loading' | 'webgl' | 'fallback'>('loading');
   const [started, setStarted] = useState(false);
-  const [bookReady, setBookReady] = useState(false);
+  const [onwardReady, setOnwardReady] = useState(false);
   const [soundOn, setSoundOn] = useState(false);
   const [soundError, setSoundError] = useState(false);
   const [sensorState, setSensorState] = useState<'idle' | 'active' | 'denied' | 'unavailable'>('idle');
   const [focus, setFocus] = useState<TemporalFocus>('overlap');
   const [fallbackYaw, setFallbackYaw] = useState(-0.04);
+  const [viewYaw, setViewYaw] = useState(-0.04);
+  const [departing, setDeparting] = useState(false);
+  const bookUnlocked = useTimeTrainUnlock();
   const copy = focusCopy[language][focus];
 
   const disposeAudio = useCallback(() => {
@@ -110,6 +113,7 @@ export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => 
   const reportView = useCallback((view: TemporalView) => {
     latestView.current = view;
     setFocus((current) => current === view.focus ? current : view.focus);
+    setViewYaw((current) => Math.abs(current - view.yaw) < 0.008 ? current : view.yaw);
     audioRef.current?.updateView(view.yaw, view.pitch);
   }, []);
 
@@ -151,12 +155,13 @@ export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => 
       document.removeEventListener('visibilitychange', pauseForVisibility);
       document.removeEventListener('play', yieldToMedia, true);
       disposeAudio();
+      if (departureTimer.current !== null) window.clearTimeout(departureTimer.current);
     };
   }, [disposeAudio]);
 
   useEffect(() => {
     if (!started) return;
-    const timer = window.setTimeout(() => setBookReady(true), 1800);
+    const timer = window.setTimeout(() => setOnwardReady(true), 5000);
     return () => window.clearTimeout(timer);
   }, [started]);
 
@@ -198,7 +203,7 @@ export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => 
     let delta = event.alpha - fallbackOrientationOrigin.current;
     if (delta > 180) delta -= 360;
     if (delta < -180) delta += 360;
-    const yaw = clamp(-delta * Math.PI / 180 * 0.7, -1.02, 1.02);
+    const yaw = clamp(-delta * Math.PI / 180 * 0.55, -0.78, 0.78);
     setFallbackYaw(yaw);
     reportView({ yaw, pitch: -0.18, focus: focusForYaw(yaw) });
   }, [reportView]);
@@ -245,7 +250,7 @@ export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => 
   const fallbackMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     const pointer = fallbackPointer.current;
     if (!pointer || pointer.id !== event.pointerId) return;
-    const yaw = clamp(fallbackYaw - (event.clientX - pointer.x) * 0.0046, -1.02, 1.02);
+    const yaw = clamp(fallbackYaw - (event.clientX - pointer.x) * 0.0037, -0.78, 0.78);
     fallbackPointer.current = { id: pointer.id, x: event.clientX };
     setFallbackYaw(yaw);
     reportView({ yaw, pitch: -0.18, focus: focusForYaw(yaw) });
@@ -257,12 +262,37 @@ export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => 
   };
 
   const sceneLabel = vi
-    ? 'Blockout không gian ba chiều có Đồi A1 năm 1954, đường Hoàng Văn Thái hiện tại, dãy nhà, nghĩa trang phía xa và cực quang ký ức.'
-    : 'A three-dimensional blockout containing A1 Hill in 1954, present-day Hoang Van Thai Road, houses, the distant cemetery and a memory aurora.';
+    ? 'Cảnh ghép bán hiện thực: ảnh Điện Biên hiện tại có chiều sâu, Đồi A1 năm 1954 xuyên qua lớp sương giao thoa và nghĩa trang phía xa.'
+    : 'A semi-realistic hybrid scene: depth-layered present-day Dien Bien imagery, A1 Hill in 1954 breaking through a hazy temporal overlap, and the distant cemetery.';
+
+  const continueJourney = () => {
+    if (departing || !onwardReady) return;
+    setDeparting(true);
+    worldRef.current?.enterRift();
+    const destination = bookUnlocked ? '/book' : TIME_TRAIN_CHALLENGE_PATH;
+    departureTimer.current = window.setTimeout(() => {
+      void navigate(destination);
+    }, 1250);
+  };
+
+  const sceneStyle = {
+    '--temporal-present-shift': `${viewYaw * -2.6}vw`,
+    '--temporal-mid-shift': `${viewYaw * -1.45}vw`,
+    '--temporal-near-shift': `${viewYaw * -4.2}vw`,
+  } as CSSProperties;
 
   return (
-    <section className={`temporal-experience is-${mode} ${started ? 'is-started' : ''} focus-${focus}`} aria-labelledby="temporal-experience-title">
+    <section
+      className={`temporal-experience is-${mode} ${started ? 'is-started' : ''} ${departing ? 'is-departing' : ''} focus-${focus}`}
+      style={sceneStyle}
+      aria-labelledby="temporal-experience-title"
+    >
       <div className="temporal-experience__world">
+        <div className="temporal-present-world" aria-hidden="true">
+          <div className="temporal-present-world__valley" />
+          <div className="temporal-present-world__city" />
+          <div className="temporal-present-world__depth" />
+        </div>
         {mode !== 'fallback' ? (
           <canvas
             ref={canvasRef}
@@ -279,6 +309,7 @@ export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => 
             onPointerUp={fallbackUp}
           />
         )}
+        <div className="temporal-boundary" aria-hidden="true"><i /><i /><i /><b /></div>
         <div className="temporal-experience__atmosphere" aria-hidden="true" />
         <div className="temporal-experience__grain" aria-hidden="true" />
       </div>
@@ -338,11 +369,22 @@ export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => 
             ) : null}
           </div>
 
-          <div className={`temporal-exit ${bookReady ? 'is-ready' : ''}`}>
-            <p>{vi ? 'Không gian này không hoàn thành hoặc thay đổi nhiệm vụ GPS tại Đồi A1.' : 'This space does not complete or alter the GPS challenge at A1 Hill.'}</p>
-            <Link to="/book">
-              <span>{vi ? 'Bước vào Book' : 'Enter the Book'}</span><ArrowRight aria-hidden="true" />
-            </Link>
+          <div className={`temporal-exit temporal-threshold ${onwardReady ? 'is-ready' : ''}`}>
+            <p>{bookUnlocked
+              ? (vi ? 'Chuyến tàu thời gian đã hoàn thành. Book of Dien Bien đang mở.' : 'The Time Train is complete. Book of Dien Bien is now open.')
+              : (vi ? 'Câu chuyện tiếp tục tại Đồi A1. GPS chỉ được xác nhận khi bạn thực sự có mặt.' : 'The story continues at A1 Hill. GPS is confirmed only when you are physically there.')}
+            </p>
+            <button type="button" onClick={continueJourney} disabled={departing}>
+              <span className="temporal-threshold__rail" aria-hidden="true"><i /><i /></span>
+              <span className="temporal-threshold__copy">
+                <small>{bookUnlocked ? (vi ? 'PHẦN TIẾP THEO' : 'NEXT CHAPTER') : (vi ? 'BƯỚC QUA VÙNG GIAO THOA' : 'CROSS THE OVERLAP')}</small>
+                <strong>{bookUnlocked
+                  ? (vi ? 'Mở Book of Dien Bien' : 'Open Book of Dien Bien')
+                  : (vi ? 'Chuyến tàu thời gian' : 'The Time Train')}
+                </strong>
+              </span>
+              <ArrowRight aria-hidden="true" />
+            </button>
           </div>
 
           {(soundError || sensorState === 'denied' || sensorState === 'unavailable') ? (
@@ -359,8 +401,8 @@ export const TemporalScene = ({ language, setLanguage }: TemporalSceneProps) => 
 
       <p className="temporal-disclaimer">
         {vi
-          ? 'Blockout 3D gợi tả, không phải bản đồ hay phục dựng lịch sử chính xác. Các lớp âm hiện tại chỉ là tín hiệu tổng hợp để thử hướng nghe; chưa sử dụng radio, lời kể, nhạc truy điệu hoặc âm thanh chiến trường.'
-          : 'An evocative 3D blockout, not an exact historical reconstruction or site map. Current audio uses synthetic calibration tones only; no radio, testimony, memorial music or battlefield recording is included.'}
+          ? 'Tái hiện nghệ thuật bán hiện thực; ảnh Điện Biên hiện tại mang tính đại diện, không phải đúng một góc nhìn duy nhất tại A1. Các lớp âm hiện tại chỉ là tín hiệu tổng hợp để thử hướng nghe.'
+          : 'A semi-realistic artistic interpretation; present-day Dien Bien imagery is representative, not one exact viewpoint at A1. Current audio uses synthetic calibration tones only.'}
       </p>
     </section>
   );

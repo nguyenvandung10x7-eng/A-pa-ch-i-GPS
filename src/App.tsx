@@ -5,6 +5,7 @@ import { Layout } from './components/Layout';
 import { MobileAppShell } from './components/MobileAppShell';
 import { ProductSurfaceFrame } from './components/ProductSurfaceFrame';
 import { Card } from './components/Card';
+import { TimeTrainBookGate } from './components/TimeTrainBookGate';
 import { useAuth } from './contexts/AuthContext';
 import { useAdminStatus } from './hooks/useAdminStatus';
 import { useTasks } from './hooks/useTasks';
@@ -140,14 +141,12 @@ export default function App() {
         </Suspense>
       )} />
       <Route path="/journey/1954" element={<Navigate to="/" replace />} />
-      <Route path="/book" element={<NewBookPage language={language} />} />
-      <Route path="/book/chapter/chapter-06-1954" element={<Navigate to="/" replace />} />
-      <Route path="/book/page/1954-duoi-mot-thanh-pho-dang-song" element={<Navigate to="/" replace />} />
-      <Route path="/book/chapter/:chapterId" element={<NewBookPage language={language} />} />
-      <Route path="/book/page/:pageId" element={<BookPageRoute />} />
+      <Route path="/book" element={<TimeTrainBookGate><NewBookPage language={language} /></TimeTrainBookGate>} />
+      <Route path="/book/chapter/:chapterId" element={<TimeTrainBookGate><NewBookPage language={language} /></TimeTrainBookGate>} />
+      <Route path="/book/page/:pageId" element={<TimeTrainBookGate><BookPageRoute /></TimeTrainBookGate>} />
       <Route path="/recent" element={<Navigate to="/book" replace />} />
-      <Route path="/saved" element={<SavedBookPage language={language} />} />
-      <Route path="/nearby" element={<BookUtilityPage language={language} mode="near-me" />} />
+      <Route path="/saved" element={<TimeTrainBookGate><SavedBookPage language={language} /></TimeTrainBookGate>} />
+      <Route path="/nearby" element={<TimeTrainBookGate><BookUtilityPage language={language} mode="near-me" /></TimeTrainBookGate>} />
       <Route path="/credits" element={<CreditsPage language={language} />} />
       <Route path="/challenge" element={<ChallengePage tasks={tasks} clearVersion={clearVersion} language={language} t={t} />} />
       <Route path="/map" element={<GameMapPage tasks={tasks} language={language} t={t} />} />

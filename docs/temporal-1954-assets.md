@@ -1,19 +1,30 @@
-# Where Times Overlap · 1954 — asset contract
+# Where Times Overlap · 1954 — hybrid scene contract
 
-The opening scene is an artistic blockout, not a claim of exact historic reconstruction. Its current geometry establishes composition, interaction and performance boundaries so reviewed GLB terrain, compressed textures or photogrammetry can replace individual modules later.
+The opening is a cinematic hybrid, not a full reconstruction of Điện Biên in 1954. Present-day Điện Biên stays photographic; only A1 Hill is rendered as historical WebGL geometry. The visible mismatch is intentional: a fragment of 1954 appears to break through the present.
+
+The two photographs are representative Điện Biên material, not a claim that they form one exact panorama captured from the scene camera at A1. Their exact shipped derivatives and licences remain governed by `docs/asset-provenance.md`.
+
+## Runtime image layers
+
+| Layer | Runtime asset | Size | Use |
+| --- | --- | ---: | --- |
+| Present valley | `public/images/tasks/canh-dong-muong-thanh-cat-banh.webp` | 174,576 bytes | Wide valley/mountain base with the slowest parallax. |
+| Present city | `public/images/tasks/quang-truong-7-5-mthen.webp` | 119,514 bytes | Masked urban layer with slightly stronger parallax. |
+
+The combined present-day image payload is 294,090 bytes before transfer compression. Both binaries already ship elsewhere in the app, so this change adds no new media files or licensing dependency.
 
 ## Replaceable scene modules
 
 `src/components/temporal3d/sceneGeometry.ts` exports these independent builders:
 
 - `TerrainA11954`
-- `CurrentRoad`
-- `CurrentHouses`
 - `CemeteryHorizon`
-- `TemporalAurora`
-- `TemporalMist`
+- `buildTemporalStaticGeometry`
+- `buildTemporalEffectGeometry`
 
-The present-day road blockout uses the user-supplied Google Street View link only as visual reference for slope, concrete, low wall, dark railing, vegetation and roadside structures. No Google imagery is downloaded, hotlinked or shipped as a runtime texture.
+`TerrainA11954` concentrates geometry in the camera-visible near and middle zones: terrain, crater rims, trenches, sandbags, timber/metal silhouettes and a restrained tree set. The far zone is intentionally resolved with haze, fog, atmospheric perspective and irregular overlap sheets rather than detailed geometry. There are no polygonal present-day roads, houses or city blocks.
+
+The overlap is not a circular portal. Multiple uneven vertical sheets, soft mist, sparse interference lines and slight photographic double exposure form an irregular boundary between the two periods.
 
 ## Historical review boundary
 
@@ -23,7 +34,15 @@ Before replacing blockout details, record whether each feature is:
 2. a plausible but non-specific scenic detail; or
 3. an artistic metaphor.
 
-Do not add named graves, identifiable faces, biographies or specific structures without reviewable evidence. Aurora is always an artistic memory metaphor, never a claimed 1954 phenomenon.
+Do not add named graves, identifiable faces, biographies or specific structures without reviewable evidence. The overlap light is always an artistic memory metaphor, never a claimed 1954 phenomenon.
+
+## Narrative and unlock contract
+
+1. `/` lazy-loads the 1954 module and waits for the visitor to enter.
+2. The camera drifts gently for five seconds; looking around is deliberately limited.
+3. The in-scene **Chuyến tàu thời gian** threshold routes to the existing exact Challenge task.
+4. Only a completed run with `gpsVerified === true` for `doi-a1-chuyen-tau-thoi-gian-1954` unlocks Book routes.
+5. The scene never creates a completion record, changes GPS coordinates/radius, or replaces the existing external Time Train URL.
 
 ## Spatial audio slots
 
@@ -44,8 +63,11 @@ Every supplied public audio file must be checked for format, duration, loudness 
 ## Performance budget
 
 - keep the renderer lazy-loaded;
-- cap device pixel ratio and use a lower frame target on coarse-pointer devices;
+- keep the photographic opening payload below 350 KB unless a reviewed replacement is approved;
+- cap device pixel ratio and use a lower frame target on coarse-pointer/low-memory devices;
+- render only camera-visible A1 detail; resolve distance with fog rather than geometry;
 - prefer compressed GLB/textures, LOD and baked lighting;
 - do not load optional stems before a user gesture;
 - preserve the 2.5D fallback and reduced-motion behavior;
+- delete WebGL buffers/programs and detach listeners when the module unmounts;
 - verify the Netlify deploy preview on representative mobile widths and a real device before merge.

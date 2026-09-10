@@ -11,7 +11,7 @@ The former standalone Experiences surface is retired; `/experiences` remains onl
 
 - `/` — the single “Where Times Overlap · 1954” opening experience.
 - `/journey/1954` — compatibility redirect to the same opening; it is not a second scene.
-- `/book` — Book contents.
+- `/book` — Book contents, unlocked only after the verified A1 Time Train GPS challenge.
 - `/book/chapter/:chapterId` — chapter entry.
 - `/book/page/:pageId` — full literary page.
 - `/recent` — recent Challenge/history activity.
@@ -25,9 +25,9 @@ The public mobile shell keeps BOOK and CHALLENGE distinct. Book reading/saved st
 
 ## Where Times Overlap · 1954
 
-The opening is a lazy-loaded, dependency-free WebGL blockout composed from replaceable modules for A1 terrain, present-day road and houses, the cemetery horizon, aurora and mist. The camera begins at an approximately 20-metre artistic viewpoint and supports pointer/touch, keyboard and permission-gated device orientation. A 2.5D fallback preserves the same five-part composition when WebGL is unavailable or the visitor selects the lighter mode.
+The opening is a lazy-loaded hybrid scene. Two already-cleared present-day Điện Biên photographs provide the realistic valley and urban layers with restrained depth/parallax; the dependency-free WebGL layer renders only the 1954 A1 terrain, trenches, fortifications, cemetery horizon and an irregular temporal-overlap treatment. The camera begins at an approximately 20-metre artistic viewpoint with a short automatic drift and tightly limited pointer/touch or permission-gated device orientation. A 2.5D fallback preserves the same composition when WebGL is unavailable or the visitor selects the lighter mode.
 
-The scene is independent from `doi-a1-chuyen-tau-thoi-gian-1954`. It does not request GPS, write Challenge history, award points, or treat viewing/listening as task completion. The original Challenge route, coordinates, radius, external URL and persistence remain authoritative.
+Five seconds after the visitor starts the scene, the temporal boundary reveals the **Chuyến tàu thời gian** threshold. It leads to the existing exact task `doi-a1-chuyen-tau-thoi-gian-1954`; the scene itself never requests GPS, writes Challenge history, awards points, or treats viewing/listening as task completion. The Book routes remain locked until the existing Challenge history contains a completed, GPS-verified run for that exact task. The original task coordinates, radius, external URL and persistence remain authoritative.
 
 Audio uses separate HRTF `PannerNode` sources. Empty asset slots fail silently; the current audible layer is an explicitly labelled oscillator-based spatial calibration study rather than historical audio. See `docs/temporal-1954-assets.md` before adding any stem.
 

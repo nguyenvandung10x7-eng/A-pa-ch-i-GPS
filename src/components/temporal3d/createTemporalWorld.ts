@@ -10,6 +10,7 @@ export type TemporalView = {
 
 export type TemporalWorld = {
   start: () => void;
+  enterRift: () => void;
   applyDeviceOrientation: (alpha: number, beta: number) => void;
   resetDeviceOrientation: () => void;
   destroy: () => void;
@@ -76,7 +77,9 @@ const STATIC_VERTEX = `
   precision highp float;
   attribute vec3 aPosition;
   attribute vec3 aColor;
+  attribute vec3 aNormal;
   attribute float aZone;
+  attribute float aMaterial;
   uniform vec3 uCameraPosition;
   uniform vec3 uCameraRight;
   uniform vec3 uCameraUp;
@@ -87,7 +90,12 @@ const STATIC_VERTEX = `
   uniform float uPresent;
   uniform float uMemorial;
   varying vec3 vColor;
+  varying vec3 vNormal;
+  varying vec3 vWorldPosition;
   varying float vFog;
+  varying float vMaterial;
+  varying float vZone;
+  varying float vBoundary;
 
   void main() {
     vec3 relative = aPosition - uCameraPosition;
@@ -104,18 +112,73 @@ const STATIC_VERTEX = `
     float presentMask = 1.0 - step(0.5, abs(aZone - 2.0));
     float memorialMask = 1.0 - step(0.5, abs(aZone - 3.0));
     float attention = neutralMask + pastMask * uPast + presentMask * uPresent + memorialMask * uMemorial;
-    vColor = aColor * (0.56 + attention * 0.58);
-    vFog = clamp((depth - 35.0) / 72.0, 0.0, 0.72);
+    float boundaryWave = sin(aPosition.z * 0.12 + aPosition.y * 0.31) * 1.7
+      + sin(aPosition.y * 0.61) * 0.65;
+    float a1Boundary = 1.0 - smoothstep(-5.5, 2.2, aPosition.x + boundaryWave);
+    vBoundary = mix(1.0, a1Boundary, pastMask);
+    vColor = aColor * (0.76 + attention * 0.28);
+    vNormal = aNormal;
+    vWorldPosition = aPosition;
+    vMaterial = aMaterial;
+    vZone = aZone;
+    vFog = clamp((depth - 34.0) / 76.0, 0.0, 0.78);
   }
 `;
 
 const STATIC_FRAGMENT = `
   precision mediump float;
   varying vec3 vColor;
+  varying vec3 vNormal;
+  varying vec3 vWorldPosition;
   varying float vFog;
+  varying float vMaterial;
+  varying float vZone;
+  varying float vBoundary;
+
+  float materialMask(float value) {
+    return 1.0 - step(0.45, abs(vMaterial - value));
+  }
+
+  float hash21(vec2 point) {
+    point = fract(point * vec2(123.34, 456.21));
+    point += dot(point, point + 45.32);
+    return fract(point.x * point.y);
+  }
+
   void main() {
-    vec3 fog = vec3(0.135, 0.175, 0.155);
-    gl_FragColor = vec4(mix(vColor, fog, vFog), 1.0);
+    vec3 normal = normalize(vNormal);
+    if (!gl_FrontFacing) normal = -normal;
+    vec3 sunDirection = normalize(vec3(-0.46, 0.79, 0.34));
+    float direct = max(dot(normal, sunDirection), 0.0);
+    float sky = 0.42 + max(normal.y, 0.0) * 0.2;
+    float bounce = max(dot(normal, normalize(vec3(0.25, 0.25, -0.92))), 0.0) * 0.12;
+
+    float earth = materialMask(1.0);
+    float trench = materialMask(2.0);
+    float vegetation = materialMask(3.0);
+    float metal = materialMask(5.0);
+    float memorial = materialMask(6.0);
+    float cell = hash21(floor(vWorldPosition.xz * mix(0.85, 1.65, earth + trench)));
+    float strata = sin(vWorldPosition.x * 2.7 + vWorldPosition.z * 1.9) * 0.5 + 0.5;
+    float surface = 0.92 + (cell - 0.5) * (0.14 * earth + 0.1 * vegetation + 0.04 * memorial);
+    surface *= 0.94 + strata * (0.07 * earth + 0.035 * trench);
+
+    float light = sky + direct * 0.72 + bounce;
+    vec3 warmSun = vec3(1.06, 1.0, 0.86);
+    vec3 color = vColor * surface * mix(vec3(light), warmSun * light, direct * 0.38);
+    color *= 1.0 - trench * 0.16;
+    color += metal * direct * 0.035;
+    color = mix(color, color * vec3(0.92, 0.97, 0.93), memorial * 0.3);
+
+    vec3 fog = vec3(0.31, 0.35, 0.32);
+    color = mix(color, fog, vFog);
+    color = color / (color + vec3(0.72));
+    color = pow(color, vec3(0.92));
+
+    float memorialZone = 1.0 - step(0.5, abs(vZone - 3.0));
+    float alpha = mix(vBoundary, 0.72, memorialZone) * (1.0 - vFog * 0.22);
+    if (alpha < 0.015) discard;
+    gl_FragColor = vec4(color, alpha);
   }
 `;
 
@@ -134,14 +197,15 @@ const EFFECT_VERTEX = `
   uniform float uPast;
   uniform float uMemorial;
   uniform float uMotion;
+  uniform float uTransition;
   varying vec4 vColor;
 
   void main() {
     vec3 position = aPosition;
     if (aKind < 0.5) {
-      position.x += sin(position.y * 0.23 + uTime * 0.11) * 1.05 * uMotion;
-      position.y += sin(position.x * 0.12 + uTime * 0.08) * 0.72 * uMotion;
-      vColor = vec4(aColor.rgb, aColor.a * (0.22 + uPast * 1.25));
+      position.x += sin(position.y * 0.23 + uTime * 0.11) * (1.05 + uTransition * 1.8) * uMotion;
+      position.y += sin(position.x * 0.12 + uTime * 0.08) * (0.72 + uTransition) * uMotion;
+      vColor = vec4(aColor.rgb, aColor.a * (0.22 + uPast * 1.25) * (1.0 + uTransition * 1.8));
     } else {
       position.x += sin(position.z * 0.09 + uTime * 0.045) * 2.4 * uMotion;
       position.z += cos(position.x * 0.07 + uTime * 0.04) * 1.2 * uMotion;
@@ -200,11 +264,18 @@ const uniform3f = (gl: WebGLRenderingContext, targetProgram: WebGLProgram, name:
 };
 
 export const createTemporalWorld = (canvas: HTMLCanvasElement, options: TemporalWorldOptions): TemporalWorld => {
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  const deviceMemory = 'deviceMemory' in navigator
+    ? Number((navigator as Navigator & { deviceMemory?: number }).deviceMemory)
+    : undefined;
+  const lowEndDevice = coarsePointer && typeof deviceMemory === 'number' && deviceMemory <= 4;
   const gl = canvas.getContext('webgl', {
-    alpha: false,
-    antialias: true,
+    alpha: true,
+    antialias: !lowEndDevice,
     depth: true,
-    powerPreference: 'high-performance',
+    powerPreference: lowEndDevice ? 'low-power' : 'high-performance',
+    premultipliedAlpha: false,
     preserveDrawingBuffer: false,
   });
 
@@ -217,7 +288,9 @@ export const createTemporalWorld = (canvas: HTMLCanvasElement, options: Temporal
   const buffers = [
     bufferData(gl, staticGeometry.positions),
     bufferData(gl, staticGeometry.colors),
+    bufferData(gl, staticGeometry.normals),
     bufferData(gl, staticGeometry.zones),
+    bufferData(gl, staticGeometry.materials),
     bufferData(gl, staticGeometry.indices, gl.ELEMENT_ARRAY_BUFFER),
     bufferData(gl, effectGeometry.positions),
     bufferData(gl, effectGeometry.colors),
@@ -239,14 +312,13 @@ export const createTemporalWorld = (canvas: HTMLCanvasElement, options: Temporal
   let lastReportedAt = 0;
   let lastFocus: TemporalFocus | null = null;
   let startedAt = 0;
+  let transitionStartedAt = 0;
   let lastDrawAt = 0;
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
-  const targetFrameDuration = coarsePointer ? 1000 / 40 : 1000 / 60;
+  const targetFrameDuration = lowEndDevice ? 1000 / 32 : coarsePointer ? 1000 / 42 : 1000 / 60;
 
   const resize = () => {
     const rect = canvas.getBoundingClientRect();
-    const maxRatio = coarsePointer ? 1.45 : 1.8;
+    const maxRatio = lowEndDevice ? 1.15 : coarsePointer ? 1.4 : 1.75;
     const ratio = Math.min(window.devicePixelRatio || 1, maxRatio);
     const width = Math.max(1, Math.round(rect.width * ratio));
     const height = Math.max(1, Math.round(rect.height * ratio));
@@ -274,7 +346,7 @@ export const createTemporalWorld = (canvas: HTMLCanvasElement, options: Temporal
     const dy = event.clientY - pointerY;
     pointerX = event.clientX;
     pointerY = event.clientY;
-    targetYaw = clamp(targetYaw - dx * 0.0046, -1.02, 1.02);
+    targetYaw = clamp(targetYaw - dx * 0.0037, -0.78, 0.78);
     targetPitch = clamp(targetPitch + dy * 0.0032, -0.34, 0.08);
   };
   const releasePointer = (event: PointerEvent) => {
@@ -284,8 +356,8 @@ export const createTemporalWorld = (canvas: HTMLCanvasElement, options: Temporal
     if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
   };
   const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'ArrowLeft') targetYaw = clamp(targetYaw - 0.14, -1.02, 1.02);
-    else if (event.key === 'ArrowRight') targetYaw = clamp(targetYaw + 0.14, -1.02, 1.02);
+    if (event.key === 'ArrowLeft') targetYaw = clamp(targetYaw - 0.12, -0.78, 0.78);
+    else if (event.key === 'ArrowRight') targetYaw = clamp(targetYaw + 0.12, -0.78, 0.78);
     else if (event.key === 'ArrowUp') targetPitch = clamp(targetPitch - 0.08, -0.34, 0.08);
     else if (event.key === 'ArrowDown') targetPitch = clamp(targetPitch + 0.08, -0.34, 0.08);
     else return;
@@ -306,7 +378,7 @@ export const createTemporalWorld = (canvas: HTMLCanvasElement, options: Temporal
   gl.enable(gl.DEPTH_TEST);
   gl.depthFunc(gl.LEQUAL);
   gl.disable(gl.CULL_FACE);
-  gl.clearColor(0.07, 0.105, 0.09, 1);
+  gl.clearColor(0, 0, 0, 0);
 
   const applyCameraUniforms = (
     targetProgram: WebGLProgram,
@@ -314,13 +386,14 @@ export const createTemporalWorld = (canvas: HTMLCanvasElement, options: Temporal
     right: readonly number[],
     up: readonly number[],
     forward: readonly number[],
+    fieldOfView: number,
   ) => {
     uniform3f(gl, targetProgram, 'uCameraPosition', camera);
     uniform3f(gl, targetProgram, 'uCameraRight', right);
     uniform3f(gl, targetProgram, 'uCameraUp', up);
     uniform3f(gl, targetProgram, 'uCameraForward', forward);
     uniform1f(gl, targetProgram, 'uAspect', canvas.width / canvas.height);
-    uniform1f(gl, targetProgram, 'uFocal', 1 / Math.tan(radians(68) / 2));
+    uniform1f(gl, targetProgram, 'uFocal', 1 / Math.tan(radians(fieldOfView) / 2));
   };
 
   const render = (now: number) => {
@@ -333,8 +406,10 @@ export const createTemporalWorld = (canvas: HTMLCanvasElement, options: Temporal
     currentYaw += (targetYaw - currentYaw) * easing;
     currentPitch += (targetPitch - currentPitch) * easing;
     const revealSeconds = started && startedAt ? (now - startedAt) / 1000 : 0;
-    const descent = started && !reducedMotion ? clamp(revealSeconds / 8, 0, 1) * 2.7 : 0;
-    const camera = [0, 20 - descent, 34] as const;
+    const descent = started && !reducedMotion ? clamp(revealSeconds / 8, 0, 1) * 1.15 : 0;
+    const transition = transitionStartedAt ? clamp((now - transitionStartedAt) / 1250, 0, 1) : 0;
+    const transitionEase = transition * transition * (3 - 2 * transition);
+    const camera = [-transitionEase * 3.1, 20 - descent - transitionEase * 3.8, 34 - transitionEase * 18.5] as const;
     const cosPitch = Math.cos(currentPitch);
     const forward = [
       Math.sin(currentYaw) * cosPitch,
@@ -356,26 +431,30 @@ export const createTemporalWorld = (canvas: HTMLCanvasElement, options: Temporal
     gl.useProgram(staticProgram);
     bindAttribute(gl, staticProgram, 'aPosition', buffers[0], 3);
     bindAttribute(gl, staticProgram, 'aColor', buffers[1], 3);
-    bindAttribute(gl, staticProgram, 'aZone', buffers[2], 1);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers[3]);
-    applyCameraUniforms(staticProgram, camera, right, up, forward);
+    bindAttribute(gl, staticProgram, 'aNormal', buffers[2], 3);
+    bindAttribute(gl, staticProgram, 'aZone', buffers[3], 1);
+    bindAttribute(gl, staticProgram, 'aMaterial', buffers[4], 1);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers[5]);
+    applyCameraUniforms(staticProgram, camera, right, up, forward, 68 - transitionEase * 11);
     uniform1f(gl, staticProgram, 'uPast', past);
     uniform1f(gl, staticProgram, 'uPresent', present);
     uniform1f(gl, staticProgram, 'uMemorial', memorial);
-    gl.disable(gl.BLEND);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.depthMask(true);
     gl.drawElements(gl.TRIANGLES, staticGeometry.indices.length, gl.UNSIGNED_SHORT, 0);
 
     gl.useProgram(effectProgram);
-    bindAttribute(gl, effectProgram, 'aPosition', buffers[4], 3);
-    bindAttribute(gl, effectProgram, 'aColor', buffers[5], 4);
-    bindAttribute(gl, effectProgram, 'aKind', buffers[6], 1);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers[7]);
-    applyCameraUniforms(effectProgram, camera, right, up, forward);
+    bindAttribute(gl, effectProgram, 'aPosition', buffers[6], 3);
+    bindAttribute(gl, effectProgram, 'aColor', buffers[7], 4);
+    bindAttribute(gl, effectProgram, 'aKind', buffers[8], 1);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers[9]);
+    applyCameraUniforms(effectProgram, camera, right, up, forward, 68 - transitionEase * 11);
     uniform1f(gl, effectProgram, 'uTime', now / 1000);
     uniform1f(gl, effectProgram, 'uPast', past);
     uniform1f(gl, effectProgram, 'uMemorial', memorial);
     uniform1f(gl, effectProgram, 'uMotion', reducedMotion ? 0 : 1);
+    uniform1f(gl, effectProgram, 'uTransition', transitionEase);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.depthMask(false);
@@ -400,10 +479,16 @@ export const createTemporalWorld = (canvas: HTMLCanvasElement, options: Temporal
       startedAt = performance.now();
       if (!reducedMotion) targetPitch = -0.13;
     },
+    enterRift() {
+      if (!started || transitionStartedAt) return;
+      transitionStartedAt = performance.now();
+      targetYaw = -0.14;
+      targetPitch = -0.13;
+    },
     applyDeviceOrientation(alpha, beta) {
       if (deviceAlphaOrigin === null) deviceAlphaOrigin = alpha;
       const delta = normalizeAngle(alpha - deviceAlphaOrigin);
-      targetYaw = clamp(-radians(delta) * 0.7, -1.02, 1.02);
+      targetYaw = clamp(-radians(delta) * 0.55, -0.78, 0.78);
       targetPitch = clamp(-0.17 + radians(beta - 45) * 0.18, -0.34, 0.08);
     },
     resetDeviceOrientation() {
