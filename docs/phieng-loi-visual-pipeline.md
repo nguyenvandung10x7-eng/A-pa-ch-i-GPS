@@ -49,6 +49,7 @@ All runtime URLs live in `visualAssets.ts`.
 | `support-atlas-v1.webp` | 4×2 | Player idle, chicken, dog and buffalo placeholders. |
 | `heesun-run-v2.webp` | 4×2 | Eight-frame HeeSun chase cycle. |
 | `hanu-walk-v2.webp` | 4×2 | Eight-frame HANU phone-walk cycle. |
+| `hanu-food-box-v1.svg` | cutout | Visible delivery box attached to HANU while his food-delivery state is active. |
 | `player-run-v2.webp` | 4×2 | Eight-frame player run cycle. |
 | `chief-talk-v2.webp` | 4×2 | Trưởng bản idle, talk and reaction cycle. |
 | `feast-loop-v2.webp` | 4×2 | Five-man roadside-table toast and laugh cycle. |
@@ -118,10 +119,11 @@ small and disappears when inactive.
 
 Trưởng bản, the roadside-table group and the adult stream group no longer reuse
 single support-atlas poses. Each has a dedicated eight-frame transparent cutout
-cycle. VươngMe is a dedicated animated visual guest: every fifth existing PHÀ ƠI
-call can stage his short karaoke entrance without adding a new quest, save field or
-event state machine. This keeps the current gameplay harness intact while testing
-the shared animation/compositing language.
+cycle. VươngMe is a dedicated animated visual guest: every fifth successful
+normal PHÀ ƠI call can stage his short karaoke entrance. A TRUE NOTHING call is
+explicitly excluded, so the visual layer cannot secretly compensate for the null
+outcome. The food-box slot, dog reaction, fish-rate escalation and existing actor
+states expose the Event Director without changing the locked art direction.
 
 ## Next art tasks
 

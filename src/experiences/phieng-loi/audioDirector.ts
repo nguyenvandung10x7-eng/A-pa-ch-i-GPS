@@ -1,4 +1,4 @@
-import type { GameEvent, PowerKind } from './gameEngine';
+import type { GameEvent, PhaOiVoiceKind, PowerKind } from './gameEngine';
 import {
   PHIENG_LOI_AUDIO_BY_ID,
   PHIENG_LOI_AUDIO_CUES,
@@ -249,8 +249,16 @@ export class PhiengLoiAudioDirector {
     source.stop(start + duration + 0.02);
   }
 
-  private playHumanCall() {
+  private playHumanCall(variant: PhaOiVoiceKind) {
     if (this.disposed || this.muted || this.voiceStatus === 'missing') return;
+    const cueByVariant: Partial<Record<PhaOiVoiceKind, PhiengLoiAudioCueId>> = {
+      long: 'pha_oi_long',
+      panicked: 'pha_oi_panicked',
+      whisper: 'pha_oi_whisper',
+      silly: 'pha_oi_silly',
+    };
+    const cue = cueByVariant[variant];
+    if (cue && this.playSample(cue, { gain: variant === 'whisper' ? 0.55 : 0.92, reverb: variant === 'long' ? 0.22 : 0.12 })) return;
     this.voice.currentTime = 0;
     this.voicePan.pan.value = (Math.random() * 2 - 1) * 0.08;
     void this.voice.play()
@@ -261,7 +269,12 @@ export class PhiengLoiAudioDirector {
   handle(event: GameEvent) {
     if (this.disposed) return;
     if (event.type === 'pha-oi') {
-      this.playHumanCall();
+      this.playHumanCall(event.voice);
+      return;
+    }
+    if (event.type === 'director-event') {
+      const cue = event.soundCue as PhiengLoiAudioCueId | undefined;
+      if (cue && PHIENG_LOI_AUDIO_BY_ID.has(cue)) this.playSample(cue, { gain: 0.66, pitchVariance: 0.025, reverb: 0.12 });
       return;
     }
     if (event.type === 'footstep') {
@@ -297,6 +310,25 @@ export class PhiengLoiAudioDirector {
     }
     if (event.type === 'reset') {
       this.tone(220, 0.4, 'triangle', 0.045, 0, 440);
+      return;
+    }
+    if (event.type === 'call-ready') {
+      this.tone(330, 0.09, 'triangle', 0.024);
+      this.tone(440, 0.13, 'triangle', 0.02, 0.07);
+      return;
+    }
+    if (event.type === 'delivery-start') {
+      this.tone(620, 0.08, 'sine', 0.024);
+      this.tone(820, 0.1, 'sine', 0.02, 0.09);
+      return;
+    }
+    if (event.type === 'delivery-complete') {
+      [392, 523, 659].forEach((note, index) => this.tone(note, 0.2, 'triangle', 0.035, index * 0.07));
+      return;
+    }
+    if (event.type === 'feast-chase') {
+      this.noise(0.12, 0.045, 1_100);
+      this.tone(145, 0.22, 'square', 0.04, 0, 92);
       return;
     }
     if (event.type === 'phone') {

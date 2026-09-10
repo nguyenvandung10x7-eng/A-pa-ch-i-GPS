@@ -61,7 +61,9 @@ const CHICKEN_REST = Array.from({ length: CHICKEN_COUNT }, (_, index) => ({
 const semanticHeeSunFrame = (mode: HeeSunMode, worldTime: number): number => {
   if (mode === 'ambush') return 3;
   if (mode === 'intro') return worldTime % 2.4 < 1.2 ? 1 : 2;
-  if (mode === 'drinking') return 5;
+  if (mode === 'drinking' || mode === 'interrupted') return 5;
+  if (mode === 'notice') return 2;
+  if (mode === 'rare-flee') return 4;
   return worldTime % 5.4 < 2.8 ? 0 : 1;
 };
 
@@ -123,12 +125,17 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
   const heesunRef = useRef<HTMLDivElement | null>(null);
   const heesunSpriteRef = useRef<HTMLDivElement | null>(null);
+  const heesunTwinRef = useRef<HTMLDivElement | null>(null);
+  const heesunTwinSpriteRef = useRef<HTMLDivElement | null>(null);
   const hanuRef = useRef<HTMLDivElement | null>(null);
   const hanuSpriteRef = useRef<HTMLDivElement | null>(null);
+  const hanuFoodRef = useRef<HTMLImageElement | null>(null);
   const feastRef = useRef<HTMLDivElement | null>(null);
   const feastSpriteRef = useRef<HTMLDivElement | null>(null);
   const streamRef = useRef<HTMLDivElement | null>(null);
   const streamSpriteRef = useRef<HTMLDivElement | null>(null);
+  const dogRef = useRef<HTMLDivElement | null>(null);
+  const dogSpriteRef = useRef<HTMLDivElement | null>(null);
   const vuongMeRef = useRef<HTMLDivElement | null>(null);
   const vuongMeSpriteRef = useRef<HTMLDivElement | null>(null);
   const chickenRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -156,7 +163,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
         void callRef.current.offsetWidth;
         callRef.current.classList.add('is-active');
       }
-      if (game.callCount > 0 && game.callCount % VUONGME_CALL_INTERVAL === 0) {
+      if (game.phaOiCooldownUntil <= game.elapsed && game.normalCallCount > 0 && game.normalCallCount % VUONGME_CALL_INTERVAL === 0) {
         const facing = game.player.facingX < 0 ? -1 : 1;
         vuongMeSpawnRef.current = nearestWalkablePoint({
           x: game.player.x + facing * 120,
@@ -168,8 +175,8 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
 
     const karaokeActive = vuongMeUntilRef.current > game.elapsed;
 
-    const chiefSpeaking = game.leaderStartedAt > 0;
-    const chiefAge = chiefSpeaking ? Math.max(0, game.elapsed - game.leaderStartedAt) : game.worldTime;
+    const chiefSpeaking = game.chief.startedAt > 0 && game.chief.pausedUntil <= game.elapsed;
+    const chiefAge = chiefSpeaking ? Math.max(0, game.elapsed - game.chief.startedAt) : game.worldTime;
     const chiefFrame = chiefSpeaking || karaokeActive
       ? cycleFrame(chiefAge, karaokeActive ? 7.2 : 5.4, game.reducedMotion)
       : game.reducedMotion || game.worldTime % 4.8 < 4.64 ? 0 : 5;
@@ -188,7 +195,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
     setData(playerRef.current, 'motion', playerMoving ? 'run' : 'idle');
     setData(playerRef.current, 'terrain', terrainAt(game.player.x, game.player.y));
 
-    const heesunMoving = game.heesun.mode === 'chasing' || game.heesun.mode === 'distracted';
+    const heesunMoving = game.heesun.mode === 'chasing' || game.heesun.mode === 'distracted' || game.heesun.mode === 'rare-flee' || game.heesun.mode === 'wander';
     const heesunFrame = cycleFrame(game.worldTime, 11.5, game.reducedMotion);
     const heesunDepthScale = 0.88 + (game.heesun.y / WORLD_HEIGHT) * 0.2;
     placeActor(heesunRef.current, game.heesun.x, game.heesun.y);
@@ -205,8 +212,22 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
     );
     setData(heesunRef.current, 'motion', heesunMoving ? 'chase' : game.heesun.mode);
 
+    if (heesunTwinRef.current) {
+      const twinActive = game.worldGag.heesunTwinUntil > game.elapsed;
+      heesunTwinRef.current.hidden = !twinActive;
+      if (twinActive) {
+        placeActor(heesunTwinRef.current, game.heesun.x + 42, game.heesun.y + 5);
+        setSpriteFrame(heesunTwinSpriteRef.current, 'heesun', semanticHeeSunFrame('notice', game.worldTime));
+        setSpriteWidth(heesunTwinSpriteRef.current, ACTOR_WIDTH.heesunPose);
+        setSpriteTransform(heesunTwinSpriteRef.current, -1, heesunDepthScale);
+      }
+    }
+
     const hanuTarget = HANU_ROUTE[game.hanu.waypoint % HANU_ROUTE.length];
-    const hanuFacing = hanuTarget.x >= game.hanu.x ? 1 : -1;
+    const routeFacing = hanuTarget.x >= game.hanu.x ? 1 : -1;
+    const hanuFacing = game.hanu.headTurnUntil > game.elapsed
+      ? (game.player.x >= game.hanu.x ? 1 : -1)
+      : routeFacing;
     const dominoActive = game.dominoStartedAt !== 0 && game.elapsed - game.dominoStartedAt < 3.4;
     const hanuTalking = game.message?.tone === 'hanu';
     const hanuFrame = cycleFrame(game.worldTime, 8.2, game.reducedMotion);
@@ -219,20 +240,29 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
     );
     setSpriteWidth(hanuSpriteRef.current, dominoActive || hanuTalking ? ACTOR_WIDTH.hanuPose : ACTOR_WIDTH.hanuWalk);
     setSpriteTransform(hanuSpriteRef.current, hanuFacing, hanuDepthScale);
-    setData(hanuRef.current, 'motion', dominoActive ? 'chaos' : hanuTalking ? 'talk' : 'walk');
+    setData(hanuRef.current, 'motion', game.hanu.mode === 'delivery-paused' ? 'phone-pause' : dominoActive ? 'chaos' : hanuTalking ? 'talk' : game.hanu.carryingFood ? 'delivery' : 'walk');
+    if (hanuFoodRef.current) hanuFoodRef.current.hidden = !game.hanu.carryingFood;
 
     placeActor(feastRef.current, game.feast.x, game.feast.y);
-    const feastRecentlyCalled = game.feast.encounters > 0 && game.feast.nextTriggerAt - game.elapsed > 2.35;
-    const feastRate = karaokeActive ? 7.4 : feastRecentlyCalled ? 4.8 : 1.65;
+    const feastReacting = game.feast.mode === 'invite' || game.feast.mode === 'stare' || game.feast.mode === 'react';
+    const feastRate = karaokeActive ? 7.4 : game.feast.mode === 'chasing' ? 9 : feastReacting ? 4.8 : 1.35 + game.feast.routineIndex * 0.16;
     setSpriteFrame(feastSpriteRef.current, 'feastLoop', cycleFrame(game.worldTime, feastRate, game.reducedMotion));
     setSpriteWidth(feastSpriteRef.current, ACTOR_WIDTH.feast);
-    setData(feastRef.current, 'motion', karaokeActive ? 'karaoke' : feastRecentlyCalled ? 'toast' : 'idle');
+    const chairFalling = game.worldGag.chairFallenUntil > game.elapsed;
+    setData(feastRef.current, 'motion', karaokeActive ? 'karaoke' : game.feast.mode === 'chasing' ? 'chase' : chairFalling ? 'chair-fall' : feastReacting ? game.feast.mode : 'idle');
 
     const streamActive = game.streamStartedAt > 0 && game.elapsed - game.streamStartedAt < 5.2;
-    const streamRate = karaokeActive ? 6.8 : streamActive ? 4.6 : 1.8;
+    const streamRate = karaokeActive ? 6.8 : streamActive ? 4.6 : 1.8 + Math.min(3.2, game.fishBoost / 24);
     setSpriteFrame(streamSpriteRef.current, 'streamLoop', cycleFrame(game.worldTime, streamRate, game.reducedMotion));
     setSpriteWidth(streamSpriteRef.current, ACTOR_WIDTH.streamGroup);
     setData(streamRef.current, 'motion', karaokeActive ? 'karaoke' : streamActive ? 'react' : 'idle');
+
+    const dogAwake = game.worldGag.dogAwakeUntil > game.elapsed;
+    placeActor(dogRef.current, PHIENG_LOI_LANDMARKS.dog.x, PHIENG_LOI_LANDMARKS.dog.y);
+    setSpriteFrame(dogSpriteRef.current, 'support', 3);
+    setSpriteWidth(dogSpriteRef.current, ACTOR_WIDTH.dog);
+    setSpriteTransform(dogSpriteRef.current, dogAwake ? game.player.x - PHIENG_LOI_LANDMARKS.dog.x : 1, 1);
+    setData(dogRef.current, 'motion', dogAwake ? 'awake' : 'idle');
 
     if (vuongMeRef.current) {
       const shouldHideVuongMe = !karaokeActive;
@@ -251,23 +281,41 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       }
     }
 
-    const panic = game.chicken.panicUntil > game.elapsed;
-    const panicProgress = panic
-      ? Math.max(0, Math.min(1, (game.elapsed - game.chicken.panicStartedAt) / 4.3))
+    const chickenActive = game.chicken.mode !== 'peck' && game.chicken.modeUntil > game.elapsed;
+    const chickenProgress = chickenActive
+      ? Math.max(0, Math.min(1, (game.elapsed - game.chicken.modeStartedAt) / Math.max(.1, game.chicken.modeUntil - game.chicken.modeStartedAt)))
       : 0;
     chickenRefs.current.forEach((node, index) => {
       if (!node) return;
-      const hidden = !panic && index >= 4;
+      const hidden = index >= game.chicken.visibleCount;
       if (node.hidden !== hidden) node.hidden = hidden;
       if (node.hidden) return;
       const rest = CHICKEN_REST[index];
-      const x = panic ? rest.x + panicProgress * 520 + (index % 3) * 13 : rest.x;
-      const y = panic ? rest.y + Math.sin(game.worldTime * 9 + index) * 8 : rest.y;
+      let x = rest.x;
+      let y = rest.y;
+      if (game.chicken.mode === 'panic-away' || game.chicken.mode === 'cross-screen') {
+        x += chickenProgress * 520 + (index % 3) * 13;
+        y += Math.sin(game.worldTime * 9 + index) * 8;
+      } else if (game.chicken.mode === 'panic-toward-player') {
+        x += (game.player.x - rest.x) * chickenProgress * .78 + (index % 3) * 8;
+        y += (game.player.y - rest.y) * chickenProgress * .78 + Math.sin(game.worldTime * 10 + index) * 7;
+      } else if (game.chicken.mode === 'follow-hanu') {
+        x = game.hanu.x - 20 - index * 8;
+        y = game.hanu.y + 7 + (index % 3) * 6;
+      } else if (game.chicken.mode === 'follow-heesun') {
+        x = game.heesun.x - 20 - index * 8;
+        y = game.heesun.y + 7 + (index % 3) * 6;
+      } else if (game.chicken.mode === 'invade-feast') {
+        x = game.feast.x - 28 + (index % 5) * 12;
+        y = game.feast.y + 5 + Math.floor(index / 5) * 9;
+      }
       placeActor(node, x, y);
+      setData(node, 'motion', game.chicken.mode);
     });
 
     setData(scene, 'terrain', terrainAt(game.player.x, game.player.y));
     setData(scene, 'absurdity', String(game.absurdityLevel));
+    setData(scene, 'macro', game.worldGag.macro);
     scene.classList.toggle('is-capture', game.scene.kind === 'capture');
     scene.classList.toggle('is-karaoke', karaokeActive);
   }, []);
@@ -293,7 +341,9 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
         <div ref={streamRef} className="phieng-visual__actor is-stream-group" style={actorStyle(PHIENG_LOI_LANDMARKS.streamGroup.x, PHIENG_LOI_LANDMARKS.streamGroup.y)}>
           <div ref={streamSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('streamLoop', 0), width: ACTOR_WIDTH.streamGroup }} />
         </div>
-        <StaticActor atlas="support" frame={3} {...PHIENG_LOI_LANDMARKS.dog} width={ACTOR_WIDTH.dog} className="is-dog" />
+        <div ref={dogRef} className="phieng-visual__actor is-dog" style={actorStyle(PHIENG_LOI_LANDMARKS.dog.x, PHIENG_LOI_LANDMARKS.dog.y)}>
+          <div ref={dogSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('support', 3), width: ACTOR_WIDTH.dog }} />
+        </div>
         <StaticActor atlas="support" frame={4} {...PHIENG_LOI_LANDMARKS.buffalo} width={ACTOR_WIDTH.buffalo} className="is-buffalo" />
 
         {CHICKEN_REST.map((position, index) => (
@@ -313,9 +363,13 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
 
         <div ref={hanuRef} className="phieng-visual__actor is-hanu" style={actorStyle(initialGame.hanu.x, initialGame.hanu.y)}>
           <div ref={hanuSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('hanuWalk', 0), width: ACTOR_WIDTH.hanuWalk }} />
+          <img ref={hanuFoodRef} className="phieng-visual__hanu-food" src={PHIENG_LOI_VISUAL_ASSETS.hanuFood} alt="" hidden />
         </div>
         <div ref={heesunRef} className="phieng-visual__actor is-heesun" style={actorStyle(initialGame.heesun.x, initialGame.heesun.y)}>
           <div ref={heesunSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('heesun', 0), width: ACTOR_WIDTH.heesunPose }} />
+        </div>
+        <div ref={heesunTwinRef} className="phieng-visual__actor is-heesun is-heesun-twin" style={actorStyle(initialGame.heesun.x + 42, initialGame.heesun.y + 5)} hidden>
+          <div ref={heesunTwinSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('heesun', 2), width: ACTOR_WIDTH.heesunPose }} />
         </div>
         <div
           ref={vuongMeRef}

@@ -36,6 +36,7 @@ procedural sound as a development fallback.
 | `pha_oi_long_01..03.wav` | Player · distant call | “Phà ơơơơơi!” | Long breath that falls away naturally | 1.4–2.5 s | 3 | No | Light stereo echo + one distant reflection | Long-distance/repeated-call beat |
 | `pha_oi_panicked_01..03.wav` | Player · chase | “PHÀ ƠI!” | Breathless and alarmed, still comic | 0.45–0.95 s | 3 | No | Minimal reverb, stronger transient | Call during HeeSun chase |
 | `pha_oi_whisper_01..02.wav` | Player · hiding | “Phà ơi…” | Absurdly cautious close whisper | 0.7–1.2 s | 2 | No | Dry, low-rumble roll-off | Quiet hiding/escape gag |
+| `pha_oi_silly_01..02.wav` | Player · rare bad take | “PHÀ… ơi?” | Confidence collapses halfway through; awkward, not cute | 0.75–1.5 s | 2 | No | Mostly dry with one late reflection | Rare weighted family; never repeat the preceding family |
 | `heesun_ban_oi_far_01..03.wav` | HeeSun · far | “Bạn ơiiii…” | Warm, persistent, too enthusiastic | 1.2–2.2 s | 3 | No | Distance roll-off, medium echo, random pan | Lost-player/high-chaos call |
 | `heesun_ban_oi_near_01..03.wav` | HeeSun · near | “Bạn ơi…” | Friendly and uncomfortably close | 0.7–1.25 s | 3 | No | Mostly dry, position pan | Final first-meeting line |
 | `heesun_ban_oi_chase_01..04.wav` | HeeSun · chase | “BẠN ƠI!” | Full-bodied happy shout, never angry | 0.55–1.05 s | 4 | No | Short slap echo, random pitch ±2% | Chase start/re-entry |

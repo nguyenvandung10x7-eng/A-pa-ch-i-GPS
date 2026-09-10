@@ -12,6 +12,8 @@ project owner; the raw references are intentionally not committed.
 - `support-atlas-v1.webp`: 1776×888 transparent 4×2 pose atlas.
 - `heesun-run-v2.webp`: 1536×1024 transparent 4×2 running cycle.
 - `hanu-walk-v2.webp`: 1536×1024 transparent 4×2 phone-walk cycle.
+- `hanu-food-box-v1.svg`: transparent project-authored cutout shown only while
+  HANU's delivery state carries the player's food.
 - `player-run-v2.webp`: 1776×888 transparent 4×2 running cycle.
 - `chief-talk-v2.webp`: 1776×888 transparent 4×2 Trưởng bản talk/reaction cycle.
 - `feast-loop-v2.webp`: 1776×888 transparent 4×2 roadside-table toast/laugh cycle.

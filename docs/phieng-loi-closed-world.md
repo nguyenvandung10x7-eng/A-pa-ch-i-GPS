@@ -1,150 +1,161 @@
-# Phiêng Lơi — closed-world comedy vertical slice
+# Phiêng Lơi — compact absurd-comedy game
 
-## Product decision
+## Product contract
 
-Phiêng Lơi is the main Book of Dien Bien experience: a compact, dense, mobile-first
-landscape comedy game. It is not an open-world POI tour and has no RPG, quest log,
-XP, skill tree, crafting, combat, or inventory. Book is a secondary overlay and
-waiting-menu entry. The 1954 and Explore implementations are hidden from primary
-flow but retained on their direct routes and in source.
+Phiêng Lơi is the primary Book of Dien Bien game: a compact, closed-world,
+mobile-first landscape comedy. It is not a POI tour or RPG. There is no combat,
+jump, dash, inventory, currency, XP, crafting, dialogue tree, minimap, or quest
+log.
 
-The map is a deliberately compressed fictional play space, not a geographic or
-travel-time claim. Its visual vocabulary—stilt houses, mountain layers, village
-road, fields and corn, stream, waterwheel, cooking smoke, chickens, a dog, a
-buffalo, produce, and everyday objects—is rendered from project-owned WebP assets.
+The complete gameplay vocabulary is:
 
-## Character-art checkpoint
+> MOVE + PHÀ ƠI!
 
-HeeSun and HANU use six-pose semantic atlases plus dedicated eight-frame movement
-cycles derived from owner-supplied character boards. Raw reference photos are not
-shipped. HeeSun locks the short, tight, close-to-scalp curls, recognizable face,
-suspicious gentle smile, and a slightly round body reduced from the previous
-chubby prototype. HANU locks the recognizable face, heavier build, messy hair,
-white tank top, shorts, sandals, and always-visible phone. The quieter player has
-an eight-frame run cycle; chief, villagers, stream group, and animals remain in the
-support atlas and deliberately less visually dominant.
+The player always understands the controls. The village is deliberately less
+predictable: ordinary actor routines collide, interrupt one another, seed delayed
+consequences, and sometimes return to complete normality.
 
-## Core loop and controls
+The fictional compressed map is not a geographic or travel-time claim. Route,
+menu, Book overlay, 1954, GPS Challenge, Auth/Admin and Supabase boundaries remain
+unchanged by the game-logic pass.
 
-> ĐI → GẶP CHUYỆN NGỚ NGẨN → PHÀ ƠI / CHẠY / ĐỨNG NHÌN → HẬU QUẢ → ĐI TIẾP
+## Event Director
 
-The only gameplay inputs are 360° movement and one contextual **PHÀ ƠI!** action.
-Mobile uses a left joystick and one large right action button. Keyboard uses
-WASD/arrows plus Space, E, or Q. Book, mute, pause, settings, and menu buttons are
-utility UI and do not create extra player abilities.
+`absurdityDirector.ts` owns a typed, data-driven registry. Definitions declare an
+ID, tier, trigger signals, weight, minimum hidden absurdity, context requirements,
+cooldown, anti-repeat group, priority, interruption policy, duration, optional
+follow-ups, actor/world changes, animation/audio cues and short dialogue bubbles.
+`gameEngine.ts` applies the finite state changes; the director does not run a
+continuous simulation or a scripted cutscene graph.
 
-The player is only told that they want to cross the village. There are no mission
-markers, checklists, minimap POIs, or required explanation of world systems.
+Director evaluation happens only on meaningful signals:
 
-## Implemented comedy systems
+- a normal PHÀ ƠI call;
+- entry into an authored location;
+- HANU reaching a waypoint;
+- an event ending;
+- a debounced important collision;
+- a delayed event becoming due;
+- a sparse 3.5–5.7 second world tick.
+
+Runtime limits are fixed at one major chain, two micro-events, six delayed items,
+five follow-up steps and fourteen recent-history entries. Persistent collisions
+are edge/debounce driven rather than reevaluated every animation frame.
+
+## PHÀ ƠI contract
+
+Every accepted press first selects a weighted voice family without repeating the
+previous family, then rolls the null outcome.
+
+- Exactly 20% of rolls are **TRUE NOTHING**. The player still calls, but the call
+  creates no NPC response, object change, dialogue, particles, secondary event,
+  chain or delayed compensation. Existing routines and chases continue.
+- TRUE NOTHING alone disables PHÀ ƠI for 60 seconds. The button stays in place,
+  becomes visually quiet and recharges without a numeric countdown. Save/restore
+  retains the remaining lock.
+- The other 80% resolves against local context. A normal result never starts the
+  global 60-second lock, so the button remains immediately reusable.
+
+The runtime reserves normal, long, panicked, whisper and rare silly recording
+families. Missing signature recordings fail silent; no TTS or synthetic voice is
+substituted.
+
+## Actor routines and collisions
 
 ### HeeSun
 
-- Distinct tight-curl silhouette, blue/white sports shirt, suspicious gentle smile,
-  and comic chase motif.
-- Required meeting sequence: invitation, player “Thôi.”, the short silence,
-  “Bạn ôi…”, then “BẠN ƠI!” and chase.
-- No combat and no Game Over.
-- Capture cuts to **3 GIỜ SAU**, the dead-eyed player at the drinking table,
-  “Làm chén cuối.”, fade, **5 GIỜ SAU**, then a reset at the village entrance.
-- Chickens, HaNu collisions, and level-three absurd entrances can interrupt or
-  restart the chase.
+The first meeting remains the fixed invitation → player “Thôi.” → “Bạn ơi…”
+sequence. HeeSun then becomes the recurring hunter with finite states for idle,
+wander, notice, intro, chase, distraction, interruption, drinking, ambush,
+capture, reset and rare flight.
 
-### HaNu
+Variations include a delayed arrival, an implausibly small hiding corner, a long
+stare, stopping for a sandal, stopping at the drinking table, following chickens,
+switching target to HANU's food and running through the scene for unexplained
+reasons. Every chase has loss distance, timeout, interruption and reset paths.
 
-- Heavier white-tank-top silhouette; the phone is always visible.
-- Walks an independent loop while cycling “Ừ.” / “Thế à?” calls.
-- Opens HeeSun's gate, physically blocks a route, startles chickens, reveals the
-  nearby player with “Nó ở đây này!”, starts an object domino, and can collide with
-  HeeSun to rescue the player accidentally.
-- Says “Ừ, tôi đang ở nhà.” while walking through the stream.
+Capture is not Game Over: **3 GIỜ SAU**, the player sits dead-eyed at the table,
+HeeSun says “Làm chén cuối.”, then **5 GIỜ SAU** returns the player to the village
+entrance without erasing completed persistent state.
 
-### Required absurd events
+### HANU
 
-| Event | Implemented behavior |
-| --- | --- |
-| Mâm nhậu | Calls “Vào làm chén.”, relocates after the player leaves, appears ahead on the alternate route, then occupies the upper field on its third encounter. |
-| Trưởng bản | “Tôi xin nói ngắn gọn.” starts a persistent speech; the clock jumps 00:01 → 02:17 → 07:42 → 19:36, sunset advances, and “Thứ nhất…” continues after the player walks away. |
-| Nhóm bên suối | Fully clothed adult figures, distant non-voyeuristic framing, required cinematic line, rapidly multiplying fish, then “Hôm nay cá hơi đông.” |
-| Con gà | One PHÀ ƠI! near the road triggers a village-wide flock. A chasing HeeSun follows it briefly, then resumes the chase. |
-| Nhà sàn | Nearby calls answer “Ơi.” then “Ơiiii.”; the third call gets silence followed by “ƠIIII!” from a distant house. |
-| Repeated call | Rapid calls raise chaos, panic animals, and produce increasingly unreasonable distant replies. |
+HANU walks a lightweight authored road loop while looking at his phone. Early in
+the session he says exactly:
 
-### OCOP as short jokes
+- “Alo, 30' nữa tôi ship cơm cho bạn.”
+- later, “30' nữa tôi ship.”
+- player: “30' trước bạn cũng nói thế mà.”
+- HANU: “Ừ.”
 
-There is no shop, brochure, description screen, or inventory. Pressing PHÀ ƠI!
-near an item consumes it immediately:
+Later he carries a visible food box. The player catches him by proximity—there is
+no extra catch button. Delivery variations can pause for the phone, choose the
+wrong route, stop just before capture, offer the box to the wrong person, pass the
+feast or chief, attract chickens, or very rarely work perfectly. Variations time
+out and cannot permanently prevent delivery.
 
-| Item | Short effect |
-| --- | --- |
-| Bí xanh Tìa Dình | Player swells; HeeSun comments, copies the player, grows much larger, and remains dangerous. |
-| Cà phê Mường Ảng | World animation, chickens, waterwheel, and HaNu slow down; the player and HeeSun do not. |
-| Mắc ca Điện Biên | Every moving step produces an exaggerated crunch, particles, and sound; nearby waiting HeeSun can hear and start chasing. |
+HANU delivery and HeeSun chase are explicitly compatible. The signature ordering
+HANU → player → HeeSun can coexist with a chasing feast and crossing chickens.
 
-### Hidden escalation
+### Mâm nhậu, chickens, chief and stream
 
-`absurdityLevel` is derived internally from time, calls, and encounters and is
-never displayed. Level 0 is mostly ordinary; level 1 adds villagers in wrong
-places; level 2 enables table/chicken/domino escalation; level 3 adds impossible
-HeeSun entrances, persistent distant replies, packed fish, and background events.
+- The feast has independent idle routines, invitation, stare, reaction, chase,
+  reset and authored relocation states. It may switch from the player to HANU's
+  food. After release it calmly returns to “Vào làm chén.”
+- Chickens can peck, stare singly or together, panic away or toward the player,
+  cross the screen, follow HANU or HeeSun, and invade the feast. They are cheap
+  chain participants rather than decoration.
+- The chief begins with “Tôi xin nói ngắn gọn.” and continues “Thứ nhất…”,
+  “Thứ hai…” after the player leaves. Nearby chaos pauses him briefly; it does not
+  reset the speech.
+- The stream keeps its distant, fully clothed community framing. Normal calls can
+  increase fish activity; TRUE NOTHING cannot.
 
-## Book contract
+A rare off-screen “Về.” disperses the feast and sends HeeSun away. Rare macro
+beats include growth figures, a dry world-news subtitle, two simultaneous HeeSuns
+and the theoretical right to leave. They are deliberately low-weight and share an
+anti-repeat group, keeping the dominant tone everyday and slapstick.
 
-Book opens in a same-origin overlay while the game state and asset scene remain mounted. The
-game pauses and persists before opening. Closing Book restores the exact position
-and prior status; Book does not inspect or mutate game events. Direct `/book`
-access remains available from the waiting menu.
+## Dialogue and audio
 
-## Audio contract
+Dialogue is event data, not an RPG conversation system. A bounded five-item queue
+supports short anchored comic bubbles with priority and interruption rules.
+Critical/capture beats can displace low-priority gags; two cinematic sequences
+cannot simultaneously lock the player.
 
-The signature call must be a real, consented human recording. Runtime reserves:
+Only cleared project recordings may be marked `ready` in `audioManifest.ts`.
+Generic effects can use the existing procedural development fallback. Signature
+human lines never do. The exact recording slots and licence gate live in
+`phieng-loi-audio-recording-library.md` and `audio-provenance.md`.
 
-`public/audio/phieng-loi/pha-oi-human.mp3`
+## Save and lifecycle
 
-There is deliberately no beep, oscillator, synthesized voice, or TTS fallback for
-that call. Missing media is visible in Settings and does not block the visual/NPC
-response. Do not mark the audio complete until the supplied recording is added to
-the provenance ledger and the project has explicit usage and redistribution
-rights.
+Save version 3 preserves checkpoint, hidden absurdity, PHÀ ƠI remaining cooldown,
+recent director history/cooldowns, recurring one-shot flags, HeeSun major state,
+HANU delivery state, feast state, chief progress, OCOP consumption and exit state.
+Ephemeral particles, active micro-events and delayed queues are intentionally not
+serialized, preventing duplicate delivery/capture chains after restore. Version 1
+and 2 saves still migrate to a valid authored route.
 
-The existing procedural motifs remain development fallbacks, but the same director
-is now sample-capable: it preloads only manifest cues marked ready, chooses among
-takes, applies gain/pan/distance/pitch/reverb, caps concurrency, and cleans up each
-source. The recording contract and exact filenames live in
-[`phieng-loi-audio-recording-library.md`](phieng-loi-audio-recording-library.md).
-Only documented, project-cleared recordings may be marked ready.
+Book opens in a same-origin overlay while the scene stays mounted. Opening Book or
+pause saves state and suspends audio; closing restores the prior play state. Blur,
+visibility changes and teardown clear held movement, cancel animation and release
+audio resources.
 
-## Performance and lifecycle
+## Performance and test gates
 
-- Responsive 16:9 DOM/CSS compositor driven by the stable 480×270 logical camera.
-  The world is a hand-painted WebP plate; named characters use transparent
-  semantic and eight-frame movement atlases with contact shadows, reaction poses,
-  and atmospheric overlays. Camera, actors and frame selection update directly in
-  `requestAnimationFrame`; React updates only the slower HUD. No Canvas primitive
-  drawing remains in the mounted gameplay presentation.
-- The player, HeeSun and HANU are constrained to authored road/courtyard/garden
-  corridors. Water, roofs, crops and rocks are blocked; the wooden crossing has a
-  distinct terrain type; legacy off-route saves recover to the nearest valid path.
-- Conservative foreground crops provide bridge, foliage and rock occlusion while
-  preserving a single world coordinate system. Houses need true-alpha foreground
-  exports before they can safely occlude actors.
-- Landscape/coarse-pointer rotation guard and entirely touch-playable controls.
-- Visibility and blur clear sticky movement; pause/Book suspend audio.
-- Unmount cancels animation, removes listeners, stops the voice element, and closes
-  AudioContext.
-- Versioned local Continue save covers player position, absurdity, calls, HeeSun,
-  HaNu, table relocation, chief/stream/gate/domino events, and consumed OCOP items.
+- Painted WebP/SVG presentation and the existing DOM/CSS compositor are unchanged
+  by this logic pass; no Canvas primitive renderer was reintroduced.
+- Named actors use bounded finite-state machines, authored waypoints and simple
+  steering. HeeSun navigation is sampled rather than recomputed every frame.
+- Actor count, dialogue, particles, active events and delayed queues are bounded.
+- `npm run verify:phieng-loi` directly tests TRUE NOTHING probability and purity,
+  normal-call reuse, cooldown continuity, anti-repeat, director bounds, HeeSun,
+  HANU delivery/variations, feast, chickens, chains, sparse evaluation, saves,
+  legacy migration and exit.
+- Release gates remain `npm run lint`, `npm run typecheck`, `npm run build` and
+  `npm run verify`; real-device iPhone landscape QA remains required.
 
-## Release gates
-
-- `npm run lint`
-- `npm run verify` (audio-provenance check, strict TypeScript, production build)
-- Engine simulation for HeeSun intro/chase/capture/reset, contextual calls, every
-  required event, all three OCOP effects, escalation, save/restore, and exit.
-- Engine assertions for walkable-route containment, blocked stream water, wooden
-  bridge terrain and safe recovery of legacy off-route saves.
-- Real-device QA still required on at least one recent iPhone in landscape for
-  safe areas, two-thumb input, orientation, resumed audio, iframe Book scrolling,
-  thermal behavior, and Safari AudioContext lifecycle.
-- Real human `PHÀ ƠI!` recording and documented rights still required before
-  production audio can be considered complete.
+The intended pacing is normality → micro weirdness → quiet → surprise → escalation
+→ release → normality. A high internal absurdity level unlocks possibilities; it
+does not force the village to be loud all the time.

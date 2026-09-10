@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import {
   ArrowLeft,
   BookOpen,
@@ -23,6 +23,7 @@ import {
   createGame,
   createSave,
   createUiSnapshot,
+  GAME_SAVE_VERSION,
   stepGame,
   type GameQuality,
   type GameSave,
@@ -65,7 +66,7 @@ const readSave = (): GameSave | null => {
     const value = window.localStorage.getItem(PHIENG_LOI_SAVE_KEY);
     if (!value) return null;
     const parsed = JSON.parse(value) as GameSave;
-    return parsed?.version === 1 || parsed?.version === 2 ? parsed : null;
+    return parsed?.version === 1 || parsed?.version === 2 || parsed?.version === GAME_SAVE_VERSION ? parsed : null;
   } catch {
     return null;
   }
@@ -122,7 +123,6 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   const [bookOpen, setBookOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState<VoiceAssetStatus>('checking');
-  const [guideUntil, setGuideUntil] = useState(initialSave ? initialGame.elapsed : initialGame.elapsed + 6.2);
 
   const syncUi = useCallback((game: GameState, force = false, snapshot?: UiSnapshot) => {
     if (!force && game.elapsed - uiSyncAtRef.current < 0.1) return;
@@ -165,7 +165,6 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     inputRef.current = createInputState();
     saveAtRef.current = 0;
     uiSyncAtRef.current = 0;
-    setGuideUntil(6.2);
     setJoystick({ x: 0, y: 0 });
     setUi(createUiSnapshot(game));
     visualRef.current?.render(game);
@@ -366,12 +365,12 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   };
   const queueCall = (event: ReactPointerEvent<HTMLButtonElement>) => {
     event.preventDefault();
+    if (gameRef.current.phaOiCooldownUntil > gameRef.current.elapsed || gameRef.current.scene.kind === 'capture') return;
     inputRef.current.callQueued = true;
     navigator.vibrate?.(18);
   };
 
   const message = ui.message;
-  const showGuide = status === 'playing' && ui.elapsed < guideUntil;
   const showCinematic = Boolean(ui.cinematicVi || ui.cinematicEn);
 
   return (
@@ -395,8 +394,19 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
           </nav>
         </header>
 
-        {ui.chasing && status === 'playing' ? (
-          <div className="phieng-game__chase" role="status"><span>{vi ? 'HEESUN ĐANG TỚI' : 'HEESUN IS COMING'}</span><strong>{vi ? 'CHẠY.' : 'RUN.'}</strong></div>
+        {(ui.chasing || ui.feastChasing || ui.hanuDeliveryActive) && status === 'playing' ? (
+          <div className="phieng-game__chase" role="status">
+            <span>
+              {ui.hanuDeliveryActive && ui.chasing
+                ? (vi ? 'CƠM PHÍA TRƯỚC · HEESUN PHÍA SAU' : 'FOOD AHEAD · HEESUN BEHIND')
+                : ui.hanuDeliveryActive
+                  ? (vi ? 'HANU ĐANG CẦM CƠM' : 'HANU HAS YOUR FOOD')
+                  : ui.feastChasing
+                    ? (vi ? 'CẢ MÂM ĐANG TỚI' : 'THE WHOLE TABLE IS COMING')
+                    : (vi ? 'HEESUN ĐANG TỚI' : 'HEESUN IS COMING')}
+            </span>
+            <strong>{ui.hanuDeliveryActive ? (vi ? 'ĐUỔI.' : 'CHASE.') : (vi ? 'CHẠY.' : 'RUN.')}</strong>
+          </div>
         ) : null}
 
         {ui.chiefSpeaking && ui.leaderClock ? (
@@ -415,7 +425,12 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
         ) : null}
 
         {message && status === 'playing' ? (
-          <article key={message.id} className={`phieng-game__message is-${message.tone}`} aria-live="assertive">
+          <article
+            key={message.id}
+            className={`phieng-game__message is-${message.tone}${ui.messageAnchored ? ' is-anchored' : ''}`}
+            style={{ '--bubble-x': `${ui.messageX}%`, '--bubble-y': `${ui.messageY}%` } as CSSProperties}
+            aria-live="assertive"
+          >
             <span>{vi ? message.speakerVi : message.speakerEn}</span>
             <p>{vi ? message.textVi : message.textEn}</p>
           </article>
@@ -445,10 +460,16 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
             >
               <span aria-hidden="true"><i style={{ transform: `translate(${joystick.x * 1.4}rem, ${joystick.y * 1.4}rem)` }} /></span>
             </div>
-            <button type="button" className="phieng-game__pha-oi" onPointerDown={queueCall} aria-label={vi ? 'Gọi Phà ơi' : 'Call out Pha oi'}>
+            <button
+              type="button"
+              className={`phieng-game__pha-oi${ui.callReady ? '' : ' is-cooldown'}${ui.callRechargeActive ? ' is-recharged' : ''}`}
+              onPointerDown={queueCall}
+              disabled={!ui.callReady || ui.scene === 'capture'}
+              style={{ '--recharge': `${ui.callCooldownProgress * 360}deg` } as CSSProperties}
+              aria-label={ui.callReady ? (vi ? 'Gọi Phà ơi' : 'Call out Pha oi') : (vi ? 'Phà ơi đang tịt' : 'Pha oi is recharging')}
+            >
               <strong>PHÀ ƠI!</strong>
             </button>
-            {showGuide ? <p>{vi ? 'Ngón trái để đi · Ngón phải chỉ cần PHÀ ƠI!' : 'Move with your left thumb · PHÀ ƠI! does the rest'}</p> : null}
           </div>
         ) : null}
 

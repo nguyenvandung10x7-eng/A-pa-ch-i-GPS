@@ -12,6 +12,7 @@ export const PHIENG_LOI_VISUAL_ASSETS = {
   feastLoopAtlas: '/images/phieng-loi/feast-loop-v2.webp',
   streamLoopAtlas: '/images/phieng-loi/stream-loop-v2.webp',
   vuongMeDanceAtlas: '/images/phieng-loi/vuongme-dance-v1.webp',
+  hanuFood: '/images/phieng-loi/hanu-food-box-v1.svg',
   heesunMenu: '/images/phieng-loi/heesun-menu-v1.webp',
   hanuMenu: '/images/phieng-loi/hanu-menu-v1.webp',
 } as const;

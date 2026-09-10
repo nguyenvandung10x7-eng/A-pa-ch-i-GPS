@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 72" role="img" aria-label="Hộp cơm của HaNu">
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="2" dy="4" stdDeviation="2" flood-color="#263326" flood-opacity=".32"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)" stroke="#4a2c1f" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 27c1-7 7-12 14-12h23c8 0 13 5 14 12" fill="none" stroke-width="6"/>
+    <path d="M10 28 17 64h55l7-36z" fill="#e6a747" stroke-width="4"/>
+    <path d="m13 31 11 8h42l10-8" fill="#f6cf72" stroke-width="3"/>
+    <path d="M25 39h39l-3 18H29z" fill="#fff0c1" stroke-width="3"/>
+    <path d="m36 43 8 6 9-6" fill="none" stroke="#c85336" stroke-width="3"/>
+    <circle cx="19" cy="56" r="3" fill="#6d9a4d" stroke-width="1.5"/>
+    <circle cx="69" cy="52" r="2.5" fill="#c85336" stroke-width="1.5"/>
+  </g>
+</svg>

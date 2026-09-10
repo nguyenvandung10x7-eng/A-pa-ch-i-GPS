@@ -3,6 +3,7 @@ export type PhiengLoiAudioCueId =
   | 'pha_oi_long'
   | 'pha_oi_panicked'
   | 'pha_oi_whisper'
+  | 'pha_oi_silly'
   | 'heesun_ban_oi_far'
   | 'heesun_ban_oi_near'
   | 'heesun_ban_oi_chase'
@@ -104,6 +105,21 @@ export const PHIENG_LOI_AUDIO_CUES: readonly PhiengLoiAudioCue[] = [
     loop: false,
     processing: 'Dry and close; roll off low rumble.',
     trigger: 'Quiet contextual gag while hidden or immediately after escape.',
+    fallback: 'none',
+    shipping: 'pending',
+    maxConcurrency: 1,
+  },
+  {
+    id: 'pha_oi_silly',
+    files: takeFiles('pha_oi_silly', 2),
+    characterOrEvent: 'Player · PHÀ ƠI! rare take',
+    lineOrSound: 'PHÀ… ơi?',
+    delivery: 'One deliberately ill-judged, breathy take; funny because the confidence collapses halfway through.',
+    durationSeconds: [0.75, 1.5],
+    takes: 2,
+    loop: false,
+    processing: 'Mostly dry with one late outdoor reflection; preserve the awkward pause.',
+    trigger: 'Rare weighted PHÀ ƠI! voice selection; never repeat the previous take family.',
     fallback: 'none',
     shipping: 'pending',
     maxConcurrency: 1,
