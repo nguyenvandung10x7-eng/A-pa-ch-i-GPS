@@ -9,8 +9,7 @@ export type ProductNavigationItem = {
 };
 
 /**
- * Public navigation follows one narrative journey. These legacy arrays remain
- * for staff/utility surfaces while the public shell owns the primary order.
+ * Product navigation is deliberately split into two equal entry points.
  *
  * BOOK is the editorial/memory half of the app. CHALLENGE is the playful GPS/action
  * half. Utility routes remain associated with one surface without becoming equal
@@ -55,6 +54,13 @@ export const CHALLENGE_NAVIGATION_ITEMS: ReadonlyArray<ProductNavigationItem> = 
     id: 'discover',
     path: '/discover',
     labelKey: 'nav.discover',
+    surface: 'challenge',
+    kind: 'utility',
+  },
+  {
+    id: 'leaderboard',
+    path: '/leaderboard',
+    labelKey: 'nav.leaderboard',
     surface: 'challenge',
     kind: 'utility',
   },

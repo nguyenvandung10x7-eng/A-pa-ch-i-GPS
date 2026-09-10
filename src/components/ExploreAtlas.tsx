@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Check, ChevronRight, Compass, Info, Map as MapIcon, MapPin, Navigation, Sparkles, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Check, ChevronRight, Compass, Info, MapPin, Navigation, Sparkles, X } from 'lucide-react';
 import { localize } from '../services/i18n';
 import type { ChallengeTask, LanguageCode } from '../types/task';
 import '../pages/explore-atlas.css';
@@ -47,7 +46,6 @@ const copy = {
     completed: 'Đã đi qua',
     invitationsHere: 'lời mời tại đây',
     atlasDisclaimer: 'Sa hình và vị trí chỉ để minh họa · Không dùng để tìm đường',
-    map: 'Bản đồ',
   },
   en: {
     fieldKicker: 'STEP OUTSIDE',
@@ -63,7 +61,6 @@ const copy = {
     completed: 'Visited',
     invitationsHere: 'invitations here',
     atlasDisclaimer: 'Atlas and positions are illustrative only · Not for navigation',
-    map: 'Map',
   },
 } as const;
 
@@ -371,7 +368,6 @@ export const ExploreAtlas = ({
               <span><b>{completedCount}</b>/{progressTotal}</span>
               <small>{c.visited}</small>
             </div>
-            <Link className="explore-atlas__map-link" to="/map"><MapIcon aria-hidden="true" /><span>{c.map}</span></Link>
             {introAside}
           </div>
         </header>

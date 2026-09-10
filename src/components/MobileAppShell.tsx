@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { BookOpen, Bookmark, ChevronRight, Compass, Languages, LockKeyhole, LogIn, LogOut, MapPin, Music2, Pause, Play, Route, Settings2, ShieldCheck, UserRound, X } from 'lucide-react';
+import { BookOpen, Bookmark, ChevronRight, ChevronUp, Compass, Languages, LogIn, LogOut, Map, MapPin, Music2, Pause, Play, Settings2, ShieldCheck, UserRound, X } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { BookChapterDrawer } from './BookChapterDrawer';
 import { BOOK_MUSIC_TRACKS } from '../data/music';
 import {
   BOOK_AUDIO_START_EVENT,
@@ -9,7 +10,7 @@ import {
   readBookSoundEnabled,
   type BookAudioStartDetail,
 } from '../services/bookAudioEvents';
-import { useJourney } from '../hooks/useJourney';
+import { requestChallengeGateReset } from '../services/challengeGateEvents';
 import { getChapter, getPage } from '../services/bookContent';
 import type { LanguageCode } from '../types/task';
 import '../mobile-shell.css';
@@ -132,7 +133,7 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
   const { pathname } = useLocation();
   const { user, loading, signIn, signOutUser } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
-  const { stage, preview: journeyPreview } = useJourney();
+  const [bookMenuOpen, setBookMenuOpen] = useState(false);
   const [bookSoundEnabled, setBookSoundEnabled] = useState(readBookSoundEnabled);
   const [bookSoundPlaying, setBookSoundPlaying] = useState(false);
   const [bookSoundBlocked, setBookSoundBlocked] = useState(false);
@@ -143,9 +144,9 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
   const restoreAccountFocusRef = useRef(true);
   const copy = labels[language];
   const normalizedPathname = normalizePublicPathname(pathname);
-  const onOpeningSurface = false;
+  const onOpeningSurface = normalizedPathname === '/';
   const onBookSurface = isBookSurface(normalizedPathname);
-  const onExploreSurface = false;
+  const onExploreSurface = normalizedPathname === '/challenge';
   const readingMode = normalizedPathname.startsWith('/book/chapter/')
     || normalizedPathname.startsWith('/book/page/');
   const userLabel = useMemo(() => getUserLabel(user), [user]);
@@ -404,7 +405,7 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
     <div className={`editorial-shell min-h-dvh ${isFieldSurface(normalizedPathname) ? 'editorial-shell--field' : 'editorial-shell--book'} ${onExploreSurface ? 'editorial-shell--explore' : ''} ${onOpeningSurface ? 'editorial-shell--opening' : ''}`}>
       <div className={`editorial-shell__frame mx-auto min-h-dvh w-full max-w-[72rem] ${onOpeningSurface ? 'pb-0' : 'pb-[calc(5.6rem+env(safe-area-inset-bottom))]'}`}>
         {!onOpeningSurface ? <header className="editorial-shell__header">
-          <Link to="/" className="editorial-shell__brand" aria-label="Book of Dien Bien">
+          <Link to="/book" className="editorial-shell__brand" aria-label="Book of Dien Bien">
             BOOK OF DIEN BIEN
           </Link>
           <div className="editorial-shell__header-actions">
@@ -443,8 +444,6 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
             </button>
           </div>
         </header> : null}
-
-        {journeyPreview ? <div className="journey-preview-notice" role="status">{language === 'vi' ? 'BẢN XEM TRƯỚC · TIẾN TRÌNH ĐANG ĐƯỢC MÔ PHỎNG' : 'DEPLOY PREVIEW · PROGRESS IS BEING SIMULATED'}</div> : null}
 
         {readingMode && activeBookTrack && bookSoundEnabled && (
           <div className={`editorial-soundtrack-pop ${bookSoundBlocked ? 'is-blocked' : ''}`}>
@@ -490,17 +489,32 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
 
       {!onOpeningSurface ? <nav aria-label={language === 'vi' ? 'Điều hướng chính' : 'Primary navigation'} className="editorial-shell__surface-nav">
         <div className="editorial-shell__surface-nav-inner">
-          <NavLink to={stage === 'culture' ? '/journey/culture' : '/journey/1954'} className={() => pathname === '/' || pathname.startsWith('/journey') ? 'is-active' : ''}>
-            <Route aria-hidden="true" /><span>{language === 'vi' ? 'Hành trình' : 'Journey'}</span>
+          <NavLink
+            to="/challenge"
+            className={({ isActive }) => isActive ? 'is-active' : ''}
+            onClick={() => {
+              if (onExploreSurface) requestChallengeGateReset();
+            }}
+          >
+            <Compass className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
           </NavLink>
-          <NavLink to="/book" className={({ isActive }) => isActive ? 'is-active' : ''}>
-            {stage === 'book' ? <BookOpen aria-hidden="true" /> : <LockKeyhole aria-hidden="true" />}<span>{language === 'vi' ? 'Cuốn sách' : 'Book'}</span>
+          <NavLink to="/map" className={({ isActive }) => isActive ? 'is-active' : ''}>
+            <Map className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Bản đồ' : 'Map'}</span>
           </NavLink>
-          <NavLink to="/challenge" className={({ isActive }) => isActive || pathname === '/map' ? 'is-active' : ''}>
-            {stage === 'book' ? <Compass aria-hidden="true" /> : <LockKeyhole aria-hidden="true" />}<span>{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
-          </NavLink>
+          <button
+            type="button"
+            className={onBookSurface || bookMenuOpen ? 'is-active' : ''}
+            onClick={() => setBookMenuOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={bookMenuOpen}
+            aria-controls={bookMenuOpen ? 'game-book-chapter-drawer' : undefined}
+          >
+            <BookOpen className="editorial-shell__nav-book" aria-hidden="true" /><span>{language === 'vi' ? 'Cuốn sách' : 'Book'}</span><ChevronUp className="editorial-shell__nav-chevron" aria-hidden="true" />
+          </button>
         </div>
       </nav> : null}
+
+      {bookMenuOpen ? <BookChapterDrawer language={language} onClose={() => setBookMenuOpen(false)} /> : null}
 
       {accountOpen ? (
         <div className="editorial-account-layer" role="presentation" onMouseDown={() => closeAccountDialog()}>
