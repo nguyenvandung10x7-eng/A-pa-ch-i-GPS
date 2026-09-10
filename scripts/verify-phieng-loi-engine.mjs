@@ -3,7 +3,6 @@ import { readFileSync } from 'node:fs';
 import {
   VIEW_HEIGHT,
   VIEW_WIDTH,
-  WORLD_WIDTH,
   createGame,
   createSave,
   createUiSnapshot,
@@ -11,6 +10,11 @@ import {
 } from '../src/experiences/phieng-loi/gameEngine.ts';
 import { PHIENG_LOI_AUDIO_CUES } from '../src/experiences/phieng-loi/audioManifest.ts';
 import { PHIENG_LOI_VISUAL_ASSETS } from '../src/experiences/phieng-loi/visualAssets.ts';
+import {
+  PHIENG_LOI_LANDMARKS,
+  isWalkable,
+  terrainAt,
+} from '../src/experiences/phieng-loi/worldLayout.ts';
 
 const freshInput = (callQueued = false) => ({
   left: false,
@@ -80,25 +84,25 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
 {
   const game = createGame('high', false);
   quietHeeSun(game);
-  game.player.x = 515;
-  game.player.y = 432;
+  game.player.x = PHIENG_LOI_LANDMARKS.feastStart.x;
+  game.player.y = PHIENG_LOI_LANDMARKS.feastStart.y;
   tick(game, 0.02);
   assert.equal(game.feast.encounters, 1, 'first table encounter should trigger');
-  game.player.x = 100;
-  game.player.y = 800;
+  game.player.x = PHIENG_LOI_LANDMARKS.playerStart.x;
+  game.player.y = PHIENG_LOI_LANDMARKS.playerStart.y;
   tick(game, 5.1);
   const secondX = game.feast.x;
   const secondY = game.feast.y;
-  assert.notEqual(secondX, 515, 'table should relocate ahead');
+  assert.notEqual(secondX, PHIENG_LOI_LANDMARKS.feastStart.x, 'table should relocate ahead');
   game.player.x = secondX;
   game.player.y = secondY;
   tick(game, 0.02);
   assert.equal(game.feast.encounters, 2, 'second table encounter should trigger');
-  game.player.x = 100;
-  game.player.y = 800;
+  game.player.x = PHIENG_LOI_LANDMARKS.playerStart.x;
+  game.player.y = PHIENG_LOI_LANDMARKS.playerStart.y;
   tick(game, 5.1);
-  assert.equal(game.feast.x, 1_018, 'third table location should be the field');
-  assert.equal(game.feast.y, 224);
+  assert.equal(game.feast.x, PHIENG_LOI_LANDMARKS.feastField.x, 'third table location should be the garden field');
+  assert.equal(game.feast.y, PHIENG_LOI_LANDMARKS.feastField.y);
   game.player.x = game.feast.x;
   game.player.y = game.feast.y;
   tick(game, 0.02);
@@ -108,8 +112,8 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
 {
   const game = createGame('high', false);
   quietHeeSun(game);
-  game.player.x = 700;
-  game.player.y = 247;
+  game.player.x = PHIENG_LOI_LANDMARKS.chief.x;
+  game.player.y = PHIENG_LOI_LANDMARKS.chief.y;
   tick(game, 0.02);
   tick(game, 9);
   const snapshot = createUiSnapshot(game);
@@ -120,8 +124,8 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
 {
   const game = createGame('high', false);
   quietHeeSun(game);
-  game.player.x = 1_205;
-  game.player.y = 704;
+  game.player.x = PHIENG_LOI_LANDMARKS.stream.x;
+  game.player.y = PHIENG_LOI_LANDMARKS.stream.y;
   const streamEvents = tick(game, 0.02);
   assert.ok(streamEvents.some((event) => event.type === 'stream'), 'stream cinematic should trigger');
   assert.ok(createUiSnapshot(game).cinematicVi?.startsWith('Người đẹp'));
@@ -132,8 +136,8 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
 {
   const game = createGame('high', false);
   quietHeeSun(game);
-  game.player.x = 765;
-  game.player.y = 458;
+  game.player.x = PHIENG_LOI_LANDMARKS.chickenYard.x;
+  game.player.y = PHIENG_LOI_LANDMARKS.chickenYard.y;
   const chickenEvents = call(game);
   assert.ok(chickenEvents.some((event) => event.type === 'chicken-panic'), 'one nearby chicken call should panic the flock');
 }
@@ -141,8 +145,8 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
 {
   const game = createGame('high', false);
   quietHeeSun(game);
-  game.player.x = 530;
-  game.player.y = 220;
+  game.player.x = 505;
+  game.player.y = 438;
   call(game);
   assert.ok(game.triggered.has('house-call-1'));
   call(game);
@@ -157,9 +161,9 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
   const game = createGame('high', false);
   quietHeeSun(game);
   const powers = [
-    ['squash', 585, 602],
-    ['coffee', 942, 335],
-    ['macadamia', 1_335, 525],
+    ['squash', PHIENG_LOI_LANDMARKS.squash.x, PHIENG_LOI_LANDMARKS.squash.y],
+    ['coffee', PHIENG_LOI_LANDMARKS.coffee.x, PHIENG_LOI_LANDMARKS.coffee.y],
+    ['macadamia', PHIENG_LOI_LANDMARKS.macadamia.x, PHIENG_LOI_LANDMARKS.macadamia.y],
   ];
   for (const [power, x, y] of powers) {
     game.player.x = x;
@@ -187,17 +191,17 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
   quietHeeSun(game);
   game.absurdityScore = 3;
   game.absurdityLevel = 1;
-  game.hanu.x = 790;
-  game.hanu.y = 450;
+  game.hanu.x = PHIENG_LOI_LANDMARKS.gate.x;
+  game.hanu.y = PHIENG_LOI_LANDMARKS.gate.y;
   tick(game, 0.02);
   assert.equal(game.gateOpen, true, 'HaNu should open the gate');
   assert.equal('mode' in game.hanu, false, 'HaNu must remain a phone-walk chaos generator, not a second chase state machine');
-  game.hanu.x = 1_265;
-  game.hanu.y = 400;
+  game.hanu.x = PHIENG_LOI_LANDMARKS.domino.x;
+  game.hanu.y = PHIENG_LOI_LANDMARKS.domino.y;
   const dominoEvents = tick(game, 0.02);
   assert.ok(dominoEvents.some((event) => event.type === 'domino'), 'HaNu should start the domino');
-  game.hanu.x = 1_050;
-  game.hanu.y = 650;
+  game.hanu.x = PHIENG_LOI_LANDMARKS.stream.x;
+  game.hanu.y = PHIENG_LOI_LANDMARKS.stream.y;
   tick(game, 0.02);
   assert.equal(game.hanu.saidAtStream, true, 'HaNu should claim to be home while in the stream');
   game.heesun.mode = 'chasing';
@@ -206,8 +210,8 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
   game.hanu.x = 900;
   game.hanu.y = 520;
   game.hanu.lastCollisionAt = -10;
-  game.player.x = 300;
-  game.player.y = 800;
+  game.player.x = PHIENG_LOI_LANDMARKS.playerStart.x;
+  game.player.y = PHIENG_LOI_LANDMARKS.playerStart.y;
   tick(game, 0.02);
   assert.equal(game.heesun.mode, 'distracted', 'HaNu should accidentally interrupt HeeSun');
 }
@@ -215,12 +219,12 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
 {
   const game = createGame('high', false);
   quietHeeSun(game);
-  game.player.x = 942;
-  game.player.y = 335;
+  game.player.x = PHIENG_LOI_LANDMARKS.coffee.x;
+  game.player.y = PHIENG_LOI_LANDMARKS.coffee.y;
   call(game);
   const saved = createSave(game);
   const restored = createGame('low', true, saved);
-  assert.equal(restored.player.x, 942);
+  assert.equal(restored.player.x, PHIENG_LOI_LANDMARKS.coffee.x);
   assert.ok(restored.triggered.has('ocop-coffee'));
   assert.equal(restored.absurdityLevel, game.absurdityLevel);
   assert.equal(createUiSnapshot(restored).power, 'coffee', 'active OCOP time should survive Continue');
@@ -229,11 +233,26 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
 {
   const game = createGame('high', false);
   quietHeeSun(game);
-  game.player.x = WORLD_WIDTH - 50;
-  game.player.y = 450;
+  game.player.x = PHIENG_LOI_LANDMARKS.exit.x;
+  game.player.y = PHIENG_LOI_LANDMARKS.exit.y;
   const exitEvents = tick(game, 0.02);
   assert.equal(game.complete, true);
   assert.ok(exitEvents.some((event) => event.type === 'exit'));
+}
+
+{
+  const game = createGame('high', false);
+  quietHeeSun(game);
+  tick(game, 3, { ...freshInput(), up: true });
+  assert.ok(isWalkable(game.player.x, game.player.y), 'player must remain on the painted road corridor');
+  assert.ok(game.player.y > 390, 'the upper road edge must block walking onto the stilt house art');
+  assert.equal(terrainAt(1_330, 592), 'wood', 'the authored stream crossing must report wooden terrain');
+  assert.equal(terrainAt(1_330, 540), 'blocked', 'water beside the bridge must remain blocked');
+
+  const saved = createSave(game);
+  saved.player = { x: 1_330, y: 720, facingX: 1, facingY: 0 };
+  const restored = createGame('high', false, saved);
+  assert.ok(isWalkable(restored.player.x, restored.player.y), 'legacy saves outside the new walk mask must be recovered safely');
 }
 
 console.log('Phiêng Lơi engine simulation passed: HeeSun, HaNu, absurd events, OCOP, escalation, save, and exit.');

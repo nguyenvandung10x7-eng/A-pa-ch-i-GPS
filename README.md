@@ -68,11 +68,15 @@ staff tools are preserved. Book is not a quest log and does not mutate game stat
 ## Rendering, lifecycle, and persistence
 
 - The game route stays lazy-loaded; no game-engine dependency is added.
-- A 480×270 logical camera drives a responsive 16:9 DOM/CSS world compositor.
-- Character and support poses come from transparent WebP atlases; the environment
-  comes from one versioned world plate. Asset slots are centralized in
-  `visualAssets.ts`.
-- CSS transform animation honors reduced motion.
+- A 480×270 logical camera drives a responsive 16:9 DOM/CSS world compositor;
+  camera and actor transforms run directly on `requestAnimationFrame`, while the
+  lightweight React HUD refreshes separately.
+- Character movement comes from transparent eight-frame WebP cycles, semantic
+  poses come from companion atlases, and the environment comes from one versioned
+  world plate. Asset slots are centralized in `visualAssets.ts`.
+- Authored route corridors in `worldLayout.ts` keep actors on the painted road,
+  garden paths and wooden bridge, with foreground crops providing basic occlusion.
+- Motion and presentation effects honor reduced motion.
 - Page hide, blur, and visibility changes clear input and pause safely.
 - Leaving the route cancels animation frames, removes listeners, stops the voice
   element, and closes the AudioContext.

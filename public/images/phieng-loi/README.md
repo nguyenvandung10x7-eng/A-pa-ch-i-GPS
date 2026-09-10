@@ -8,8 +8,13 @@ project owner; the raw references are intentionally not committed.
 - `heesun-atlas-v1.webp`: 1536×1024 transparent 3×2 pose atlas.
 - `hanu-atlas-v1.webp`: 1536×1024 transparent 3×2 pose atlas.
 - `support-atlas-v1.webp`: 1776×888 transparent 4×2 pose atlas.
+- `heesun-run-v2.webp`: 1536×1024 transparent 4×2 running cycle.
+- `hanu-walk-v2.webp`: 1536×1024 transparent 4×2 phone-walk cycle.
+- `player-run-v2.webp`: 1776×888 transparent 4×2 running cycle.
 - `heesun-menu-v1.webp`, `hanu-menu-v1.webp`: transparent menu cutouts.
 
 Runtime mapping and preload behavior live in
 `src/experiences/phieng-loi/visualAssets.ts`. Do not replace a pose atlas with a
 different grid without updating that manifest and the visual regression checks.
+Animation sheets must contain true alpha: checkerboards, matte colors, guide lines,
+and cell backgrounds must never be baked into the exported image.

@@ -5,16 +5,22 @@ export const PHIENG_LOI_VISUAL_ASSETS = {
   heesunAtlas: '/images/phieng-loi/heesun-atlas-v1.webp',
   hanuAtlas: '/images/phieng-loi/hanu-atlas-v1.webp',
   supportAtlas: '/images/phieng-loi/support-atlas-v1.webp',
+  heesunRunAtlas: '/images/phieng-loi/heesun-run-v2.webp',
+  hanuWalkAtlas: '/images/phieng-loi/hanu-walk-v2.webp',
+  playerRunAtlas: '/images/phieng-loi/player-run-v2.webp',
   heesunMenu: '/images/phieng-loi/heesun-menu-v1.webp',
   hanuMenu: '/images/phieng-loi/hanu-menu-v1.webp',
 } as const;
 
-export type AtlasName = 'heesun' | 'hanu' | 'support';
+export type AtlasName = 'heesun' | 'hanu' | 'support' | 'heesunRun' | 'hanuWalk' | 'playerRun';
 
 const ATLAS_CONFIG = {
-  heesun: { url: PHIENG_LOI_VISUAL_ASSETS.heesunAtlas, columns: 3, rows: 2 },
-  hanu: { url: PHIENG_LOI_VISUAL_ASSETS.hanuAtlas, columns: 3, rows: 2 },
-  support: { url: PHIENG_LOI_VISUAL_ASSETS.supportAtlas, columns: 4, rows: 2 },
+  heesun: { url: PHIENG_LOI_VISUAL_ASSETS.heesunAtlas, columns: 3, rows: 2, frameAspect: 1 },
+  hanu: { url: PHIENG_LOI_VISUAL_ASSETS.hanuAtlas, columns: 3, rows: 2, frameAspect: 1 },
+  support: { url: PHIENG_LOI_VISUAL_ASSETS.supportAtlas, columns: 4, rows: 2, frameAspect: 1 },
+  heesunRun: { url: PHIENG_LOI_VISUAL_ASSETS.heesunRunAtlas, columns: 4, rows: 2, frameAspect: 0.75 },
+  hanuWalk: { url: PHIENG_LOI_VISUAL_ASSETS.hanuWalkAtlas, columns: 4, rows: 2, frameAspect: 0.75 },
+  playerRun: { url: PHIENG_LOI_VISUAL_ASSETS.playerRunAtlas, columns: 4, rows: 2, frameAspect: 1 },
 } as const;
 
 export const atlasFrameStyle = (atlas: AtlasName, frame: number): CSSProperties => {
@@ -29,6 +35,7 @@ export const atlasFrameStyle = (atlas: AtlasName, frame: number): CSSProperties 
     backgroundPosition: `${x}% ${y}%`,
     backgroundRepeat: 'no-repeat',
     backgroundSize: `${config.columns * 100}% ${config.rows * 100}%`,
+    aspectRatio: config.frameAspect,
   };
 };
 

@@ -1,10 +1,20 @@
+import {
+  HANU_ROUTE,
+  HOUSE_CALL_POINTS,
+  OCOP_WORLD_ITEMS,
+  PHIENG_LOI_LANDMARKS,
+  isWalkable,
+  navigationTarget,
+  nearestWalkablePoint,
+} from './worldLayout.ts';
+
 export const VIEW_WIDTH = 480;
 export const VIEW_HEIGHT = 270;
 export const WORLD_WIDTH = 1_680;
 export const WORLD_HEIGHT = 920;
 
-const PLAYER_START_X = 92;
-const PLAYER_START_Y = 486;
+const PLAYER_START_X = PHIENG_LOI_LANDMARKS.playerStart.x;
+const PLAYER_START_Y = PHIENG_LOI_LANDMARKS.playerStart.y;
 const PLAYER_SPEED = 67;
 const CAMERA_VERTICAL_ANCHOR = 0.7;
 const SAVE_VERSION = 1;
@@ -134,37 +144,6 @@ export type UiSnapshot = {
   chasing: boolean;
   caught: number;
   complete: boolean;
-  visual: {
-    cameraX: number;
-    cameraY: number;
-    worldTime: number;
-    absurdityLevel: 0 | 1 | 2 | 3;
-    player: {
-      x: number;
-      y: number;
-      moving: boolean;
-      facingX: number;
-      scale: number;
-    };
-    heesun: {
-      x: number;
-      y: number;
-      mode: HeeSunMode;
-      scale: number;
-      facingX: number;
-    };
-    hanu: {
-      x: number;
-      y: number;
-      moving: boolean;
-      facingX: number;
-    };
-    feast: { x: number; y: number };
-    chickenPanic: boolean;
-    chickenProgress: number;
-    streamSeen: boolean;
-    dominoActive: boolean;
-  };
 };
 
 export type GameState = {
@@ -209,37 +188,6 @@ export type GameState = {
 };
 
 const POWER_DURATION: Record<PowerKind, number> = { squash: 11, coffee: 12, macadamia: 12 };
-
-const HOUSES = [
-  { x: 210, y: 260, width: 170, height: 94 },
-  { x: 455, y: 126, width: 152, height: 84 },
-  { x: 760, y: 548, width: 175, height: 96 },
-  { x: 1_260, y: 112, width: 158, height: 88 },
-];
-
-const HOUSE_CALL_POINTS = [
-  { x: 295, y: 370 },
-  { x: 530, y: 220 },
-  { x: 845, y: 660 },
-  { x: 1_340, y: 210 },
-];
-
-const OCOP_ITEMS: Array<{ kind: PowerKind; x: number; y: number }> = [
-  { kind: 'squash', x: 585, y: 602 },
-  { kind: 'coffee', x: 942, y: 335 },
-  { kind: 'macadamia', x: 1_335, y: 525 },
-];
-
-const HANU_PATH = [
-  { x: 650, y: 462 },
-  { x: 792, y: 445 },
-  { x: 1_060, y: 650 },
-  { x: 1_210, y: 595 },
-  { x: 1_300, y: 388 },
-  { x: 980, y: 276 },
-  { x: 710, y: 320 },
-  { x: 520, y: 560 },
-];
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 const distance = (ax: number, ay: number, bx: number, by: number) => Math.hypot(ax - bx, ay - by);
@@ -302,8 +250,8 @@ const addParticles = (
 const defaultGame = (quality: GameQuality, reducedMotion: boolean): GameState => ({
   player: { x: PLAYER_START_X, y: PLAYER_START_Y, vx: 0, vy: 0, facingX: 1, facingY: 0, walk: 0 },
   heesun: {
-    x: 365,
-    y: 456,
+    x: PHIENG_LOI_LANDMARKS.heesunStart.x,
+    y: PHIENG_LOI_LANDMARKS.heesunStart.y,
     vx: 0,
     vy: 0,
     mode: 'waiting',
@@ -315,8 +263,8 @@ const defaultGame = (quality: GameQuality, reducedMotion: boolean): GameState =>
     nextAmbushAt: 62,
   },
   hanu: {
-    x: HANU_PATH[0].x,
-    y: HANU_PATH[0].y,
+    x: HANU_ROUTE[0].x,
+    y: HANU_ROUTE[0].y,
     waypoint: 1,
     lineIndex: 0,
     nextLineAt: 5,
@@ -324,7 +272,14 @@ const defaultGame = (quality: GameQuality, reducedMotion: boolean): GameState =>
     lastCollisionAt: 0,
     saidAtStream: false,
   },
-  feast: { x: 515, y: 432, encounters: 0, pendingRelocate: false, relocateAt: 0, nextTriggerAt: 0 },
+  feast: {
+    x: PHIENG_LOI_LANDMARKS.feastStart.x,
+    y: PHIENG_LOI_LANDMARKS.feastStart.y,
+    encounters: 0,
+    pendingRelocate: false,
+    relocateAt: 0,
+    nextTriggerAt: 0,
+  },
   chicken: { panicStartedAt: 0, panicUntil: 0 },
   scene: { kind: 'none', startedAt: 0, stage: 0 },
   elapsed: 0,
@@ -365,8 +320,12 @@ export const createGame = (quality: GameQuality, reducedMotion: boolean, save?: 
   const game = defaultGame(quality, reducedMotion);
   if (!save || save.version !== SAVE_VERSION || save.complete) return game;
 
-  game.player.x = clamp(save.player.x, 32, WORLD_WIDTH - 32);
-  game.player.y = clamp(save.player.y, 42, WORLD_HEIGHT - 32);
+  const restoredPlayer = nearestWalkablePoint({
+    x: clamp(save.player.x, 32, WORLD_WIDTH - 32),
+    y: clamp(save.player.y, 42, WORLD_HEIGHT - 32),
+  });
+  game.player.x = restoredPlayer.x;
+  game.player.y = restoredPlayer.y;
   game.player.facingX = save.player.facingX;
   game.player.facingY = save.player.facingY;
   game.elapsed = Math.max(0, save.elapsed);
@@ -375,13 +334,15 @@ export const createGame = (quality: GameQuality, reducedMotion: boolean, save?: 
   game.absurdityLevel = absurdityFromScore(game.absurdityScore);
   game.callCount = Math.max(0, save.callCount);
   game.triggered = new Set(save.triggered);
-  game.feast.x = save.feast.x;
-  game.feast.y = save.feast.y;
+  const restoredFeast = nearestWalkablePoint({ x: save.feast.x, y: save.feast.y });
+  game.feast.x = restoredFeast.x;
+  game.feast.y = restoredFeast.y;
   game.feast.encounters = save.feast.encounters;
   game.feast.pendingRelocate = save.feast.pendingRelocate ?? false;
   game.feast.relocateAt = game.feast.pendingRelocate ? game.elapsed + 1.1 : 0;
-  game.heesun.x = save.heesun.x;
-  game.heesun.y = save.heesun.y;
+  const restoredHeeSun = nearestWalkablePoint({ x: save.heesun.x, y: save.heesun.y });
+  game.heesun.x = restoredHeeSun.x;
+  game.heesun.y = restoredHeeSun.y;
   game.heesun.vx = 0;
   game.heesun.vy = 0;
   game.heesun.mode = save.heesun.mode === 'intro' || save.heesun.mode === 'ambush' ? 'waiting' : save.heesun.mode;
@@ -390,9 +351,10 @@ export const createGame = (quality: GameQuality, reducedMotion: boolean, save?: 
   game.heesun.scale = save.heesun.scale;
   game.heesun.modeUntil = game.heesun.mode === 'drinking' ? game.elapsed + 8 : 0;
   game.heesun.nextAmbushAt = game.elapsed + 34;
-  game.hanu.x = save.hanu.x;
-  game.hanu.y = save.hanu.y;
-  game.hanu.waypoint = save.hanu.waypoint;
+  const restoredHaNu = nearestWalkablePoint({ x: save.hanu.x, y: save.hanu.y });
+  game.hanu.x = restoredHaNu.x;
+  game.hanu.y = restoredHaNu.y;
+  game.hanu.waypoint = save.hanu.waypoint % HANU_ROUTE.length;
   game.hanu.lineIndex = save.hanu.lineIndex;
   game.hanu.saidAtStream = save.hanu.saidAtStream;
   game.hanu.nextLineAt = game.elapsed + 4;
@@ -514,51 +476,13 @@ export const createUiSnapshot = (game: GameState): UiSnapshot => {
     chasing: game.heesun.mode === 'chasing' || game.heesun.mode === 'distracted',
     caught: game.heesun.caught,
     complete: game.complete,
-    visual: {
-      cameraX: game.cameraX,
-      cameraY: game.cameraY,
-      worldTime: game.worldTime,
-      absurdityLevel: game.absurdityLevel,
-      player: {
-        x: game.player.x,
-        y: game.player.y,
-        moving: Math.hypot(game.player.vx, game.player.vy) > 5,
-        facingX: game.player.facingX,
-        scale: game.powerUntil.squash > game.elapsed ? 1.3 : 1,
-      },
-      heesun: {
-        x: game.heesun.x,
-        y: game.heesun.y,
-        mode: game.heesun.mode,
-        scale: game.heesun.scale,
-        facingX: Math.abs(game.heesun.vx) > 1 ? Math.sign(game.heesun.vx) : 1,
-      },
-      hanu: {
-        x: game.hanu.x,
-        y: game.hanu.y,
-        moving: true,
-        facingX: HANU_PATH[game.hanu.waypoint % HANU_PATH.length].x >= game.hanu.x ? 1 : -1,
-      },
-      feast: { x: game.feast.x, y: game.feast.y },
-      chickenPanic: game.chicken.panicUntil > game.elapsed,
-      chickenProgress: game.chicken.panicUntil > game.elapsed
-        ? clamp((game.elapsed - game.chicken.panicStartedAt) / 4.3, 0, 1)
-        : 0,
-      streamSeen: game.streamStartedAt !== 0,
-      dominoActive: game.dominoStartedAt !== 0 && game.elapsed - game.dominoStartedAt < 3.4,
-    },
   };
 };
 
 const clearQueuedInput = (input: InputState) => { input.callQueued = false; };
-const riverCenterX = (y: number) => 1_105 + Math.sin(y * 0.009) * 30;
-const isBridgeY = (y: number) => (y > 402 && y < 474) || (y > 662 && y < 728);
-const solidRects = HOUSES.map((house) => ({ x: house.x - 10, y: house.y - 18, width: house.width + 20, height: house.height + 70 }));
 
 const isBlocked = (game: GameState, x: number, y: number) => {
-  if (x < 24 || y < 44 || x > WORLD_WIDTH - 24 || y > WORLD_HEIGHT - 26) return true;
-  if (!isBridgeY(y) && Math.abs(x - riverCenterX(y)) < 34) return true;
-  if (solidRects.some((rect) => x > rect.x && x < rect.x + rect.width && y > rect.y && y < rect.y + rect.height)) return true;
+  if (!isWalkable(x, y, 8)) return true;
   return distance(x, y, game.hanu.x, game.hanu.y) < 14;
 };
 
@@ -568,7 +492,7 @@ const startChickenPanic = (game: GameState, events: GameEvent[]) => {
   game.chicken.panicUntil = game.elapsed + 4.3;
   game.shakeUntil = game.elapsed + 0.34;
   addAbsurdity(game, 1.15);
-  addParticles(game, 760, 454, ['#ead08c', '#c66b3d', '#fff2c0'], 28, 'leaf', 58);
+  addParticles(game, PHIENG_LOI_LANDMARKS.chickenYard.x, PHIENG_LOI_LANDMARKS.chickenYard.y, ['#ead08c', '#c66b3d', '#fff2c0'], 28, 'leaf', 58);
   events.push({ type: 'chicken-panic' });
   setMessage(game, 'CẢ BẢN', 'THE WHOLE VILLAGE', 'Không ai biết con gà đầu tiên đã báo động điều gì.', 'Nobody knows what the first chicken warned them about.', 'world', 3.1);
   if (game.heesun.mode === 'chasing') {
@@ -708,7 +632,7 @@ const handleCall = (game: GameState, events: GameEvent[]) => {
   addAbsurdity(game, game.rapidCalls >= 3 ? 1.05 : 0.48);
   addParticles(game, game.player.x, game.player.y - 13, ['#fff2a8', '#efbc58', '#e56c43'], 24, 'note', 55);
 
-  const nearestPower = OCOP_ITEMS
+  const nearestPower = OCOP_WORLD_ITEMS
     .filter((item) => !game.triggered.has(`ocop-${item.kind}`))
     .map((item) => ({ item, value: distance(game.player.x, game.player.y, item.x, item.y) }))
     .sort((first, second) => first.value - second.value)[0];
@@ -716,7 +640,7 @@ const handleCall = (game: GameState, events: GameEvent[]) => {
     activatePower(game, nearestPower.item.kind, events);
     return;
   }
-  if (distance(game.player.x, game.player.y, 765, 458) < 105) {
+  if (distance(game.player.x, game.player.y, PHIENG_LOI_LANDMARKS.chickenYard.x, PHIENG_LOI_LANDMARKS.chickenYard.y) < 82) {
     startChickenPanic(game, events);
     return;
   }
@@ -730,7 +654,7 @@ const handleCall = (game: GameState, events: GameEvent[]) => {
     else setMessage(game, 'HEESUN', 'HEESUN', 'Bạn gọi tôi à?', 'Were you calling me?', 'heesun', 2);
     return;
   }
-  if (game.streamStartedAt !== 0 && distance(game.player.x, game.player.y, 1_205, 705) < 145) {
+  if (game.streamStartedAt !== 0 && distance(game.player.x, game.player.y, PHIENG_LOI_LANDMARKS.stream.x, PHIENG_LOI_LANDMARKS.stream.y) < 125) {
     game.fishBoost = Math.min(76, game.fishBoost + 12);
     setMessage(game, 'BÊN SUỐI', 'BY THE STREAM', 'Cá lại tìm về đông thêm một lớp.', 'Another layer of fish arrives.', 'stream', 2.2);
     events.push({ type: 'stream' });
@@ -801,11 +725,15 @@ const updateFeast = (game: GameState, events: GameEvent[]) => {
     if (farEnough || game.elapsed >= game.feast.relocateAt + 2.2) {
       game.feast.pendingRelocate = false;
       if (game.feast.encounters === 1) {
-        game.feast.x = clamp(game.player.x + 330, 610, 1_020);
-        game.feast.y = game.player.y < 460 ? game.player.y + 150 : game.player.y - 145;
+        const relocated = nearestWalkablePoint({
+          x: clamp(game.player.x + 300, 620, 1_080),
+          y: game.player.y < 500 ? game.player.y + 92 : game.player.y - 82,
+        });
+        game.feast.x = relocated.x;
+        game.feast.y = relocated.y;
       } else if (game.feast.encounters === 2) {
-        game.feast.x = 1_018;
-        game.feast.y = 224;
+        game.feast.x = PHIENG_LOI_LANDMARKS.feastField.x;
+        game.feast.y = PHIENG_LOI_LANDMARKS.feastField.y;
       }
     }
   }
@@ -821,7 +749,11 @@ const updateFeast = (game: GameState, events: GameEvent[]) => {
 };
 
 const updateLeader = (game: GameState) => {
-  if (game.leaderStartedAt === 0 && distance(game.player.x, game.player.y, 700, 247) < 92 && game.scene.kind === 'none') {
+  if (
+    game.leaderStartedAt === 0
+    && distance(game.player.x, game.player.y, PHIENG_LOI_LANDMARKS.chief.x, PHIENG_LOI_LANDMARKS.chief.y) < 76
+    && game.scene.kind === 'none'
+  ) {
     game.leaderStartedAt = game.elapsed || 0.001;
     addAbsurdity(game, 1.25);
     setMessage(game, 'TRƯỞNG BẢN', 'VILLAGE CHIEF', 'Tôi xin nói ngắn gọn.', 'I will be brief.', 'chief', 2.1);
@@ -834,7 +766,7 @@ const updateLeader = (game: GameState) => {
 
 const updateStream = (game: GameState, events: GameEvent[]) => {
   if (game.streamStartedAt !== 0 || game.scene.kind !== 'none') return;
-  if (distance(game.player.x, game.player.y, 1_205, 704) > 90) return;
+  if (distance(game.player.x, game.player.y, PHIENG_LOI_LANDMARKS.stream.x, PHIENG_LOI_LANDMARKS.stream.y) > 68) return;
   game.streamStartedAt = game.elapsed || 0.001;
   game.scene = { kind: 'stream', startedAt: game.elapsed, stage: 0 };
   game.player.vx = 0;
@@ -844,7 +776,7 @@ const updateStream = (game: GameState, events: GameEvent[]) => {
 };
 
 const updateHaNu = (game: GameState, dt: number, events: GameEvent[]) => {
-  const target = HANU_PATH[game.hanu.waypoint % HANU_PATH.length];
+  const target = HANU_ROUTE[game.hanu.waypoint % HANU_ROUTE.length];
   const dx = target.x - game.hanu.x;
   const dy = target.y - game.hanu.y;
   const length = Math.max(0.001, Math.hypot(dx, dy));
@@ -852,7 +784,7 @@ const updateHaNu = (game: GameState, dt: number, events: GameEvent[]) => {
   const speed = 24 * environmentSlow;
   game.hanu.x += (dx / length) * speed * dt;
   game.hanu.y += (dy / length) * speed * dt;
-  if (length < 8) game.hanu.waypoint = (game.hanu.waypoint + 1) % HANU_PATH.length;
+  if (length < 8) game.hanu.waypoint = (game.hanu.waypoint + 1) % HANU_ROUTE.length;
 
   if (game.elapsed >= game.hanu.nextLineAt && game.scene.kind !== 'capture') {
     const lines = [['Ừ.', 'Yeah.'], ['Ừ.', 'Yeah.'], ['Thế à?', 'Really?'], ['Ừ.', 'Yeah.']];
@@ -862,13 +794,17 @@ const updateHaNu = (game: GameState, dt: number, events: GameEvent[]) => {
     setMessage(game, 'HANU · ĐIỆN THOẠI', 'HANU · ON THE PHONE', line[0], line[1], 'hanu', 1.25);
     events.push({ type: 'phone' });
   }
-  if (!game.hanu.saidAtStream && game.hanu.x > 1_020 && game.hanu.y > 605) {
+  if (!game.hanu.saidAtStream && distance(game.hanu.x, game.hanu.y, PHIENG_LOI_LANDMARKS.stream.x, PHIENG_LOI_LANDMARKS.stream.y) < 65) {
     game.hanu.saidAtStream = true;
     setMessage(game, 'HANU · GIỮA SUỐI', 'HANU · IN THE STREAM', 'Ừ, tôi đang ở nhà.', 'Yeah, I am at home.', 'hanu', 2.7);
     events.push({ type: 'phone' });
     addAbsurdity(game, 1);
   }
-  if (!game.gateOpen && game.absurdityLevel >= 1 && game.hanu.x > 760 && game.hanu.x < 825 && game.hanu.y < 485) {
+  if (
+    !game.gateOpen
+    && game.absurdityLevel >= 1
+    && distance(game.hanu.x, game.hanu.y, PHIENG_LOI_LANDMARKS.gate.x, PHIENG_LOI_LANDMARKS.gate.y) < 54
+  ) {
     game.gateOpen = true;
     addAbsurdity(game, 0.6);
     if (game.heesun.met && game.heesun.mode === 'waiting') {
@@ -876,13 +812,16 @@ const updateHaNu = (game: GameState, dt: number, events: GameEvent[]) => {
       startChase(game, events, false);
     }
   }
-  if (game.dominoStartedAt === 0 && game.hanu.x > 1_260 && game.hanu.y > 350 && game.hanu.y < 440) {
+  if (game.dominoStartedAt === 0 && distance(game.hanu.x, game.hanu.y, PHIENG_LOI_LANDMARKS.domino.x, PHIENG_LOI_LANDMARKS.domino.y) < 48) {
     game.dominoStartedAt = game.elapsed;
     addAbsurdity(game, 1.1);
     setMessage(game, 'PHIÊNG LƠI', 'PHIENG LOI', 'HaNu không hề nhìn thấy chuyện vừa xảy ra.', 'HaNu does not notice what just happened.', 'world', 2.4);
     events.push({ type: 'domino' });
   }
-  if (distance(game.hanu.x, game.hanu.y, 765, 458) < 54 && game.chicken.panicUntil <= game.elapsed) startChickenPanic(game, events);
+  if (
+    distance(game.hanu.x, game.hanu.y, PHIENG_LOI_LANDMARKS.chickenYard.x, PHIENG_LOI_LANDMARKS.chickenYard.y) < 54
+    && game.chicken.panicUntil <= game.elapsed
+  ) startChickenPanic(game, events);
 
   const chasing = game.heesun.mode === 'chasing' || game.heesun.mode === 'distracted';
   if (chasing && distance(game.player.x, game.player.y, game.hanu.x, game.hanu.y) < 70 && game.elapsed >= game.hanu.revealReadyAt) {
@@ -908,20 +847,12 @@ const moveHeeSunTowards = (
   dt: number,
   turnResponse: number,
 ) => {
-  let navigationX = targetX;
-  let navigationY = targetY;
-  const heeSunSide = Math.sign(game.heesun.x - riverCenterX(game.heesun.y));
-  const targetSide = Math.sign(targetX - riverCenterX(targetY));
-  if (heeSunSide !== 0 && targetSide !== 0 && heeSunSide !== targetSide && !isBridgeY(game.heesun.y)) {
-    const bridgeY = [438, 695].sort((first, second) => (
-      distance(game.heesun.x, game.heesun.y, riverCenterX(first), first)
-      + distance(targetX, targetY, riverCenterX(first), first)
-      - distance(game.heesun.x, game.heesun.y, riverCenterX(second), second)
-      - distance(targetX, targetY, riverCenterX(second), second)
-    ))[0];
-    navigationX = riverCenterX(bridgeY);
-    navigationY = bridgeY;
-  }
+  const waypoint = navigationTarget(
+    { x: game.heesun.x, y: game.heesun.y },
+    { x: targetX, y: targetY },
+  );
+  const navigationX = waypoint.x;
+  const navigationY = waypoint.y;
 
   const baseAngle = Math.atan2(navigationY - game.heesun.y, navigationX - game.heesun.x);
   const probe = 25;
@@ -959,8 +890,12 @@ const updateHeeSun = (game: GameState, dt: number, events: GameEvent[]) => {
     && game.player.x > 720
     && game.scene.kind === 'none'
   ) {
-    game.heesun.x = clamp(game.player.x + 205, 780, WORLD_WIDTH - 130);
-    game.heesun.y = clamp(game.player.y + (game.player.y < 470 ? 105 : -105), 110, WORLD_HEIGHT - 80);
+    const ambush = nearestWalkablePoint({
+      x: clamp(game.player.x + 205, 780, WORLD_WIDTH - 130),
+      y: clamp(game.player.y + (game.player.y < 500 ? 92 : -92), 110, WORLD_HEIGHT - 80),
+    });
+    game.heesun.x = ambush.x;
+    game.heesun.y = ambush.y;
     game.heesun.mode = 'ambush';
     game.heesun.modeUntil = game.elapsed + 1.25;
     game.heesun.nextAmbushAt = game.elapsed + 38;
@@ -969,8 +904,8 @@ const updateHeeSun = (game: GameState, dt: number, events: GameEvent[]) => {
   if (game.heesun.mode === 'waiting' && game.heesun.met && distance(game.player.x, game.player.y, game.heesun.x, game.heesun.y) < 92) startChase(game, events);
   if (game.heesun.mode === 'distracted') {
     const panic = game.chicken.panicUntil > game.elapsed;
-    const targetX = panic ? 1_520 : game.hanu.x;
-    const targetY = panic ? 455 : game.hanu.y;
+    const targetX = panic ? PHIENG_LOI_LANDMARKS.chickenYard.x : game.hanu.x;
+    const targetY = panic ? PHIENG_LOI_LANDMARKS.chickenYard.y : game.hanu.y;
     moveHeeSunTowards(game, targetX, targetY, 49, dt, 3.1);
     if (game.elapsed >= game.heesun.modeUntil) game.heesun.mode = 'chasing';
     return;
@@ -1039,8 +974,10 @@ export const stepGame = (game: GameState, input: InputState, dt: number): GameEv
   }
   const introAge = game.scene.kind === 'heesun-intro' ? game.elapsed - game.scene.startedAt : 99;
   const controlsLocked = game.scene.kind === 'capture' || (game.scene.kind === 'heesun-intro' && introAge < 3.75) || game.complete;
-  const moving = !controlsLocked && inputLength > 0.08;
+  let moving = false;
   if (!controlsLocked) {
+    const previousX = game.player.x;
+    const previousY = game.player.y;
     const targetVx = moveX * PLAYER_SPEED;
     const targetVy = moveY * PLAYER_SPEED;
     const response = 1 - Math.exp(-dt * 14);
@@ -1052,10 +989,14 @@ export const stepGame = (game: GameState, input: InputState, dt: number): GameEv
     const nextY = game.player.y + game.player.vy * dt;
     if (!isBlocked(game, game.player.x, nextY)) game.player.y = nextY;
     else game.player.vy = 0;
-    if (moving) {
+    const movedDistance = distance(previousX, previousY, game.player.x, game.player.y);
+    moving = movedDistance > 0.01;
+    if (inputLength > 0.08) {
       game.player.facingX = moveX;
       game.player.facingY = moveY;
-      game.player.walk += dt * 9.2;
+    }
+    if (moving) {
+      game.player.walk += (movedDistance / PLAYER_SPEED) * 9.2;
       if (game.elapsed >= game.nextFootstepAt) {
         game.nextFootstepAt = game.elapsed + 0.36;
         events.push({ type: 'footstep' });
@@ -1073,7 +1014,7 @@ export const stepGame = (game: GameState, input: InputState, dt: number): GameEv
   updateHaNu(game, dt, events);
   updateHeeSun(game, dt, events);
   if (input.callQueued && game.scene.kind !== 'capture' && !game.complete) handleCall(game, events);
-  if (!game.complete && game.player.x > WORLD_WIDTH - 58 && game.player.y > 385 && game.player.y < 565) {
+  if (!game.complete && distance(game.player.x, game.player.y, PHIENG_LOI_LANDMARKS.exit.x, PHIENG_LOI_LANDMARKS.exit.y) < 34) {
     game.complete = true;
     game.player.vx = 0;
     game.player.vy = 0;

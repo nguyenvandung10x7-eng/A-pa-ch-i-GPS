@@ -980,6 +980,7 @@
   overflow: hidden;
   aspect-ratio: 16 / 9;
   background: #b8d38d;
+  contain: layout paint style;
   isolation: isolate;
 }
 
@@ -1007,66 +1008,113 @@
   background-repeat: no-repeat;
   background-size: 100% 100%;
   transform-origin: 0 0;
-  transition: transform 54ms linear;
   will-change: transform;
+}
+
+.phieng-visual__actor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.phieng-visual__actor::before {
+  position: absolute;
+  top: -5px;
+  left: -19px;
+  width: 38px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(24, 42, 28, .27);
+  box-shadow: 0 2px 4px rgba(17, 32, 22, .12);
+  content: "";
+  transform: scaleX(var(--shadow-scale, 1));
 }
 
 .phieng-visual__sprite {
   position: absolute;
-  aspect-ratio: 1;
-  filter: drop-shadow(0 .32rem .22rem rgba(18, 39, 27, .28));
+  top: 0;
+  left: 0;
+  background-repeat: no-repeat;
   transform:
     translate(-50%, -92%)
-    scaleX(var(--sprite-flip, 1))
-    scale(var(--sprite-scale, 1));
+    scale(var(--sprite-scale, 1))
+    scaleX(var(--sprite-flip, 1));
   transform-origin: 50% 92%;
-  transition: left 52ms linear, top 52ms linear;
-  will-change: left, top, transform;
+  will-change: background-position, transform;
 }
 
-.phieng-visual__sprite.is-player {
-  filter: drop-shadow(0 .2rem .14rem rgba(13, 31, 22, .34));
+.phieng-visual__actor.is-player[data-motion="idle"] .phieng-visual__sprite {
+  animation: phieng-player-cutout-idle 1.8s ease-in-out infinite alternate;
 }
 
-.phieng-visual__sprite.is-player.is-moving {
-  animation: phieng-player-cutout-run .28s ease-in-out infinite alternate;
+.phieng-visual__actor.is-player[data-terrain="wood"]::before {
+  background: rgba(52, 35, 23, .2);
 }
 
-.phieng-visual__sprite.is-hanu {
-  animation: phieng-hanu-phone-walk .72s ease-in-out infinite alternate;
+.phieng-visual__actor.is-heesun::before {
+  left: -25px;
+  width: 50px;
+  background: rgba(31, 42, 26, .3);
 }
 
-.phieng-visual__sprite.is-heesun {
-  filter: drop-shadow(0 .42rem .24rem rgba(29, 37, 25, .34));
+.phieng-visual__actor.is-hanu::before {
+  left: -23px;
+  width: 46px;
 }
 
-.phieng-visual__sprite.is-heesun.is-chasing,
-.phieng-visual__sprite.is-heesun.is-distracted {
-  animation: phieng-heesun-cutout-chase .24s cubic-bezier(.33, 0, .67, 1) infinite alternate;
+.phieng-visual__actor.is-chicken::before {
+  top: -2px;
+  left: -7px;
+  width: 14px;
+  height: 4px;
 }
 
-.phieng-visual__sprite.is-chicken {
+.phieng-visual__actor.is-chicken .phieng-visual__sprite {
   animation: phieng-chicken-cutout .18s steps(2, end) infinite alternate;
 }
 
-.phieng-visual__sprite.is-dog {
+.phieng-visual__actor.is-dog .phieng-visual__sprite {
   animation: phieng-dog-cutout 1.8s ease-in-out infinite;
 }
 
-.phieng-visual__sprite.is-feast,
-.phieng-visual__sprite.is-chief,
-.phieng-visual__sprite.is-stream-group {
-  filter: drop-shadow(0 .34rem .2rem rgba(18, 37, 26, .26));
+.phieng-visual__actor.is-feast::before,
+.phieng-visual__actor.is-stream-group::before {
+  left: -52px;
+  width: 104px;
+}
+
+.phieng-visual__occluder {
+  position: absolute;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.phieng-visual__call-anchor {
+  pointer-events: none;
+}
+
+.phieng-visual__call-anchor::before {
+  display: none;
 }
 
 .phieng-visual__call-ring {
   position: absolute;
-  width: 4.6%;
+  top: 0;
+  left: 0;
+  width: 24px;
   aspect-ratio: 1;
-  border: .18rem solid rgba(255, 240, 168, .9);
+  border: 2px solid rgba(255, 240, 168, .9);
   border-radius: 50%;
-  box-shadow: 0 0 0 .22rem rgba(38, 83, 59, .35);
+  box-shadow: 0 0 0 2px rgba(38, 83, 59, .35);
+  opacity: 0;
   transform: translate(-50%, -50%);
+}
+
+.phieng-visual__call-anchor.is-active .phieng-visual__call-ring {
   animation: phieng-cutout-call-ring .62s ease-out both;
 }
 
@@ -1087,13 +1135,14 @@
   box-shadow: inset 0 0 2.2rem rgba(17, 47, 33, .13);
 }
 
-.phieng-visual.is-absurd-2 .phieng-visual__sunwash {
+.phieng-visual[data-absurdity="2"] .phieng-visual__sunwash,
+.phieng-visual[data-absurdity="3"] .phieng-visual__sunwash {
   background:
     radial-gradient(circle at 72% 8%, rgba(255, 218, 120, .25), transparent 34%),
     linear-gradient(180deg, rgba(244, 175, 101, .08), transparent 48%);
 }
 
-.phieng-visual.is-absurd-3::after {
+.phieng-visual[data-absurdity="3"]::after {
   position: absolute;
   z-index: 10;
   inset: 0;
@@ -1302,19 +1351,9 @@
   color: #241f19;
 }
 
-@keyframes phieng-player-cutout-run {
-  from { translate: 0 0; rotate: -1.2deg; }
-  to { translate: 0 -.18rem; rotate: 1.2deg; }
-}
-
-@keyframes phieng-hanu-phone-walk {
-  from { translate: 0 0; rotate: -.55deg; }
-  to { translate: 0 .1rem; rotate: .55deg; }
-}
-
-@keyframes phieng-heesun-cutout-chase {
-  from { translate: -.12rem 0; rotate: -1.5deg; }
-  to { translate: .18rem -.28rem; rotate: 1.5deg; }
+@keyframes phieng-player-cutout-idle {
+  from { translate: 0 0; rotate: -.35deg; }
+  to { translate: 0 -.06rem; rotate: .35deg; }
 }
 
 @keyframes phieng-chicken-cutout {
@@ -1366,6 +1405,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .phieng-visual__world,
+  .phieng-visual__actor,
   .phieng-visual__sprite {
     animation: none !important;
     transition: none !important;

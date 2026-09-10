@@ -15,13 +15,14 @@ buffalo, produce, and everyday objects—is rendered from project-owned WebP ass
 
 ## Character-art checkpoint
 
-HeeSun and HANU now use six-pose transparent WebP atlases derived from owner-supplied
-character boards. Raw reference photos are not shipped. HeeSun locks the short,
-tight, close-to-scalp curls, recognizable face, suspicious gentle smile, and a
-slightly round body reduced from the previous chubby prototype. HANU locks the
-recognizable face, heavier build, messy hair, white tank top, shorts, sandals, and
-always-visible phone. Player, chief, villagers, stream group, and animals share a
-support atlas and remain deliberately less visually dominant.
+HeeSun and HANU use six-pose semantic atlases plus dedicated eight-frame movement
+cycles derived from owner-supplied character boards. Raw reference photos are not
+shipped. HeeSun locks the short, tight, close-to-scalp curls, recognizable face,
+suspicious gentle smile, and a slightly round body reduced from the previous
+chubby prototype. HANU locks the recognizable face, heavier build, messy hair,
+white tank top, shorts, sandals, and always-visible phone. The quieter player has
+an eight-frame run cycle; chief, villagers, stream group, and animals remain in the
+support atlas and deliberately less visually dominant.
 
 ## Core loop and controls
 
@@ -116,10 +117,16 @@ Only documented, project-cleared recordings may be marked ready.
 ## Performance and lifecycle
 
 - Responsive 16:9 DOM/CSS compositor driven by the stable 480×270 logical camera.
-  The world is a hand-painted WebP plate; named characters and supporting actors
-  are transparent pose atlases with depth sorting, cutout transforms, contact
-  shadows, squash/stretch, reaction poses, and atmospheric overlays. No Canvas
-  primitive drawing remains in the mounted gameplay presentation.
+  The world is a hand-painted WebP plate; named characters use transparent
+  semantic and eight-frame movement atlases with contact shadows, reaction poses,
+  and atmospheric overlays. Camera, actors and frame selection update directly in
+  `requestAnimationFrame`; React updates only the slower HUD. No Canvas primitive
+  drawing remains in the mounted gameplay presentation.
+- The player, HeeSun and HANU are constrained to authored road/courtyard/garden
+  corridors. Water, roofs, crops and rocks are blocked; the wooden crossing has a
+  distinct terrain type; legacy off-route saves recover to the nearest valid path.
+- Foreground background crops provide basic roof, bridge, foliage and rock
+  occlusion while preserving a single world coordinate system.
 - Landscape/coarse-pointer rotation guard and entirely touch-playable controls.
 - Visibility and blur clear sticky movement; pause/Book suspend audio.
 - Unmount cancels animation, removes listeners, stops the voice element, and closes
@@ -133,6 +140,8 @@ Only documented, project-cleared recordings may be marked ready.
 - `npm run verify` (audio-provenance check, strict TypeScript, production build)
 - Engine simulation for HeeSun intro/chase/capture/reset, contextual calls, every
   required event, all three OCOP effects, escalation, save/restore, and exit.
+- Engine assertions for walkable-route containment, blocked stream water, wooden
+  bridge terrain and safe recovery of legacy off-route saves.
 - Real-device QA still required on at least one recent iPhone in landscape for
   safe areas, two-thumb input, orientation, resumed audio, iframe Book scrolling,
   thermal behavior, and Safari AudioContext lifecycle.

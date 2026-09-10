@@ -15,13 +15,21 @@ copied.
 
 ## Runtime contract
 
-- Gameplay state, collision, saves, audio events and encounter logic stay in
-  `gameEngine.ts`.
+- Gameplay state, saves, audio events and encounter logic stay in `gameEngine.ts`.
+- `worldLayout.ts` is the spatial contract for the painted road, courtyard,
+  garden route, bridge, terrain type, landmarks, chase navigation and depth
+  occluders.
 - `PhiengLoiVisualScene.tsx` is the only mounted world presentation.
 - The 480×270 values are logical camera units, not a bitmap render resolution.
-- The compositor uses one scalable world plate plus transparent pose atlases.
-- CSS transforms provide depth ordering, camera movement, flip, squash/stretch,
-  bob, anticipation and reaction motion.
+- The compositor uses one scalable world plate, transparent semantic-pose atlases
+  and dedicated eight-frame movement atlases.
+- Actor and camera transforms are written directly on every animation frame;
+  React only refreshes lightweight HUD state at a lower cadence. This keeps input,
+  camera and feet locked to the same frame without rerendering the page tree.
+- CSS provides contact shadows, idle motion and presentation effects; movement is
+  an actual frame sequence rather than a static cutout being bobbed up and down.
+- Background crops at authored depths let roofs, rails, foliage and rocks pass in
+  front of characters without duplicating gameplay state.
 - Canvas primitive drawing is not a runtime fallback.
 - Missing art must receive a named asset slot; it must not silently fall back to a
   rectangle, ellipse, stick figure or icon.
@@ -35,13 +43,20 @@ All runtime URLs live in `visualAssets.ts`.
 | `village-world-v1.webp` | full plate | Mountains, stilt houses, fields, road, stream, fences, waterwheel and environmental depth. |
 | `heesun-atlas-v1.webp` | 3×2 | Idle, smile, point, bựa, chase and triumphant poses. |
 | `hanu-atlas-v1.webp` | 3×2 | Phone idle, phone walk, call, confused, distracted and accidental-chaos poses. |
-| `support-atlas-v1.webp` | 4×2 | Player idle/run, chicken, dog, buffalo, chief, feast group and stream group. |
+| `support-atlas-v1.webp` | 4×2 | Player idle, chicken, dog, buffalo, chief, feast group and stream group. |
+| `heesun-run-v2.webp` | 4×2 | Eight-frame HeeSun chase cycle. |
+| `hanu-walk-v2.webp` | 4×2 | Eight-frame HANU phone-walk cycle. |
+| `player-run-v2.webp` | 4×2 | Eight-frame player run cycle. |
 | `heesun-menu-v1.webp` | cutout | Waiting-menu left character. |
 | `hanu-menu-v1.webp` | cutout | Waiting-menu right character. |
 
 Atlases use regular cells and transparent alpha. Keep every pose inside its cell.
 When replacing an atlas, preserve its grid and filename or version the filename and
 update the centralized slot.
+
+The current background is a painted plate, so `worldLayout.ts` must be updated in
+the same change whenever a road, bridge, stream or major prop moves. Old saves are
+projected onto the nearest valid route instead of placing the player over scenery.
 
 ## Character locks
 
@@ -70,9 +85,10 @@ small and disappears when inactive.
 
 ## Next art tasks
 
-The current world is a single plate. A later art-only pass may split it into
-far-mountain, village-ground and foreground-foliage layers for stronger parallax
-without changing simulation coordinates. OCOP props, gate/domino reactions and
-capture tableaux are still represented by the world plate, support atlas, CSS
-effects or text and are the next asset slots to illustrate.
-
+The current world is a single plate with cropped depth occluders. A later art-only
+pass may replace those crops with authored transparent far-mountain,
+village-ground and foreground-foliage layers for stronger parallax without
+changing simulation coordinates. Idle/talk cycles for the supporting cast, OCOP
+props, gate/domino reactions and capture tableaux are still semantic poses,
+world-plate art, presentation effects or text and are the next asset slots to
+illustrate.

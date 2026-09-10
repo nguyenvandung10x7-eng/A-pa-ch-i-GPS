@@ -31,8 +31,12 @@ import {
   type PowerKind,
   type UiSnapshot,
 } from '../experiences/phieng-loi/gameEngine';
-import { PhiengLoiVisualScene } from '../experiences/phieng-loi/PhiengLoiVisualScene';
+import {
+  PhiengLoiVisualScene,
+  type PhiengLoiVisualHandle,
+} from '../experiences/phieng-loi/PhiengLoiVisualScene';
 import { preloadPhiengLoiVisualAssets } from '../experiences/phieng-loi/visualAssets';
+import { PHIENG_LOI_LANDMARKS } from '../experiences/phieng-loi/worldLayout';
 import type { LanguageCode } from '../types/task';
 import {
   clearPhiengLoiSave,
@@ -104,6 +108,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   const gameRef = useRef<GameState>(initialGame);
   const inputRef = useRef<InputState>(createInputState());
   const audioRef = useRef<PhiengLoiAudioDirector | null>(null);
+  const visualRef = useRef<PhiengLoiVisualHandle | null>(null);
   const animationRef = useRef<number | null>(null);
   const uiSyncAtRef = useRef(0);
   const saveAtRef = useRef(initialGame.elapsed);
@@ -119,10 +124,10 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   const [voiceStatus, setVoiceStatus] = useState<VoiceAssetStatus>('checking');
   const [guideUntil, setGuideUntil] = useState(initialSave ? initialGame.elapsed : initialGame.elapsed + 6.2);
 
-  const syncUi = useCallback((game: GameState, force = false) => {
-    if (!force && game.elapsed - uiSyncAtRef.current < 0.034) return;
+  const syncUi = useCallback((game: GameState, force = false, snapshot?: UiSnapshot) => {
+    if (!force && game.elapsed - uiSyncAtRef.current < 0.1) return;
     uiSyncAtRef.current = game.elapsed;
-    setUi(createUiSnapshot(game));
+    setUi(snapshot ?? createUiSnapshot(game));
   }, []);
 
   const saveGame = useCallback((game: GameState) => {
@@ -163,6 +168,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     setGuideUntil(6.2);
     setJoystick({ x: 0, y: 0 });
     setUi(createUiSnapshot(game));
+    visualRef.current?.render(game);
     requestLandscape();
     ensureAudio();
     setStatus('playing');
@@ -238,6 +244,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   useEffect(() => {
     const game = gameRef.current;
     if (status !== 'playing' || bookOpen) {
+      visualRef.current?.render(game);
       syncUi(game, true);
       return;
     }
@@ -286,6 +293,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
       const dt = Math.min(0.032, Math.max(0.001, (time - previousTime) / 1_000));
       previousTime = time;
       const events = stepGame(current, inputRef.current, dt);
+      visualRef.current?.render(current);
       const audio = audioRef.current;
       events.forEach((event) => audio?.handle(event));
       const snapshot = createUiSnapshot(current);
@@ -293,10 +301,13 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
         elapsed: current.elapsed,
         chasing: snapshot.chasing,
         power: snapshot.power,
-        nearStream: current.player.x > 1_020 && current.player.y > 590,
+        nearStream: Math.hypot(
+          current.player.x - PHIENG_LOI_LANDMARKS.stream.x,
+          current.player.y - PHIENG_LOI_LANDMARKS.stream.y,
+        ) < 105,
       });
       if (events.some((event) => event.type === 'pha-oi')) setVoiceStatus(audio?.getVoiceAssetStatus() ?? 'missing');
-      syncUi(current, events.length > 0);
+      syncUi(current, events.length > 0, snapshot);
       if (current.elapsed - saveAtRef.current >= 1.2) {
         saveAtRef.current = current.elapsed;
         saveGame(current);
@@ -366,7 +377,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   return (
     <main className={`phieng-game${ui.chasing ? ' is-chasing' : ''}`} aria-labelledby="phieng-game-title">
       <section className="phieng-game__frame" aria-label={vi ? 'Trò chơi Phiêng Lơi' : 'Phiêng Lơi game'}>
-        <PhiengLoiVisualScene ui={ui} />
+        <PhiengLoiVisualScene ref={visualRef} initialGame={initialGame} />
 
         <header className="phieng-game__hud">
           <Link className="phieng-game__location" to="/" aria-label={vi ? 'Về menu' : 'Back to menu'}>
