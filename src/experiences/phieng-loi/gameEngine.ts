@@ -499,9 +499,16 @@ const roundedRect = (
   context.closePath();
 };
 
+const colorChannels = (color: string) => {
+  if (color.startsWith('#')) {
+    return [color.slice(1, 3), color.slice(3, 5), color.slice(5, 7)].map((hex) => Number.parseInt(hex, 16));
+  }
+  return color.match(/[\d.]+/g)?.slice(0, 3).map(Number) ?? [0, 0, 0];
+};
+
 const mixColor = (first: string, second: string, amount: number) => {
-  const a = first.match(/[a-f\d]{2}/gi)?.map((hex) => Number.parseInt(hex, 16)) ?? [0, 0, 0];
-  const b = second.match(/[a-f\d]{2}/gi)?.map((hex) => Number.parseInt(hex, 16)) ?? [0, 0, 0];
+  const a = colorChannels(first);
+  const b = colorChannels(second);
   return `rgb(${a.map((value, index) => Math.round(value + (b[index] - value) * amount)).join(',')})`;
 };
 
