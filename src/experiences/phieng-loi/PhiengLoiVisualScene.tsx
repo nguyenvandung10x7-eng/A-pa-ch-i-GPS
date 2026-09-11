@@ -8,6 +8,7 @@ import {
   type CSSProperties,
 } from 'react';
 import {
+  FEAST_TABLE_LOCATIONS,
   VIEW_WIDTH,
   WORLD_HEIGHT,
   WORLD_WIDTH,
@@ -309,6 +310,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       true,
     );
     const heesunCue = game.animationCues.heesun;
+    const feastHome = FEAST_TABLE_LOCATIONS[game.feast.locationIndex];
     const drinkJoinActive = heesunCue?.cue === 'heesun-drink' && heesunCue.until > game.elapsed;
     const drinkJoinAge = drinkJoinActive ? Math.max(0, game.elapsed - heesunCue.enteredAt) : 99;
     const drinkJoinProgress = drinkJoinActive ? Math.max(0, Math.min(1, (drinkJoinAge - .16) / .44)) : 1;
