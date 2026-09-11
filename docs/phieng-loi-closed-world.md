@@ -19,6 +19,18 @@ The fictional compressed map is not a geographic or travel-time claim. Route,
 menu, Book overlay, 1954, GPS Challenge, Auth/Admin and Supabase boundaries remain
 unchanged by the game-logic pass.
 
+## Thiết kế mới: manga có màu cho mọi biến cố
+
+Phong cách trình bày chung khi biến cố xuất hiện là **manga có màu, lấy cảm
+hứng từ GTO/Shonan**, với nhân vật và bối cảnh riêng của Phiêng Lơi. Bộ phát
+tranh dùng chung và cấu hình từng cảnh phục vụ việc tái sử dụng, hạn chế phải
+sửa code cho mỗi lần thay nội dung. HeeSun phục kích là mẫu đầu tiên; các loại
+biến cố khác dùng cùng ngôn ngữ với nhịp trình bày phù hợp.
+
+Đây là định hướng thiết kế chưa triển khai. Điều kiện, tần suất và kết quả của
+các biến cố không đổi trong lần cập nhật tài liệu này.
+Xem [ngôn ngữ manga có màu cho biến cố](phieng-loi-visual-pipeline.md#ngôn-ngữ-manga-có-màu-cho-biến-cố--thiết-kế-mới).
+
 ## Event Director
 
 `absurdityDirector.ts` owns a typed, data-driven registry. Definitions declare an
@@ -68,6 +80,13 @@ The first meeting remains the fixed invitation → player “Thôi.” → “B�
 sequence. HeeSun then becomes the recurring hunter with finite states for idle,
 wander, notice, intro, chase, distraction, interruption, drinking, ambush,
 capture, reset and rare flight.
+
+**Thiết kế mới cho riêng cảnh phục kích (chưa triển khai):** dùng ba khung manga
+có màu tái sử dụng thay phần diễn xuất bằng animation liên tục đã đề xuất trước
+đó. Đây là mẫu đầu tiên của phong cách manga có màu lấy cảm hứng từ GTO/Shonan
+cho mọi biến cố trong toàn game.
+Xem [đặc tả manga cut-in](phieng-loi-visual-pipeline.md#heesun-phục-kích--manga-cut-in-tái-sử-dụng).
+Thay đổi tài liệu này không sửa gameplay đuổi/bắt, cảnh ngồi mâm hoặc các sự kiện khác.
 
 Variations include a delayed arrival, an implausibly small hiding corner, a long
 stare, stopping for a sandal, stopping at the drinking table, following chickens,
