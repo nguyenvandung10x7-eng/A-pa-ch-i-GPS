@@ -86,10 +86,10 @@ export const applyPhiengLoiQaScenario = (game: GameState, scenario: PhiengLoiQaS
       Object.assign(game.heesun, { x: road.x + 2, y: road.y, met: true, mode: 'chasing', target: 'player', chaseTimeoutAt: 99_999 });
       break;
     case 'hanu-delivery':
-      Object.assign(game.hanu, { x: road.x + 105, y: road.y, mode: 'delivering', carryingFood: true, promiseStage: 2, deliveryTimeoutAt: 99_999 });
+      Object.assign(game.hanu, { x: road.x + 105, y: road.y, waypoint: 5, mode: 'delivering', carryingFood: true, promiseStage: 2, deliveryTimeoutAt: 99_999 });
       break;
     case 'signature-chase':
-      Object.assign(game.hanu, { x: road.x + 112, y: road.y, mode: 'delivering', carryingFood: true, promiseStage: 2, deliveryTimeoutAt: 99_999 });
+      Object.assign(game.hanu, { x: road.x + 142, y: road.y, waypoint: 5, mode: 'delivering', carryingFood: true, promiseStage: 2, deliveryTimeoutAt: 99_999 });
       Object.assign(game.heesun, { x: road.x - 108, y: road.y, met: true, mode: 'chasing', target: 'player', chaseStartedAt: .001, chaseTimeoutAt: 99_999 });
       game.feast.x = road.x - 235;
       game.feast.y = road.y + 8;
@@ -104,13 +104,13 @@ export const applyPhiengLoiQaScenario = (game: GameState, scenario: PhiengLoiQaS
       triggerDirectedEvent(game, 'chicken-triple-stare');
       break;
     case 'hanu-blocks-heesun':
-      Object.assign(game.hanu, { x: road.x + 18, y: road.y, mode: 'delivering', carryingFood: true, deliveryTimeoutAt: 99_999 });
+      Object.assign(game.hanu, { x: road.x + 18, y: road.y, waypoint: 5, mode: 'delivering', carryingFood: true, promiseStage: 2, deliveryTimeoutAt: 99_999 });
       Object.assign(game.heesun, { x: road.x, y: road.y, met: true, mode: 'chasing', target: 'player', chaseTimeoutAt: 99_999, vx: 68 });
       triggerDirectedEvent(game, 'hanu-blocks-heesun');
       break;
     case 'disco':
       Object.assign(game.heesun, { x: road.x - 95, y: road.y, met: true, mode: 'chasing', target: 'player', chaseTimeoutAt: 99_999 });
-      Object.assign(game.hanu, { x: road.x + 96, y: road.y, mode: 'delivering', carryingFood: true, promiseStage: 2, deliveryTimeoutAt: 99_999 });
+      Object.assign(game.hanu, { x: road.x + 96, y: road.y, waypoint: 5, mode: 'delivering', carryingFood: true, promiseStage: 2, deliveryTimeoutAt: 99_999 });
       triggerDirectedEvent(game, 'vuongme-karaoke-disco');
       break;
     case 'wife':
