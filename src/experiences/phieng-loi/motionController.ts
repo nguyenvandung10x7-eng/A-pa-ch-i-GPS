@@ -12,6 +12,8 @@ export type MotionActorId =
   | 'dog'
   | 'chicken';
 
+export type MotionView = 'side' | 'down' | 'up';
+
 export type ActorMotion =
   | 'idle'
   | 'start'
@@ -70,6 +72,7 @@ export type MotionSnapshot = {
   localMotionTime: number;
   framePhase: number;
   facing: number;
+  view: MotionView;
 };
 
 export type MotionTrack = {
@@ -91,6 +94,9 @@ export type MotionTrack = {
   phaseOffset: number;
   /** Integrated atlas-frame clock; changing speed must not rewrite past phase. */
   framePhase: number;
+  view: MotionView;
+  pendingView: MotionView;
+  viewStartedAt: number;
 };
 
 export type MotionController = Record<MotionActorId, MotionTrack>;
@@ -104,6 +110,7 @@ type MotionRequest = {
   visualOverride?: ActorMotion | null;
   reactionUntil?: number;
   allowLocomotionTransitions?: boolean;
+  directionalView?: boolean;
 };
 
 export type MotionPose = {
@@ -162,7 +169,29 @@ const createTrack = (actor: MotionActorId, now: number): MotionTrack => ({
   speed: 0,
   phaseOffset: ACTOR_PHASE[actor],
   framePhase: 0,
+  view: actor === 'player' ? 'down' : 'side',
+  pendingView: actor === 'player' ? 'down' : 'side',
+  viewStartedAt: 0,
 });
+
+/**
+ * Three directional drawings replace the old mirrored side-only player. The
+ * wider exit threshold keeps shallow diagonal input from flickering between
+ * atlases; changing view never resets the accumulated stride phase.
+ */
+export const directionalViewForVelocity = (
+  current: MotionView,
+  vx: number,
+  vy: number,
+): MotionView => {
+  const ax = Math.abs(vx);
+  const ay = Math.abs(vy);
+  if (Math.hypot(vx, vy) <= 3) return current;
+  if (current === 'side') return ay > ax * 1.18 ? (vy > 0 ? 'down' : 'up') : 'side';
+  if (ax > ay * 1.12) return 'side';
+  if (ay > ax * .72) return vy > 0 ? 'down' : 'up';
+  return current;
+};
 
 export const createMotionController = (now = 0): MotionController => ({
   player: createTrack('player', now),
@@ -209,6 +238,22 @@ export const advanceMotion = (track: MotionTrack, request: MotionRequest): Motio
   track.speed = Math.hypot(request.vx ?? 0, request.vy ?? 0);
   if (request.reactionUntil !== undefined) track.reactionUntil = Math.max(track.reactionUntil, request.reactionUntil);
 
+  if (request.directionalView) {
+    const desiredView = directionalViewForVelocity(track.view, request.vx ?? 0, request.vy ?? 0);
+    if (desiredView !== track.view) {
+      if (track.pendingView !== desiredView) {
+        track.pendingView = desiredView;
+        track.viewStartedAt = request.now;
+      } else if (request.now - track.viewStartedAt >= .065) {
+        track.view = desiredView;
+        track.viewStartedAt = request.now;
+      }
+    } else {
+      track.pendingView = desiredView;
+      track.viewStartedAt = 0;
+    }
+  }
+
   const desiredFacing = Math.abs(request.facingHint ?? request.vx ?? 0) > .001
     ? Math.sign(request.facingHint ?? request.vx ?? 1)
     : track.facing;
@@ -238,6 +283,7 @@ export const advanceMotion = (track: MotionTrack, request: MotionRequest): Motio
           localMotionTime: track.localMotionTime,
           framePhase: track.framePhase,
           facing: track.facing,
+          view: track.view,
         };
       }
       track.visualOverride = nextOverride;
@@ -256,6 +302,8 @@ export const advanceMotion = (track: MotionTrack, request: MotionRequest): Motio
     track.localMotionTime = suspended?.motion === request.motion ? suspended.localMotionTime : 0;
     track.framePhase = suspended?.motion === request.motion ? suspended.framePhase : 0;
     track.facing = suspended?.facing ?? track.facing;
+    track.view = suspended?.view ?? track.view;
+    track.pendingView = track.view;
     track.transitionUntil = 0;
     track.settleMotion = null;
     return track;

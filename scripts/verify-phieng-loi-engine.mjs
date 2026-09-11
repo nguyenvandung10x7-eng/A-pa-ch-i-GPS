@@ -27,6 +27,7 @@ import {
   actorMotionForGame,
   advanceMotion,
   createMotionController,
+  directionalViewForVelocity,
   frameForTrack,
   motionFrameRate,
   sampleMotionPose,
@@ -104,7 +105,10 @@ assert.match(visualSource, /createMotionController/);
 assert.match(visualSource, /ResizeObserver/);
 assert.match(visualSource, /feastCrowdRef/);
 assert.match(visualSource, /actorAction/);
-assert.match(visualSource, /playerMotion/);
+assert.match(visualSource, /playerLocomotionDown/);
+assert.match(visualSource, /playerLocomotionSide/);
+assert.match(visualSource, /playerLocomotionUp/);
+assert.match(visualSource, /playerActions/);
 assert.match(visualSource, /streamAction/);
 assert.doesNotMatch(visualSource, /offsetWidth|clientWidth/);
 assert.match(motionSource, /preEventMotionState/);
@@ -229,6 +233,11 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
 }
 {
   const track = createMotionController().player;
+  assert.equal(track.view, 'down', 'Player starts in the readable down-facing view');
+  assert.equal(directionalViewForVelocity('down', 90, 4), 'side');
+  assert.equal(directionalViewForVelocity('side', 20, -80), 'up');
+  assert.equal(directionalViewForVelocity('side', 20, 80), 'down');
+  assert.equal(directionalViewForVelocity('side', 50, 48), 'side', 'direction hysteresis keeps shallow diagonals stable');
   advanceMotion(track, { motion: 'move', now: 0, vx: 40 });
   for (let step = 1; step <= 600; step += 1) {
     advanceMotion(track, { motion: 'move', now: step / 60, vx: 40 });
@@ -246,15 +255,19 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   advanceMotion(track, { motion: 'move', now: 10.10, vx: -90, allowLocomotionTransitions: true });
   assert.equal(track.currentMotion, 'turn');
   assert.ok(track.framePhase > phase, 'turn does not restart the stride clock');
-  advanceMotion(track, { motion: 'move', now: 10.22, vx: -90, allowLocomotionTransitions: true });
+  const directionalPhase = track.framePhase;
+  advanceMotion(track, { motion: 'move', now: 10.18, vx: 0, vy: -90, directionalView: true });
+  advanceMotion(track, { motion: 'move', now: 10.26, vx: 0, vy: -90, directionalView: true });
+  assert.equal(track.view, 'up', 'sustained vertical movement selects the dedicated up atlas');
+  assert.ok(track.framePhase >= directionalPhase, 'changing directional atlas preserves the stride clock');
   assert.equal(track.currentMotion, 'move');
   const resumedPhase = track.framePhase;
-  advanceMotion(track, { motion: 'move', now: 10.22, vx: -90, visualOverride: 'dance-player' });
+  advanceMotion(track, { motion: 'move', now: 10.26, vx: -90, visualOverride: 'dance-player' });
   assert.equal(track.framePhase, 0, 'new action starts at its own first frame');
-  advanceMotion(track, { motion: 'move', now: 10.30, vx: -90, visualOverride: 'dance-player' });
-  advanceMotion(track, { motion: 'move', now: 10.40, vx: -90 });
+  advanceMotion(track, { motion: 'move', now: 10.36, vx: -90, visualOverride: 'dance-player' });
+  advanceMotion(track, { motion: 'move', now: 10.46, vx: -90 });
   assert.equal(track.framePhase, resumedPhase, 'disco restores the suspended stride phase exactly');
-  advanceMotion(track, { motion: 'shout', now: 10.40 });
+  advanceMotion(track, { motion: 'shout', now: 10.46 });
   assert.equal(track.framePhase, 0, 'shout is an action, not continued locomotion');
   assert.equal(frameForTrack(track, 8, true), 0);
   const phases = [30, 60, 120].map((renderFps) => {

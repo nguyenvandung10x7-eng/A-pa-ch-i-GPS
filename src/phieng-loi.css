@@ -1043,10 +1043,6 @@
   will-change: background-position, transform;
 }
 
-.phieng-visual__actor.is-player[data-motion="idle"] .phieng-visual__sprite {
-  animation: phieng-player-cutout-idle 1.8s ease-in-out infinite alternate;
-}
-
 .phieng-visual__actor.is-player[data-terrain="wood"]::before {
   background: rgba(52, 35, 23, .2);
 }
@@ -1658,11 +1654,6 @@
   0% { translate: 0 0; rotate: 0deg; }
   45% { translate: -2px 2px; rotate: -2deg; }
   100% { translate: 0 0; rotate: .5deg; }
-}
-
-@keyframes phieng-player-cutout-idle {
-  from { translate: 0 0; rotate: -.35deg; }
-  to { translate: 0 -.06rem; rotate: .35deg; }
 }
 
 @keyframes phieng-chicken-cutout {

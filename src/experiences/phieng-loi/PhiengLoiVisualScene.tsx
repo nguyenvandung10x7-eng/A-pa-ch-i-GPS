@@ -47,8 +47,8 @@ export type PhiengLoiVisualHandle = { render: (game: GameState) => void };
 
 const CHICKEN_COUNT = 10;
 const ACTOR_WIDTH = {
-  player: 80,
-  playerAction: 78,
+  player: 108,
+  playerAction: 82,
   chief: 58,
   heesunPose: 63,
   heesunRun: 47.5,
@@ -137,6 +137,7 @@ const updateTrack = (
   facingHint: number,
   visualOverride: ReturnType<typeof karaokeOverrideFor>,
   allowLocomotionTransitions = false,
+  directionalView = false,
 ) => advanceMotion(track, {
   motion,
   now: game.elapsed,
@@ -145,6 +146,7 @@ const updateTrack = (
   facingHint,
   visualOverride,
   allowLocomotionTransitions,
+  directionalView,
 });
 
 const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initialGame }, ref) => {
@@ -252,34 +254,48 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       game.player.facingX,
       karaokeOverrideFor(game, 'player'),
       true,
+      true,
     );
-    const playerCapturePose = ['caught', 'seated-tired'].includes(playerTrack.currentMotion);
-    const playerFrame = playerTrack.currentMotion === 'seated-tired'
-      ? 0
-      : playerTrack.currentMotion === 'caught'
-        ? 7
+    const playerVerticalTransition = ['start', 'stop'].includes(playerTrack.currentMotion) && playerTrack.view !== 'side';
+    const playerLocomoting = ['walk', 'run', 'move'].includes(playerTrack.currentMotion) || playerVerticalTransition;
+    const playerAtlas: AtlasName = playerLocomoting
+      ? playerTrack.view === 'down'
+        ? 'playerLocomotionDown'
+        : playerTrack.view === 'up'
+          ? 'playerLocomotionUp'
+          : 'playerLocomotionSide'
+      : 'playerActions';
+    const playerFrame = playerTrack.currentMotion === 'walk'
+      ? frameForTrack(playerTrack, 8, game.reducedMotion)
+      : ['run', 'move'].includes(playerTrack.currentMotion)
+        ? 8 + frameForTrack(playerTrack, 8, game.reducedMotion)
+        : playerVerticalTransition
+          ? playerTrack.currentMotion === 'start' && playerTrack.settleMotion === 'run' ? 8 : 0
         : playerTrack.currentMotion === 'idle'
-          ? frameForTrack(playerTrack, 4, game.reducedMotion)
-          : playerTrack.currentMotion === 'walk'
-            ? 4 + frameForTrack(playerTrack, 4, game.reducedMotion)
-            : ['run', 'move', 'dance-player'].includes(playerTrack.currentMotion)
-              ? 8 + frameForTrack(playerTrack, 4, game.reducedMotion)
-              : playerTrack.currentMotion === 'start'
-                ? 12
-                : playerTrack.currentMotion === 'turn'
-                  ? 13
-                  : playerTrack.currentMotion === 'stop'
-                    ? 14
-                    : playerTrack.currentMotion === 'shout'
-                      ? 15
-                      : 0;
+          ? playerTrack.view === 'down' ? 0 : playerTrack.view === 'up' ? 2 : 1
+          : playerTrack.currentMotion === 'start'
+            ? 4
+            : playerTrack.currentMotion === 'turn'
+              ? 5
+              : playerTrack.currentMotion === 'stop'
+                ? 6
+                : playerTrack.currentMotion === 'shout'
+                  ? 7
+                  : playerTrack.currentMotion === 'caught'
+                    ? 8
+                    : playerTrack.currentMotion === 'seated-tired'
+                      ? 9
+                      : playerTrack.currentMotion === 'dance-player'
+                        ? 11
+                        : 0;
     placeActor(playerRef.current, game.player.x, game.player.y);
-    setSpriteFrame(playerSpriteRef.current, playerCapturePose ? 'actorAction' : 'playerMotion', playerFrame);
-    setSpriteWidth(playerSpriteRef.current, playerCapturePose ? ACTOR_WIDTH.playerAction : ACTOR_WIDTH.player);
+    setSpriteFrame(playerSpriteRef.current, playerAtlas, playerFrame);
+    setSpriteWidth(playerSpriteRef.current, playerLocomoting ? ACTOR_WIDTH.player : ACTOR_WIDTH.playerAction);
     const playerPowerScale = game.powerUntil.squash > game.elapsed ? 1.3 : 1;
     setSpriteTransform(playerSpriteRef.current, playerTrack.facing, depthScale(game.player.y) * playerPowerScale);
     applyMotionPose(playerSpriteRef.current, sampleMotionPose(playerTrack), climax);
     setData(playerRef.current, 'motion', playerTrack.currentMotion);
+    setData(playerRef.current, 'view', playerTrack.view);
     setData(playerRef.current, 'terrain', terrainAt(game.player.x, game.player.y));
 
     const heesunMotion = actorMotionForGame(game, 'heesun');
@@ -627,7 +643,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
           <div ref={vuongMeSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('vuongMeDance', 0), width: ACTOR_WIDTH.vuongMe }} />
         </div>
         <div ref={playerRef} className="phieng-visual__actor is-player" style={actorStyle(initialGame.player.x, initialGame.player.y)}>
-          <div ref={playerSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('playerMotion', 0), width: ACTOR_WIDTH.player }} />
+          <div ref={playerSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('playerActions', 0), width: ACTOR_WIDTH.playerAction }} />
         </div>
 
         <div ref={callRef} className="phieng-visual__actor phieng-visual__call-anchor" style={actorStyle(initialGame.player.x, initialGame.player.y - 22)}>

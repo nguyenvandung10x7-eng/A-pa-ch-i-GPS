@@ -7,7 +7,10 @@ export const PHIENG_LOI_VISUAL_ASSETS = {
   supportAtlas: '/images/phieng-loi/support-atlas-v1.webp',
   heesunRunAtlas: '/images/phieng-loi/heesun-run-v2.webp',
   hanuWalkAtlas: '/images/phieng-loi/hanu-walk-v2.webp',
-  playerMotionAtlas: '/images/phieng-loi/player-motion-atlas-v1.webp',
+  playerLocomotionSideAtlas: '/images/phieng-loi/player-locomotion-side-v2.webp',
+  playerLocomotionDownAtlas: '/images/phieng-loi/player-locomotion-down-v2.webp',
+  playerLocomotionUpAtlas: '/images/phieng-loi/player-locomotion-up-v2.webp',
+  playerActionsAtlas: '/images/phieng-loi/player-actions-v2.webp',
   chiefTalkAtlas: '/images/phieng-loi/chief-talk-v2.webp',
   feastLoopAtlas: '/images/phieng-loi/feast-loop-v2.webp',
   streamLoopAtlas: '/images/phieng-loi/stream-loop-v2.webp',
@@ -29,7 +32,10 @@ export type AtlasName =
   | 'support'
   | 'heesunRun'
   | 'hanuWalk'
-  | 'playerMotion'
+  | 'playerLocomotionSide'
+  | 'playerLocomotionDown'
+  | 'playerLocomotionUp'
+  | 'playerActions'
   | 'chiefTalk'
   | 'feastLoop'
   | 'streamLoop'
@@ -45,7 +51,10 @@ const ATLAS_CONFIG = {
   support: { url: PHIENG_LOI_VISUAL_ASSETS.supportAtlas, columns: 4, rows: 2, frameAspect: 1 },
   heesunRun: { url: PHIENG_LOI_VISUAL_ASSETS.heesunRunAtlas, columns: 4, rows: 2, frameAspect: 0.75 },
   hanuWalk: { url: PHIENG_LOI_VISUAL_ASSETS.hanuWalkAtlas, columns: 4, rows: 2, frameAspect: 0.75 },
-  playerMotion: { url: PHIENG_LOI_VISUAL_ASSETS.playerMotionAtlas, columns: 4, rows: 4, frameAspect: 331 / 297 },
+  playerLocomotionSide: { url: PHIENG_LOI_VISUAL_ASSETS.playerLocomotionSideAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
+  playerLocomotionDown: { url: PHIENG_LOI_VISUAL_ASSETS.playerLocomotionDownAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
+  playerLocomotionUp: { url: PHIENG_LOI_VISUAL_ASSETS.playerLocomotionUpAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
+  playerActions: { url: PHIENG_LOI_VISUAL_ASSETS.playerActionsAtlas, columns: 4, rows: 3, frameAspect: 384 / 341 },
   chiefTalk: { url: PHIENG_LOI_VISUAL_ASSETS.chiefTalkAtlas, columns: 4, rows: 2, frameAspect: 1 },
   feastLoop: { url: PHIENG_LOI_VISUAL_ASSETS.feastLoopAtlas, columns: 4, rows: 2, frameAspect: 1 },
   streamLoop: { url: PHIENG_LOI_VISUAL_ASSETS.streamLoopAtlas, columns: 4, rows: 2, frameAspect: 1 },
