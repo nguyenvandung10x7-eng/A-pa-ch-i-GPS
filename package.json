@@ -4,7 +4,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "verify": "node scripts/check-audio-provenance.mjs && npm run typecheck && npm run build",
+    "verify": "node scripts/check-audio-provenance.mjs && npm run verify:phieng-loi:foundation && npm run typecheck && npm run build",
+    "verify:phieng-loi:foundation": "node scripts/verify-phieng-loi-foundation.mjs",
     "lint": "eslint . --ext .ts,.tsx",
     "package": "bash scripts/package.sh",
     "preview": "vite preview --host 0.0.0.0"
