@@ -329,6 +329,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       karaokeOverrideFor(game, 'heesun'),
       true,
       true,
+      game.heesun,
     );
     const heesunCue = game.animationCues.heesun;
     const feastHome = FEAST_TABLE_LOCATIONS[game.feast.locationIndex];
@@ -342,6 +343,9 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
     const heesunRenderY = drinkJoinActive
       ? game.heesun.actionFromY + (game.heesun.y - game.heesun.actionFromY) * drinkJoinEase
       : game.heesun.y;
+    const heesunStrideMotion = ['start', 'turn'].includes(heesunTrack.currentMotion)
+      ? heesunTrack.settleMotion
+      : heesunTrack.currentMotion;
     const heesunMoving = ['start', 'turn', 'wander', 'chase', 'chase-distracted', 'flee'].includes(heesunTrack.currentMotion)
       || (drinkJoinActive && drinkJoinAge >= .18 && drinkJoinAge < .56);
     let heesunAtlas: AtlasName = heesunTrack.view === 'down'
@@ -351,7 +355,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
         : 'heesunLocomotionSide';
     let heesunFrame: number;
     if (heesunMoving) {
-      const chasing = ['chase', 'chase-distracted', 'flee'].includes(heesunTrack.currentMotion);
+      const chasing = heesunStrideMotion !== null && ['chase', 'chase-distracted', 'flee'].includes(heesunStrideMotion);
       heesunFrame = drinkJoinActive
         ? Math.min(7, Math.floor(drinkJoinProgress * 8))
         : (chasing ? 8 : 0) + frameForTrack(heesunTrack, 8, game.reducedMotion);
@@ -402,11 +406,15 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       karaokeOverrideFor(game, 'hanu'),
       true,
       true,
+      game.hanu,
     );
     const dominoActive = game.dominoStartedAt !== 0 && game.elapsed - game.dominoStartedAt < 3.4;
     const hanuActiveCue = game.animationCues.hanu;
     const hanuCue = hanuActiveCue && hanuActiveCue.until > game.elapsed ? hanuActiveCue.cue : null;
-    const hanuMoving = ['phone-walk', 'delivery', 'delivery-fast'].includes(hanuTrack.currentMotion);
+    const hanuStrideMotion = ['start', 'turn'].includes(hanuTrack.currentMotion)
+      ? hanuTrack.settleMotion
+      : hanuTrack.currentMotion;
+    const hanuMoving = ['start', 'turn', 'phone-walk', 'delivery', 'delivery-fast'].includes(hanuTrack.currentMotion);
     let hanuAtlas: AtlasName = hanuTrack.view === 'down'
       ? 'hanuLocomotionDown'
       : hanuTrack.view === 'up'
@@ -414,7 +422,8 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
         : 'hanuLocomotionSide';
     let hanuFrame: number;
     if (hanuMoving) {
-      const carryingDelivery = ['delivery', 'delivery-fast'].includes(hanuTrack.currentMotion);
+      const carryingDelivery = game.hanu.carryingFood
+        || (hanuStrideMotion !== null && ['delivery', 'delivery-fast'].includes(hanuStrideMotion));
       hanuFrame = (carryingDelivery ? 8 : 0) + frameForTrack(hanuTrack, 8, game.reducedMotion);
     } else {
       hanuAtlas = 'hanuActions';
@@ -446,6 +455,9 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       game.feast.vy,
       Math.abs(game.feast.vx) > 2 ? game.feast.vx : game.player.x - game.feast.x,
       karaokeOverrideFor(game, 'feast'),
+      false,
+      false,
+      game.feast,
     );
     const feastLaunching = game.feast.mode === 'chasing' && game.elapsed - game.feast.chaseStartedAt < .46;
     const feastCrowdVisible = karaokeActive || (game.feast.mode === 'chasing' && !feastLaunching) || game.feast.mode === 'resetting';
@@ -594,7 +606,18 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
         vx = index % 2 ? -1 : 1;
       }
       const chickenTrack = chickenMotionRefs.current[index];
-      updateTrack(chickenTrack, game, actorMotionForGame(game, 'chicken'), vx, 0, vx || (index % 2 ? -1 : 1), karaokeOverrideFor(game, 'chicken'));
+      updateTrack(
+        chickenTrack,
+        game,
+        actorMotionForGame(game, 'chicken'),
+        vx,
+        0,
+        vx || (index % 2 ? -1 : 1),
+        karaokeOverrideFor(game, 'chicken'),
+        false,
+        false,
+        { x, y },
+      );
       placeActor(node, x, y);
       const sprite = chickenSpriteRefs.current[index];
       setSpriteTransform(sprite, chickenTrack.facing, 1);

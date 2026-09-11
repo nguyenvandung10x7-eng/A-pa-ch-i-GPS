@@ -325,6 +325,36 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   assert.equal(stopped.framePhase, 0, 'feet do not cycle while collision prevents travel');
   advanceMotion(stopped, { motion: 'walk', now: .6, vx: 36, worldX: 1_020, worldY: 20 });
   assert.equal(stopped.framePhase, 0, 'checkpoint teleports do not spin the stride clock');
+
+  for (const [actor, motion, speed] of [
+    ['heesun', 'chase', 96],
+    ['hanu', 'delivery', 72],
+    ['feast', 'feast-chase', 68],
+    ['chicken', 'panic', 52],
+  ]) {
+    const actorPhases = [30, 60, 120].map((renderFps) => {
+      const actorTrack = createMotionController()[actor];
+      advanceMotion(actorTrack, { motion, now: 0, vx: speed, worldX: 0, worldY: 0 });
+      for (let step = 1; step <= renderFps * 2; step += 1) {
+        advanceMotion(actorTrack, {
+          motion,
+          now: step / renderFps,
+          vx: speed,
+          worldX: speed * step / renderFps,
+          worldY: 0,
+        });
+      }
+      return actorTrack.framePhase;
+    });
+    assert.ok(
+      actorPhases.every((value) => Math.abs(value - actorPhases[0]) < 1e-9),
+      `${actor} stride phase is independent of 30/60/120 render FPS`,
+    );
+    const blockedTrack = createMotionController()[actor];
+    advanceMotion(blockedTrack, { motion, now: 0, vx: speed, worldX: 10, worldY: 10 });
+    advanceMotion(blockedTrack, { motion, now: .5, vx: speed, worldX: 10, worldY: 10 });
+    assert.equal(blockedTrack.framePhase, 0, `${actor} feet stop cycling when world travel is blocked`);
+  }
 }
 {
   const game = createGame('high', false, null, { random: () => .8 });

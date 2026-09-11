@@ -25,17 +25,17 @@ copied.
   occluders.
 - `PhiengLoiVisualScene.tsx` is the only mounted world presentation.
 - The 640×360 values are logical camera units, not a bitmap render resolution.
-- The compositor uses one scalable world plate, transparent semantic-pose atlases,
-  directional atlases for NPCs and a lightweight articulated cutout rig for
-  Player locomotion.
+- The compositor uses one scalable world plate, transparent semantic-pose atlases
+  and directional full-body locomotion atlases for Player, HeeSun and HANU.
 - Actor and camera transforms are written directly on every animation frame;
   React only refreshes lightweight HUD state at a lower cadence. This keeps input,
   camera and feet locked to the same frame without rerendering the page tree.
-- Player walk/run uses project-owned head, torso and limb cutouts with a fixed
-  ground anchor. Stride phase is integrated from actual world distance, while
-  joint transforms interpolate at render cadence; a blocked player therefore
-  stops stepping instead of sliding through a time-driven cycle. Dedicated
-  action art remains responsible for PHÀ ƠI, capture, seated and dance poses.
+- Player, HeeSun, HANU, the moving feast crowd and panic chickens use fixed foot
+  anchors and stride phase integrated from actual world distance. A blocked actor
+  therefore stops stepping instead of sliding through a time-driven cycle, and
+  30/60/120 Hz rendering reaches the same gait phase for the same travel.
+  Dedicated action art remains responsible for PHÀ ƠI, capture, seated, handoff,
+  drinking and dance poses.
 - Background crops at authored depths let the bridge rail, lower foliage and
   foreground rocks pass in front of characters without duplicating gameplay
   state. House silhouettes stay in the base plate until true-alpha foreground

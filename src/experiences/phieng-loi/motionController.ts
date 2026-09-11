@@ -124,6 +124,35 @@ export const PLAYER_STRIDE_LENGTH = {
   move: 64,
 } as const;
 
+type GroundedStrideProfile = { distance: number; frames: number };
+
+/**
+ * One full drawn gait cycle covers this much world travel. The values are
+ * actor-specific because HeeSun's heavy chase, HANU's phone walk and the small
+ * chicken panic cycle should not share Player's cadence.
+ */
+const groundedStrideProfile = (actor: MotionActorId, motion: ActorMotion): GroundedStrideProfile | null => {
+  if (actor === 'player') {
+    if (motion === 'walk') return { distance: PLAYER_STRIDE_LENGTH.walk, frames: 8 };
+    if (motion === 'run') return { distance: PLAYER_STRIDE_LENGTH.run, frames: 8 };
+    if (motion === 'move') return { distance: PLAYER_STRIDE_LENGTH.move, frames: 8 };
+  }
+  if (actor === 'heesun') {
+    if (motion === 'wander') return { distance: 58, frames: 8 };
+    if (motion === 'chase' || motion === 'chase-distracted') return { distance: 72, frames: 8 };
+    if (motion === 'flee') return { distance: 82, frames: 8 };
+  }
+  if (actor === 'hanu') {
+    if (motion === 'phone-walk') return { distance: 56, frames: 8 };
+    if (motion === 'delivery') return { distance: 66, frames: 8 };
+    if (motion === 'delivery-fast') return { distance: 78, frames: 8 };
+  }
+  if (actor === 'feast' && motion === 'feast-chase') return { distance: 62, frames: 4 };
+  if (actor === 'stream' && motion === 'stream-arrive') return { distance: 54, frames: 4 };
+  if (actor === 'chicken' && motion === 'panic') return { distance: 34, frames: 8 };
+  return null;
+};
+
 export type MotionPose = {
   x: number;
   y: number;
@@ -253,16 +282,11 @@ export const advanceMotion = (track: MotionTrack, request: MotionRequest): Motio
     : 0;
   const naturalDistanceLimit = Math.max(10, nextSpeed * dt * 2.5);
   const groundedDistance = measuredDistance <= naturalDistanceLimit ? measuredDistance : 0;
-  if (track.actor === 'player' && LOCOMOTION.has(request.motion) && hasWorldSample) {
-    const strideLength = request.motion === 'run'
-      ? PLAYER_STRIDE_LENGTH.run
-      : request.motion === 'walk'
-        ? PLAYER_STRIDE_LENGTH.walk
-        : PLAYER_STRIDE_LENGTH.move;
-    track.framePhase += (groundedDistance / strideLength) * 8;
+  const strideProfile = groundedStrideProfile(track.actor, request.motion);
+  if (LOCOMOTION.has(request.motion) && hasWorldSample && strideProfile) {
+    track.framePhase += (groundedDistance / strideProfile.distance) * strideProfile.frames;
   } else {
-    // Non-player actors keep the existing time-integrated atlas clock until
-    // their own rig pass. Player locomotion is grounded to measured travel.
+    // Acting loops and actors without a sampled world position stay time-based.
     track.framePhase += dt * motionFrameRate(track);
   }
   if (hasWorldSample) {
