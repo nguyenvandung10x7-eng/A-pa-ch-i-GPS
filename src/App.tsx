@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactElement } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactElement } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { Loader2, LogIn } from 'lucide-react';
 import { Layout } from './components/Layout';
@@ -24,6 +24,10 @@ import { OpeningPage } from './pages/OpeningPage';
 import { SavedBookPage } from './pages/SavedBookPage';
 import { TikTokSubmissionPage } from './pages/TikTokSubmissionPage';
 import { CHALLENGE_CLEAR_VERSION_KEY, getChallengeClearVersion } from './services/tasks';
+
+const PhiengLoiGamePage = lazy(() => import('./pages/PhiengLoiGamePage').then((module) => ({
+  default: module.PhiengLoiGamePage,
+})));
 
 const parseClearVersion = (value: string | null): number => {
   const parsed = Number(value);
@@ -152,6 +156,14 @@ export default function App() {
   );
 
   const normalizedPathname = normalizeRoutePath(location.pathname);
+  if (normalizedPathname === '/phieng-loi') {
+    return (
+      <Suspense fallback={null}>
+        <PhiengLoiGamePage language={language} />
+      </Suspense>
+    );
+  }
+
   const staffOrLegalRoute = ['/admin', '/moderation', '/privacy', '/legal'].includes(normalizedPathname);
 
   return (
