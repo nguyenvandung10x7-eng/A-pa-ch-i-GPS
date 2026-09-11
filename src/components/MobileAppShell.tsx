@@ -405,7 +405,7 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
     <div className={`editorial-shell min-h-dvh ${isFieldSurface(normalizedPathname) ? 'editorial-shell--field' : 'editorial-shell--book'} ${onExploreSurface ? 'editorial-shell--explore' : ''} ${onOpeningSurface ? 'editorial-shell--opening' : ''}`}>
       <div className={`editorial-shell__frame mx-auto min-h-dvh w-full max-w-[72rem] ${onOpeningSurface ? 'pb-0' : 'pb-[calc(5.6rem+env(safe-area-inset-bottom))]'}`}>
         {!onOpeningSurface ? <header className="editorial-shell__header">
-          <Link to="/book" className="editorial-shell__brand" aria-label="Book of Dien Bien">
+          <Link to="/" className="editorial-shell__brand" aria-label="Book of Dien Bien — Experiences">
             BOOK OF DIEN BIEN
           </Link>
           <div className="editorial-shell__header-actions">

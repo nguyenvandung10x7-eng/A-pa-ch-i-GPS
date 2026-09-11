@@ -13,7 +13,7 @@ export const PRODUCT_SURFACES = {
   book: {
     id: 'book' as const,
     rootPath: '/book',
-    utilityPaths: ['/near-me', '/saved', '/experiences'] as const,
+    utilityPaths: ['/near-me', '/saved'] as const,
   },
   challenge: {
     id: 'challenge' as const,
