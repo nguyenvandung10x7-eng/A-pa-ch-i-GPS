@@ -1063,8 +1063,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 58px;
-  height: 86px;
+  width: 44px;
+  height: 66px;
   transform:
     translate(-50%, -96%)
     translateY(var(--rig-root-y))
@@ -1094,8 +1094,8 @@
 .phieng-player-rig .rig-part {
   position: absolute;
   display: block;
-  width: 46px;
-  height: 46px;
+  width: 34px;
+  height: 34px;
   background-image: var(--rig-atlas);
   background-repeat: no-repeat;
   background-size: 400% 300%;
@@ -1103,27 +1103,27 @@
   will-change: transform;
 }
 
-.phieng-player-rig .is-head { z-index: 8; top: -4px; left: 6px; }
-.phieng-player-rig .is-torso { z-index: 5; top: 19px; left: 6px; }
-.phieng-player-rig .is-back-arm-upper { z-index: 2; top: 20px; left: -1px; transform: rotate(var(--rig-back-arm)); transform-origin: 58% 28%; }
-.phieng-player-rig .is-back-arm-lower { z-index: 1; top: 34px; left: -5px; transform: rotate(var(--rig-back-forearm)); transform-origin: 60% 23%; }
-.phieng-player-rig .is-front-arm-upper { z-index: 9; top: 20px; left: 14px; transform: rotate(var(--rig-front-arm)); transform-origin: 42% 28%; }
-.phieng-player-rig .is-front-arm-lower { z-index: 10; top: 34px; left: 19px; transform: rotate(var(--rig-front-forearm)); transform-origin: 40% 23%; }
-.phieng-player-rig .is-front-hand { z-index: 11; top: 45px; left: 23px; transform: rotate(var(--rig-front-hand)); transform-origin: 42% 20%; }
-.phieng-player-rig .is-back-thigh { z-index: 3; top: 43px; left: 5px; transform: rotate(var(--rig-back-leg)); transform-origin: 54% 24%; }
-.phieng-player-rig .is-back-shin { z-index: 2; top: 57px; left: 3px; transform: rotate(var(--rig-back-shin)); transform-origin: 54% 22%; }
-.phieng-player-rig .is-back-shoe { z-index: 1; top: 70px; left: 1px; }
-.phieng-player-rig .is-front-thigh { z-index: 7; top: 43px; left: 15px; transform: rotate(var(--rig-front-leg)); transform-origin: 46% 24%; }
-.phieng-player-rig .is-front-shin { z-index: 6; top: 57px; left: 18px; transform: rotate(var(--rig-front-shin)); transform-origin: 46% 22%; }
-.phieng-player-rig .is-front-shoe { z-index: 7; top: 70px; left: 21px; }
+.phieng-player-rig .is-head { z-index: 8; top: -3px; left: 5px; }
+.phieng-player-rig .is-torso { z-index: 5; top: 14px; left: 5px; }
+.phieng-player-rig .is-back-arm-upper { z-index: 2; top: 15px; left: 0; transform: rotate(var(--rig-back-arm)); transform-origin: 58% 28%; }
+.phieng-player-rig .is-back-arm-lower { z-index: 1; top: 25px; left: -3px; transform: rotate(var(--rig-back-forearm)); transform-origin: 60% 23%; }
+.phieng-player-rig .is-front-arm-upper { z-index: 9; top: 15px; left: 11px; transform: rotate(var(--rig-front-arm)); transform-origin: 42% 28%; }
+.phieng-player-rig .is-front-arm-lower { z-index: 10; top: 25px; left: 14px; transform: rotate(var(--rig-front-forearm)); transform-origin: 40% 23%; }
+.phieng-player-rig .is-front-hand { z-index: 11; top: 33px; left: 17px; transform: rotate(var(--rig-front-hand)); transform-origin: 42% 20%; }
+.phieng-player-rig .is-back-thigh { z-index: 3; top: 32px; left: 4px; transform: rotate(var(--rig-back-leg)); transform-origin: 54% 24%; }
+.phieng-player-rig .is-back-shin { z-index: 2; top: 42px; left: 2px; transform: rotate(var(--rig-back-shin)); transform-origin: 54% 22%; }
+.phieng-player-rig .is-back-shoe { z-index: 1; top: 52px; left: 1px; }
+.phieng-player-rig .is-front-thigh { z-index: 7; top: 32px; left: 11px; transform: rotate(var(--rig-front-leg)); transform-origin: 46% 24%; }
+.phieng-player-rig .is-front-shin { z-index: 6; top: 42px; left: 13px; transform: rotate(var(--rig-front-shin)); transform-origin: 46% 22%; }
+.phieng-player-rig .is-front-shoe { z-index: 7; top: 52px; left: 16px; }
 
-.phieng-player-rig[data-view="side"] .is-head { left: 7px; }
-.phieng-player-rig[data-view="side"] .is-torso { left: 7px; }
-.phieng-player-rig[data-view="side"] .is-back-arm-upper { left: 3px; }
-.phieng-player-rig[data-view="side"] .is-back-arm-lower { left: -2px; }
-.phieng-player-rig[data-view="side"] .is-front-arm-upper { left: 17px; }
-.phieng-player-rig[data-view="side"] .is-front-arm-lower { left: 22px; }
-.phieng-player-rig[data-view="side"] .is-front-hand { left: 27px; }
+.phieng-player-rig[data-view="side"] .is-head { left: 5px; }
+.phieng-player-rig[data-view="side"] .is-torso { left: 5px; }
+.phieng-player-rig[data-view="side"] .is-back-arm-upper { left: 2px; }
+.phieng-player-rig[data-view="side"] .is-back-arm-lower { left: -1px; }
+.phieng-player-rig[data-view="side"] .is-front-arm-upper { left: 13px; }
+.phieng-player-rig[data-view="side"] .is-front-arm-lower { left: 16px; }
+.phieng-player-rig[data-view="side"] .is-front-hand { left: 20px; }
 
 .phieng-visual__actor.is-player[data-terrain="wood"]::before {
   background: rgba(52, 35, 23, .2);
