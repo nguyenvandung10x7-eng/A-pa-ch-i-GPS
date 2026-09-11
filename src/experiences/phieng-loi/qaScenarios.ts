@@ -62,6 +62,8 @@ export const applyPhiengLoiQaScenario = (game: GameState, scenario: PhiengLoiQaS
 
   const road = { x: 1_005, y: 822 };
   Object.assign(game.player, road, { facingX: 1, facingY: 0 });
+  game.currentLocation = 'village-road';
+  game.recentLocations = ['village-road'];
   game.cameraX = road.x - 320;
   game.cameraY = road.y - 252;
 
@@ -108,7 +110,7 @@ export const applyPhiengLoiQaScenario = (game: GameState, scenario: PhiengLoiQaS
       break;
     case 'disco':
       Object.assign(game.heesun, { x: road.x - 95, y: road.y, met: true, mode: 'chasing', target: 'player', chaseTimeoutAt: 99_999 });
-      Object.assign(game.hanu, { x: road.x + 96, y: road.y, mode: 'delivering', carryingFood: true, deliveryTimeoutAt: 99_999 });
+      Object.assign(game.hanu, { x: road.x + 96, y: road.y, mode: 'delivering', carryingFood: true, promiseStage: 2, deliveryTimeoutAt: 99_999 });
       triggerDirectedEvent(game, 'vuongme-karaoke-disco');
       break;
     case 'wife':

@@ -643,7 +643,7 @@ const cinematicCopy = (game: GameState): { vi: string; en: string } | null => {
   if (game.scene.kind === 'capture') {
     const age = game.elapsed - game.scene.startedAt;
     if (age >= .14 && age < 1.08) return { vi: '3 GIỜ SAU', en: '3 HOURS LATER' };
-    if (age >= 3.05 && age < 3.85) return { vi: '5 GIỜ SAU', en: '5 HOURS LATER' };
+    if (age >= 4.1 && age < 4.9) return { vi: '5 GIỜ SAU', en: '5 HOURS LATER' };
     return null;
   }
   if (game.scene.kind === 'stream' && game.elapsed - game.scene.startedAt < 2.65) {
@@ -816,11 +816,11 @@ const updateScene = (game: GameState, events: GameEvent[]) => {
       Object.assign(game.heesun, { x: game.feast.x - 48, y: game.feast.y + 18, vx: 0, vy: 0 });
       game.cameraX = clamp(game.feast.x - VIEW_WIDTH / 2, 0, WORLD_WIDTH - VIEW_WIDTH);
       game.cameraY = clamp(game.feast.y - VIEW_HEIGHT * .62, 0, WORLD_HEIGHT - VIEW_HEIGHT);
-      setMessage(game, 'HEESUN', 'HEESUN', 'Làm chén cuối.', 'One last cup.', 'heesun', 1.75, 'heesun', 'high', false);
-    } else if (game.scene.stage === 1 && age >= 3.05) {
+      setMessage(game, 'HEESUN', 'HEESUN', 'Làm chén cuối.', 'One last cup.', 'heesun', 2.75, 'heesun', 'high', false);
+    } else if (game.scene.stage === 1 && age >= 4.1) {
       game.scene.stage = 2;
       game.message = null;
-    } else if (age >= 3.85) resetAfterCapture(game, events);
+    } else if (age >= 4.9) resetAfterCapture(game, events);
     return;
   }
   if (game.scene.kind === 'stream') {

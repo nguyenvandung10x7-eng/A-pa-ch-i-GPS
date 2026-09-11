@@ -327,6 +327,9 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   assert.equal(game.player.y, game.feast.y + 18);
   assert.equal(game.heesun.y, game.feast.y + 18);
   tick(game, 1.95);
+  assert.equal(game.scene.stage, 1, 'the seated composition holds long enough to read on mobile');
+  assert.equal(createUiSnapshot(game).cinematicVi, null);
+  tick(game, 1.05);
   assert.equal(createUiSnapshot(game).cinematicVi, '5 GIỜ SAU');
   assert.ok(tick(game, 0.9).some(({ type }) => type === 'reset'));
   assert.equal(game.heesun.caught, 1);
