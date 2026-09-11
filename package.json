@@ -4,9 +4,10 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "verify": "node scripts/check-audio-provenance.mjs && npm run verify:phieng-loi:foundation && npm run verify:phieng-loi:runtime && npm run typecheck && npm run build",
+    "verify": "node scripts/check-audio-provenance.mjs && npm run verify:phieng-loi:foundation && npm run verify:phieng-loi:runtime && npm run verify:phieng-loi:player && npm run typecheck && npm run build",
     "verify:phieng-loi:foundation": "node scripts/verify-phieng-loi-foundation.mjs",
     "verify:phieng-loi:runtime": "node scripts/verify-phieng-loi-runtime.mjs",
+    "verify:phieng-loi:player": "node scripts/verify-phieng-loi-player.mjs",
     "lint": "eslint . --ext .ts,.tsx",
     "package": "bash scripts/package.sh",
     "preview": "vite preview --host 0.0.0.0"

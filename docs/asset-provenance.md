@@ -25,6 +25,16 @@ For either surface, an asset being present in `public/`, referenced by source co
 
 Before using `SOURCES.md` as provenance evidence, reconcile the shipped binary to one exact original work. At minimum, compare the downloaded/shipped image to the claimed original (visual identity plus available file metadata/hash history), then record the original, creator, licence/version or permission basis, and required attribution. If the exact original cannot be established, the asset remains `UNVERIFIED`.
 
+## Explicit unverified Phiêng Lơi S03 records
+
+| Asset | Status | Evidence | Required attribution / restrictions |
+| --- | --- | --- | --- |
+| `public/images/phieng-loi/village-world-v2.webp` | UNVERIFIED | Exact project-generated world plate from snapshot `f40cb84`, SHA-256 `9116766cc5a88af35ad5cf90a4afbe80111fef5c3f6b10c7f2c6117ad738cfd3`; the repository does not yet contain a reconciled source/rights record for this binary. | Preview use only until the source and permission basis are documented for public release. |
+| `public/images/phieng-loi/player-locomotion-side-v2.webp` | UNVERIFIED | Original 4×4 project-generated full-body locomotion atlas, SHA-256 `ca2dcc6362dd1b6219a52420df9d06725b97633a3e0f832e9ae5f4ec88cf402f`, derived with the user-supplied Player portrait/model reference. No commercial-game asset or pose was supplied or traced. | Preview use only until the portrait source and depicted person's consent/likeness rights are confirmed for the intended public release. |
+| `public/images/phieng-loi/player-locomotion-down-v2.webp` | UNVERIFIED | Original 4×4 project-generated full-body locomotion atlas, SHA-256 `3470b27ba531b048f297a69f0a9dde098c4dceb7aaf588f30c950086b48345ee`, produced from the same supplied identity/model reference. | Same portrait-source and likeness-consent release restriction as the side atlas. |
+| `public/images/phieng-loi/player-locomotion-up-v2.webp` | UNVERIFIED | Original 4×4 project-generated full-body locomotion atlas, SHA-256 `d849d1d6ec7fa4e8bd90c4b1fe4e24885baf1176cc7b1750731132b11cf9b967`, produced from the same supplied identity/model reference. | Same portrait-source and likeness-consent release restriction as the side atlas. |
+| `public/images/phieng-loi/player-actions-v2.webp` | UNVERIFIED | Original 4×3 project-generated action atlas, SHA-256 `192dea52e337a24ca6208edaf54a1b7246608537e7ec25e85481739a18bf7f9f`, produced from the same user-supplied portrait/model reference. | Same portrait-source and likeness-consent release restriction as the side atlas. |
+
 ## Explicit cleared asset records
 
 | Asset | Status | Evidence | Required attribution / restrictions |
