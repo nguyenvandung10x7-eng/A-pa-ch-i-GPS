@@ -8,6 +8,15 @@ import {
   updatePhiengLoiKey,
   type PhiengLoiFrameLoop,
 } from '../experiences/phieng-loi/runtime';
+import {
+  createPhiengLoiPlayerState,
+  stepPhiengLoiPlayer,
+  type PhiengLoiPlayerState,
+} from '../experiences/phieng-loi/playerMotion';
+import {
+  PhiengLoiPlayerScene,
+  type PhiengLoiPlayerSceneHandle,
+} from '../experiences/phieng-loi/PhiengLoiPlayerScene';
 import type { LanguageCode } from '../types/task';
 import '../phieng-loi.css';
 
@@ -21,6 +30,11 @@ export function PhiengLoiGamePage({ language }: PhiengLoiGamePageProps) {
   const vi = language === 'vi';
   const inputRef = useRef(createPhiengLoiInputState());
   const runtimeRef = useRef<PhiengLoiFrameLoop | null>(null);
+  const [initialPlayerState] = useState(() => createPhiengLoiPlayerState(
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  ));
+  const playerStateRef = useRef<PhiengLoiPlayerState>(initialPlayerState);
+  const sceneRef = useRef<PhiengLoiPlayerSceneHandle | null>(null);
   const [status, setStatus] = useState<RuntimeStatus>('playing');
   const [joystick, setJoystick] = useState({ x: 0, y: 0 });
 
@@ -42,7 +56,12 @@ export function PhiengLoiGamePage({ language }: PhiengLoiGamePageProps) {
 
   useEffect(() => {
     const input = inputRef.current;
-    const runtime = createPhiengLoiFrameLoop({ onStep: () => undefined });
+    const runtime = createPhiengLoiFrameLoop({
+      onStep: (deltaSeconds) => {
+        stepPhiengLoiPlayer(playerStateRef.current, input, deltaSeconds);
+        sceneRef.current?.render(playerStateRef.current);
+      },
+    });
     runtimeRef.current = runtime;
     runtime.start();
 
@@ -127,7 +146,7 @@ export function PhiengLoiGamePage({ language }: PhiengLoiGamePageProps) {
   return (
     <main className="phieng-game" aria-labelledby="phieng-game-title">
       <section className="phieng-game__frame" aria-label={vi ? 'Trò chơi Phiêng Lơi' : 'Phiêng Lơi game'}>
-        <div className="phieng-game__runtime-surface" aria-hidden="true" />
+        <PhiengLoiPlayerScene ref={sceneRef} initialState={initialPlayerState} />
 
         <header className="phieng-game__hud">
           <Link className="phieng-game__location" to="/" aria-label={vi ? 'Về menu' : 'Back to menu'}>
