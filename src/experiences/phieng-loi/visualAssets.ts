@@ -14,6 +14,7 @@ export const PHIENG_LOI_VISUAL_ASSETS = {
   playerRigSideAtlas: '/images/phieng-loi/player-rig-side-v1.webp',
   playerRigDownAtlas: '/images/phieng-loi/player-rig-down-v1.webp',
   playerRigUpAtlas: '/images/phieng-loi/player-rig-up-v1.webp',
+  playerPhaOiAtlas: '/images/phieng-loi/player-pha-oi-v1.webp',
   playerActionsAtlas: '/images/phieng-loi/player-actions-v2.webp',
   chiefTalkAtlas: '/images/phieng-loi/chief-talk-v2.webp',
   feastLoopAtlas: '/images/phieng-loi/feast-loop-v2.webp',
@@ -38,6 +39,7 @@ export type AtlasName =
   | 'hanuLocomotionUp'
   | 'hanuActions'
   | 'support'
+  | 'playerPhaOi'
   | 'playerActions'
   | 'chiefTalk'
   | 'feastLoop'
@@ -57,6 +59,7 @@ const ATLAS_CONFIG = {
   hanuLocomotionUp: { url: PHIENG_LOI_VISUAL_ASSETS.hanuLocomotionUpAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
   hanuActions: { url: PHIENG_LOI_VISUAL_ASSETS.hanuActionsAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
   support: { url: PHIENG_LOI_VISUAL_ASSETS.supportAtlas, columns: 4, rows: 2, frameAspect: 1 },
+  playerPhaOi: { url: PHIENG_LOI_VISUAL_ASSETS.playerPhaOiAtlas, columns: 4, rows: 2, frameAspect: .75 },
   playerActions: { url: PHIENG_LOI_VISUAL_ASSETS.playerActionsAtlas, columns: 4, rows: 3, frameAspect: 384 / 341 },
   chiefTalk: { url: PHIENG_LOI_VISUAL_ASSETS.chiefTalkAtlas, columns: 4, rows: 2, frameAspect: 1 },
   feastLoop: { url: PHIENG_LOI_VISUAL_ASSETS.feastLoopAtlas, columns: 4, rows: 2, frameAspect: 1 },

@@ -110,6 +110,8 @@ assert.match(visualSource, /playerRigDownAtlas/);
 assert.match(visualSource, /playerRigSideAtlas/);
 assert.match(visualSource, /playerRigUpAtlas/);
 assert.match(visualSource, /setPlayerRigPose/);
+assert.match(visualSource, /playerPhaOiFrame/);
+assert.match(visualSource, /playerShouting \? 'playerPhaOi' : 'playerActions'/);
 assert.doesNotMatch(visualSource, /playerLocomotion(?:Down|Side|Up)/);
 assert.match(visualSource, /playerActions/);
 assert.match(visualSource, /heesunLocomotionDown/);

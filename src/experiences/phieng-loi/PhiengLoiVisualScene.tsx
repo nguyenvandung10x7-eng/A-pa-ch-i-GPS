@@ -49,6 +49,7 @@ const CHICKEN_COUNT = 10;
 const ACTOR_WIDTH = {
   player: 108,
   playerAction: 82,
+  playerPhaOi: 58,
   chief: 58,
   heesun: 112,
   hanu: 108,
@@ -119,6 +120,18 @@ const rigCellStyle = (frame: number): CSSProperties => ({
 });
 
 const PLAYER_RIG_MOTIONS = new Set(['idle', 'start', 'walk', 'run', 'move', 'turn', 'stop']);
+
+const playerPhaOiFrame = (localTime: number, reducedMotion: boolean) => {
+  if (reducedMotion) return 4;
+  if (localTime < .11) return 0;
+  if (localTime < .22) return 1;
+  if (localTime < .34) return 2;
+  if (localTime < .48) return 3;
+  if (localTime < .71) return 4;
+  if (localTime < .86) return 5;
+  if (localTime < .98) return 6;
+  return 7;
+};
 
 const setPlayerRigPose = (
   node: HTMLDivElement | null,
@@ -306,7 +319,10 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       game.player,
     );
     const playerRigActive = PLAYER_RIG_MOTIONS.has(playerTrack.currentMotion);
-    const playerFrame = playerTrack.currentMotion === 'idle'
+    const playerShouting = playerTrack.currentMotion === 'shout';
+    const playerFrame = playerShouting
+      ? playerPhaOiFrame(playerTrack.localMotionTime, game.reducedMotion)
+      : playerTrack.currentMotion === 'idle'
           ? playerTrack.view === 'down' ? 0 : playerTrack.view === 'up' ? 2 : 1
           : playerTrack.currentMotion === 'start'
             ? 4
@@ -314,9 +330,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
               ? 5
               : playerTrack.currentMotion === 'stop'
                 ? 6
-                : playerTrack.currentMotion === 'shout'
-                  ? 7
-                  : playerTrack.currentMotion === 'caught'
+                : playerTrack.currentMotion === 'caught'
                     ? 8
                     : playerTrack.currentMotion === 'seated-tired'
                       ? 9
@@ -324,8 +338,8 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
                         ? 11
                         : 0;
     placeActor(playerRef.current, game.player.x, game.player.y);
-    setSpriteFrame(playerSpriteRef.current, 'playerActions', playerFrame);
-    setSpriteWidth(playerSpriteRef.current, ACTOR_WIDTH.playerAction);
+    setSpriteFrame(playerSpriteRef.current, playerShouting ? 'playerPhaOi' : 'playerActions', playerFrame);
+    setSpriteWidth(playerSpriteRef.current, playerShouting ? ACTOR_WIDTH.playerPhaOi : ACTOR_WIDTH.playerAction);
     const playerPowerScale = game.powerUntil.squash > game.elapsed ? 1.3 : 1;
     const playerScale = depthScale(game.player.y) * playerPowerScale;
     if (playerSpriteRef.current) playerSpriteRef.current.hidden = playerRigActive;

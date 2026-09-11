@@ -25,8 +25,13 @@ project owner; the raw references are intentionally not committed.
   the composition-B Player. Head, torso, upper/lower limbs, hands and sneakers
   are assembled around stable joints at runtime; walk/run phase is derived from
   travelled world distance and joints interpolate at render cadence.
-- `player-actions-v2.webp`: 1536×1023 transparent 4×3 Player action atlas with
-  directional idle, start, turn, stop, PHÀ ƠI, caught, seated and dance poses.
+- `player-pha-oi-v1.webp`: 1536×1024 transparent 4×2 dedicated PHÀ ƠI sequence:
+  shoulder-width anticipation, both elbows opening away from the torso, palms
+  raised toward the sky, helpless pleading hold, then a short settle. It is a
+  meme-specific acting cycle rather than a generic one-hand shout.
+- `player-actions-v2.webp`: 1536×1023 transparent 4×3 retained Player special-pose
+  atlas for caught, seated and dance states. Its former generic shout cell is no
+  longer selected for PHÀ ƠI.
 - `chief-talk-v2.webp`: 1776×888 transparent 4×2 Trưởng bản talk/reaction cycle.
 - `feast-loop-v2.webp`: 1776×888 transparent 4×2 roadside-table toast/laugh cycle.
 - `stream-loop-v2.webp`: 1776×888 transparent 4×2 adult stream-community cycle.

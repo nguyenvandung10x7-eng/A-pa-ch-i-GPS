@@ -62,7 +62,8 @@ All runtime URLs live in `visualAssets.ts`.
 | `hanu-up-v2.webp` | 4×4 | Up/away-view eight-frame phone-walk and food-delivery run cycles. |
 | `support-atlas-v1.webp` | 4×2 | Player idle, chicken, dog and buffalo placeholders. |
 | `player-rig-{side,down,up}-v1.webp` | 4×3 each | Composition-B Player cutout parts for continuous idle/walk/run/turn/stop articulation; adult proportions, light-blue shirt, black jeans and sneakers. |
-| `player-actions-v2.webp` | 4×3 | Player directional idle, start, turn, stop, PHÀ ƠI, caught, seated and dance poses. |
+| `player-pha-oi-v1.webp` | 4×2 | Dedicated helpless “trời ơi / gọi Bụt” acting sequence: feet shoulder-width, elbows open, forearms raised and both palms up. |
+| `player-actions-v2.webp` | 4×3 | Retained Player caught, seated and dance poses; the old generic shout cell is retired from runtime selection. |
 | `chief-talk-v2.webp` | 4×2 | Trưởng bản idle, talk and reaction cycle. |
 | `feast-loop-v2.webp` | 4×2 | Five-man roadside-table toast and laugh cycle. |
 | `stream-loop-v2.webp` | 4×2 | Four-adult stream-community idle and reaction cycle. |
