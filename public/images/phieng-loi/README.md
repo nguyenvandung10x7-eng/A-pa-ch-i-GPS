@@ -15,6 +15,10 @@ project owner; the raw references are intentionally not committed.
 - `hanu-food-box-v1.svg`: transparent project-authored cutout shown only while
   HANU's delivery state carries the player's food.
 - `player-run-v2.webp`: 1776×888 transparent 4×2 running cycle.
+- `player-motion-atlas-v1.webp`: 1324×1188 transparent 4×4 Player sample
+  approved from composition B. Rows are idle, grounded walk, run, then dedicated
+  start/turn/stop/PHÀ ƠI poses. All cells share a 331×297 foot-anchored frame;
+  the source checker matte was converted to true alpha before WebP export.
 - `chief-talk-v2.webp`: 1776×888 transparent 4×2 Trưởng bản talk/reaction cycle.
 - `feast-loop-v2.webp`: 1776×888 transparent 4×2 roadside-table toast/laugh cycle.
 - `stream-loop-v2.webp`: 1776×888 transparent 4×2 adult stream-community cycle.

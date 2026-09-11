@@ -139,7 +139,7 @@ export const drivePhiengLoiQaScenario = (
     input.up = false;
     input.down = false;
     input.moveY = 0;
-    input.moveX = game.elapsed < .55 ? 0 : game.elapsed < 1.45 ? 1 : game.elapsed < 2.15 ? -1 : 0;
+    input.moveX = game.elapsed < .55 ? 0 : game.elapsed < 1.2 ? .42 : game.elapsed < 1.75 ? 1 : game.elapsed < 2.35 ? -1 : 0;
     if (game.elapsed >= 2.55 && game.callCount === 0) input.callQueued = true;
     return;
   }

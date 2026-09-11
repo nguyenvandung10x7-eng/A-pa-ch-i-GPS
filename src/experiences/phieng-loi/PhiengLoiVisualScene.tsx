@@ -47,8 +47,8 @@ export type PhiengLoiVisualHandle = { render: (game: GameState) => void };
 
 const CHICKEN_COUNT = 10;
 const ACTOR_WIDTH = {
-  player: 58,
-  playerAction: 64,
+  player: 80,
+  playerAction: 78,
   chief: 58,
   heesunPose: 63,
   heesunRun: 47.5,
@@ -253,17 +253,29 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       karaokeOverrideFor(game, 'player'),
       true,
     );
-    const playerAction = ['shout', 'caught', 'seated-tired', 'stop'].includes(playerTrack.currentMotion);
+    const playerCapturePose = ['caught', 'seated-tired'].includes(playerTrack.currentMotion);
     const playerFrame = playerTrack.currentMotion === 'seated-tired'
       ? 0
-      : playerTrack.currentMotion === 'shout'
-        ? 6
-        : playerTrack.currentMotion === 'caught' || playerTrack.currentMotion === 'stop'
-          ? 7
-          : frameForTrack(playerTrack, 8, game.reducedMotion);
+      : playerTrack.currentMotion === 'caught'
+        ? 7
+        : playerTrack.currentMotion === 'idle'
+          ? frameForTrack(playerTrack, 4, game.reducedMotion)
+          : playerTrack.currentMotion === 'walk'
+            ? 4 + frameForTrack(playerTrack, 4, game.reducedMotion)
+            : ['run', 'move', 'dance-player'].includes(playerTrack.currentMotion)
+              ? 8 + frameForTrack(playerTrack, 4, game.reducedMotion)
+              : playerTrack.currentMotion === 'start'
+                ? 12
+                : playerTrack.currentMotion === 'turn'
+                  ? 13
+                  : playerTrack.currentMotion === 'stop'
+                    ? 14
+                    : playerTrack.currentMotion === 'shout'
+                      ? 15
+                      : 0;
     placeActor(playerRef.current, game.player.x, game.player.y);
-    setSpriteFrame(playerSpriteRef.current, playerAction ? 'actorAction' : playerTrack.currentMotion === 'idle' ? 'support' : 'playerRun', playerTrack.currentMotion === 'idle' ? 0 : playerFrame);
-    setSpriteWidth(playerSpriteRef.current, playerAction ? ACTOR_WIDTH.playerAction : ACTOR_WIDTH.player);
+    setSpriteFrame(playerSpriteRef.current, playerCapturePose ? 'actorAction' : 'playerMotion', playerFrame);
+    setSpriteWidth(playerSpriteRef.current, playerCapturePose ? ACTOR_WIDTH.playerAction : ACTOR_WIDTH.player);
     const playerPowerScale = game.powerUntil.squash > game.elapsed ? 1.3 : 1;
     setSpriteTransform(playerSpriteRef.current, playerTrack.facing, depthScale(game.player.y) * playerPowerScale);
     applyMotionPose(playerSpriteRef.current, sampleMotionPose(playerTrack), climax);
@@ -615,7 +627,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
           <div ref={vuongMeSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('vuongMeDance', 0), width: ACTOR_WIDTH.vuongMe }} />
         </div>
         <div ref={playerRef} className="phieng-visual__actor is-player" style={actorStyle(initialGame.player.x, initialGame.player.y)}>
-          <div ref={playerSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('support', 0), width: ACTOR_WIDTH.player }} />
+          <div ref={playerSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('playerMotion', 0), width: ACTOR_WIDTH.player }} />
         </div>
 
         <div ref={callRef} className="phieng-visual__actor phieng-visual__call-anchor" style={actorStyle(initialGame.player.x, initialGame.player.y - 22)}>

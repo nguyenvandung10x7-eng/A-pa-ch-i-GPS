@@ -16,6 +16,8 @@ export type ActorMotion =
   | 'idle'
   | 'start'
   | 'move'
+  | 'walk'
+  | 'run'
   | 'turn'
   | 'stop'
   | 'shout'
@@ -66,6 +68,7 @@ export type ActorMotion =
 export type MotionSnapshot = {
   motion: ActorMotion;
   localMotionTime: number;
+  framePhase: number;
   facing: number;
 };
 
@@ -86,6 +89,8 @@ export type MotionTrack = {
   lastUpdatedAt: number;
   speed: number;
   phaseOffset: number;
+  /** Integrated atlas-frame clock; changing speed must not rewrite past phase. */
+  framePhase: number;
 };
 
 export type MotionController = Record<MotionActorId, MotionTrack>;
@@ -123,7 +128,7 @@ const ACTOR_PHASE: Record<MotionActorId, number> = {
 };
 
 const LOCOMOTION = new Set<ActorMotion>([
-  'move', 'wander', 'chase', 'chase-distracted', 'flee', 'phone-walk',
+  'move', 'walk', 'run', 'wander', 'chase', 'chase-distracted', 'flee', 'phone-walk',
   'delivery', 'delivery-fast', 'feast-chase', 'stream-arrive', 'panic',
 ]);
 
@@ -156,6 +161,7 @@ const createTrack = (actor: MotionActorId, now: number): MotionTrack => ({
   lastUpdatedAt: now,
   speed: 0,
   phaseOffset: ACTOR_PHASE[actor],
+  framePhase: 0,
 });
 
 export const createMotionController = (now = 0): MotionController => ({
@@ -179,6 +185,8 @@ const enterMotion = (
   settleMotion: ActorMotion | null = null,
 ) => {
   if (track.currentMotion === motion && track.settleMotion === settleMotion) return;
+  const isStride = (value: ActorMotion) => LOCOMOTION.has(value) || value === 'start' || value === 'turn' || value === 'stop';
+  if (!isStride(track.currentMotion) || !isStride(motion)) track.framePhase = 0;
   track.previousMotion = track.currentMotion;
   track.currentMotion = motion;
   track.motionEnteredAt = now;
@@ -195,6 +203,9 @@ export const advanceMotion = (track: MotionTrack, request: MotionRequest): Motio
   const dt = Math.max(0, Math.min(.1, request.now - track.lastUpdatedAt));
   track.lastUpdatedAt = request.now;
   track.localMotionTime += dt;
+  // Integrate the interval at the previous sample's rate. A new velocity applies
+  // from this sample onward, not retroactively to the entire action duration.
+  track.framePhase += dt * motionFrameRate(track);
   track.speed = Math.hypot(request.vx ?? 0, request.vy ?? 0);
   if (request.reactionUntil !== undefined) track.reactionUntil = Math.max(track.reactionUntil, request.reactionUntil);
 
@@ -225,6 +236,7 @@ export const advanceMotion = (track: MotionTrack, request: MotionRequest): Motio
         track.preEventMotionState = {
           motion: track.currentMotion,
           localMotionTime: track.localMotionTime,
+          framePhase: track.framePhase,
           facing: track.facing,
         };
       }
@@ -242,6 +254,7 @@ export const advanceMotion = (track: MotionTrack, request: MotionRequest): Motio
     track.currentMotion = request.motion;
     track.motionEnteredAt = request.now - (suspended?.motion === request.motion ? suspended.localMotionTime : 0);
     track.localMotionTime = suspended?.motion === request.motion ? suspended.localMotionTime : 0;
+    track.framePhase = suspended?.motion === request.motion ? suspended.framePhase : 0;
     track.facing = suspended?.facing ?? track.facing;
     track.transitionUntil = 0;
     track.settleMotion = null;
@@ -258,6 +271,10 @@ export const advanceMotion = (track: MotionTrack, request: MotionRequest): Motio
   if (request.allowLocomotionTransitions) {
     const wasMoving = LOCOMOTION.has(track.currentMotion) || LOCOMOTION.has(track.settleMotion ?? 'idle');
     const willMove = LOCOMOTION.has(request.motion);
+    if (track.currentMotion === 'shout' && willMove) {
+      enterMotion(track, request.motion, request.now);
+      return track;
+    }
     if (!wasMoving && willMove) {
       enterMotion(track, 'start', request.now, .12, request.motion);
       return track;
@@ -290,7 +307,7 @@ export const actorMotionForGame = (game: GameState, actor: MotionActorId): Actor
   if (actor === 'player') {
     if (game.scene.kind === 'capture') return game.scene.stage >= 1 ? 'seated-tired' : 'caught';
     if (game.callPulseUntil > game.elapsed) return 'shout';
-    return speed > 4 ? 'move' : 'idle';
+    return speed >= 60 ? 'run' : speed > 4 ? 'walk' : 'idle';
   }
   if (actor === 'heesun') {
     if (game.scene.kind === 'capture') return game.scene.stage >= 1 ? 'seated-toast' : 'victory';
@@ -340,6 +357,8 @@ export const motionFrameRate = (track: MotionTrack) => {
   const speed = track.speed;
   switch (track.currentMotion) {
     case 'move': return Math.max(6.8, Math.min(11, speed / 8.5));
+    case 'walk': return Math.max(4.8, Math.min(8.2, speed / 7));
+    case 'run': return Math.max(7.4, Math.min(11.2, speed / 8.5));
     case 'wander': return Math.max(3.2, Math.min(5.2, speed / 5));
     case 'chase': case 'chase-distracted': return Math.max(7.2, Math.min(11.2, speed / 7.2));
     case 'flee': return Math.max(10, Math.min(13, speed / 7));
@@ -363,7 +382,7 @@ export const motionFrameRate = (track: MotionTrack) => {
 };
 
 export const frameForTrack = (track: MotionTrack, frameCount: number, reducedMotion: boolean, frameOffset = 0) => (
-  reducedMotion ? frameOffset % frameCount : (Math.floor(track.localMotionTime * motionFrameRate(track) + track.phaseOffset) + frameOffset) % frameCount
+  reducedMotion ? frameOffset % frameCount : (Math.floor(track.framePhase + track.phaseOffset) + frameOffset) % frameCount
 );
 
 const easeOutBack = (value: number) => {
@@ -375,21 +394,15 @@ const easeOutBack = (value: number) => {
 /** Samples intentional body motion; actor translation/path movement remains in game logic. */
 export const sampleMotionPose = (track: MotionTrack): MotionPose => {
   const t = track.localMotionTime;
-  const rate = motionFrameRate(track);
-  const phase = t * rate * Math.PI * .25 + track.phaseOffset;
+  const phase = track.framePhase * Math.PI * .25 + track.phaseOffset;
   const stride = Math.sin(phase);
   const lift = Math.abs(Math.sin(phase));
   const base: MotionPose = { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1 };
-  const progress = track.transitionUntil > track.motionEnteredAt
-    ? Math.max(0, Math.min(1, (track.lastUpdatedAt - track.motionEnteredAt) / (track.transitionUntil - track.motionEnteredAt)))
-    : 1;
-
   switch (track.currentMotion) {
     case 'idle': base.y = Math.sin(t * 2.1 + track.phaseOffset) * .35; break;
-    case 'start': base.x = -track.facing * (1 - progress) * 2.2; base.y = (1 - progress) * 1.5; base.scaleY = .94 + progress * .06; break;
-    case 'stop': base.x = track.facing * (1 - progress) * 2.5; base.rotation = -track.facing * (1 - progress) * 2.5; base.scaleY = .97 + progress * .03; break;
-    case 'turn': base.scaleX = .78 + Math.abs(progress - .5) * .44; base.y = .7 * Math.sin(progress * Math.PI); break;
+    case 'start': case 'stop': case 'turn': break;
     case 'move': base.y = -lift * 1.15; base.rotation = stride * 1.1; break;
+    case 'walk': case 'run': break;
     case 'wander': base.y = -lift * .65; base.rotation = stride * .55; break;
     case 'chase': base.y = -lift * 1.75; base.x = track.facing * .8; base.rotation = track.facing * -4.2 + stride * 1.6; break;
     case 'chase-distracted': base.y = -lift * 1.35; base.rotation = track.facing * -1.8 + stride * 2.4; break;
@@ -401,8 +414,7 @@ export const sampleMotionPose = (track: MotionTrack): MotionPose => {
     case 'stream-arrive': base.y = -lift * 1.15; base.rotation = stride * 1.05; break;
     case 'shout': {
       const shout = Math.min(1, t / .2);
-      base.y = shout < .45 ? (shout / .45) * 2 : 2 - easeOutBack((shout - .45) / .55) * 3.3;
-      base.scaleY = .94 + easeOutBack(shout) * .08;
+      base.y = shout < .45 ? (shout / .45) * .35 : .35 - easeOutBack((shout - .45) / .55) * .35;
       break;
     }
     case 'caught': base.x = -track.facing * 2.5; base.rotation = -track.facing * 6; base.scaleY = .94; break;

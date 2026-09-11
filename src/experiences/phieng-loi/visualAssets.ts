@@ -8,6 +8,7 @@ export const PHIENG_LOI_VISUAL_ASSETS = {
   heesunRunAtlas: '/images/phieng-loi/heesun-run-v2.webp',
   hanuWalkAtlas: '/images/phieng-loi/hanu-walk-v2.webp',
   playerRunAtlas: '/images/phieng-loi/player-run-v2.webp',
+  playerMotionAtlas: '/images/phieng-loi/player-motion-atlas-v1.webp',
   chiefTalkAtlas: '/images/phieng-loi/chief-talk-v2.webp',
   feastLoopAtlas: '/images/phieng-loi/feast-loop-v2.webp',
   streamLoopAtlas: '/images/phieng-loi/stream-loop-v2.webp',
@@ -30,6 +31,7 @@ export type AtlasName =
   | 'heesunRun'
   | 'hanuWalk'
   | 'playerRun'
+  | 'playerMotion'
   | 'chiefTalk'
   | 'feastLoop'
   | 'streamLoop'
@@ -46,6 +48,7 @@ const ATLAS_CONFIG = {
   heesunRun: { url: PHIENG_LOI_VISUAL_ASSETS.heesunRunAtlas, columns: 4, rows: 2, frameAspect: 0.75 },
   hanuWalk: { url: PHIENG_LOI_VISUAL_ASSETS.hanuWalkAtlas, columns: 4, rows: 2, frameAspect: 0.75 },
   playerRun: { url: PHIENG_LOI_VISUAL_ASSETS.playerRunAtlas, columns: 4, rows: 2, frameAspect: 1 },
+  playerMotion: { url: PHIENG_LOI_VISUAL_ASSETS.playerMotionAtlas, columns: 4, rows: 4, frameAspect: 331 / 297 },
   chiefTalk: { url: PHIENG_LOI_VISUAL_ASSETS.chiefTalkAtlas, columns: 4, rows: 2, frameAspect: 1 },
   feastLoop: { url: PHIENG_LOI_VISUAL_ASSETS.feastLoopAtlas, columns: 4, rows: 2, frameAspect: 1 },
   streamLoop: { url: PHIENG_LOI_VISUAL_ASSETS.streamLoopAtlas, columns: 4, rows: 2, frameAspect: 1 },
