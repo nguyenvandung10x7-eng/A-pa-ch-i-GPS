@@ -95,6 +95,8 @@ export type MotionTrack = {
   phaseOffset: number;
   /** Integrated atlas-frame clock; changing speed must not rewrite past phase. */
   framePhase: number;
+  lastWorldX: number | null;
+  lastWorldY: number | null;
   view: MotionView;
   pendingView: MotionView;
   viewStartedAt: number;
@@ -112,7 +114,15 @@ type MotionRequest = {
   reactionUntil?: number;
   allowLocomotionTransitions?: boolean;
   directionalView?: boolean;
+  worldX?: number;
+  worldY?: number;
 };
+
+export const PLAYER_STRIDE_LENGTH = {
+  walk: 54,
+  run: 76,
+  move: 64,
+} as const;
 
 export type MotionPose = {
   x: number;
@@ -171,6 +181,8 @@ const createTrack = (actor: MotionActorId, now: number): MotionTrack => ({
   speed: 0,
   phaseOffset: ACTOR_PHASE[actor],
   framePhase: 0,
+  lastWorldX: null,
+  lastWorldY: null,
   view: actor === 'player' ? 'down' : 'side',
   pendingView: actor === 'player' ? 'down' : 'side',
   viewStartedAt: 0,
@@ -234,10 +246,30 @@ export const advanceMotion = (track: MotionTrack, request: MotionRequest): Motio
   const dt = Math.max(0, Math.min(.1, request.now - track.lastUpdatedAt));
   track.lastUpdatedAt = request.now;
   track.localMotionTime += dt;
-  // Integrate the interval at the previous sample's rate. A new velocity applies
-  // from this sample onward, not retroactively to the entire action duration.
-  track.framePhase += dt * motionFrameRate(track);
-  track.speed = Math.hypot(request.vx ?? 0, request.vy ?? 0);
+  const nextSpeed = Math.hypot(request.vx ?? 0, request.vy ?? 0);
+  const hasWorldSample = Number.isFinite(request.worldX) && Number.isFinite(request.worldY);
+  const measuredDistance = hasWorldSample && track.lastWorldX !== null && track.lastWorldY !== null
+    ? Math.hypot((request.worldX as number) - track.lastWorldX, (request.worldY as number) - track.lastWorldY)
+    : 0;
+  const naturalDistanceLimit = Math.max(10, nextSpeed * dt * 2.5);
+  const groundedDistance = measuredDistance <= naturalDistanceLimit ? measuredDistance : 0;
+  if (track.actor === 'player' && LOCOMOTION.has(request.motion) && hasWorldSample) {
+    const strideLength = request.motion === 'run'
+      ? PLAYER_STRIDE_LENGTH.run
+      : request.motion === 'walk'
+        ? PLAYER_STRIDE_LENGTH.walk
+        : PLAYER_STRIDE_LENGTH.move;
+    track.framePhase += (groundedDistance / strideLength) * 8;
+  } else {
+    // Non-player actors keep the existing time-integrated atlas clock until
+    // their own rig pass. Player locomotion is grounded to measured travel.
+    track.framePhase += dt * motionFrameRate(track);
+  }
+  if (hasWorldSample) {
+    track.lastWorldX = request.worldX as number;
+    track.lastWorldY = request.worldY as number;
+  }
+  track.speed = nextSpeed;
   if (request.reactionUntil !== undefined) track.reactionUntil = Math.max(track.reactionUntil, request.reactionUntil);
 
   if (request.directionalView) {

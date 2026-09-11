@@ -25,13 +25,17 @@ copied.
   occluders.
 - `PhiengLoiVisualScene.tsx` is the only mounted world presentation.
 - The 640×360 values are logical camera units, not a bitmap render resolution.
-- The compositor uses one scalable world plate, transparent semantic-pose atlases
-  and dedicated eight-frame movement atlases.
+- The compositor uses one scalable world plate, transparent semantic-pose atlases,
+  directional atlases for NPCs and a lightweight articulated cutout rig for
+  Player locomotion.
 - Actor and camera transforms are written directly on every animation frame;
   React only refreshes lightweight HUD state at a lower cadence. This keeps input,
   camera and feet locked to the same frame without rerendering the page tree.
-- CSS provides contact shadows, idle motion and presentation effects; movement is
-  an actual frame sequence rather than a static cutout being bobbed up and down.
+- Player walk/run uses project-owned head, torso and limb cutouts with a fixed
+  ground anchor. Stride phase is integrated from actual world distance, while
+  joint transforms interpolate at render cadence; a blocked player therefore
+  stops stepping instead of sliding through a time-driven cycle. Dedicated
+  action art remains responsible for PHÀ ƠI, capture, seated and dance poses.
 - Background crops at authored depths let the bridge rail, lower foliage and
   foreground rocks pass in front of characters without duplicating gameplay
   state. House silhouettes stay in the base plate until true-alpha foreground
@@ -57,7 +61,7 @@ All runtime URLs live in `visualAssets.ts`.
 | `hanu-down-v2.webp` | 4×4 | Down/forward-view eight-frame phone-walk and food-delivery run cycles. |
 | `hanu-up-v2.webp` | 4×4 | Up/away-view eight-frame phone-walk and food-delivery run cycles. |
 | `support-atlas-v1.webp` | 4×2 | Player idle, chicken, dog and buffalo placeholders. |
-| `player-locomotion-{side,down,up}-v2.webp` | 4×4 each | Approved composition-B Player: directional eight-frame walk and run cycles. |
+| `player-rig-{side,down,up}-v1.webp` | 4×3 each | Composition-B Player cutout parts for continuous idle/walk/run/turn/stop articulation; adult proportions, light-blue shirt, black jeans and sneakers. |
 | `player-actions-v2.webp` | 4×3 | Player directional idle, start, turn, stop, PHÀ ƠI, caught, seated and dance poses. |
 | `chief-talk-v2.webp` | 4×2 | Trưởng bản idle, talk and reaction cycle. |
 | `feast-loop-v2.webp` | 4×2 | Five-man roadside-table toast and laugh cycle. |

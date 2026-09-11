@@ -114,6 +114,54 @@ const setData = (node: HTMLDivElement | null, key: string, value: string) => {
   if (node && node.dataset[key] !== value) node.dataset[key] = value;
 };
 
+const rigCellStyle = (frame: number): CSSProperties => ({
+  backgroundPosition: `${(frame % 4) * (100 / 3)}% ${Math.floor(frame / 4) * 50}%`,
+});
+
+const PLAYER_RIG_MOTIONS = new Set(['idle', 'start', 'walk', 'run', 'move', 'turn', 'stop']);
+
+const setPlayerRigPose = (
+  node: HTMLDivElement | null,
+  track: MotionTrack,
+  scale: number,
+  reducedMotion: boolean,
+) => {
+  if (!node) return;
+  const active = PLAYER_RIG_MOTIONS.has(track.currentMotion);
+  node.hidden = !active;
+  if (!active) return;
+  const atlas = track.view === 'down'
+    ? PHIENG_LOI_VISUAL_ASSETS.playerRigDownAtlas
+    : track.view === 'up'
+      ? PHIENG_LOI_VISUAL_ASSETS.playerRigUpAtlas
+      : PHIENG_LOI_VISUAL_ASSETS.playerRigSideAtlas;
+  const phase = reducedMotion ? 0 : ((track.framePhase % 8) / 8) * Math.PI * 2;
+  const stride = Math.sin(phase);
+  const cadence = Math.cos(phase * 2);
+  const locomoting = ['walk', 'run', 'move', 'start', 'turn'].includes(track.currentMotion);
+  const running = track.currentMotion === 'run' || track.settleMotion === 'run';
+  const legSwing = locomoting ? stride * (running ? 31 : 21) : 0;
+  const armSwing = locomoting ? -stride * (running ? 25 : 16) : 0;
+  const compression = locomoting ? Math.max(0, cadence) * (running ? 1.25 : .7) : Math.sin(track.localMotionTime * 1.8) * .18;
+  const braking = track.currentMotion === 'stop' ? Math.max(0, 1 - track.localMotionTime / .16) : 0;
+  node.dataset.view = track.view;
+  node.dataset.motion = track.currentMotion;
+  node.style.setProperty('--rig-atlas', `url("${atlas}")`);
+  node.style.setProperty('--rig-scale', scale.toFixed(3));
+  node.style.setProperty('--rig-flip', track.facing < 0 ? '-1' : '1');
+  node.style.setProperty('--rig-root-y', `${compression.toFixed(2)}px`);
+  node.style.setProperty('--rig-lean', `${((running ? 5 : locomoting ? 2.2 : 0) + braking * 4).toFixed(2)}deg`);
+  node.style.setProperty('--rig-front-leg', `${legSwing.toFixed(2)}deg`);
+  node.style.setProperty('--rig-back-leg', `${(-legSwing).toFixed(2)}deg`);
+  node.style.setProperty('--rig-front-shin', `${(Math.max(0, -stride) * (running ? 26 : 14)).toFixed(2)}deg`);
+  node.style.setProperty('--rig-back-shin', `${(Math.max(0, stride) * (running ? 26 : 14)).toFixed(2)}deg`);
+  node.style.setProperty('--rig-front-arm', `${armSwing.toFixed(2)}deg`);
+  node.style.setProperty('--rig-back-arm', `${(-armSwing).toFixed(2)}deg`);
+  node.style.setProperty('--rig-front-forearm', `${(armSwing * .55).toFixed(2)}deg`);
+  node.style.setProperty('--rig-back-forearm', `${(-armSwing * .55).toFixed(2)}deg`);
+  node.style.setProperty('--rig-front-hand', `${(armSwing * .35).toFixed(2)}deg`);
+};
+
 const applyMotionPose = (node: HTMLDivElement | null, pose: MotionPose, multiplier = 1) => {
   if (!node) return;
   node.style.setProperty('--motion-x', `${(pose.x * multiplier).toFixed(2)}px`);
@@ -135,6 +183,7 @@ const updateTrack = (
   visualOverride: ReturnType<typeof karaokeOverrideFor>,
   allowLocomotionTransitions = false,
   directionalView = false,
+  worldPoint?: { x: number; y: number },
 ) => advanceMotion(track, {
   motion,
   now: game.elapsed,
@@ -144,6 +193,8 @@ const updateTrack = (
   visualOverride,
   allowLocomotionTransitions,
   directionalView,
+  worldX: worldPoint?.x,
+  worldY: worldPoint?.y,
 });
 
 const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initialGame }, ref) => {
@@ -161,6 +212,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
   const chiefSpriteRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<HTMLDivElement | null>(null);
   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
+  const playerRigRef = useRef<HTMLDivElement | null>(null);
   const heesunRef = useRef<HTMLDivElement | null>(null);
   const heesunSpriteRef = useRef<HTMLDivElement | null>(null);
   const heesunTwinRef = useRef<HTMLDivElement | null>(null);
@@ -251,23 +303,10 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       karaokeOverrideFor(game, 'player'),
       true,
       true,
+      game.player,
     );
-    const playerVerticalTransition = ['start', 'stop'].includes(playerTrack.currentMotion) && playerTrack.view !== 'side';
-    const playerLocomoting = ['walk', 'run', 'move'].includes(playerTrack.currentMotion) || playerVerticalTransition;
-    const playerAtlas: AtlasName = playerLocomoting
-      ? playerTrack.view === 'down'
-        ? 'playerLocomotionDown'
-        : playerTrack.view === 'up'
-          ? 'playerLocomotionUp'
-          : 'playerLocomotionSide'
-      : 'playerActions';
-    const playerFrame = playerTrack.currentMotion === 'walk'
-      ? frameForTrack(playerTrack, 8, game.reducedMotion)
-      : ['run', 'move'].includes(playerTrack.currentMotion)
-        ? 8 + frameForTrack(playerTrack, 8, game.reducedMotion)
-        : playerVerticalTransition
-          ? playerTrack.currentMotion === 'start' && playerTrack.settleMotion === 'run' ? 8 : 0
-        : playerTrack.currentMotion === 'idle'
+    const playerRigActive = PLAYER_RIG_MOTIONS.has(playerTrack.currentMotion);
+    const playerFrame = playerTrack.currentMotion === 'idle'
           ? playerTrack.view === 'down' ? 0 : playerTrack.view === 'up' ? 2 : 1
           : playerTrack.currentMotion === 'start'
             ? 4
@@ -285,11 +324,14 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
                         ? 11
                         : 0;
     placeActor(playerRef.current, game.player.x, game.player.y);
-    setSpriteFrame(playerSpriteRef.current, playerAtlas, playerFrame);
-    setSpriteWidth(playerSpriteRef.current, playerLocomoting ? ACTOR_WIDTH.player : ACTOR_WIDTH.playerAction);
+    setSpriteFrame(playerSpriteRef.current, 'playerActions', playerFrame);
+    setSpriteWidth(playerSpriteRef.current, ACTOR_WIDTH.playerAction);
     const playerPowerScale = game.powerUntil.squash > game.elapsed ? 1.3 : 1;
-    setSpriteTransform(playerSpriteRef.current, playerTrack.facing, depthScale(game.player.y) * playerPowerScale);
+    const playerScale = depthScale(game.player.y) * playerPowerScale;
+    if (playerSpriteRef.current) playerSpriteRef.current.hidden = playerRigActive;
+    setSpriteTransform(playerSpriteRef.current, playerTrack.facing, playerScale);
     applyMotionPose(playerSpriteRef.current, sampleMotionPose(playerTrack), climax);
+    setPlayerRigPose(playerRigRef.current, playerTrack, playerScale, game.reducedMotion);
     setData(playerRef.current, 'motion', playerTrack.currentMotion);
     setData(playerRef.current, 'view', playerTrack.view);
     setData(playerRef.current, 'terrain', terrainAt(game.player.x, game.player.y));
@@ -664,6 +706,22 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
           <div ref={vuongMeSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('vuongMeDance', 0), width: ACTOR_WIDTH.vuongMe }} />
         </div>
         <div ref={playerRef} className="phieng-visual__actor is-player" style={actorStyle(initialGame.player.x, initialGame.player.y)}>
+          <div ref={playerRigRef} className="phieng-player-rig" data-view="down" aria-hidden="true">
+            <div className="phieng-player-rig__set is-side">
+              <i className="rig-part is-back-arm-upper" style={rigCellStyle(8)} /><i className="rig-part is-back-arm-lower" style={rigCellStyle(9)} />
+              <i className="rig-part is-back-thigh" style={rigCellStyle(10)} /><i className="rig-part is-back-shin" style={rigCellStyle(11)} />
+              <i className="rig-part is-torso" style={rigCellStyle(1)} /><i className="rig-part is-head" style={rigCellStyle(0)} />
+              <i className="rig-part is-front-thigh" style={rigCellStyle(5)} /><i className="rig-part is-front-shin" style={rigCellStyle(6)} /><i className="rig-part is-front-shoe" style={rigCellStyle(7)} />
+              <i className="rig-part is-front-arm-upper" style={rigCellStyle(2)} /><i className="rig-part is-front-arm-lower" style={rigCellStyle(3)} /><i className="rig-part is-front-hand" style={rigCellStyle(4)} />
+            </div>
+            <div className="phieng-player-rig__set is-depth">
+              <i className="rig-part is-back-arm-upper" style={rigCellStyle(2)} /><i className="rig-part is-back-arm-lower" style={rigCellStyle(4)} />
+              <i className="rig-part is-back-thigh" style={rigCellStyle(6)} /><i className="rig-part is-back-shin" style={rigCellStyle(8)} /><i className="rig-part is-back-shoe" style={rigCellStyle(10)} />
+              <i className="rig-part is-torso" style={rigCellStyle(1)} /><i className="rig-part is-head" style={rigCellStyle(0)} />
+              <i className="rig-part is-front-thigh" style={rigCellStyle(7)} /><i className="rig-part is-front-shin" style={rigCellStyle(9)} /><i className="rig-part is-front-shoe" style={rigCellStyle(11)} />
+              <i className="rig-part is-front-arm-upper" style={rigCellStyle(3)} /><i className="rig-part is-front-arm-lower" style={rigCellStyle(5)} />
+            </div>
+          </div>
           <div ref={playerSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('playerActions', 0), width: ACTOR_WIDTH.playerAction }} />
         </div>
 

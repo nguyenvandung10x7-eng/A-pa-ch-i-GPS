@@ -20,10 +20,11 @@ project owner; the raw references are intentionally not committed.
   1536×1024 transparent 4×4 directional locomotion atlases. Rows 1–2 are an
   eight-frame phone-walk cycle; rows 3–4 are an eight-frame food-delivery run.
 - `support-atlas-v1.webp`: 1776×888 transparent 4×2 pose atlas.
-- `player-locomotion-side-v2.webp`, `player-locomotion-down-v2.webp`,
-  `player-locomotion-up-v2.webp`: 1536×1024 transparent 4×4 directional Player
-  locomotion atlases. Rows 1–2 are an eight-frame walk cycle and rows 3–4 are
-  an eight-frame run cycle.
+- `player-rig-side-v1.webp`, `player-rig-down-v1.webp`,
+  `player-rig-up-v1.webp`: 724×543 transparent 4×3 articulated-part sheets for
+  the composition-B Player. Head, torso, upper/lower limbs, hands and sneakers
+  are assembled around stable joints at runtime; walk/run phase is derived from
+  travelled world distance and joints interpolate at render cadence.
 - `player-actions-v2.webp`: 1536×1023 transparent 4×3 Player action atlas with
   directional idle, start, turn, stop, PHÀ ƠI, caught, seated and dance poses.
 - `chief-talk-v2.webp`: 1776×888 transparent 4×2 Trưởng bản talk/reaction cycle.

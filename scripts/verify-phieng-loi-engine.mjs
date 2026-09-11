@@ -30,6 +30,7 @@ import {
   directionalViewForVelocity,
   frameForTrack,
   motionFrameRate,
+  PLAYER_STRIDE_LENGTH,
   sampleMotionPose,
 } from '../src/experiences/phieng-loi/motionController.ts';
 import { PHIENG_LOI_VISUAL_ASSETS } from '../src/experiences/phieng-loi/visualAssets.ts';
@@ -105,9 +106,11 @@ assert.match(visualSource, /createMotionController/);
 assert.match(visualSource, /ResizeObserver/);
 assert.match(visualSource, /feastCrowdRef/);
 assert.doesNotMatch(visualSource, /actorAction/);
-assert.match(visualSource, /playerLocomotionDown/);
-assert.match(visualSource, /playerLocomotionSide/);
-assert.match(visualSource, /playerLocomotionUp/);
+assert.match(visualSource, /playerRigDownAtlas/);
+assert.match(visualSource, /playerRigSideAtlas/);
+assert.match(visualSource, /playerRigUpAtlas/);
+assert.match(visualSource, /setPlayerRigPose/);
+assert.doesNotMatch(visualSource, /playerLocomotion(?:Down|Side|Up)/);
 assert.match(visualSource, /playerActions/);
 assert.match(visualSource, /heesunLocomotionDown/);
 assert.match(visualSource, /heesunLocomotionSide/);
@@ -269,47 +272,55 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   assert.equal(directionalViewForVelocity('side', 20, -80), 'up');
   assert.equal(directionalViewForVelocity('side', 20, 80), 'down');
   assert.equal(directionalViewForVelocity('side', 50, 48), 'side', 'direction hysteresis keeps shallow diagonals stable');
-  advanceMotion(track, { motion: 'move', now: 0, vx: 40 });
+  advanceMotion(track, { motion: 'move', now: 0, vx: 40, worldX: 0, worldY: 0 });
   for (let step = 1; step <= 600; step += 1) {
-    advanceMotion(track, { motion: 'move', now: step / 60, vx: 40 });
+    advanceMotion(track, { motion: 'move', now: step / 60, vx: 40, worldX: 40 * step / 60, worldY: 0 });
   }
   const phase = track.framePhase;
   const frame = frameForTrack(track, 8, false);
   const pose = sampleMotionPose(track);
-  advanceMotion(track, { motion: 'move', now: 10, vx: 90 });
+  advanceMotion(track, { motion: 'move', now: 10, vx: 90, worldX: 400, worldY: 0 });
   assert.equal(track.framePhase, phase, 'speed changes cannot retroactively jump accumulated phase');
   assert.equal(frameForTrack(track, 8, false), frame);
   assert.deepEqual(sampleMotionPose(track), pose, 'body cadence also keeps its phase');
-  advanceMotion(track, { motion: 'move', now: 10.01, vx: 90 });
-  assert.ok(Math.abs(track.framePhase - phase - motionFrameRate(track) * .01) < 1e-9);
-  advanceMotion(track, { motion: 'move', now: 10.01, vx: -90, allowLocomotionTransitions: true });
-  advanceMotion(track, { motion: 'move', now: 10.10, vx: -90, allowLocomotionTransitions: true });
+  advanceMotion(track, { motion: 'move', now: 10.01, vx: 90, worldX: 400.9, worldY: 0 });
+  assert.ok(Math.abs(track.framePhase - phase - (.9 / PLAYER_STRIDE_LENGTH.move) * 8) < 1e-9);
+  advanceMotion(track, { motion: 'move', now: 10.01, vx: -90, worldX: 400.9, worldY: 0, allowLocomotionTransitions: true });
+  advanceMotion(track, { motion: 'move', now: 10.10, vx: -90, worldX: 392.8, worldY: 0, allowLocomotionTransitions: true });
   assert.equal(track.currentMotion, 'turn');
   assert.ok(track.framePhase > phase, 'turn does not restart the stride clock');
   const directionalPhase = track.framePhase;
-  advanceMotion(track, { motion: 'move', now: 10.18, vx: 0, vy: -90, directionalView: true });
-  advanceMotion(track, { motion: 'move', now: 10.26, vx: 0, vy: -90, directionalView: true });
+  advanceMotion(track, { motion: 'move', now: 10.18, vx: 0, vy: -90, worldX: 392.8, worldY: -7.2, directionalView: true });
+  advanceMotion(track, { motion: 'move', now: 10.26, vx: 0, vy: -90, worldX: 392.8, worldY: -14.4, directionalView: true });
   assert.equal(track.view, 'up', 'sustained vertical movement selects the dedicated up atlas');
   assert.ok(track.framePhase >= directionalPhase, 'changing directional atlas preserves the stride clock');
   assert.equal(track.currentMotion, 'move');
   const resumedPhase = track.framePhase;
-  advanceMotion(track, { motion: 'move', now: 10.26, vx: -90, visualOverride: 'dance-player' });
+  advanceMotion(track, { motion: 'move', now: 10.26, vx: -90, worldX: 392.8, worldY: -14.4, visualOverride: 'dance-player' });
   assert.equal(track.framePhase, 0, 'new action starts at its own first frame');
-  advanceMotion(track, { motion: 'move', now: 10.36, vx: -90, visualOverride: 'dance-player' });
-  advanceMotion(track, { motion: 'move', now: 10.46, vx: -90 });
+  advanceMotion(track, { motion: 'move', now: 10.36, vx: -90, worldX: 392.8, worldY: -14.4, visualOverride: 'dance-player' });
+  advanceMotion(track, { motion: 'move', now: 10.46, vx: -90, worldX: 392.8, worldY: -14.4 });
   assert.equal(track.framePhase, resumedPhase, 'disco restores the suspended stride phase exactly');
   advanceMotion(track, { motion: 'shout', now: 10.46 });
   assert.equal(track.framePhase, 0, 'shout is an action, not continued locomotion');
   assert.equal(frameForTrack(track, 8, true), 0);
   const phases = [30, 60, 120].map((renderFps) => {
     const sample = createMotionController().player;
-    advanceMotion(sample, { motion: 'move', now: 0, vx: 85 });
+    advanceMotion(sample, { motion: 'move', now: 0, vx: 85, worldX: 0, worldY: 0 });
     for (let step = 1; step <= renderFps * 2; step += 1) {
-      advanceMotion(sample, { motion: 'move', now: step / renderFps, vx: 85 });
+      advanceMotion(sample, { motion: 'move', now: step / renderFps, vx: 85, worldX: 85 * step / renderFps, worldY: 0 });
     }
     return sample.framePhase;
   });
-  assert.ok(phases.every((value) => Math.abs(value - 20) < 1e-9), 'atlas cadence is independent of 30/60/120 render FPS');
+  const expectedGroundedPhase = (170 / PLAYER_STRIDE_LENGTH.move) * 8;
+  assert.ok(phases.every((value) => Math.abs(value - expectedGroundedPhase) < 1e-9), 'grounded stride is independent of 30/60/120 render FPS');
+
+  const stopped = createMotionController().player;
+  advanceMotion(stopped, { motion: 'walk', now: 0, vx: 36, worldX: 20, worldY: 20 });
+  advanceMotion(stopped, { motion: 'walk', now: .5, vx: 36, worldX: 20, worldY: 20 });
+  assert.equal(stopped.framePhase, 0, 'feet do not cycle while collision prevents travel');
+  advanceMotion(stopped, { motion: 'walk', now: .6, vx: 36, worldX: 1_020, worldY: 20 });
+  assert.equal(stopped.framePhase, 0, 'checkpoint teleports do not spin the stride clock');
 }
 {
   const game = createGame('high', false, null, { random: () => .8 });
