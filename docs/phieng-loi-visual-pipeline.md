@@ -48,13 +48,16 @@ All runtime URLs live in `visualAssets.ts`.
 | Asset | Grid | Use |
 | --- | ---: | --- |
 | `village-world-v2.webp` | full plate | Active spacious village: mountains, stilt houses, fields, broad road network, stream, fences, waterwheel and contextual NPC pockets. |
-| `heesun-atlas-v1.webp` | 3×2 | Idle, smile, point, bựa, chase and triumphant poses. |
+| `heesun-actions-v2.webp` | 4×4 | Directional idle plus notice, invitation, beckon, brake, recoil, victory, ambush, seated/drinking and rare-flee acting. |
+| `heesun-side-v2.webp` | 4×4 | Side-view eight-frame wander and eight-frame chase cycles. |
+| `heesun-down-v2.webp` | 4×4 | Down/forward-view eight-frame wander and chase cycles. |
+| `heesun-up-v2.webp` | 4×4 | Up/away-view eight-frame wander and chase cycles. |
 | `hanu-atlas-v1.webp` | 3×2 | Phone idle, phone walk, call, confused, distracted and accidental-chaos poses. |
 | `support-atlas-v1.webp` | 4×2 | Player idle, chicken, dog and buffalo placeholders. |
-| `heesun-run-v2.webp` | 4×2 | Eight-frame HeeSun chase cycle. |
 | `hanu-walk-v2.webp` | 4×2 | Eight-frame HANU phone-walk cycle. |
 | `hanu-food-box-v1.svg` | cutout | Visible delivery box attached to HANU while his food-delivery state is active. |
-| `player-motion-atlas-v1.webp` | 4×4 | Approved composition-B Player sample: idle, walk, run, start, turn, stop and PHÀ ƠI. |
+| `player-locomotion-{side,down,up}-v2.webp` | 4×4 each | Approved composition-B Player: directional eight-frame walk and run cycles. |
+| `player-actions-v2.webp` | 4×3 | Player directional idle, start, turn, stop, PHÀ ƠI, caught, seated and dance poses. |
 | `chief-talk-v2.webp` | 4×2 | Trưởng bản idle, talk and reaction cycle. |
 | `feast-loop-v2.webp` | 4×2 | Five-man roadside-table toast and laugh cycle. |
 | `stream-loop-v2.webp` | 4×2 | Four-adult stream-community idle and reaction cycle. |

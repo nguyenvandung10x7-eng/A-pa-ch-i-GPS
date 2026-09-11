@@ -104,11 +104,16 @@ assert.match(visualSource, /heesunWife/);
 assert.match(visualSource, /createMotionController/);
 assert.match(visualSource, /ResizeObserver/);
 assert.match(visualSource, /feastCrowdRef/);
-assert.match(visualSource, /actorAction/);
+assert.doesNotMatch(visualSource, /actorAction/);
 assert.match(visualSource, /playerLocomotionDown/);
 assert.match(visualSource, /playerLocomotionSide/);
 assert.match(visualSource, /playerLocomotionUp/);
 assert.match(visualSource, /playerActions/);
+assert.match(visualSource, /heesunLocomotionDown/);
+assert.match(visualSource, /heesunLocomotionSide/);
+assert.match(visualSource, /heesunLocomotionUp/);
+assert.match(visualSource, /heesunActions/);
+assert.doesNotMatch(visualSource, /heesunRun|atlasFrameStyle\('heesun'/);
 assert.match(visualSource, /streamAction/);
 assert.doesNotMatch(visualSource, /offsetWidth|clientWidth/);
 assert.match(motionSource, /preEventMotionState/);
@@ -201,6 +206,7 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   assert.equal(track.currentMotion, 'idle');
 
   const heesun = controller.heesun;
+  assert.equal(heesun.actor, 'heesun');
   advanceMotion(heesun, { motion: 'chase', now: .1, vx: 20, facingHint: 1 });
   const slowRate = motionFrameRate(heesun);
   advanceMotion(heesun, { motion: 'chase', now: .2, vx: 82, facingHint: 1 });
@@ -210,6 +216,16 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   assert.equal(heesun.preEventMotionState?.motion, 'chase');
   advanceMotion(heesun, { motion: 'chase', now: 1.3, vx: 82, facingHint: 1, visualOverride: null });
   assert.equal(heesun.currentMotion, 'chase', 'disco restores the pre-event chase motion directly');
+
+  const directionalHeesun = createMotionController().heesun;
+  advanceMotion(directionalHeesun, { motion: 'chase', now: .1, vx: 0, vy: -82, directionalView: true });
+  advanceMotion(directionalHeesun, { motion: 'chase', now: .18, vx: 0, vy: -82, directionalView: true });
+  assert.equal(directionalHeesun.view, 'up', 'HeeSun selects a dedicated away-facing chase atlas');
+  assert.deepEqual(
+    sampleMotionPose(directionalHeesun),
+    { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1 },
+    'HeeSun locomotion weight comes from drawn frames rather than whole-sprite wobble',
+  );
 }
 {
   const game = createGame('high', false, null, { random: () => .8 });

@@ -8,7 +8,6 @@ import {
   type CSSProperties,
 } from 'react';
 import {
-  FEAST_TABLE_LOCATIONS,
   VIEW_WIDTH,
   WORLD_HEIGHT,
   WORLD_WIDTH,
@@ -50,9 +49,7 @@ const ACTOR_WIDTH = {
   player: 108,
   playerAction: 82,
   chief: 58,
-  heesunPose: 63,
-  heesunRun: 47.5,
-  heesunAction: 65,
+  heesun: 112,
   hanuPose: 64,
   hanuWalk: 48,
   feast: 106,
@@ -309,9 +306,8 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       heesunFacingHint,
       karaokeOverrideFor(game, 'heesun'),
       true,
+      true,
     );
-    const feastHome = FEAST_TABLE_LOCATIONS[game.feast.locationIndex];
-    const heesunNearFeast = Math.hypot(game.heesun.x - feastHome.x, game.heesun.y - feastHome.y) < 100;
     const heesunCue = game.animationCues.heesun;
     const drinkJoinActive = heesunCue?.cue === 'heesun-drink' && heesunCue.until > game.elapsed;
     const drinkJoinAge = drinkJoinActive ? Math.max(0, game.elapsed - heesunCue.enteredAt) : 99;
@@ -323,38 +319,48 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
     const heesunRenderY = drinkJoinActive
       ? game.heesun.actionFromY + (game.heesun.y - game.heesun.actionFromY) * drinkJoinEase
       : game.heesun.y;
-    const heesunMoving = ['start', 'turn', 'wander', 'chase', 'chase-distracted', 'flee'].includes(heesunTrack.currentMotion);
-    const heesunAction = ['notice', 'recoil', 'seated-toast', 'victory'].includes(heesunTrack.currentMotion)
-      || (heesunTrack.currentMotion === 'drinking' && heesunNearFeast && drinkJoinAge >= .56);
-    let heesunAtlas: AtlasName = 'heesun';
+    const heesunMoving = ['start', 'turn', 'wander', 'chase', 'chase-distracted', 'flee'].includes(heesunTrack.currentMotion)
+      || (drinkJoinActive && drinkJoinAge >= .18 && drinkJoinAge < .56);
+    let heesunAtlas: AtlasName = heesunTrack.view === 'down'
+      ? 'heesunLocomotionDown'
+      : heesunTrack.view === 'up'
+        ? 'heesunLocomotionUp'
+        : 'heesunLocomotionSide';
     let heesunFrame: number;
-    if (heesunMoving || heesunTrack.currentMotion === 'dance-heesun' || (drinkJoinActive && drinkJoinAge >= .18 && drinkJoinAge < .56)) {
-      heesunAtlas = 'heesunRun';
-      heesunFrame = drinkJoinActive ? Math.min(2, Math.floor(drinkJoinProgress * 3)) : frameForTrack(heesunTrack, 8, game.reducedMotion);
-    } else if (heesunAction) {
-      heesunAtlas = 'actorAction';
-      if (heesunTrack.currentMotion === 'notice' || heesunTrack.currentMotion === 'victory') heesunFrame = 4;
-      else if (heesunTrack.currentMotion === 'recoil') heesunFrame = 5;
-      else heesunFrame = heesunTrack.localMotionTime > .72 ? 3 : 2;
+    if (heesunMoving) {
+      const chasing = ['chase', 'chase-distracted', 'flee'].includes(heesunTrack.currentMotion);
+      heesunFrame = drinkJoinActive
+        ? Math.min(7, Math.floor(drinkJoinProgress * 8))
+        : (chasing ? 8 : 0) + frameForTrack(heesunTrack, 8, game.reducedMotion);
     } else if (heesunTrack.currentMotion === 'intro') {
-      heesunFrame = heesunTrack.localMotionTime < 1.25 ? 1 : 2;
-    } else if (heesunTrack.currentMotion === 'ambush') heesunFrame = 3;
-    else if (heesunTrack.currentMotion === 'drinking') heesunFrame = drinkJoinActive ? 4 : 5;
-    else heesunFrame = heesunTrack.localMotionTime % 5.4 < 3 ? 0 : 1;
+      heesunAtlas = 'heesunActions';
+      heesunFrame = heesunTrack.localMotionTime < 1.1 ? 4 : heesunTrack.localMotionTime < 2.5 ? 5 : 6;
+    } else {
+      heesunAtlas = 'heesunActions';
+      if (heesunTrack.currentMotion === 'notice') heesunFrame = 3;
+      else if (heesunTrack.currentMotion === 'recoil') heesunFrame = 9;
+      else if (heesunTrack.currentMotion === 'victory') heesunFrame = 10;
+      else if (heesunTrack.currentMotion === 'ambush') heesunFrame = 11;
+      else if (heesunTrack.currentMotion === 'seated-toast') heesunFrame = heesunTrack.localMotionTime < .72 ? 12 : 13;
+      else if (heesunTrack.currentMotion === 'drinking') heesunFrame = heesunTrack.localMotionTime % 1.5 < .78 ? 13 : 14;
+      else if (heesunTrack.currentMotion === 'dance-heesun') heesunFrame = 10;
+      else heesunFrame = heesunTrack.view === 'down' ? 0 : heesunTrack.view === 'up' ? 2 : 1;
+    }
     placeActor(heesunRef.current, heesunRenderX, heesunRenderY);
     setSpriteFrame(heesunSpriteRef.current, heesunAtlas, heesunFrame);
-    setSpriteWidth(heesunSpriteRef.current, heesunAtlas === 'heesunRun' ? ACTOR_WIDTH.heesunRun : heesunAtlas === 'actorAction' ? ACTOR_WIDTH.heesunAction : ACTOR_WIDTH.heesunPose);
+    setSpriteWidth(heesunSpriteRef.current, ACTOR_WIDTH.heesun);
     setSpriteTransform(heesunSpriteRef.current, heesunTrack.facing, game.heesun.scale * depthScale(game.heesun.y));
     applyMotionPose(heesunSpriteRef.current, sampleMotionPose(heesunTrack), climax);
     setData(heesunRef.current, 'motion', heesunTrack.currentMotion);
+    setData(heesunRef.current, 'view', heesunTrack.view);
 
     const twinActive = game.worldGag.heesunTwinUntil > game.elapsed;
     if (heesunTwinRef.current) {
       heesunTwinRef.current.hidden = !twinActive;
       if (twinActive) {
         placeActor(heesunTwinRef.current, game.heesun.x + 42, game.heesun.y + 5);
-        setSpriteFrame(heesunTwinSpriteRef.current, 'actorAction', 4);
-        setSpriteWidth(heesunTwinSpriteRef.current, ACTOR_WIDTH.heesunAction);
+        setSpriteFrame(heesunTwinSpriteRef.current, 'heesunActions', 3);
+        setSpriteWidth(heesunTwinSpriteRef.current, ACTOR_WIDTH.heesun);
         setSpriteTransform(heesunTwinSpriteRef.current, -heesunTrack.facing, depthScale(game.heesun.y));
         applyMotionPose(heesunTwinSpriteRef.current, sampleMotionPose(heesunTrack));
       }
@@ -630,10 +636,10 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
           <img ref={hanuFoodRef} className="phieng-visual__hanu-food" src={PHIENG_LOI_VISUAL_ASSETS.hanuFood} alt="" hidden />
         </div>
         <div ref={heesunRef} className="phieng-visual__actor is-heesun" style={actorStyle(initialGame.heesun.x, initialGame.heesun.y)}>
-          <div ref={heesunSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('heesun', 0), width: ACTOR_WIDTH.heesunPose }} />
+          <div ref={heesunSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('heesunActions', 0), width: ACTOR_WIDTH.heesun }} />
         </div>
         <div ref={heesunTwinRef} className="phieng-visual__actor is-heesun is-heesun-twin" style={actorStyle(initialGame.heesun.x + 42, initialGame.heesun.y + 5)} hidden>
-          <div ref={heesunTwinSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('actorAction', 4), width: ACTOR_WIDTH.heesunAction }} />
+          <div ref={heesunTwinSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('heesunActions', 3), width: ACTOR_WIDTH.heesun }} />
         </div>
         <div ref={wifeRef} className="phieng-visual__actor is-heesun-wife" style={actorStyle(initialGame.wife.x, initialGame.wife.y)} hidden>
           <div ref={wifeSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('heesunWife', 0), width: ACTOR_WIDTH.heesunWife }} />

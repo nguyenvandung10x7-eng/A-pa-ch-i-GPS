@@ -2,10 +2,12 @@ import type { CSSProperties } from 'react';
 
 export const PHIENG_LOI_VISUAL_ASSETS = {
   world: '/images/phieng-loi/village-world-v2.webp',
-  heesunAtlas: '/images/phieng-loi/heesun-atlas-v1.webp',
+  heesunLocomotionSideAtlas: '/images/phieng-loi/heesun-side-v2.webp',
+  heesunLocomotionDownAtlas: '/images/phieng-loi/heesun-down-v2.webp',
+  heesunLocomotionUpAtlas: '/images/phieng-loi/heesun-up-v2.webp',
+  heesunActionsAtlas: '/images/phieng-loi/heesun-actions-v2.webp',
   hanuAtlas: '/images/phieng-loi/hanu-atlas-v1.webp',
   supportAtlas: '/images/phieng-loi/support-atlas-v1.webp',
-  heesunRunAtlas: '/images/phieng-loi/heesun-run-v2.webp',
   hanuWalkAtlas: '/images/phieng-loi/hanu-walk-v2.webp',
   playerLocomotionSideAtlas: '/images/phieng-loi/player-locomotion-side-v2.webp',
   playerLocomotionDownAtlas: '/images/phieng-loi/player-locomotion-down-v2.webp',
@@ -14,7 +16,6 @@ export const PHIENG_LOI_VISUAL_ASSETS = {
   chiefTalkAtlas: '/images/phieng-loi/chief-talk-v2.webp',
   feastLoopAtlas: '/images/phieng-loi/feast-loop-v2.webp',
   streamLoopAtlas: '/images/phieng-loi/stream-loop-v2.webp',
-  actorActionAtlas: '/images/phieng-loi/actor-action-atlas-v1.webp',
   feastActionAtlas: '/images/phieng-loi/feast-action-atlas-v1.webp',
   streamActionAtlas: '/images/phieng-loi/stream-action-atlas-v1.webp',
   vuongMeDanceAtlas: '/images/phieng-loi/vuongme-dance-v1.webp',
@@ -27,10 +28,12 @@ export const PHIENG_LOI_VISUAL_ASSETS = {
 } as const;
 
 export type AtlasName =
-  | 'heesun'
+  | 'heesunLocomotionSide'
+  | 'heesunLocomotionDown'
+  | 'heesunLocomotionUp'
+  | 'heesunActions'
   | 'hanu'
   | 'support'
-  | 'heesunRun'
   | 'hanuWalk'
   | 'playerLocomotionSide'
   | 'playerLocomotionDown'
@@ -39,17 +42,18 @@ export type AtlasName =
   | 'chiefTalk'
   | 'feastLoop'
   | 'streamLoop'
-  | 'actorAction'
   | 'feastAction'
   | 'streamAction'
   | 'vuongMeDance'
   | 'heesunWife';
 
 const ATLAS_CONFIG = {
-  heesun: { url: PHIENG_LOI_VISUAL_ASSETS.heesunAtlas, columns: 3, rows: 2, frameAspect: 1 },
+  heesunLocomotionSide: { url: PHIENG_LOI_VISUAL_ASSETS.heesunLocomotionSideAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
+  heesunLocomotionDown: { url: PHIENG_LOI_VISUAL_ASSETS.heesunLocomotionDownAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
+  heesunLocomotionUp: { url: PHIENG_LOI_VISUAL_ASSETS.heesunLocomotionUpAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
+  heesunActions: { url: PHIENG_LOI_VISUAL_ASSETS.heesunActionsAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
   hanu: { url: PHIENG_LOI_VISUAL_ASSETS.hanuAtlas, columns: 3, rows: 2, frameAspect: 1 },
   support: { url: PHIENG_LOI_VISUAL_ASSETS.supportAtlas, columns: 4, rows: 2, frameAspect: 1 },
-  heesunRun: { url: PHIENG_LOI_VISUAL_ASSETS.heesunRunAtlas, columns: 4, rows: 2, frameAspect: 0.75 },
   hanuWalk: { url: PHIENG_LOI_VISUAL_ASSETS.hanuWalkAtlas, columns: 4, rows: 2, frameAspect: 0.75 },
   playerLocomotionSide: { url: PHIENG_LOI_VISUAL_ASSETS.playerLocomotionSideAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
   playerLocomotionDown: { url: PHIENG_LOI_VISUAL_ASSETS.playerLocomotionDownAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
@@ -58,7 +62,6 @@ const ATLAS_CONFIG = {
   chiefTalk: { url: PHIENG_LOI_VISUAL_ASSETS.chiefTalkAtlas, columns: 4, rows: 2, frameAspect: 1 },
   feastLoop: { url: PHIENG_LOI_VISUAL_ASSETS.feastLoopAtlas, columns: 4, rows: 2, frameAspect: 1 },
   streamLoop: { url: PHIENG_LOI_VISUAL_ASSETS.streamLoopAtlas, columns: 4, rows: 2, frameAspect: 1 },
-  actorAction: { url: PHIENG_LOI_VISUAL_ASSETS.actorActionAtlas, columns: 4, rows: 2, frameAspect: 1 },
   feastAction: { url: PHIENG_LOI_VISUAL_ASSETS.feastActionAtlas, columns: 4, rows: 2, frameAspect: 1 },
   streamAction: { url: PHIENG_LOI_VISUAL_ASSETS.streamActionAtlas, columns: 4, rows: 2, frameAspect: 1 },
   vuongMeDance: { url: PHIENG_LOI_VISUAL_ASSETS.vuongMeDanceAtlas, columns: 4, rows: 2, frameAspect: 1 },

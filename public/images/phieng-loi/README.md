@@ -7,24 +7,26 @@ project owner; the raw references are intentionally not committed.
 - `village-world-v1.webp`: 1672×941 legacy visual-pass world plate.
 - `village-world-v2.webp`: 1672×941 active, more spacious world plate mapped to
   a 2400×1350 logical world (over twice the previous playable area).
-- `heesun-atlas-v1.webp`: 1536×1024 transparent 3×2 pose atlas.
+- `heesun-actions-v2.webp`: 1536×1024 transparent 4×4 action atlas with
+  directional idle, notice, invitation, beckon, brake, recoil, victory, ambush,
+  seated-toast/drink and rare-flee poses.
+- `heesun-side-v2.webp`, `heesun-down-v2.webp`, `heesun-up-v2.webp`:
+  1536×1024 transparent 4×4 directional locomotion atlases. Rows 1–2 are an
+  eight-frame wander cycle; rows 3–4 are an eight-frame chase cycle.
 - `hanu-atlas-v1.webp`: 1536×1024 transparent 3×2 pose atlas.
 - `support-atlas-v1.webp`: 1776×888 transparent 4×2 pose atlas.
-- `heesun-run-v2.webp`: 1536×1024 transparent 4×2 running cycle.
 - `hanu-walk-v2.webp`: 1536×1024 transparent 4×2 phone-walk cycle.
 - `hanu-food-box-v1.svg`: transparent project-authored cutout shown only while
   HANU's delivery state carries the player's food.
-- `player-motion-atlas-v1.webp`: 1324×1188 transparent 4×4 Player sample
-  approved from composition B. Rows are idle, grounded walk, run, then dedicated
-  start/turn/stop/PHÀ ƠI poses. All cells share a 331×297 foot-anchored frame;
-  the source checker matte was converted to true alpha before WebP export.
+- `player-locomotion-side-v2.webp`, `player-locomotion-down-v2.webp`,
+  `player-locomotion-up-v2.webp`: 1536×1024 transparent 4×4 directional Player
+  locomotion atlases. Rows 1–2 are an eight-frame walk cycle and rows 3–4 are
+  an eight-frame run cycle.
+- `player-actions-v2.webp`: 1536×1023 transparent 4×3 Player action atlas with
+  directional idle, start, turn, stop, PHÀ ƠI, caught, seated and dance poses.
 - `chief-talk-v2.webp`: 1776×888 transparent 4×2 Trưởng bản talk/reaction cycle.
 - `feast-loop-v2.webp`: 1776×888 transparent 4×2 roadside-table toast/laugh cycle.
 - `stream-loop-v2.webp`: 1776×888 transparent 4×2 adult stream-community cycle.
-- `actor-action-atlas-v1.webp`: 888×444 transparent 4×2 action atlas with
-  dedicated Player/HeeSun seated feast poses, HeeSun brake/recoil and Player
-  shout/brake poses. Generated for this project from its existing approved
-  character atlases; chroma was removed into true alpha during export.
 - `feast-action-atlas-v1.webp`: 888×444 transparent 4×2 choreography atlas:
   abandoned table, collective stare/rise, and a separated four-person chase
   cycle. Generated for this project from the approved feast atlas.

@@ -76,6 +76,7 @@ export type MotionSnapshot = {
 };
 
 export type MotionTrack = {
+  actor: MotionActorId;
   currentMotion: ActorMotion;
   previousMotion: ActorMotion;
   motionEnteredAt: number;
@@ -152,6 +153,7 @@ const DANCE: Record<Exclude<MotionActorId, 'wife'>, ActorMotion> = {
 };
 
 const createTrack = (actor: MotionActorId, now: number): MotionTrack => ({
+  actor,
   currentMotion: 'idle',
   previousMotion: 'idle',
   motionEnteredAt: now,
@@ -451,10 +453,18 @@ export const sampleMotionPose = (track: MotionTrack): MotionPose => {
     case 'start': case 'stop': case 'turn': break;
     case 'move': base.y = -lift * 1.15; base.rotation = stride * 1.1; break;
     case 'walk': case 'run': break;
-    case 'wander': base.y = -lift * .65; base.rotation = stride * .55; break;
-    case 'chase': base.y = -lift * 1.75; base.x = track.facing * .8; base.rotation = track.facing * -4.2 + stride * 1.6; break;
-    case 'chase-distracted': base.y = -lift * 1.35; base.rotation = track.facing * -1.8 + stride * 2.4; break;
-    case 'flee': base.y = -lift * 2.2; base.x = -track.facing * .5; base.rotation = track.facing * 4.8 + stride * 2.2; break;
+    case 'wander':
+      if (track.actor !== 'heesun') { base.y = -lift * .65; base.rotation = stride * .55; }
+      break;
+    case 'chase':
+      if (track.actor !== 'heesun') { base.y = -lift * 1.75; base.x = track.facing * .8; base.rotation = track.facing * -4.2 + stride * 1.6; }
+      break;
+    case 'chase-distracted':
+      if (track.actor !== 'heesun') { base.y = -lift * 1.35; base.rotation = track.facing * -1.8 + stride * 2.4; }
+      break;
+    case 'flee':
+      if (track.actor !== 'heesun') { base.y = -lift * 2.2; base.x = -track.facing * .5; base.rotation = track.facing * 4.8 + stride * 2.2; }
+      break;
     case 'phone-walk': base.y = -lift * .55; base.rotation = stride * .42; break;
     case 'delivery': base.y = -lift * .9; base.rotation = stride * .75; break;
     case 'delivery-fast': base.y = -lift * 1.35; base.rotation = track.facing * -2 + stride * 1.1; break;
@@ -466,16 +476,24 @@ export const sampleMotionPose = (track: MotionTrack): MotionPose => {
       break;
     }
     case 'caught': base.x = -track.facing * 2.5; base.rotation = -track.facing * 6; base.scaleY = .94; break;
-    case 'notice': base.x = -track.facing * .9; base.rotation = track.facing * 1.2; break;
-    case 'intro': base.x = track.facing * 1.4; base.rotation = track.facing * -1.1; break;
+    case 'notice':
+      if (track.actor !== 'heesun') { base.x = -track.facing * .9; base.rotation = track.facing * 1.2; }
+      break;
+    case 'intro':
+      if (track.actor !== 'heesun') { base.x = track.facing * 1.4; base.rotation = track.facing * -1.1; }
+      break;
     case 'recoil': {
       const recoil = Math.min(1, t / .34);
-      base.x = -track.facing * Math.sin(recoil * Math.PI) * 4.5;
-      base.rotation = -track.facing * Math.sin(recoil * Math.PI) * 7;
+      if (track.actor !== 'heesun') {
+        base.x = -track.facing * Math.sin(recoil * Math.PI) * 4.5;
+        base.rotation = -track.facing * Math.sin(recoil * Math.PI) * 7;
+      }
       break;
     }
     case 'ambush': base.y = 2 - easeOutBack(Math.min(1, t / .28)) * 2; base.scaleY = .9 + easeOutBack(Math.min(1, t / .28)) * .1; break;
-    case 'victory': base.y = -Math.sin(Math.min(1, t / .22) * Math.PI) * 2.3; base.rotation = track.facing * -2; break;
+    case 'victory':
+      if (track.actor !== 'heesun') { base.y = -Math.sin(Math.min(1, t / .22) * Math.PI) * 2.3; base.rotation = track.facing * -2; }
+      break;
     case 'phone-pause': base.rotation = Math.sin(t * 1.4 + track.phaseOffset) * .22; break;
     case 'handoff': base.x = track.facing * Math.sin(Math.min(1, t / .45) * Math.PI) * 2.4; break;
     case 'feast-rise': base.y = 2 - easeOutBack(Math.min(1, t / .32)) * 2.5; break;
