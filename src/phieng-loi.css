@@ -1033,8 +1033,12 @@
   background-repeat: no-repeat;
   transform:
     translate(-50%, -92%)
+    translate(var(--motion-x, 0), var(--motion-y, 0))
+    rotate(var(--motion-rotation, 0deg))
     scale(var(--sprite-scale, 1))
-    scaleX(var(--sprite-flip, 1));
+    scaleX(var(--sprite-flip, 1))
+    scaleX(var(--motion-scale-x, 1))
+    scaleY(var(--motion-scale-y, 1));
   transform-origin: 50% 92%;
   will-change: background-position, transform;
 }
@@ -1132,6 +1136,7 @@
 }
 
 .phieng-visual__actor.is-feast::before,
+.phieng-visual__actor.is-feast-crowd::before,
 .phieng-visual__actor.is-stream-group::before {
   left: -38px;
   width: 76px;
@@ -1139,6 +1144,13 @@
 
 .phieng-visual__actor.is-stream-group::before {
   display: none;
+}
+
+.phieng-visual__actor.is-feast-crowd::before {
+  top: -4px;
+  left: -34px;
+  width: 68px;
+  height: 7px;
 }
 
 .phieng-visual__occluder {
@@ -1554,6 +1566,7 @@
   left: var(--bubble-x);
   width: min(22rem, 44%);
   transform: translate(-50%, -100%);
+  transition: top 110ms linear, left 110ms linear;
 }
 
 .phieng-game__message.is-anchored::after {
@@ -1590,11 +1603,22 @@
   filter: drop-shadow(0 2px 2px rgba(27, 36, 25, .28));
   transform: rotate(8deg);
   transform-origin: 50% 80%;
+  transition: transform .16s ease-out, top .16s ease-out, left .16s ease-out;
   pointer-events: none;
 }
 
 .phieng-visual__actor.is-hanu[data-motion="delivery"] .phieng-visual__hanu-food {
-  animation: phieng-food-bob .32s ease-in-out infinite alternate;
+  transform: translateY(-1px) rotate(9deg);
+}
+
+.phieng-visual__actor.is-hanu[data-motion="delivery-fast"] .phieng-visual__hanu-food {
+  transform: translateY(-2px) rotate(13deg);
+}
+
+.phieng-visual__actor.is-hanu[data-motion="handoff"] .phieng-visual__hanu-food {
+  top: -25px;
+  left: 18px;
+  transform: translate(4px, 2px) rotate(-4deg);
 }
 
 .phieng-visual__actor.is-feast[data-motion="chase"] .phieng-visual__sprite {
@@ -1751,6 +1775,40 @@
   .phieng-game__message { bottom: 4.4rem; width: min(27rem, 52%); }
   .phieng-game__pha-oi { width: clamp(5.8rem, 17vw, 7.2rem); }
   .phieng-game__joystick { width: clamp(4.8rem, 14vw, 6.3rem); }
+}
+
+/* Actor motion is sampled from local action time by motionController.ts.
+   These sprites must never fall back to unrelated perpetual CSS wobble. */
+.phieng-visual__actor .phieng-visual__sprite {
+  animation: none !important;
+}
+
+.phieng-visual.is-capture-impact::before {
+  position: absolute;
+  z-index: 15;
+  inset: 0;
+  background: radial-gradient(circle at 50% 58%, rgba(255, 243, 186, .42), transparent 24%);
+  content: "";
+  pointer-events: none;
+  animation: phieng-capture-impact .14s steps(2, end) both;
+}
+
+.phieng-visual.is-capture-seated .phieng-visual__actor.is-player::before,
+.phieng-visual.is-capture-seated .phieng-visual__actor.is-heesun::before {
+  top: -2px;
+  height: 5px;
+  opacity: .7;
+}
+
+.phieng-visual__actor.is-feast-crowd[data-motion="feast-reset"] {
+  opacity: .45;
+  transition: opacity .24s ease-out;
+}
+
+@keyframes phieng-capture-impact {
+  0% { opacity: 0; filter: contrast(1); }
+  35% { opacity: 1; filter: contrast(1.35); }
+  100% { opacity: 0; filter: contrast(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {

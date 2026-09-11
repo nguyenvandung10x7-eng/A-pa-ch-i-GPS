@@ -11,6 +11,9 @@ export const PHIENG_LOI_VISUAL_ASSETS = {
   chiefTalkAtlas: '/images/phieng-loi/chief-talk-v2.webp',
   feastLoopAtlas: '/images/phieng-loi/feast-loop-v2.webp',
   streamLoopAtlas: '/images/phieng-loi/stream-loop-v2.webp',
+  actorActionAtlas: '/images/phieng-loi/actor-action-atlas-v1.webp',
+  feastActionAtlas: '/images/phieng-loi/feast-action-atlas-v1.webp',
+  streamActionAtlas: '/images/phieng-loi/stream-action-atlas-v1.webp',
   vuongMeDanceAtlas: '/images/phieng-loi/vuongme-dance-v1.webp',
   heesunWifeAtlas: '/images/phieng-loi/heesun-wife-atlas-v1.webp',
   victoryMonument: '/images/phieng-loi/dien-bien-victory-monument-v1.webp',
@@ -30,6 +33,9 @@ export type AtlasName =
   | 'chiefTalk'
   | 'feastLoop'
   | 'streamLoop'
+  | 'actorAction'
+  | 'feastAction'
+  | 'streamAction'
   | 'vuongMeDance'
   | 'heesunWife';
 
@@ -43,6 +49,9 @@ const ATLAS_CONFIG = {
   chiefTalk: { url: PHIENG_LOI_VISUAL_ASSETS.chiefTalkAtlas, columns: 4, rows: 2, frameAspect: 1 },
   feastLoop: { url: PHIENG_LOI_VISUAL_ASSETS.feastLoopAtlas, columns: 4, rows: 2, frameAspect: 1 },
   streamLoop: { url: PHIENG_LOI_VISUAL_ASSETS.streamLoopAtlas, columns: 4, rows: 2, frameAspect: 1 },
+  actorAction: { url: PHIENG_LOI_VISUAL_ASSETS.actorActionAtlas, columns: 4, rows: 2, frameAspect: 1 },
+  feastAction: { url: PHIENG_LOI_VISUAL_ASSETS.feastActionAtlas, columns: 4, rows: 2, frameAspect: 1 },
+  streamAction: { url: PHIENG_LOI_VISUAL_ASSETS.streamActionAtlas, columns: 4, rows: 2, frameAspect: 1 },
   vuongMeDance: { url: PHIENG_LOI_VISUAL_ASSETS.vuongMeDanceAtlas, columns: 4, rows: 2, frameAspect: 1 },
   heesunWife: { url: PHIENG_LOI_VISUAL_ASSETS.heesunWifeAtlas, columns: 4, rows: 2, frameAspect: 0.75 },
 } as const;

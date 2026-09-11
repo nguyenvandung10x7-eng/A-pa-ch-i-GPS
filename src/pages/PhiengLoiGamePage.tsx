@@ -38,6 +38,11 @@ import {
   type PhiengLoiVisualHandle,
 } from '../experiences/phieng-loi/PhiengLoiVisualScene';
 import { preloadPhiengLoiVisualAssets } from '../experiences/phieng-loi/visualAssets';
+import {
+  applyPhiengLoiQaScenario,
+  parsePhiengLoiQaScenario,
+  randomForPhiengLoiQaScenario,
+} from '../experiences/phieng-loi/qaScenarios';
 import { PHIENG_LOI_LANDMARKS } from '../experiences/phieng-loi/worldLayout';
 import type { LanguageCode } from '../types/task';
 import {
@@ -70,7 +75,7 @@ const readSave = (): GameSave | null => {
     const value = window.localStorage.getItem(PHIENG_LOI_SAVE_KEY);
     if (!value) return null;
     const parsed = JSON.parse(value) as GameSave;
-    return parsed?.version === 1 || parsed?.version === 2 || parsed?.version === GAME_SAVE_VERSION ? parsed : null;
+    return [1, 2, 3, GAME_SAVE_VERSION].includes(parsed?.version) ? parsed : null;
   } catch {
     return null;
   }
@@ -102,14 +107,23 @@ const createInputState = (): InputState => ({
 export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePageProps) {
   const vi = language === 'vi';
   const [profile] = useState(getDeviceProfile);
+  const [qaScenario] = useState(() => (
+    typeof window === 'undefined'
+      ? null
+      : parsePhiengLoiQaScenario(new URLSearchParams(window.location.search).get('qa'))
+  ));
   const [initialSave] = useState(() => {
+    if (qaScenario) return null;
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('new')) {
       clearPhiengLoiSave();
       return null;
     }
     return readSave();
   });
-  const [initialGame] = useState(() => createGame(profile.quality, profile.reducedMotion, initialSave));
+  const [initialGame] = useState(() => applyPhiengLoiQaScenario(
+    createGame(profile.quality, profile.reducedMotion, initialSave, { random: randomForPhiengLoiQaScenario(qaScenario) }),
+    qaScenario,
+  ));
   const gameRef = useRef<GameState>(initialGame);
   const inputRef = useRef<InputState>(createInputState());
   const audioRef = useRef<PhiengLoiAudioDirector | null>(null);
@@ -119,7 +133,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   const saveAtRef = useRef(initialGame.elapsed);
   const beforeBookStatusRef = useRef<GameStatus>('playing');
 
-  const [status, setStatus] = useState<GameStatus>('intro');
+  const [status, setStatus] = useState<GameStatus>(() => qaScenario ? 'playing' : 'intro');
   const [ui, setUi] = useState<UiSnapshot>(() => createUiSnapshot(initialGame));
   const [muted, setMuted] = useState(readPhiengLoiMuted);
   const [needsLandscape, setNeedsLandscape] = useState(false);
@@ -135,13 +149,13 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   }, []);
 
   const saveGame = useCallback((game: GameState) => {
-    if (typeof window === 'undefined' || game.complete || game.scene.kind === 'capture') return;
+    if (qaScenario || typeof window === 'undefined' || game.complete || game.scene.kind === 'capture') return;
     try {
       window.localStorage.setItem(PHIENG_LOI_SAVE_KEY, JSON.stringify(createSave(game)));
     } catch {
       // Continue is optional; gameplay remains live if storage is unavailable.
     }
-  }, []);
+  }, [qaScenario]);
 
   const ensureAudio = useCallback(() => {
     if (!audioRef.current) audioRef.current = createPhiengLoiAudio();
@@ -163,8 +177,11 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
   }, [ensureAudio]);
 
   const startFresh = useCallback(() => {
-    clearPhiengLoiSave();
-    const game = createGame(profile.quality, profile.reducedMotion);
+    if (!qaScenario) clearPhiengLoiSave();
+    const game = applyPhiengLoiQaScenario(
+      createGame(profile.quality, profile.reducedMotion, null, { random: randomForPhiengLoiQaScenario(qaScenario) }),
+      qaScenario,
+    );
     gameRef.current = game;
     inputRef.current = createInputState();
     saveAtRef.current = 0;
@@ -175,7 +192,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     requestLandscape();
     ensureAudio();
     setStatus('playing');
-  }, [ensureAudio, profile.quality, profile.reducedMotion]);
+  }, [ensureAudio, profile.quality, profile.reducedMotion, qaScenario]);
 
   const togglePause = useCallback(() => {
     if (status === 'playing') {

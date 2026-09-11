@@ -4,6 +4,7 @@ import {
   ABSURD_EVENT_REGISTRY,
   DIRECTOR_LIMITS,
   PHA_OI_COOLDOWN_SECONDS,
+  PHA_OI_TRUE_NOTHING_COOLDOWN_SECONDS,
   TRUE_NOTHING_PROBABILITY,
   activateDirectedEvent,
   createDirectorState,
@@ -22,6 +23,12 @@ import {
   triggerDirectedEvent,
 } from '../src/experiences/phieng-loi/gameEngine.ts';
 import { PHIENG_LOI_AUDIO_CUES } from '../src/experiences/phieng-loi/audioManifest.ts';
+import {
+  actorMotionForGame,
+  advanceMotion,
+  createMotionController,
+  motionFrameRate,
+} from '../src/experiences/phieng-loi/motionController.ts';
 import { PHIENG_LOI_VISUAL_ASSETS } from '../src/experiences/phieng-loi/visualAssets.ts';
 import { PHIENG_LOI_LANDMARKS, PHIENG_LOI_WORLD, isWalkable, terrainAt } from '../src/experiences/phieng-loi/worldLayout.ts';
 
@@ -78,6 +85,8 @@ const engineSource = readFileSync(new URL('../src/experiences/phieng-loi/gameEng
 const directorSource = readFileSync(new URL('../src/experiences/phieng-loi/absurdityDirector.ts', import.meta.url), 'utf8');
 const pageSource = readFileSync(new URL('../src/pages/PhiengLoiGamePage.tsx', import.meta.url), 'utf8');
 const visualSource = readFileSync(new URL('../src/experiences/phieng-loi/PhiengLoiVisualScene.tsx', import.meta.url), 'utf8');
+const motionSource = readFileSync(new URL('../src/experiences/phieng-loi/motionController.ts', import.meta.url), 'utf8');
+const qaSource = readFileSync(new URL('../src/experiences/phieng-loi/qaScenarios.ts', import.meta.url), 'utf8');
 assert.doesNotMatch(engineSource, /CanvasRenderingContext2D|\.fillRect\(|\.beginPath\(/);
 assert.doesNotMatch(pageSource, /<canvas|renderGame\(/);
 assert.match(pageSource, /disabled=\{!ui\.callReady/);
@@ -89,6 +98,18 @@ assert.doesNotMatch(visualSource, /VUONGME_CALL_INTERVAL|normalCallCount\s*%/);
 assert.match(visualSource, /PHIENG_LOI_VISUAL_ASSETS\.victoryMonument/);
 assert.match(visualSource, /PHIENG_LOI_VISUAL_ASSETS\.victoryMuseum/);
 assert.match(visualSource, /heesunWife/);
+assert.match(visualSource, /createMotionController/);
+assert.match(visualSource, /ResizeObserver/);
+assert.match(visualSource, /feastCrowdRef/);
+assert.match(visualSource, /actorAction/);
+assert.match(visualSource, /streamAction/);
+assert.doesNotMatch(visualSource, /offsetWidth|clientWidth/);
+assert.match(motionSource, /preEventMotionState/);
+assert.match(motionSource, /motionEnteredAt/);
+assert.match(pageSource, /parsePhiengLoiQaScenario/);
+for (const scenario of ['locomotion', 'pha-normal', 'pha-nothing', 'heesun-intro', 'heesun-feast', 'capture', 'hanu-delivery', 'signature-chase', 'feast', 'chicken', 'hanu-blocks-heesun', 'disco', 'wife']) {
+  assert.match(qaSource, new RegExp(`["']${scenario}["']`), `${scenario} deterministic QA scene must exist`);
+}
 assert.doesNotMatch(pageSource, /GỌI \/ ĂN \/ CHẠM|CALL \/ EAT \/ ACT/);
 assert.doesNotMatch(pageSource, /Ngón trái để đi · Ngón phải|Move with your left thumb/);
 assert.doesNotMatch(pageSource, /BẮT HANU|CATCH HANU|catch button/i);
@@ -108,6 +129,7 @@ assert.equal(DIRECTOR_LIMITS.chainDepth, 5);
 
 assert.equal(TRUE_NOTHING_PROBABILITY, 0.2);
 assert.equal(PHA_OI_COOLDOWN_SECONDS, 5);
+assert.equal(PHA_OI_TRUE_NOTHING_COOLDOWN_SECONDS, 60);
 assert.equal(isGameplayBubble('player', 'plain'), true);
 assert.equal(isGameplayBubble('heesun', 'heesun'), true);
 assert.equal(isGameplayBubble('hanu', 'hanu'), true);
@@ -124,6 +146,49 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   assert.ok(ratio > 0.19 && ratio < 0.21, `TRUE NOTHING ratio was ${ratio}`);
 }
 {
+  const controller = createMotionController(0);
+  const track = controller.player;
+  advanceMotion(track, { motion: 'idle', now: 0, vx: 0, vy: 0, facingHint: 1, allowLocomotionTransitions: true });
+  advanceMotion(track, { motion: 'move', now: .01, vx: 86, vy: 0, facingHint: 1, allowLocomotionTransitions: true });
+  assert.equal(track.currentMotion, 'start', 'locomotion starts with anticipation');
+  advanceMotion(track, { motion: 'move', now: .14, vx: 86, vy: 0, facingHint: 1, allowLocomotionTransitions: true });
+  assert.equal(track.currentMotion, 'move');
+  const firstMotionStart = track.motionEnteredAt;
+  advanceMotion(track, { motion: 'move', now: .16, vx: -86, vy: 0, facingHint: -1, allowLocomotionTransitions: true });
+  assert.equal(track.facing, 1, 'facing uses hysteresis instead of flipping on the first reverse sample');
+  advanceMotion(track, { motion: 'move', now: .25, vx: -86, vy: 0, facingHint: -1, allowLocomotionTransitions: true });
+  assert.equal(track.facing, -1);
+  assert.equal(track.currentMotion, 'turn');
+  advanceMotion(track, { motion: 'move', now: .38, vx: -86, vy: 0, facingHint: -1, allowLocomotionTransitions: true });
+  assert.equal(track.currentMotion, 'move');
+  assert.ok(track.motionEnteredAt > firstMotionStart, 'each action owns a fresh local phase');
+  advanceMotion(track, { motion: 'idle', now: .4, vx: 0, vy: 0, facingHint: -1, allowLocomotionTransitions: true });
+  assert.equal(track.currentMotion, 'stop', 'locomotion ends with braking/settle');
+  advanceMotion(track, { motion: 'idle', now: .58, vx: 0, vy: 0, facingHint: -1, allowLocomotionTransitions: true });
+  assert.equal(track.currentMotion, 'idle');
+
+  const heesun = controller.heesun;
+  advanceMotion(heesun, { motion: 'chase', now: .1, vx: 20, facingHint: 1 });
+  const slowRate = motionFrameRate(heesun);
+  advanceMotion(heesun, { motion: 'chase', now: .2, vx: 82, facingHint: 1 });
+  assert.ok(motionFrameRate(heesun) > slowRate, 'chase cadence follows actual velocity');
+  advanceMotion(heesun, { motion: 'chase', now: .3, vx: 82, facingHint: 1, visualOverride: 'dance-heesun' });
+  assert.equal(heesun.currentMotion, 'dance-heesun');
+  assert.equal(heesun.preEventMotionState?.motion, 'chase');
+  advanceMotion(heesun, { motion: 'chase', now: 1.3, vx: 82, facingHint: 1, visualOverride: null });
+  assert.equal(heesun.currentMotion, 'chase', 'disco restores the pre-event chase motion directly');
+}
+{
+  const game = createGame('high', false, null, { random: () => .8 });
+  stabilize(game);
+  game.player.x = 1_000;
+  game.player.y = 620;
+  game.cameraX = game.player.x - VIEW_WIDTH / 2;
+  game.cameraY = game.player.y - VIEW_HEIGHT * .7;
+  tick(game, .8, { ...freshInput(), moveX: 1 });
+  assert.ok(game.cameraX > game.player.x - VIEW_WIDTH / 2 + 12, 'camera leads horizontal movement');
+}
+{
   const game = createGame('high', false, null, { random: sequenceRandom([0.1, 0.1]) });
   stabilize(game);
   const before = {
@@ -134,6 +199,9 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
     delayed: game.director.delayedQueue.length,
     recent: game.director.recentEvents.length,
     shakeUntil: game.shakeUntil,
+    impulse: { ...game.cameraImpulse },
+    particles: game.particles.length,
+    animationCues: JSON.stringify(game.animationCues),
     normalCallCount: game.normalCallCount,
   };
   const events = call(game);
@@ -147,9 +215,14 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   assert.equal(game.feast.mode, before.feastMode);
   assert.equal(game.chicken.mode, before.chicken);
   assert.equal(game.shakeUntil, before.shakeUntil);
+  assert.deepEqual(game.cameraImpulse, before.impulse);
+  assert.equal(game.particles.length, before.particles);
+  assert.equal(JSON.stringify(game.animationCues), before.animationCues);
   assert.equal(game.normalCallCount, before.normalCallCount);
+  assert.equal(game.lastCallOutcome, 'true-nothing');
   assert.equal(game.karaoke.active, false);
-  assert.ok(Math.abs(game.phaOiCooldownUntil - game.elapsed - PHA_OI_COOLDOWN_SECONDS) < 0.001);
+  assert.ok(Math.abs(game.phaOiCooldownUntil - game.elapsed - PHA_OI_TRUE_NOTHING_COOLDOWN_SECONDS) < 0.001);
+  assert.equal(game.phaOiCooldownDuration, PHA_OI_TRUE_NOTHING_COOLDOWN_SECONDS);
   const calls = game.callCount;
   assert.equal(call(game).some(({ type }) => type === 'pha-oi'), false);
   assert.equal(game.callCount, calls);
@@ -170,7 +243,7 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   assert.notEqual(game.hanu.x, hanuX);
 
   const restored = createGame('high', false, createSave(game), { random: () => 0.8 });
-  assert.ok(restored.phaOiCooldownUntil - restored.elapsed > 2.9);
+  assert.ok(restored.phaOiCooldownUntil - restored.elapsed > 57.9);
   restored.heesun.mode = 'drinking';
   restored.heesun.modeUntil = 99_999;
   restored.hanu.mode = 'delivery-paused';
@@ -185,21 +258,26 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   legacyLongCooldown.version = 2;
   legacyLongCooldown.phaOiCooldownRemaining = 60;
   const cappedLegacy = createGame('high', false, legacyLongCooldown, { random: () => 0.8 });
-  assert.ok(cappedLegacy.phaOiCooldownUntil - cappedLegacy.elapsed <= PHA_OI_COOLDOWN_SECONDS);
+  assert.ok(cappedLegacy.phaOiCooldownUntil - cappedLegacy.elapsed > 59.9);
+  assert.ok(cappedLegacy.phaOiCooldownUntil - cappedLegacy.elapsed <= PHA_OI_TRUE_NOTHING_COOLDOWN_SECONDS);
 }
 
 {
-  const game = createGame('high', false, null, { random: sequenceRandom([0.1, 0.8, 0, 0.2, 0.4, 0.8, 0, 0.8], 0.7) });
+  const game = createGame('high', false, null, { random: sequenceRandom([0.8, 0.1, 0, 0.2, 0.4, 0.8, 0, 0.8], 0.7) });
   stabilize(game);
   const first = call(game);
   assert.ok(first.some((event) => event.type === 'pha-oi' && event.outcome === 'normal'));
   assert.ok(first.some((event) => event.type === 'director-event'));
   assert.equal(game.normalCallCount, 1);
-  assert.ok(game.phaOiCooldownUntil - game.elapsed > 4.9);
+  assert.ok(Math.abs(game.phaOiCooldownUntil - game.elapsed - PHA_OI_COOLDOWN_SECONDS) < .001);
+  assert.equal(game.phaOiCooldownDuration, PHA_OI_COOLDOWN_SECONDS);
+  assert.equal(game.lastCallOutcome, 'normal');
+  assert.ok(game.cameraImpulse.until > game.elapsed, 'normal PHÀ ƠI may create a small camera beat');
   const firstVoice = first.find(({ type }) => type === 'pha-oi').voice;
   tick(game, 0.08);
   assert.equal(call(game).some(({ type }) => type === 'pha-oi'), false);
   tick(game, PHA_OI_COOLDOWN_SECONDS);
+  game.random = sequenceRandom([0.8, 0.95, 0.4, 0.6], 0.7);
   const second = call(game);
   assert.ok(second.some((event) => event.type === 'pha-oi'));
   assert.notEqual(second.find(({ type }) => type === 'pha-oi').voice, firstVoice);
@@ -228,6 +306,7 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   assert.equal(game.heesun.mode, 'chasing');
   triggerDirectedEvent(game, 'heesun-shoe');
   assert.equal(game.heesun.mode, 'interrupted');
+  assert.equal(actorMotionForGame(game, 'heesun'), 'recoil');
   tick(game, 1.8);
   assert.equal(game.heesun.mode, 'chasing');
   game.director.activeMicro = [];
@@ -238,14 +317,40 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   game.heesun.x = game.player.x;
   game.heesun.y = game.player.y;
   assert.ok(tick(game, 0.02).some(({ type }) => type === 'capture'));
+  assert.equal(createUiSnapshot(game).cinematicVi, null, 'capture contact gets a readable hit-stop before the hard cut');
+  tick(game, 0.14);
   assert.equal(createUiSnapshot(game).cinematicVi, '3 GIỜ SAU');
-  tick(game, 1.1);
+  tick(game, 0.96);
   assert.equal(game.message?.textVi, 'Làm chén cuối.');
-  tick(game, 1.7);
+  assert.equal(actorMotionForGame(game, 'player'), 'seated-tired');
+  assert.equal(actorMotionForGame(game, 'heesun'), 'seated-toast');
+  assert.equal(game.player.y, game.feast.y + 18);
+  assert.equal(game.heesun.y, game.feast.y + 18);
+  tick(game, 1.95);
   assert.equal(createUiSnapshot(game).cinematicVi, '5 GIỜ SAU');
   assert.ok(tick(game, 0.9).some(({ type }) => type === 'reset'));
   assert.equal(game.heesun.caught, 1);
   assert.equal(Math.round(game.player.x), PHIENG_LOI_LANDMARKS.playerStart.x);
+}
+
+{
+  const game = createGame('high', false, null, { random: () => 0.8 });
+  stabilize(game);
+  Object.assign(game.heesun, {
+    x: game.feast.x + 44,
+    y: game.feast.y,
+    mode: 'chasing',
+    target: 'player',
+    chaseTimeoutAt: 99_999,
+  });
+  const origin = { x: game.heesun.x, y: game.heesun.y };
+  triggerDirectedEvent(game, 'heesun-feast-interrupt');
+  assert.equal(game.heesun.mode, 'drinking');
+  assert.equal(actorMotionForGame(game, 'heesun'), 'drinking');
+  assert.deepEqual({ x: game.heesun.actionFromX, y: game.heesun.actionFromY }, origin);
+  assert.ok(Math.hypot(game.heesun.x - game.feast.x, game.heesun.y - game.feast.y) < 70, 'HeeSun joins a real table seat');
+  tick(game, 2.45);
+  assert.equal(game.heesun.mode, 'chasing', 'HeeSun resumes the pre-interrupt chase');
 }
 
 {
@@ -278,6 +383,7 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   game.director.activeMicro = [];
   triggerDirectedEvent(game, 'hanu-phone-first');
   assert.equal(game.hanu.mode, 'delivery-paused');
+  assert.equal(actorMotionForGame(game, 'hanu'), 'phone-pause');
   tick(game, 1.9);
   assert.equal(game.hanu.mode, 'delivering');
   game.director.activeMicro = [];
@@ -289,6 +395,7 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   game.director.activeMicro = [];
   triggerDirectedEvent(game, 'hanu-wrong-person');
   assert.equal(game.hanu.mode, 'delivery-paused');
+  assert.equal(actorMotionForGame(game, 'hanu'), 'handoff');
   tick(game, 3);
   assert.equal(game.hanu.mode, 'delivering');
   assert.equal(game.hanu.carryingFood, true);
@@ -305,6 +412,7 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   Object.assign(game.hanu, { mode: 'delivering', carryingFood: true, deliveryTimeoutAt: 99_999 });
   const events = triggerDirectedEvent(game, 'hanu-perfect-delivery');
   assert.ok(events.some(({ type }) => type === 'delivery-complete'));
+  assert.equal(actorMotionForGame(game, 'hanu'), 'handoff');
   assert.equal(game.hanu.mode, 'delivered');
   assert.equal(game.hanu.carryingFood, false);
 }
@@ -342,10 +450,15 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   tick(game, 2.3);
   assert.equal(game.feast.mode, 'idle');
   game.director.activeMicro = [];
-  triggerDirectedEvent(game, 'feast-chase');
-  assert.equal(game.feast.mode, 'chasing');
   game.player.x = PHIENG_LOI_LANDMARKS.exit.x - 100;
   game.player.y = PHIENG_LOI_LANDMARKS.exit.y;
+  triggerDirectedEvent(game, 'feast-chase');
+  assert.equal(game.feast.mode, 'chasing');
+  assert.equal(actorMotionForGame(game, 'feast'), 'feast-rise');
+  const feastLaunchX = game.feast.x;
+  tick(game, .5);
+  assert.equal(actorMotionForGame(game, 'feast'), 'feast-chase');
+  assert.notEqual(game.feast.x, feastLaunchX, 'the people launch after standing instead of sliding the table immediately');
   tick(game, 8.2);
   assert.notEqual(game.feast.mode, 'chasing');
   game.feast.mode = 'idle';
@@ -370,6 +483,7 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
     game.director.activeMicro = [];
     triggerDirectedEvent(game, id);
     assert.equal(game.chicken.mode, expected);
+    assert.equal(actorMotionForGame(game, 'chicken'), expected === 'look' || expected === 'triple-look' ? 'look' : 'panic');
   }
 }
 
@@ -380,6 +494,8 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   game.feast.mode = 'chasing';
   triggerDirectedEvent(game, 'heesun-wife');
   assert.equal(game.heesun.mode, 'rare-flee');
+  assert.equal(actorMotionForGame(game, 'heesun'), 'flee');
+  assert.equal(actorMotionForGame(game, 'wife'), 'command');
   assert.equal(game.feast.mode, 'resetting');
   assert.ok(game.wife.visibleUntil > game.elapsed);
   assert.notEqual(game.message?.speakerVi, 'VỢ HEESUN');
@@ -561,4 +677,4 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
   assert.ok(cue.durationSeconds[0] > 0 && cue.durationSeconds[1] >= cue.durationSeconds[0]);
 });
 
-console.log('Phiêng Lơi director simulation passed: 5s PHÀ ƠI cooldown, TRUE NOTHING purity, bubble allowlist, VuongMe karaoke, HeeSun wife, chains, save and bounded runtime.');
+console.log('Phiêng Lơi simulation passed: 5s normal / 60s TRUE NOTHING cooldown, A-M choreography QA, motion controller, bubble allowlist, karaoke restore, capture seating, chains, save and bounded runtime.');

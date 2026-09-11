@@ -18,6 +18,16 @@ project owner; the raw references are intentionally not committed.
 - `chief-talk-v2.webp`: 1776×888 transparent 4×2 Trưởng bản talk/reaction cycle.
 - `feast-loop-v2.webp`: 1776×888 transparent 4×2 roadside-table toast/laugh cycle.
 - `stream-loop-v2.webp`: 1776×888 transparent 4×2 adult stream-community cycle.
+- `actor-action-atlas-v1.webp`: 888×444 transparent 4×2 action atlas with
+  dedicated Player/HeeSun seated feast poses, HeeSun brake/recoil and Player
+  shout/brake poses. Generated for this project from its existing approved
+  character atlases; chroma was removed into true alpha during export.
+- `feast-action-atlas-v1.webp`: 888×444 transparent 4×2 choreography atlas:
+  abandoned table, collective stare/rise, and a separated four-person chase
+  cycle. Generated for this project from the approved feast atlas.
+- `stream-action-atlas-v1.webp`: 888×444 transparent 4×2 run/dance atlas for
+  the same four adult stream characters, used to leave the stream visibly and
+  join VuongMe's disco without moving the painted water/rocks.
 - `vuongme-dance-v1.webp`: 1776×888 transparent 4×2 VươngMe karaoke/dance cycle.
 - `heesun-wife-atlas-v1.webp`: 1536×1024 transparent 4×2 original fictional
   HeeSun-wife entrance/command/exit pose atlas.

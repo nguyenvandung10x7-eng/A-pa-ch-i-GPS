@@ -1,5 +1,6 @@
 export const TRUE_NOTHING_PROBABILITY = 0.2;
 export const PHA_OI_COOLDOWN_SECONDS = 5;
+export const PHA_OI_TRUE_NOTHING_COOLDOWN_SECONDS = 60;
 
 export const DIRECTOR_LIMITS = {
   activeMajor: 1,

@@ -1,5 +1,6 @@
 import {
   PHA_OI_COOLDOWN_SECONDS,
+  PHA_OI_TRUE_NOTHING_COOLDOWN_SECONDS,
   activateDirectedEvent,
   createDirectorState,
   evaluateDirector,
@@ -36,7 +37,7 @@ export const VIEW_WIDTH = PHIENG_LOI_WORLD.viewWidth;
 export const VIEW_HEIGHT = PHIENG_LOI_WORLD.viewHeight;
 export const WORLD_WIDTH = PHIENG_LOI_WORLD.width;
 export const WORLD_HEIGHT = PHIENG_LOI_WORLD.height;
-export const GAME_SAVE_VERSION = 3;
+export const GAME_SAVE_VERSION = 4;
 
 const PLAYER_START_X = PHIENG_LOI_LANDMARKS.playerStart.x;
 const PLAYER_START_Y = PHIENG_LOI_LANDMARKS.playerStart.y;
@@ -55,6 +56,20 @@ export type ChickenMode = 'peck' | 'look' | 'triple-look' | 'panic-away' | 'pani
 export type MacroKind = 'none' | 'growth' | 'world-news' | 'physics' | 'philosophy';
 export type SceneKind = 'none' | 'heesun-intro' | 'capture' | 'stream';
 export type MessageTone = DialogueTone;
+export type AnimationActorId = 'player' | 'heesun' | 'hanu' | 'feast' | 'chief' | 'stream' | 'vuongme' | 'wife' | 'dog' | 'chicken';
+
+export type AnimationCueState = {
+  cue: string;
+  enteredAt: number;
+  until: number;
+};
+
+export type CameraImpulseState = {
+  startedAt: number;
+  until: number;
+  x: number;
+  y: number;
+};
 
 export type InputState = {
   left: boolean;
@@ -104,6 +119,8 @@ export type HeeSunState = {
   navigationX: number;
   navigationY: number;
   nextNavigationAt: number;
+  actionFromX: number;
+  actionFromY: number;
 };
 
 export type HaNuState = {
@@ -221,6 +238,7 @@ export type GameSave = {
   powerRemaining?: Partial<Record<PowerKind, number>>;
   squashSequence?: { age: number; stage: number };
   phaOiCooldownRemaining?: number;
+  phaOiCooldownDuration?: number;
   lastVoice?: PhaOiVoiceKind;
   directorRecent?: Array<{ id: string; age: number }>;
   directorCooldownRemaining?: Record<string, number>;
@@ -291,7 +309,9 @@ export type GameState = {
   lastVoice: PhaOiVoiceKind | null;
   phaOiCooldownStartedAt: number;
   phaOiCooldownUntil: number;
+  phaOiCooldownDuration: number;
   callRechargePulseUntil: number;
+  lastCallOutcome: 'normal' | 'true-nothing' | null;
   absurdityScore: number;
   absurdityLevel: AbsurdityLevel;
   nextTimeEscalationAt: number;
@@ -312,13 +332,15 @@ export type GameState = {
   nextCollisionSignalAt: number;
   lastCollisionSignature: string;
   shakeUntil: number;
+  cameraImpulse: CameraImpulseState;
+  animationCues: Partial<Record<AnimationActorId, AnimationCueState>>;
   particles: Particle[];
   complete: boolean;
 };
 
 type GameRuntimeOptions = { random?: () => number };
 const POWER_DURATION: Record<PowerKind, number> = { squash: 11, coffee: 12, macadamia: 12 };
-const FEAST_LOCATIONS = [PHIENG_LOI_LANDMARKS.feastStart, PHIENG_LOI_LANDMARKS.feastSecond, PHIENG_LOI_LANDMARKS.feastField] as const;
+export const FEAST_TABLE_LOCATIONS = [PHIENG_LOI_LANDMARKS.feastStart, PHIENG_LOI_LANDMARKS.feastSecond, PHIENG_LOI_LANDMARKS.feastField] as const;
 const HEESUN_WANDER_POINTS = [PHIENG_LOI_LANDMARKS.heesunStart, PHIENG_LOI_LANDMARKS.chief, PHIENG_LOI_LANDMARKS.feastStart] as const;
 const VOICE_WEIGHTS: readonly { kind: PhaOiVoiceKind; weight: number }[] = [
   { kind: 'normal', weight: 48 }, { kind: 'long', weight: 23 }, { kind: 'panicked', weight: 14 },
@@ -398,6 +420,35 @@ const addParticles = (game: GameState, x: number, y: number, colors: string[], c
   }
 };
 
+const cameraKick = (game: GameState, x: number, y: number, duration: number) => {
+  if (game.reducedMotion) return;
+  game.cameraImpulse = { startedAt: game.elapsed, until: game.elapsed + duration, x, y };
+  // Retained for save/test compatibility with the previous renderer.
+  game.shakeUntil = game.elapsed + duration;
+};
+
+const animationActorForCue = (cue: string): AnimationActorId | null => {
+  if (cue.startsWith('heesun-') || cue === 'comic-bump') return 'heesun';
+  if (cue.startsWith('hanu-')) return 'hanu';
+  if (cue.startsWith('feast-') || cue === 'chair-fall') return 'feast';
+  if (cue.startsWith('chicken-')) return 'chicken';
+  if (cue.startsWith('fish-')) return 'stream';
+  if (cue.startsWith('dog-')) return 'dog';
+  if (cue === 'karaoke-disco') return 'vuongme';
+  return null;
+};
+
+const setAnimationCue = (game: GameState, cue: string | undefined, duration: number) => {
+  if (!cue) return;
+  const actor = animationActorForCue(cue);
+  if (!actor) return;
+  game.animationCues[actor] = {
+    cue,
+    enteredAt: game.elapsed,
+    until: game.elapsed + Math.max(.18, Math.min(duration, 4.8)),
+  };
+};
+
 const defaultGame = (quality: GameQuality, reducedMotion: boolean, random: () => number): GameState => ({
   player: { x: PLAYER_START_X, y: PLAYER_START_Y, vx: 0, vy: 0, facingX: 1, facingY: 0, walk: 0 },
   heesun: {
@@ -406,6 +457,7 @@ const defaultGame = (quality: GameQuality, reducedMotion: boolean, random: () =>
     target: 'player', resumeMode: null, chaseStartedAt: 0, chaseTimeoutAt: 0, lostSince: 0,
     wanderTarget: 0, nextWanderAt: 7, navigationX: PHIENG_LOI_LANDMARKS.heesunStart.x,
     navigationY: PHIENG_LOI_LANDMARKS.heesunStart.y, nextNavigationAt: 0,
+    actionFromX: PHIENG_LOI_LANDMARKS.heesunStart.x, actionFromY: PHIENG_LOI_LANDMARKS.heesunStart.y,
   },
   hanu: {
     x: HANU_ROUTE[0].x, y: HANU_ROUTE[0].y, vx: 0, vy: 0, waypoint: 1, lineIndex: 0, nextLineAt: 8,
@@ -430,13 +482,16 @@ const defaultGame = (quality: GameQuality, reducedMotion: boolean, random: () =>
   cameraY: clamp(PLAYER_START_Y - VIEW_HEIGHT * CAMERA_VERTICAL_ANCHOR, 0, WORLD_HEIGHT - VIEW_HEIGHT),
   quality, reducedMotion, random, message: null, dialogueQueue: [], messageSerial: 0, callSerial: 0,
   callPulseUntil: 0, replyPulseUntil: 0, lastCallAt: -10, callCount: 0, normalCallCount: 0, lastVoice: null,
-  phaOiCooldownStartedAt: 0, phaOiCooldownUntil: 0, callRechargePulseUntil: 0,
+  phaOiCooldownStartedAt: 0, phaOiCooldownUntil: 0, phaOiCooldownDuration: 0,
+  callRechargePulseUntil: 0, lastCallOutcome: null,
   absurdityScore: 0, absurdityLevel: 0, nextTimeEscalationAt: 45, triggered: new Set<string>(),
   recurringFlags: new Set<string>(), recentLocations: ['village-entry'], currentLocation: 'village-entry',
   streamStartedAt: 0, fishBoost: 0, gateOpen: false, dominoStartedAt: 0,
   powerUntil: { squash: 0, coffee: 0, macadamia: 0 }, squashSequenceAt: 0, squashSequenceStage: 0,
   nextFootstepAt: 0, nextCrunchAt: 0, nextCollisionCheckAt: 0, nextCollisionSignalAt: 0,
-  lastCollisionSignature: '', shakeUntil: 0, particles: [], complete: false,
+  lastCollisionSignature: '', shakeUntil: 0,
+  cameraImpulse: { startedAt: 0, until: 0, x: 0, y: 0 }, animationCues: {},
+  particles: [], complete: false,
 });
 
 const restoreHeeSunMode = (mode: string): HeeSunMode => {
@@ -447,7 +502,7 @@ const restoreHeeSunMode = (mode: string): HeeSunMode => {
 
 export const createGame = (quality: GameQuality, reducedMotion: boolean, save?: GameSave | null, runtime: GameRuntimeOptions = {}): GameState => {
   const game = defaultGame(quality, reducedMotion, runtime.random ?? Math.random);
-  if (!save || ![1, 2, GAME_SAVE_VERSION].includes(save.version) || save.complete) return game;
+  if (!save || ![1, 2, 3, GAME_SAVE_VERSION].includes(save.version) || save.complete) return game;
   const restorePoint = (point: WorldPoint) => nearestWalkablePoint(save.version === 1 ? migrateLegacyWorldPoint(point) : point);
   const player = restorePoint({ x: clamp(save.player.x, 32, WORLD_WIDTH - 32), y: clamp(save.player.y, 42, WORLD_HEIGHT - 32) });
   Object.assign(game.player, player, { facingX: save.player.facingX, facingY: save.player.facingY });
@@ -464,7 +519,7 @@ export const createGame = (quality: GameQuality, reducedMotion: boolean, save?: 
 
   Object.assign(game.feast, restorePoint(save.feast), {
     encounters: Math.max(0, save.feast.encounters), pendingRelocate: save.feast.pendingRelocate ?? false,
-    locationIndex: clamp(Math.round(save.feast.locationIndex ?? save.feast.encounters), 0, FEAST_LOCATIONS.length - 1),
+    locationIndex: clamp(Math.round(save.feast.locationIndex ?? save.feast.encounters), 0, FEAST_TABLE_LOCATIONS.length - 1),
     mode: save.feast.mode === 'chasing' ? 'chasing' : 'idle', relocateAt: game.elapsed + 26,
   });
   game.feast.modeUntil = game.feast.mode === 'chasing' ? game.elapsed + 6 : 0;
@@ -513,9 +568,17 @@ export const createGame = (quality: GameQuality, reducedMotion: boolean, save?: 
     game.squashSequenceAt = Math.max(0.001, game.elapsed - Math.max(0, save.squashSequence.age));
     game.squashSequenceStage = clamp(Math.round(save.squashSequence.stage), 0, 2);
   }
-  const cooldown = Math.min(PHA_OI_COOLDOWN_SECONDS, Math.max(0, save.phaOiCooldownRemaining ?? 0));
+  const savedCooldown = Math.max(0, save.phaOiCooldownRemaining ?? 0);
+  const inferredDuration = savedCooldown > PHA_OI_COOLDOWN_SECONDS
+    ? PHA_OI_TRUE_NOTHING_COOLDOWN_SECONDS
+    : PHA_OI_COOLDOWN_SECONDS;
+  const cooldownDuration = save.version >= 4
+    ? clamp(save.phaOiCooldownDuration ?? inferredDuration, PHA_OI_COOLDOWN_SECONDS, PHA_OI_TRUE_NOTHING_COOLDOWN_SECONDS)
+    : inferredDuration;
+  const cooldown = Math.min(cooldownDuration, savedCooldown);
   if (cooldown > 0) {
-    game.phaOiCooldownStartedAt = game.elapsed - (PHA_OI_COOLDOWN_SECONDS - cooldown);
+    game.phaOiCooldownDuration = cooldownDuration;
+    game.phaOiCooldownStartedAt = game.elapsed - (cooldownDuration - cooldown);
     game.phaOiCooldownUntil = game.elapsed + cooldown;
   }
   restoreDirectorHistory(game.director, game.elapsed, save.directorRecent, save.directorCooldownRemaining);
@@ -543,7 +606,8 @@ export const createSave = (game: GameState): GameSave => {
     gateOpen: game.gateOpen, dominoStartedAt: game.dominoStartedAt,
     powerRemaining: { squash: Math.max(0, game.powerUntil.squash - game.elapsed), coffee: Math.max(0, game.powerUntil.coffee - game.elapsed), macadamia: Math.max(0, game.powerUntil.macadamia - game.elapsed) },
     squashSequence: game.squashSequenceAt > 0 ? { age: game.elapsed - game.squashSequenceAt, stage: game.squashSequenceStage } : undefined,
-    phaOiCooldownRemaining: Math.max(0, game.phaOiCooldownUntil - game.elapsed), lastVoice: game.lastVoice ?? undefined,
+    phaOiCooldownRemaining: Math.max(0, game.phaOiCooldownUntil - game.elapsed),
+    phaOiCooldownDuration: game.phaOiCooldownDuration || undefined, lastVoice: game.lastVoice ?? undefined,
     directorRecent: game.director.recentEvents.map((event) => ({ id: event.id, age: game.elapsed - event.at })),
     directorCooldownRemaining, complete: game.complete,
   };
@@ -578,8 +642,8 @@ const cinematicCopy = (game: GameState): { vi: string; en: string } | null => {
   if (game.karaoke.active) return null;
   if (game.scene.kind === 'capture') {
     const age = game.elapsed - game.scene.startedAt;
-    if (age < 1.05) return { vi: '3 GIỜ SAU', en: '3 HOURS LATER' };
-    if (age >= 2.75 && age < 3.65) return { vi: '5 GIỜ SAU', en: '5 HOURS LATER' };
+    if (age >= .14 && age < 1.08) return { vi: '3 GIỜ SAU', en: '3 HOURS LATER' };
+    if (age >= 3.05 && age < 3.85) return { vi: '5 GIỜ SAU', en: '5 HOURS LATER' };
     return null;
   }
   if (game.scene.kind === 'stream' && game.elapsed - game.scene.startedAt < 2.65) {
@@ -622,7 +686,9 @@ export const createUiSnapshot = (game: GameState): UiSnapshot => {
     callSerial: game.callSerial,
     callActive: game.callPulseUntil > game.elapsed,
     callReady: cooldownRemaining <= 0,
-    callCooldownProgress: cooldownRemaining > 0 ? clamp(1 - cooldownRemaining / PHA_OI_COOLDOWN_SECONDS, 0, 1) : 1,
+    callCooldownProgress: cooldownRemaining > 0
+      ? clamp(1 - cooldownRemaining / Math.max(PHA_OI_COOLDOWN_SECONDS, game.phaOiCooldownDuration), 0, 1)
+      : 1,
     callRechargeActive: game.callRechargePulseUntil > game.elapsed,
     cinematicVi: cinematic?.vi ?? null,
     cinematicEn: cinematic?.en ?? null,
@@ -671,7 +737,7 @@ const startChickenMode = (game: GameState, mode: ChickenMode, duration: number, 
     visibleCount: mode === 'look' ? 1 : mode === 'triple-look' ? 3 : 10,
     directionX: mode === 'panic-toward-player' ? -1 : 1,
   });
-  game.shakeUntil = game.elapsed + 0.26;
+  cameraKick(game, 1.3, .8, .16);
   addParticles(game, PHIENG_LOI_LANDMARKS.chickenYard.x, PHIENG_LOI_LANDMARKS.chickenYard.y, ['#ead08c', '#c66b3d', '#fff2c0'], 18, 'leaf', 46);
   if (mode !== 'look' && mode !== 'triple-look') events.push({ type: 'chicken-panic' });
 };
@@ -683,7 +749,7 @@ const startChase = (game: GameState, events: GameEvent[], shout = true, target: 
     chaseStartedAt: game.elapsed, chaseTimeoutAt: game.elapsed + (target === 'player' ? 24 : 7), lostSince: 0,
   });
   if (shout && !alreadyChasing) setMessage(game, 'HEESUN', 'HEESUN', 'BẠN ƠI!', 'MY FRIEND!', 'heesun', 1.5, 'heesun', 'medium');
-  game.shakeUntil = game.elapsed + 0.26;
+  cameraKick(game, 1.8, .8, .16);
   if (!alreadyChasing) events.push({ type: 'chase-start' });
 };
 
@@ -701,13 +767,15 @@ const startHeeSunIntro = (game: GameState) => {
 };
 
 const startCapture = (game: GameState, events: GameEvent[]) => {
+  const feastHome = FEAST_TABLE_LOCATIONS[game.feast.locationIndex];
   game.scene = { kind: 'capture', startedAt: game.elapsed, stage: 0 };
   game.heesun.mode = 'caught-player';
+  Object.assign(game.feast, feastHome, { mode: 'idle', vx: 0, vy: 0, target: 'player' });
   game.player.vx = 0;
   game.player.vy = 0;
   game.message = null;
   game.dialogueQueue = [];
-  game.shakeUntil = game.elapsed + 0.5;
+  cameraKick(game, 7, 3.5, .12);
   events.push({ type: 'capture' });
 };
 
@@ -742,15 +810,17 @@ const updateScene = (game: GameState, events: GameEvent[]) => {
     return;
   }
   if (game.scene.kind === 'capture') {
-    if (game.scene.stage === 0 && age >= 1.05) {
+    if (game.scene.stage === 0 && age >= 1.08) {
       game.scene.stage = 1;
-      Object.assign(game.player, { x: game.feast.x + 22, y: game.feast.y + 12 });
-      Object.assign(game.heesun, { x: game.feast.x - 26, y: game.feast.y + 8 });
-      setMessage(game, 'HEESUN', 'HEESUN', 'Làm chén cuối.', 'One last cup.', 'heesun', 1.45, 'heesun', 'high', false);
-    } else if (game.scene.stage === 1 && age >= 2.75) {
+      Object.assign(game.player, { x: game.feast.x + 48, y: game.feast.y + 18, facingX: -1, facingY: 0 });
+      Object.assign(game.heesun, { x: game.feast.x - 48, y: game.feast.y + 18, vx: 0, vy: 0 });
+      game.cameraX = clamp(game.feast.x - VIEW_WIDTH / 2, 0, WORLD_WIDTH - VIEW_WIDTH);
+      game.cameraY = clamp(game.feast.y - VIEW_HEIGHT * .62, 0, WORLD_HEIGHT - VIEW_HEIGHT);
+      setMessage(game, 'HEESUN', 'HEESUN', 'Làm chén cuối.', 'One last cup.', 'heesun', 1.75, 'heesun', 'high', false);
+    } else if (game.scene.stage === 1 && age >= 3.05) {
       game.scene.stage = 2;
       game.message = null;
-    } else if (age >= 3.65) resetAfterCapture(game, events);
+    } else if (age >= 3.85) resetAfterCapture(game, events);
     return;
   }
   if (game.scene.kind === 'stream') {
@@ -769,7 +839,7 @@ const activatePower = (game: GameState, power: PowerKind, events: GameEvent[]) =
   game.triggered.add(key);
   game.powerUntil[power] = game.elapsed + POWER_DURATION[power];
   addAbsurdity(game, 0.9);
-  game.shakeUntil = game.elapsed + 0.38;
+  cameraKick(game, 2.2, 1, .18);
   events.push({ type: 'power-start', power });
   if (power === 'squash') {
     game.squashSequenceAt = game.elapsed;
@@ -825,6 +895,7 @@ export const applyDirectedEvent = (game: GameState, resolution: DirectorResoluti
     game.message = null;
     game.dialogueQueue = [];
   }
+  setAnimationCue(game, definition.animationCue, definition.duration);
   definition.dialogueBubbles.forEach((dialogue) => queueDialogue(game, dialogue));
   addAbsurdity(game, definition.tier === 'macro' ? 0.75 : definition.tier === 'major' ? 0.62 : definition.tier === 'medium' ? 0.34 : 0.12);
   events.push({ type: 'director-event', id: definition.id, soundCue: definition.soundCue });
@@ -862,13 +933,23 @@ export const applyDirectedEvent = (game: GameState, resolution: DirectorResoluti
     }
     case 'stream-more-fish': game.fishBoost = Math.min(96, game.fishBoost + 18); events.push({ type: 'stream' }); break;
     case 'dog-wakes': game.worldGag.dogAwakeUntil = game.elapsed + 1.7; break;
-    case 'chair-fall': game.worldGag.chairFallenUntil = game.elapsed + 2.2; game.shakeUntil = game.elapsed + 0.16; break;
+    case 'chair-fall': game.worldGag.chairFallenUntil = game.elapsed + 2.2; cameraKick(game, 2.4, 1.2, .1); break;
     case 'shoe-from-house': game.worldGag.shoeAirborneUntil = game.elapsed + 1.6; break;
     case 'heesun-shoe': Object.assign(game.heesun, { mode: 'interrupted', modeUntil: game.elapsed + 1.7, resumeMode: 'chasing' }); break;
-    case 'heesun-feast-interrupt': Object.assign(game.heesun, { mode: 'drinking', modeUntil: game.elapsed + 2.4, resumeMode: 'chasing' }); break;
+    case 'heesun-feast-interrupt': {
+      const seat = nearestWalkablePoint({ x: game.feast.x - 46, y: game.feast.y + 18 });
+      const actionFromX = game.heesun.x;
+      const actionFromY = game.heesun.y;
+      Object.assign(game.heesun, seat, { actionFromX, actionFromY, mode: 'drinking', modeUntil: game.elapsed + 2.4, resumeMode: 'chasing', vx: 0, vy: 0 });
+      cameraKick(game, 2.2, .9, .1);
+      break;
+    }
     case 'heesun-chicken-detour': Object.assign(game.heesun, { mode: 'distracted', target: 'chickens', modeUntil: game.elapsed + 2.6, resumeMode: 'chasing' }); break;
     case 'heesun-smells-food': Object.assign(game.heesun, { mode: 'distracted', target: 'hanu', modeUntil: game.elapsed + 5.5, resumeMode: 'chasing' }); break;
-    case 'hanu-blocks-heesun': Object.assign(game.heesun, { mode: 'interrupted', modeUntil: game.elapsed + 2.2, resumeMode: 'chasing', vx: game.heesun.vx * -0.45, vy: game.heesun.vy * -0.45 }); break;
+    case 'hanu-blocks-heesun':
+      Object.assign(game.heesun, { mode: 'interrupted', modeUntil: game.elapsed + 2.2, resumeMode: 'chasing', vx: game.heesun.vx * -0.45, vy: game.heesun.vy * -0.45 });
+      cameraKick(game, 3.2, 1.4, .1);
+      break;
     case 'hanu-wrong-person': case 'hanu-chief-delivery': Object.assign(game.hanu, { mode: 'delivery-paused', modeUntil: game.elapsed + definition.duration }); break;
     case 'hanu-chicken-procession': startChickenMode(game, 'follow-hanu', 7, events); break;
     case 'chicken-follow-heesun': startChickenMode(game, 'follow-heesun', 5.5, events); break;
@@ -884,7 +965,7 @@ export const applyDirectedEvent = (game: GameState, resolution: DirectorResoluti
       const side = game.player.facingX < 0 ? -1 : 1;
       const stage = nearestWalkablePoint({ x: game.player.x + side * 112, y: game.player.y - 20 });
       Object.assign(game.karaoke, { active: true, startedAt: game.elapsed, endsAt: game.elapsed + definition.duration, ...stage });
-      game.shakeUntil = game.elapsed + .32;
+      cameraKick(game, 4, 1.5, .22);
       events.push({ type: 'karaoke-start' });
       break;
     }
@@ -928,16 +1009,20 @@ const handleCall = (game: GameState, events: GameEvent[]) => {
   game.callSerial += 1;
   game.callCount += 1;
   game.callPulseUntil = game.elapsed + 1.05;
+  const trueNothing = isTrueNothingRoll(game.random());
+  const cooldownDuration = trueNothing ? PHA_OI_TRUE_NOTHING_COOLDOWN_SECONDS : PHA_OI_COOLDOWN_SECONDS;
   game.phaOiCooldownStartedAt = game.elapsed;
-  game.phaOiCooldownUntil = game.elapsed + PHA_OI_COOLDOWN_SECONDS;
+  game.phaOiCooldownDuration = cooldownDuration;
+  game.phaOiCooldownUntil = game.elapsed + cooldownDuration;
   const voice = chooseVoice(game);
-  if (isTrueNothingRoll(game.random())) {
+  game.lastCallOutcome = trueNothing ? 'true-nothing' : 'normal';
+  if (trueNothing) {
     events.push({ type: 'pha-oi', voice, outcome: 'true-nothing' });
     return;
   }
   events.push({ type: 'pha-oi', voice, outcome: 'normal' });
   game.normalCallCount += 1;
-  game.shakeUntil = game.elapsed + 0.2;
+  cameraKick(game, 1.2, .45, .14);
   const interval = game.elapsed - game.lastCallAt;
   game.lastCallAt = game.elapsed;
   addAbsurdity(game, interval < 0.9 ? 0.42 : 0.24);
@@ -961,6 +1046,7 @@ const updatePhaOiCooldown = (game: GameState, previousElapsed: number, events: G
   if (game.phaOiCooldownUntil > previousElapsed && game.phaOiCooldownUntil <= game.elapsed) {
     game.phaOiCooldownUntil = 0;
     game.phaOiCooldownStartedAt = 0;
+    game.phaOiCooldownDuration = 0;
     game.callRechargePulseUntil = game.elapsed + 0.75;
     events.push({ type: 'call-ready' });
   }
@@ -1060,7 +1146,7 @@ const updatePowers = (game: GameState, previousElapsed: number, moving: boolean,
       game.squashSequenceStage = 2;
       game.heesun.scale = 1.72;
       setMessage(game, 'PHIÊNG LƠI', 'PHIENG LOI', 'HeeSun ăn theo. Đây là một sai lầm.', 'HeeSun copies you. This is a mistake.', 'world', 2.3);
-      game.shakeUntil = game.elapsed + 0.45;
+      cameraKick(game, 2.5, 1.2, .18);
       addParticles(game, game.heesun.x, game.heesun.y, ['#a8d35f', '#f4e594'], 36, 'leaf', 52);
     }
   }
@@ -1090,12 +1176,19 @@ const moveTowards = (current: { x: number; y: number; vx: number; vy: number }, 
 const updateFeast = (game: GameState, dt: number, events: GameEvent[]) => {
   const feast = game.feast;
   if (['invite', 'stare', 'react'].includes(feast.mode) && game.elapsed >= feast.modeUntil) feast.mode = 'idle';
-  if (feast.mode === 'resetting' && game.elapsed >= feast.modeUntil) Object.assign(feast, { mode: 'idle', vx: 0, vy: 0 });
+  if (feast.mode === 'resetting' && game.elapsed >= feast.modeUntil) {
+    Object.assign(feast, FEAST_TABLE_LOCATIONS[feast.locationIndex], { mode: 'idle', vx: 0, vy: 0 });
+  }
   if (feast.mode === 'chasing') {
     const chaseTarget = feast.target === 'hanu' && game.hanu.carryingFood ? game.hanu : game.player;
-    moveTowards(feast, navigationTarget(feast, chaseTarget), 54, dt, 4.2);
-    if (!isWalkable(feast.x, feast.y, 8)) {
-      Object.assign(feast, nearestWalkablePoint(feast), { vx: feast.vx * 0.2, vy: feast.vy * 0.2 });
+    if (game.elapsed - feast.chaseStartedAt >= .46) {
+      moveTowards(feast, navigationTarget(feast, chaseTarget), 54, dt, 4.2);
+      if (!isWalkable(feast.x, feast.y, 8)) {
+        Object.assign(feast, nearestWalkablePoint(feast), { vx: feast.vx * 0.2, vy: feast.vy * 0.2 });
+      }
+    } else {
+      feast.vx = 0;
+      feast.vy = 0;
     }
     if (distance(feast.x, feast.y, chaseTarget.x, chaseTarget.y) < 45 || game.elapsed >= feast.modeUntil || (feast.target === 'hanu' && !game.hanu.carryingFood)) {
       Object.assign(feast, { mode: 'resetting', modeUntil: game.elapsed + 1.5, target: 'player', vx: 0, vy: 0 });
@@ -1116,8 +1209,8 @@ const updateFeast = (game: GameState, dt: number, events: GameEvent[]) => {
     events.push({ type: 'feast' });
   }
   if (feast.pendingRelocate && game.elapsed >= feast.relocateAt && distance(game.player.x, game.player.y, feast.x, feast.y) > 135) {
-    feast.locationIndex = (feast.locationIndex + 1) % FEAST_LOCATIONS.length;
-    const next = FEAST_LOCATIONS[feast.locationIndex];
+    feast.locationIndex = (feast.locationIndex + 1) % FEAST_TABLE_LOCATIONS.length;
+    const next = FEAST_TABLE_LOCATIONS[feast.locationIndex];
     Object.assign(feast, next, { pendingRelocate: false, mode: 'relocating', modeUntil: game.elapsed + 0.4, nextTriggerAt: game.elapsed + 3 });
   }
   if (feast.mode === 'relocating' && game.elapsed >= feast.modeUntil) feast.mode = 'idle';
@@ -1383,9 +1476,16 @@ const updateParticles = (game: GameState, dt: number) => {
 };
 
 const updateCamera = (game: GameState, dt: number) => {
-  const targetX = clamp(game.player.x - VIEW_WIDTH / 2, 0, WORLD_WIDTH - VIEW_WIDTH);
-  const targetY = clamp(game.player.y - VIEW_HEIGHT * CAMERA_VERTICAL_ANCHOR, 0, WORLD_HEIGHT - VIEW_HEIGHT);
-  const response = game.reducedMotion ? 1 : 1 - Math.exp(-dt * 7.2);
+  const speed = Math.hypot(game.player.vx, game.player.vy);
+  const speedRatio = clamp(speed / PLAYER_SPEED, 0, 1);
+  const chaseLead = game.heesun.mode === 'chasing' || game.feast.mode === 'chasing' || game.hanu.carryingFood;
+  const directionX = speed > 2 ? game.player.vx / speed : 0;
+  const directionY = speed > 2 ? game.player.vy / speed : 0;
+  const horizontalLead = (chaseLead ? 55 : 38) * speedRatio;
+  const verticalLead = (chaseLead ? 28 : 18) * speedRatio;
+  const targetX = clamp(game.player.x - VIEW_WIDTH / 2 + directionX * horizontalLead, 0, WORLD_WIDTH - VIEW_WIDTH);
+  const targetY = clamp(game.player.y - VIEW_HEIGHT * CAMERA_VERTICAL_ANCHOR + directionY * verticalLead, 0, WORLD_HEIGHT - VIEW_HEIGHT);
+  const response = game.reducedMotion ? 1 : 1 - Math.exp(-dt * (chaseLead ? 8.4 : 7.2));
   game.cameraX += (targetX - game.cameraX) * response;
   game.cameraY += (targetY - game.cameraY) * response;
 };
