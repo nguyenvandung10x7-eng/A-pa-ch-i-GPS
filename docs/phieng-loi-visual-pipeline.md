@@ -50,7 +50,6 @@ All runtime URLs live in `visualAssets.ts`.
 | `heesun-run-v2.webp` | 4×2 | Eight-frame HeeSun chase cycle. |
 | `hanu-walk-v2.webp` | 4×2 | Eight-frame HANU phone-walk cycle. |
 | `hanu-food-box-v1.svg` | cutout | Visible delivery box attached to HANU while his food-delivery state is active. |
-| `player-run-v2.webp` | 4×2 | Eight-frame player run cycle. |
 | `player-motion-atlas-v1.webp` | 4×4 | Approved composition-B Player sample: idle, walk, run, start, turn, stop and PHÀ ƠI. |
 | `chief-talk-v2.webp` | 4×2 | Trưởng bản idle, talk and reaction cycle. |
 | `feast-loop-v2.webp` | 4×2 | Five-man roadside-table toast and laugh cycle. |
