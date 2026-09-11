@@ -346,18 +346,16 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       true,
     );
     const dominoActive = game.dominoStartedAt !== 0 && game.elapsed - game.dominoStartedAt < 3.4;
-    const hanuPose = dominoActive || ['phone-pause', 'head-only', 'handoff', 'delivered'].includes(hanuTrack.currentMotion);
+    const hanuPose = dominoActive || ['phone-pause', 'handoff', 'delivered'].includes(hanuTrack.currentMotion);
     const hanuFrame = dominoActive
       ? 5
       : hanuTrack.currentMotion === 'handoff'
         ? 4
-        : hanuTrack.currentMotion === 'head-only'
-          ? 1
-          : hanuTrack.currentMotion === 'phone-pause'
-            ? 2
-            : hanuTrack.currentMotion === 'delivered'
-              ? 0
-              : frameForTrack(hanuTrack, 8, game.reducedMotion);
+        : hanuTrack.currentMotion === 'phone-pause'
+          ? 2
+          : hanuTrack.currentMotion === 'delivered'
+            ? 0
+            : frameForTrack(hanuTrack, 8, game.reducedMotion);
     placeActor(hanuRef.current, game.hanu.x, game.hanu.y);
     setSpriteFrame(hanuSpriteRef.current, hanuPose ? 'hanu' : 'hanuWalk', hanuFrame);
     setSpriteWidth(hanuSpriteRef.current, hanuPose ? ACTOR_WIDTH.hanuPose : ACTOR_WIDTH.hanuWalk);

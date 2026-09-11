@@ -108,7 +108,7 @@ assert.match(motionSource, /preEventMotionState/);
 assert.match(motionSource, /motionEnteredAt/);
 assert.match(pageSource, /parsePhiengLoiQaScenario/);
 assert.match(pageSource, /drivePhiengLoiQaScenario/);
-assert.match(qaSource, /qa-feast-chase/);
+assert.match(qaSource, /qa-feast-react/);
 for (const scenario of ['locomotion', 'pha-normal', 'pha-nothing', 'heesun-intro', 'heesun-feast', 'capture', 'hanu-delivery', 'signature-chase', 'feast', 'chicken', 'hanu-blocks-heesun', 'disco', 'wife']) {
   assert.match(qaSource, new RegExp(`["']${scenario}["']`), `${scenario} deterministic QA scene must exist`);
 }
@@ -118,11 +118,35 @@ assert.doesNotMatch(pageSource, /BẮT HANU|CATCH HANU|catch button/i);
 
 assert.ok(ABSURD_EVENT_REGISTRY.length >= 28, 'the pool should have enough combinable events');
 assert.equal(new Set(ABSURD_EVENT_REGISTRY.map(({ id }) => id)).size, ABSURD_EVENT_REGISTRY.length);
+const retiredEventIds = [
+  'feast-chase',
+  'hanu-head-only',
+  'hanu-go-faster',
+  'distant-reply',
+  'delayed-feast-memory',
+  'feast-remembers-call',
+  'delayed-far-oi',
+  'far-oi-returns',
+];
+const registeredEventIds = new Set(ABSURD_EVENT_REGISTRY.map(({ id }) => id));
+retiredEventIds.forEach((id) => {
+  assert.equal(registeredEventIds.has(id), false, `${id} must not remain in the event registry`);
+  assert.equal(activateDirectedEvent(createDirectorState(), id, 1, 0, () => 0), null, `${id} must not be directly activatable`);
+  assert.doesNotMatch(directorSource, new RegExp(`id:\\s*['"]${id}['"]`));
+});
 ABSURD_EVENT_REGISTRY.forEach((event) => {
   for (const key of ['id', 'tier', 'weight', 'minimumAbsurdity', 'cooldown', 'antiRepeatGroup', 'priority', 'canInterrupt', 'canBeInterrupted', 'actorStateChanges', 'worldStateChanges', 'dialogueBubbles']) {
     assert.ok(key in event, `${event.id} is missing ${key}`);
   }
+  event.possibleFollowUps?.forEach(({ id }) => {
+    assert.ok(registeredEventIds.has(id), `${event.id} has a dangling follow-up to ${id}`);
+    assert.equal(retiredEventIds.includes(id), false, `${event.id} still points to retired event ${id}`);
+  });
 });
+assert.doesNotMatch(engineSource, /activateDirectedEvent\(game\.director,\s*['"]distant-reply['"]/);
+assert.doesNotMatch(engineSource, /case\s+['"](?:distant-reply|far-oi-returns|feast-remembers-call|hanu-head-only|hanu-go-faster)['"]/);
+assert.doesNotMatch(motionSource, /hanu-head-only/);
+assert.doesNotMatch(qaSource, /triggerDirectedEvent\(game,\s*['"]feast-chase['"]/);
 assert.match(directorSource, /signals: \['pha-oi'/);
 assert.equal(DIRECTOR_LIMITS.activeMajor, 1);
 assert.equal(DIRECTOR_LIMITS.activeMicro, 2);
@@ -287,6 +311,24 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
 }
 
 {
+  const game = createGame('high', false, null, { random: () => 0.8 });
+  stabilize(game);
+  ABSURD_EVENT_REGISTRY.forEach(({ id }) => { game.director.cooldownUntil[id] = game.elapsed + 100; });
+  const recentBefore = game.director.recentEvents.length;
+  const delayedBefore = game.director.delayedQueue.length;
+  const normalWithoutCandidate = call(game);
+  assert.ok(normalWithoutCandidate.some((event) => event.type === 'pha-oi' && event.outcome === 'normal'));
+  assert.equal(normalWithoutCandidate.some(({ type }) => type === 'director-event'), false);
+  assert.equal(game.lastCallOutcome, 'normal', 'an empty candidate set must not be converted to TRUE NOTHING');
+  assert.equal(game.phaOiCooldownDuration, PHA_OI_COOLDOWN_SECONDS);
+  assert.equal(game.director.recentEvents.length, recentBefore);
+  assert.equal(game.director.delayedQueue.length, delayedBefore);
+  assert.equal(game.replyPulseUntil, 0, 'an empty candidate set must not synthesize a distant reply');
+  assert.ok(game.cameraImpulse.until > game.elapsed, 'the existing basic normal-call presentation remains');
+  assert.ok(game.particles.length > 0, 'the existing basic normal-call particles remain');
+}
+
+{
   const director = createDirectorState();
   const context = new Set(['near-house', 'world-quiet', 'major-quiet', 'chickens-calm', 'feast-idle', 'heesun-idle']);
   const first = evaluateDirector(director, 'pha-oi', context, 0, 1, () => 0);
@@ -427,8 +469,10 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   stabilize(game);
   Object.assign(game.hanu, { mode: 'delivering', carryingFood: true, deliveryTimeoutAt: 99_999 });
   Object.assign(game.heesun, { mode: 'chasing', target: 'player', chaseTimeoutAt: 99_999, met: true });
-  game.director.activeMicro = [];
-  triggerDirectedEvent(game, 'feast-chase');
+  Object.assign(game.feast, {
+    mode: 'chasing', target: 'player', chaseStartedAt: game.elapsed || .001,
+    modeUntil: game.elapsed + 8, vx: 0, vy: 0,
+  });
   game.director.activeMicro = [];
   triggerDirectedEvent(game, 'hanu-chicken-procession');
   const ui = createUiSnapshot(game);
@@ -455,9 +499,20 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
   tick(game, 2.3);
   assert.equal(game.feast.mode, 'idle');
   game.director.activeMicro = [];
-  game.player.x = PHIENG_LOI_LANDMARKS.exit.x - 100;
-  game.player.y = PHIENG_LOI_LANDMARKS.exit.y;
-  triggerDirectedEvent(game, 'feast-chase');
+  triggerDirectedEvent(game, 'feast-what');
+  assert.equal(game.feast.mode, 'react');
+  assert.equal(actorMotionForGame(game, 'feast'), 'feast-rise');
+  tick(game, 2.2);
+  assert.equal(game.feast.mode, 'idle');
+
+  Object.assign(game.hanu, {
+    x: PHIENG_LOI_LANDMARKS.exit.x - 25, y: PHIENG_LOI_LANDMARKS.exit.y,
+    mode: 'delivering', carryingFood: true, deliveryTimeoutAt: 99_999,
+  });
+  Object.assign(game.feast, {
+    mode: 'chasing', target: 'hanu', chaseStartedAt: game.elapsed,
+    modeUntil: game.elapsed + 8, vx: 0, vy: 0,
+  });
   assert.equal(game.feast.mode, 'chasing');
   assert.equal(actorMotionForGame(game, 'feast'), 'feast-rise');
   const feastLaunchX = game.feast.x;
@@ -649,6 +704,27 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
 }
 
 {
+  const oldSave = createSave(createGame('high', false, null, { random: () => 0.8 }));
+  oldSave.feast.mode = 'chasing';
+  oldSave.directorRecent = [
+    ...retiredEventIds.map((id) => ({ id, age: 1 })),
+    { id: 'house-reply', age: 2 },
+  ];
+  oldSave.directorCooldownRemaining = Object.fromEntries([
+    ...retiredEventIds.map((id) => [id, 45]),
+    ['house-reply', 12],
+  ]);
+  const restored = createGame('high', false, oldSave, { random: () => 0.8 });
+  assert.equal(restored.feast.mode, 'idle', 'a legacy save must not revive the removed feast player chase');
+  retiredEventIds.forEach((id) => {
+    assert.equal(restored.director.recentEvents.some((event) => event.id === id), false);
+    assert.equal(restored.director.cooldownUntil[id], undefined);
+  });
+  assert.ok(restored.director.recentEvents.some((event) => event.id === 'house-reply'));
+  assert.ok(restored.director.cooldownUntil['house-reply'] > restored.elapsed);
+}
+
+{
   const game = createGame('high', false);
   stabilize(game);
   game.player.x = PHIENG_LOI_LANDMARKS.exit.x;
@@ -682,4 +758,4 @@ PHIENG_LOI_AUDIO_CUES.forEach((cue) => {
   assert.ok(cue.durationSeconds[0] > 0 && cue.durationSeconds[1] >= cue.durationSeconds[0]);
 });
 
-console.log('Phiêng Lơi simulation passed: 5s normal / 60s TRUE NOTHING cooldown, A-M choreography QA, motion controller, bubble allowlist, karaoke restore, capture seating, chains, save and bounded runtime.');
+console.log('Phiêng Lơi simulation passed: retired-event removal, safe empty-candidate calls, 5s normal / 60s TRUE NOTHING cooldown, A-M choreography QA, motion controller, bubble allowlist, karaoke restore, capture seating, chains, legacy save filtering and bounded runtime.');

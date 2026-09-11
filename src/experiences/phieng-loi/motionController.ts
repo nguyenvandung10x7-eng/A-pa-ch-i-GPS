@@ -37,7 +37,6 @@ export type ActorMotion =
   | 'phone-pause'
   | 'delivery'
   | 'delivery-fast'
-  | 'head-only'
   | 'handoff'
   | 'delivered'
   | 'feast-idle'
@@ -305,10 +304,9 @@ export const actorMotionForGame = (game: GameState, actor: MotionActorId): Actor
     return mapping[game.heesun.mode];
   }
   if (actor === 'hanu') {
-    if (cue === 'hanu-head-only') return 'head-only';
     if (cue === 'hanu-handoff' || cue === 'hanu-pull-box') return 'handoff';
     if (cue === 'hanu-phone-pause' || cue === 'hanu-phone-call') return 'phone-pause';
-    if (cue === 'hanu-run' || cue === 'hanu-wrong-turn') return 'delivery-fast';
+    if (cue === 'hanu-wrong-turn') return 'delivery-fast';
     if (game.hanu.mode === 'delivery-paused') return 'phone-pause';
     if (game.hanu.mode === 'delivered') return 'delivered';
     if (game.hanu.carryingFood) return game.hanu.speedBoostUntil > game.elapsed ? 'delivery-fast' : 'delivery';
@@ -419,7 +417,6 @@ export const sampleMotionPose = (track: MotionTrack): MotionPose => {
     case 'ambush': base.y = 2 - easeOutBack(Math.min(1, t / .28)) * 2; base.scaleY = .9 + easeOutBack(Math.min(1, t / .28)) * .1; break;
     case 'victory': base.y = -Math.sin(Math.min(1, t / .22) * Math.PI) * 2.3; base.rotation = track.facing * -2; break;
     case 'phone-pause': base.rotation = Math.sin(t * 1.4 + track.phaseOffset) * .22; break;
-    case 'head-only': base.x = -track.facing * .35; base.rotation = -track.facing * .7; break;
     case 'handoff': base.x = track.facing * Math.sin(Math.min(1, t / .45) * Math.PI) * 2.4; break;
     case 'feast-rise': base.y = 2 - easeOutBack(Math.min(1, t / .32)) * 2.5; break;
     case 'feast-stare': base.rotation = 0; break;

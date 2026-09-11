@@ -91,9 +91,12 @@ export const applyPhiengLoiQaScenario = (game: GameState, scenario: PhiengLoiQaS
     case 'signature-chase':
       Object.assign(game.hanu, { x: road.x + 142, y: road.y, waypoint: 5, mode: 'delivering', carryingFood: true, promiseStage: 2, deliveryTimeoutAt: 99_999 });
       Object.assign(game.heesun, { x: road.x - 108, y: road.y, met: true, mode: 'chasing', target: 'player', chaseStartedAt: .001, chaseTimeoutAt: 99_999 });
-      game.feast.x = road.x - 235;
-      game.feast.y = road.y + 8;
-      triggerDirectedEvent(game, 'feast-chase');
+      // Exercise the retained crowd locomotion without reviving the removed
+      // player-blame event. The crowd follows HANU's food in this QA tableau.
+      Object.assign(game.feast, {
+        x: road.x - 235, y: road.y + 8, mode: 'chasing', target: 'hanu',
+        chaseStartedAt: game.elapsed || .001, modeUntil: 99_999, vx: 0, vy: 0,
+      });
       break;
     case 'feast':
       Object.assign(game.player, { x: game.feast.x + 96, y: game.feast.y });
@@ -149,9 +152,9 @@ export const drivePhiengLoiQaScenario = (
     scenario === 'feast'
     && game.elapsed >= 2.35
     && game.feast.mode === 'idle'
-    && !game.recurringFlags.has('qa-feast-chase')
+    && !game.recurringFlags.has('qa-feast-react')
   ) {
-    game.recurringFlags.add('qa-feast-chase');
-    triggerDirectedEvent(game, 'feast-chase');
+    game.recurringFlags.add('qa-feast-react');
+    triggerDirectedEvent(game, 'feast-what');
   }
 };

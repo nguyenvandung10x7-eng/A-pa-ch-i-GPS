@@ -12,7 +12,7 @@ export type PhiengLoiAudioCueId =
   | 'hanu_the_a'
   | 'chief_thu_nhat'
   | 'feast_vao_lam_chen'
-  | 'village_far_reply'
+  | 'village_reply'
   | 'chicken_panic'
   | 'dog_reply'
   | 'macadamia_crunch'
@@ -245,16 +245,16 @@ export const PHIENG_LOI_AUDIO_CUES: readonly PhiengLoiAudioCue[] = [
     maxConcurrency: 2,
   },
   {
-    id: 'village_far_reply',
-    files: takeFiles('village_far_reply', 4),
-    characterOrEvent: 'Distant village voice',
-    lineOrSound: 'ƠIIII!',
-    delivery: 'Very far answer; different adult voices are welcome.',
-    durationSeconds: [0.8, 1.8],
+    id: 'village_reply',
+    files: takeFiles('village_reply', 4),
+    characterOrEvent: 'Nearby house / ambient villager',
+    lineOrSound: 'Ơi.',
+    delivery: 'Short, ordinary acknowledgement; different adult voices are welcome.',
+    durationSeconds: [0.35, 0.9],
     takes: 4,
     loop: false,
-    processing: 'Strong distance attenuation, alternating pan, two echoes.',
-    trigger: 'Delayed house reply and repeated-call escalation.',
+    processing: 'Light outdoor ambience and modest spatial placement; no long echo.',
+    trigger: 'Immediate nearby-house reply or an independent ambient call; never a PHÀ ƠI fallback or delayed consequence.',
     fallback: 'procedural',
     shipping: 'pending',
     maxConcurrency: 2,

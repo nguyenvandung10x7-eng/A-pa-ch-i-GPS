@@ -118,7 +118,7 @@ export const ABSURD_EVENT_REGISTRY = [
     id: 'house-reply', tier: 'micro', signals: ['pha-oi'], weight: 9, minimumAbsurdity: 0,
     contextRequirements: { all: ['near-house'] }, cooldown: 8, antiRepeatGroup: 'local-reply',
     priority: 'low', canInterrupt: false, canBeInterrupted: true, duration: 1.8,
-    actorStateChanges: [], worldStateChanges: ['house-reply-pulse'], animationCue: 'house-open', soundCue: 'village_far_reply',
+    actorStateChanges: [], worldStateChanges: ['house-reply-pulse'], animationCue: 'house-open', soundCue: 'village_reply',
     dialogueBubbles: [bubble('world', 'TRONG NHÀ', 'INSIDE THE HOUSE', 'Ơi.', 'Yes?', 'world', 1.55)],
   },
   {
@@ -160,27 +160,6 @@ export const ABSURD_EVENT_REGISTRY = [
     dialogueBubbles: [bubble('feast', 'MỘT NGƯỜI TRONG MÂM', 'SOMEONE AT THE TABLE', 'Gọi gì?', 'What?', 'world', 1.05)],
   },
   {
-    id: 'feast-chase', tier: 'major', signals: ['pha-oi', 'delayed', 'collision'], weight: 2.4, minimumAbsurdity: 2,
-    contextRequirements: { all: ['near-feast', 'feast-idle'] }, cooldown: 34, antiRepeatGroup: 'feast-major',
-    priority: 'medium', canInterrupt: false, canBeInterrupted: true, duration: 8,
-    actorStateChanges: ['feast:chasing'], worldStateChanges: ['major-chain'], animationCue: 'feast-chase', soundCue: 'feast_chase',
-    dialogueBubbles: [bubble('feast', 'MÂM NHẬU', 'THE DRINKING TABLE', 'Nó làm đổ ghế!', 'They knocked over the chair!', 'world', 1.65, 0, 'medium')],
-  },
-  {
-    id: 'hanu-head-only', tier: 'micro', signals: ['pha-oi'], weight: 8, minimumAbsurdity: 0,
-    contextRequirements: { all: ['near-hanu'] }, cooldown: 7, antiRepeatGroup: 'hanu-call',
-    priority: 'low', canInterrupt: false, canBeInterrupted: true, duration: 1.5,
-    actorStateChanges: ['hanu:head-turn'], worldStateChanges: [], animationCue: 'hanu-head-only',
-    dialogueBubbles: [bubble('hanu', 'HANU', 'HANU', 'Ừ.', 'Yeah.', 'hanu', 1)],
-  },
-  {
-    id: 'hanu-go-faster', tier: 'medium', signals: ['pha-oi'], weight: 10, minimumAbsurdity: 0,
-    contextRequirements: { all: ['near-hanu', 'hanu-delivering'] }, cooldown: 9, antiRepeatGroup: 'hanu-call',
-    priority: 'medium', canInterrupt: false, canBeInterrupted: true, duration: 4.5,
-    actorStateChanges: ['hanu:speed-up'], worldStateChanges: [], animationCue: 'hanu-run', soundCue: 'hanu_u',
-    dialogueBubbles: [bubble('hanu', 'HANU', 'HANU', 'Biết rồi.', 'I know.', 'hanu', 1.2)],
-  },
-  {
     id: 'heesun-stare', tier: 'micro', signals: ['pha-oi', 'world-tick'], weight: 4.4, minimumAbsurdity: 1,
     contextRequirements: { all: ['heesun-idle'] }, cooldown: 18, antiRepeatGroup: 'heesun-appearance',
     priority: 'low', canInterrupt: false, canBeInterrupted: true, duration: 3.4,
@@ -213,27 +192,9 @@ export const ABSURD_EVENT_REGISTRY = [
     actorStateChanges: ['dog:wake'], worldStateChanges: [], animationCue: 'dog-wake', soundCue: 'dog_reply', dialogueBubbles: [],
   },
   {
-    id: 'distant-reply', tier: 'micro', signals: ['pha-oi'], weight: 4, minimumAbsurdity: 0,
-    cooldown: 5, antiRepeatGroup: 'local-reply', priority: 'low', canInterrupt: false, canBeInterrupted: true, duration: 1.8,
-    actorStateChanges: [], worldStateChanges: ['far-reply'], animationCue: 'reply-ring', soundCue: 'village_far_reply',
-    dialogueBubbles: [bubble('world', 'AI ĐÓ RẤT XA', 'SOMEONE VERY FAR AWAY', 'Ơi…', 'Yeees…', 'world', 1.65)],
-  },
-  {
     id: 'delayed-chicken-crossing', tier: 'micro', signals: ['pha-oi'], weight: 2.2, minimumAbsurdity: 1,
     cooldown: 20, antiRepeatGroup: 'delayed-seed', priority: 'low', canInterrupt: false, canBeInterrupted: true, duration: 0.1,
     possibleFollowUps: [{ id: 'chicken-crossing', chance: 1, delayRange: [6.5, 10.5] }],
-    actorStateChanges: [], worldStateChanges: ['delayed-seed'], dialogueBubbles: [],
-  },
-  {
-    id: 'delayed-feast-memory', tier: 'micro', signals: ['pha-oi'], weight: 1.2, minimumAbsurdity: 2,
-    cooldown: 30, antiRepeatGroup: 'delayed-seed', priority: 'low', canInterrupt: false, canBeInterrupted: true, duration: 0.1,
-    possibleFollowUps: [{ id: 'feast-remembers-call', chance: 1, delayRange: [14, 22] }],
-    actorStateChanges: [], worldStateChanges: ['delayed-seed'], dialogueBubbles: [],
-  },
-  {
-    id: 'delayed-far-oi', tier: 'micro', signals: ['pha-oi'], weight: 1.8, minimumAbsurdity: 1,
-    cooldown: 22, antiRepeatGroup: 'delayed-seed', priority: 'low', canInterrupt: false, canBeInterrupted: true, duration: 0.1,
-    possibleFollowUps: [{ id: 'far-oi-returns', chance: 1, delayRange: [8, 14] }],
     actorStateChanges: [], worldStateChanges: ['delayed-seed'], dialogueBubbles: [],
   },
   {
@@ -242,25 +203,11 @@ export const ABSURD_EVENT_REGISTRY = [
     actorStateChanges: ['chicken:cross-screen'], worldStateChanges: [], animationCue: 'chicken-run', soundCue: 'chicken_panic', dialogueBubbles: [],
   },
   {
-    id: 'feast-remembers-call', tier: 'major', signals: ['delayed'], weight: 1, minimumAbsurdity: 2,
-    contextRequirements: { all: ['feast-idle'] }, cooldown: 0, antiRepeatGroup: 'feast-major', priority: 'medium',
-    canInterrupt: false, canBeInterrupted: true, duration: 8,
-    actorStateChanges: ['feast:chasing'], worldStateChanges: ['major-chain'], animationCue: 'feast-chase', soundCue: 'feast_chase',
-    dialogueBubbles: [bubble('feast', 'MÂM NHẬU', 'THE DRINKING TABLE', 'À, lúc nãy ông gọi à?', 'Were you calling us earlier?', 'world', 1.8, 0, 'medium')],
-  },
-  {
-    id: 'far-oi-returns', tier: 'micro', signals: ['delayed'], weight: 1, minimumAbsurdity: 1,
-    cooldown: 0, antiRepeatGroup: 'local-reply', priority: 'low', canInterrupt: false, canBeInterrupted: true, duration: 2.2,
-    actorStateChanges: [], worldStateChanges: ['far-reply'], soundCue: 'village_far_reply',
-    dialogueBubbles: [bubble('world', 'RẤT XA', 'VERY FAR AWAY', 'ƠIIIIIIII!', 'YEEEEES!', 'world', 2)],
-  },
-  {
     id: 'chair-fall', tier: 'micro', signals: ['delayed', 'world-tick'], weight: 5, minimumAbsurdity: 0,
     contextRequirements: { all: ['world-quiet'] }, cooldown: 16, antiRepeatGroup: 'ambient-prop', priority: 'low',
     canInterrupt: false, canBeInterrupted: true, duration: 1.7,
     possibleFollowUps: [
       { id: 'chicken-invade-feast', chance: 0.38, delayRange: [0.25, 0.65] },
-      { id: 'feast-chase', chance: 0.28, delayRange: [0.45, 1.1] },
     ],
     actorStateChanges: [], worldStateChanges: ['chair:fallen'], animationCue: 'chair-fall', soundCue: 'comic_domino', dialogueBubbles: [],
   },
@@ -274,7 +221,7 @@ export const ABSURD_EVENT_REGISTRY = [
     id: 'someone-says-oi', tier: 'micro', signals: ['world-tick'], weight: 3.2, minimumAbsurdity: 1,
     contextRequirements: { all: ['world-quiet'] }, cooldown: 22, antiRepeatGroup: 'ambient-voice', priority: 'low',
     canInterrupt: false, canBeInterrupted: true, duration: 1.5,
-    actorStateChanges: [], worldStateChanges: [], soundCue: 'village_far_reply',
+    actorStateChanges: [], worldStateChanges: [], soundCue: 'village_reply',
     dialogueBubbles: [bubble('world', 'AI ĐÓ', 'SOMEONE', 'Ơi.', 'Yes.', 'world', 1.2)],
   },
   {
@@ -384,7 +331,6 @@ export const ABSURD_EVENT_REGISTRY = [
     id: 'chicken-invade-feast', tier: 'micro', signals: ['delayed', 'collision'], weight: 4.8, minimumAbsurdity: 1,
     contextRequirements: { all: ['feast-idle'] }, cooldown: 24, antiRepeatGroup: 'chicken-follow', priority: 'low',
     canInterrupt: false, canBeInterrupted: true, duration: 5.2,
-    possibleFollowUps: [{ id: 'feast-chase', chance: .48, delayRange: [.7, 1.4] }],
     actorStateChanges: ['chicken:invade-feast'], worldStateChanges: ['chair:disturbed'], animationCue: 'chicken-follow', soundCue: 'chicken_panic', dialogueBubbles: [],
   },
   {

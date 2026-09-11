@@ -143,7 +143,6 @@ export type HaNuState = {
   deliveryCycle: number;
   carryingFood: boolean;
   speedBoostUntil: number;
-  headTurnUntil: number;
   nextPauseAt: number;
   receivedCount: number;
 };
@@ -463,7 +462,7 @@ const defaultGame = (quality: GameQuality, reducedMotion: boolean, random: () =>
     x: HANU_ROUTE[0].x, y: HANU_ROUTE[0].y, vx: 0, vy: 0, waypoint: 1, lineIndex: 0, nextLineAt: 8,
     revealReadyAt: 0, lastCollisionAt: 0, saidAtStream: false, mode: 'phone-loop', modeUntil: 0,
     promiseStage: 0, nextPromiseAt: 2.4, deliveryStartAt: 38, deliveryTimeoutAt: 0, deliveryCycle: 0,
-    carryingFood: false, speedBoostUntil: 0, headTurnUntil: 0, nextPauseAt: 13, receivedCount: 0,
+    carryingFood: false, speedBoostUntil: 0, nextPauseAt: 13, receivedCount: 0,
   },
   feast: {
     x: PHIENG_LOI_LANDMARKS.feastStart.x, y: PHIENG_LOI_LANDMARKS.feastStart.y, vx: 0, vy: 0,
@@ -520,10 +519,12 @@ export const createGame = (quality: GameQuality, reducedMotion: boolean, save?: 
   Object.assign(game.feast, restorePoint(save.feast), {
     encounters: Math.max(0, save.feast.encounters), pendingRelocate: save.feast.pendingRelocate ?? false,
     locationIndex: clamp(Math.round(save.feast.locationIndex ?? save.feast.encounters), 0, FEAST_TABLE_LOCATIONS.length - 1),
-    mode: save.feast.mode === 'chasing' ? 'chasing' : 'idle', relocateAt: game.elapsed + 26,
+    // Older saves can contain the retired player-chase scene. Restore the table
+    // calmly instead of reviving an event that no longer exists.
+    mode: 'idle', relocateAt: game.elapsed + 26,
   });
-  game.feast.modeUntil = game.feast.mode === 'chasing' ? game.elapsed + 6 : 0;
-  game.feast.chaseStartedAt = game.feast.mode === 'chasing' ? game.elapsed : 0;
+  game.feast.modeUntil = 0;
+  game.feast.chaseStartedAt = 0;
 
   Object.assign(game.heesun, restorePoint(save.heesun), {
     mode: restoreHeeSunMode(save.heesun.mode), met: save.heesun.met, caught: save.heesun.caught,
@@ -900,7 +901,7 @@ export const applyDirectedEvent = (game: GameState, resolution: DirectorResoluti
   addAbsurdity(game, definition.tier === 'macro' ? 0.75 : definition.tier === 'major' ? 0.62 : definition.tier === 'medium' ? 0.34 : 0.12);
   events.push({ type: 'director-event', id: definition.id, soundCue: definition.soundCue });
   switch (definition.id) {
-    case 'house-reply': case 'distant-reply': case 'far-oi-returns': game.replyPulseUntil = game.elapsed + 1.05; break;
+    case 'house-reply': game.replyPulseUntil = game.elapsed + 1.05; break;
     case 'chicken-glance': startChickenMode(game, 'look', 1.5, events); break;
     case 'chicken-triple-stare': startChickenMode(game, 'triple-look', 1.9, events); break;
     case 'chicken-run-away': startChickenMode(game, 'panic-away', 4.2, events); break;
@@ -908,9 +909,6 @@ export const applyDirectedEvent = (game: GameState, resolution: DirectorResoluti
     case 'chicken-crossing': startChickenMode(game, 'cross-screen', 4.2, events); break;
     case 'feast-stare': Object.assign(game.feast, { mode: 'stare', modeUntil: game.elapsed + 2.2 }); break;
     case 'feast-what': Object.assign(game.feast, { mode: 'react', modeUntil: game.elapsed + 2.1 }); break;
-    case 'feast-chase': case 'feast-remembers-call': startFeastChase(game, events); break;
-    case 'hanu-head-only': game.hanu.headTurnUntil = game.elapsed + 1.5; events.push({ type: 'phone' }); break;
-    case 'hanu-go-faster': game.hanu.speedBoostUntil = game.elapsed + 4.5; events.push({ type: 'phone' }); break;
     case 'hanu-almost-caught':
       Object.assign(game.hanu, { mode: 'delivery-paused', modeUntil: game.elapsed + definition.duration, speedBoostUntil: game.elapsed + definition.duration + 2.2 });
       events.push({ type: 'phone' });
@@ -1035,11 +1033,10 @@ const handleCall = (game: GameState, events: GameEvent[]) => {
     const index = game.director.activeMicro.findIndex((event) => event.canBeInterrupted);
     if (index >= 0) game.director.activeMicro.splice(index, 1);
   }
-  const resolution = runDirectorSignal(game, 'pha-oi', events);
-  if (!resolution) {
-    const fallback = activateDirectedEvent(game.director, 'distant-reply', game.elapsed, 0, game.random);
-    if (fallback) applyDirectedEvent(game, fallback, events);
-  }
+  // A normal call always keeps its own voice/pose/camera beat. If no contextual
+  // Director candidate is eligible, that basic response is the whole outcome:
+  // do not reroll, synthesize a distant reply, or turn it into TRUE NOTHING.
+  runDirectorSignal(game, 'pha-oi', events);
 };
 
 const updatePhaOiCooldown = (game: GameState, previousElapsed: number, events: GameEvent[]) => {
@@ -1075,7 +1072,6 @@ const pauseWorldForKaraoke = (game: GameState, dt: number) => {
   hanu.deliveryStartAt = shifted(hanu.deliveryStartAt, dt);
   hanu.deliveryTimeoutAt = shifted(hanu.deliveryTimeoutAt, dt);
   hanu.speedBoostUntil = shifted(hanu.speedBoostUntil, dt);
-  hanu.headTurnUntil = shifted(hanu.headTurnUntil, dt);
   hanu.nextPauseAt = shifted(hanu.nextPauseAt, dt);
 
   const feast = game.feast;

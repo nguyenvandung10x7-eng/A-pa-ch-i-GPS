@@ -45,7 +45,7 @@ procedural sound as a development fallback.
 | `hanu_the_a_01..03.wav` | HANU · phone | “Thế à?” | Mild surprise; no change in pace | 0.45–0.85 s | 3 | No | Phone band-limit + world pan | Every third/fourth phone response |
 | `chief_thu_nhat_01..03.wav` | Trưởng bản | “Thứ nhất…” | Formal, slow, nowhere near the point | 0.8–1.4 s | 3 | No | Natural outdoor distance; preserve pause | Speech escalation/far continuation |
 | `feast_vao_lam_chen_01..04.wav` | Mâm nhậu | “Vào làm chén.” | Friendly adult group, slight overlap | 0.7–1.35 s | 4 | No | Small group stereo spread | Every relocated table encounter |
-| `village_far_reply_01..04.wav` | Distant house | “ƠIIII!” | Very far; vary adult voices | 0.8–1.8 s | 4 | No | Strong attenuation, alternating pan, two echoes | Delayed house/spam reply |
+| `village_reply_01..04.wav` | Nearby house / ambient villager | “Ơi.” | Short, ordinary acknowledgement; vary adult voices | 0.35–0.9 s | 4 | No | Light outdoor ambience; no long echo | Immediate nearby-house reply or independent ambient call; never a PHÀ ƠI fallback/delayed consequence |
 | `chicken_panic_01..05.wav` | Chicken flock · vocal Foley | Clucks, wings, needless alarm | Fast distinct mouth-Foley takes | 0.25–0.9 s | 5 | No | Random pan/pitch, max 4 concurrent | Whole-village flock panic |
 | `dog_reply_01..03.wav` | Village dog · vocal Foley | Two barks / confused huff | Playful, not aggressive | 0.2–0.7 s | 3 | No | Distance pan, subtle low shelf | Ambient or nearby call response |
 | `macadamia_crunch_01..05.wav` | Macadamia gag | Impossibly loud dry crunch | Layered mouth crunch/click | 0.12–0.45 s | 5 | No | Random pitch ±5%, max 3 concurrent | Every powered footstep |
