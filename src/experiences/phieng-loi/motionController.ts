@@ -465,9 +465,15 @@ export const sampleMotionPose = (track: MotionTrack): MotionPose => {
     case 'flee':
       if (track.actor !== 'heesun') { base.y = -lift * 2.2; base.x = -track.facing * .5; base.rotation = track.facing * 4.8 + stride * 2.2; }
       break;
-    case 'phone-walk': base.y = -lift * .55; base.rotation = stride * .42; break;
-    case 'delivery': base.y = -lift * .9; base.rotation = stride * .75; break;
-    case 'delivery-fast': base.y = -lift * 1.35; base.rotation = track.facing * -2 + stride * 1.1; break;
+    case 'phone-walk':
+      if (track.actor !== 'hanu') { base.y = -lift * .55; base.rotation = stride * .42; }
+      break;
+    case 'delivery':
+      if (track.actor !== 'hanu') { base.y = -lift * .9; base.rotation = stride * .75; }
+      break;
+    case 'delivery-fast':
+      if (track.actor !== 'hanu') { base.y = -lift * 1.35; base.rotation = track.facing * -2 + stride * 1.1; }
+      break;
     case 'feast-chase': base.y = -lift * 1.4; base.rotation = stride * 1.15; break;
     case 'stream-arrive': base.y = -lift * 1.15; base.rotation = stride * 1.05; break;
     case 'shout': {
@@ -494,8 +500,12 @@ export const sampleMotionPose = (track: MotionTrack): MotionPose => {
     case 'victory':
       if (track.actor !== 'heesun') { base.y = -Math.sin(Math.min(1, t / .22) * Math.PI) * 2.3; base.rotation = track.facing * -2; }
       break;
-    case 'phone-pause': base.rotation = Math.sin(t * 1.4 + track.phaseOffset) * .22; break;
-    case 'handoff': base.x = track.facing * Math.sin(Math.min(1, t / .45) * Math.PI) * 2.4; break;
+    case 'phone-pause':
+      if (track.actor !== 'hanu') base.rotation = Math.sin(t * 1.4 + track.phaseOffset) * .22;
+      break;
+    case 'handoff':
+      if (track.actor !== 'hanu') base.x = track.facing * Math.sin(Math.min(1, t / .45) * Math.PI) * 2.4;
+      break;
     case 'feast-rise': base.y = 2 - easeOutBack(Math.min(1, t / .32)) * 2.5; break;
     case 'feast-stare': base.rotation = 0; break;
     case 'observe-hold': base.rotation = track.facing * .6; break;

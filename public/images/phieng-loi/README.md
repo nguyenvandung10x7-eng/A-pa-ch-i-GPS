@@ -13,11 +13,13 @@ project owner; the raw references are intentionally not committed.
 - `heesun-side-v2.webp`, `heesun-down-v2.webp`, `heesun-up-v2.webp`:
   1536×1024 transparent 4×4 directional locomotion atlases. Rows 1–2 are an
   eight-frame wander cycle; rows 3–4 are an eight-frame chase cycle.
-- `hanu-atlas-v1.webp`: 1536×1024 transparent 3×2 pose atlas.
+- `hanu-actions-v2.webp`: 1536×1024 transparent 4×4 action atlas with
+  directional phone idle, call, puzzled/shrug/glance-back, brake, handoff,
+  pull-back, recoil, dance and delivered poses.
+- `hanu-side-v2.webp`, `hanu-down-v2.webp`, `hanu-up-v2.webp`:
+  1536×1024 transparent 4×4 directional locomotion atlases. Rows 1–2 are an
+  eight-frame phone-walk cycle; rows 3–4 are an eight-frame food-delivery run.
 - `support-atlas-v1.webp`: 1776×888 transparent 4×2 pose atlas.
-- `hanu-walk-v2.webp`: 1536×1024 transparent 4×2 phone-walk cycle.
-- `hanu-food-box-v1.svg`: transparent project-authored cutout shown only while
-  HANU's delivery state carries the player's food.
 - `player-locomotion-side-v2.webp`, `player-locomotion-down-v2.webp`,
   `player-locomotion-up-v2.webp`: 1536×1024 transparent 4×4 directional Player
   locomotion atlases. Rows 1–2 are an eight-frame walk cycle and rows 3–4 are

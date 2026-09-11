@@ -95,7 +95,7 @@ assert.doesNotMatch(pageSource, /<canvas|renderGame\(/);
 assert.match(pageSource, /disabled=\{!ui\.callReady/);
 assert.match(pageSource, /while \(remaining > 0\.0001\)/);
 assert.match(pageSource, /MAX_VISIBLE_FRAME_CATCH_UP_SECONDS/);
-assert.match(visualSource, /PHIENG_LOI_VISUAL_ASSETS\.hanuFood/);
+assert.doesNotMatch(visualSource, /PHIENG_LOI_VISUAL_ASSETS\.hanuFood/);
 assert.match(visualSource, /game\.karaoke\.active/);
 assert.doesNotMatch(visualSource, /VUONGME_CALL_INTERVAL|normalCallCount\s*%/);
 assert.match(visualSource, /PHIENG_LOI_VISUAL_ASSETS\.victoryMonument/);
@@ -114,6 +114,11 @@ assert.match(visualSource, /heesunLocomotionSide/);
 assert.match(visualSource, /heesunLocomotionUp/);
 assert.match(visualSource, /heesunActions/);
 assert.doesNotMatch(visualSource, /heesunRun|atlasFrameStyle\('heesun'/);
+assert.match(visualSource, /hanuLocomotionDown/);
+assert.match(visualSource, /hanuLocomotionSide/);
+assert.match(visualSource, /hanuLocomotionUp/);
+assert.match(visualSource, /hanuActions/);
+assert.doesNotMatch(visualSource, /hanuWalk|atlasFrameStyle\('hanu'/);
 assert.match(visualSource, /streamAction/);
 assert.doesNotMatch(visualSource, /offsetWidth|clientWidth/);
 assert.match(motionSource, /preEventMotionState/);
@@ -225,6 +230,16 @@ for (const [anchor, tone] of [['chief', 'chief'], ['feast', 'world'], ['stream',
     sampleMotionPose(directionalHeesun),
     { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1 },
     'HeeSun locomotion weight comes from drawn frames rather than whole-sprite wobble',
+  );
+
+  const directionalHanu = createMotionController().hanu;
+  advanceMotion(directionalHanu, { motion: 'delivery', now: .1, vx: 0, vy: 72, directionalView: true });
+  advanceMotion(directionalHanu, { motion: 'delivery', now: .18, vx: 0, vy: 72, directionalView: true });
+  assert.equal(directionalHanu.view, 'down', 'HANU selects a dedicated forward-facing delivery atlas');
+  assert.deepEqual(
+    sampleMotionPose(directionalHanu),
+    { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1 },
+    'HANU locomotion weight comes from drawn frames rather than whole-sprite wobble',
   );
 }
 {

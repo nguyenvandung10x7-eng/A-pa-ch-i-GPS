@@ -51,8 +51,7 @@ const ACTOR_WIDTH = {
   playerAction: 82,
   chief: 58,
   heesun: 112,
-  hanuPose: 64,
-  hanuWalk: 48,
+  hanu: 108,
   feast: 106,
   feastCrowd: 102,
   streamGroup: 88,
@@ -168,7 +167,6 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
   const heesunTwinSpriteRef = useRef<HTMLDivElement | null>(null);
   const hanuRef = useRef<HTMLDivElement | null>(null);
   const hanuSpriteRef = useRef<HTMLDivElement | null>(null);
-  const hanuFoodRef = useRef<HTMLImageElement | null>(null);
   const feastRef = useRef<HTMLDivElement | null>(null);
   const feastSpriteRef = useRef<HTMLDivElement | null>(null);
   const feastCrowdRef = useRef<HTMLDivElement | null>(null);
@@ -380,25 +378,41 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
       routeFacing,
       karaokeOverrideFor(game, 'hanu'),
       true,
+      true,
     );
     const dominoActive = game.dominoStartedAt !== 0 && game.elapsed - game.dominoStartedAt < 3.4;
-    const hanuPose = dominoActive || ['phone-pause', 'handoff', 'delivered'].includes(hanuTrack.currentMotion);
-    const hanuFrame = dominoActive
-      ? 5
-      : hanuTrack.currentMotion === 'handoff'
-        ? 4
-        : hanuTrack.currentMotion === 'phone-pause'
-          ? 2
-          : hanuTrack.currentMotion === 'delivered'
-            ? 0
-            : frameForTrack(hanuTrack, 8, game.reducedMotion);
+    const hanuActiveCue = game.animationCues.hanu;
+    const hanuCue = hanuActiveCue && hanuActiveCue.until > game.elapsed ? hanuActiveCue.cue : null;
+    const hanuMoving = ['phone-walk', 'delivery', 'delivery-fast'].includes(hanuTrack.currentMotion);
+    let hanuAtlas: AtlasName = hanuTrack.view === 'down'
+      ? 'hanuLocomotionDown'
+      : hanuTrack.view === 'up'
+        ? 'hanuLocomotionUp'
+        : 'hanuLocomotionSide';
+    let hanuFrame: number;
+    if (hanuMoving) {
+      const carryingDelivery = ['delivery', 'delivery-fast'].includes(hanuTrack.currentMotion);
+      hanuFrame = (carryingDelivery ? 8 : 0) + frameForTrack(hanuTrack, 8, game.reducedMotion);
+    } else {
+      hanuAtlas = 'hanuActions';
+      if (dominoActive) hanuFrame = 12;
+      else if (hanuTrack.currentMotion === 'dance-hanu') hanuFrame = 14;
+      else if (hanuTrack.currentMotion === 'handoff') {
+        hanuFrame = hanuCue === 'hanu-pull-box' ? 10 : hanuTrack.localMotionTime < .42 ? 8 : 11;
+      } else if (hanuTrack.currentMotion === 'phone-pause') {
+        if (hanuCue === 'hanu-phone-call') hanuFrame = 3;
+        else if (game.hanu.mode === 'delivery-paused') hanuFrame = 7;
+        else hanuFrame = hanuTrack.view === 'down' ? 0 : hanuTrack.view === 'up' ? 2 : 1;
+      } else if (hanuTrack.currentMotion === 'delivered') hanuFrame = 15;
+      else hanuFrame = hanuTrack.view === 'down' ? 0 : hanuTrack.view === 'up' ? 2 : 1;
+    }
     placeActor(hanuRef.current, game.hanu.x, game.hanu.y);
-    setSpriteFrame(hanuSpriteRef.current, hanuPose ? 'hanu' : 'hanuWalk', hanuFrame);
-    setSpriteWidth(hanuSpriteRef.current, hanuPose ? ACTOR_WIDTH.hanuPose : ACTOR_WIDTH.hanuWalk);
+    setSpriteFrame(hanuSpriteRef.current, hanuAtlas, hanuFrame);
+    setSpriteWidth(hanuSpriteRef.current, ACTOR_WIDTH.hanu);
     setSpriteTransform(hanuSpriteRef.current, hanuTrack.facing, depthScale(game.hanu.y));
     applyMotionPose(hanuSpriteRef.current, sampleMotionPose(hanuTrack), climax);
     setData(hanuRef.current, 'motion', hanuTrack.currentMotion);
-    if (hanuFoodRef.current) hanuFoodRef.current.hidden = !game.hanu.carryingFood;
+    setData(hanuRef.current, 'view', hanuTrack.view);
 
     const feastMotion = actorMotionForGame(game, 'feast');
     const feastTrack = updateTrack(
@@ -634,8 +648,7 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
         ))}
 
         <div ref={hanuRef} className="phieng-visual__actor is-hanu" style={actorStyle(initialGame.hanu.x, initialGame.hanu.y)}>
-          <div ref={hanuSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('hanuWalk', 0), width: ACTOR_WIDTH.hanuWalk }} />
-          <img ref={hanuFoodRef} className="phieng-visual__hanu-food" src={PHIENG_LOI_VISUAL_ASSETS.hanuFood} alt="" hidden />
+          <div ref={hanuSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('hanuActions', 0), width: ACTOR_WIDTH.hanu }} />
         </div>
         <div ref={heesunRef} className="phieng-visual__actor is-heesun" style={actorStyle(initialGame.heesun.x, initialGame.heesun.y)}>
           <div ref={heesunSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('heesunActions', 0), width: ACTOR_WIDTH.heesun }} />

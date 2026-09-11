@@ -52,10 +52,11 @@ All runtime URLs live in `visualAssets.ts`.
 | `heesun-side-v2.webp` | 4×4 | Side-view eight-frame wander and eight-frame chase cycles. |
 | `heesun-down-v2.webp` | 4×4 | Down/forward-view eight-frame wander and chase cycles. |
 | `heesun-up-v2.webp` | 4×4 | Up/away-view eight-frame wander and chase cycles. |
-| `hanu-atlas-v1.webp` | 3×2 | Phone idle, phone walk, call, confused, distracted and accidental-chaos poses. |
+| `hanu-actions-v2.webp` | 4×4 | Directional phone idle plus call, puzzled/shrug/glance-back, brake, handoff, pull-back, recoil, dance and delivered acting. |
+| `hanu-side-v2.webp` | 4×4 | Side-view eight-frame phone-walk and food-delivery run cycles. |
+| `hanu-down-v2.webp` | 4×4 | Down/forward-view eight-frame phone-walk and food-delivery run cycles. |
+| `hanu-up-v2.webp` | 4×4 | Up/away-view eight-frame phone-walk and food-delivery run cycles. |
 | `support-atlas-v1.webp` | 4×2 | Player idle, chicken, dog and buffalo placeholders. |
-| `hanu-walk-v2.webp` | 4×2 | Eight-frame HANU phone-walk cycle. |
-| `hanu-food-box-v1.svg` | cutout | Visible delivery box attached to HANU while his food-delivery state is active. |
 | `player-locomotion-{side,down,up}-v2.webp` | 4×4 each | Approved composition-B Player: directional eight-frame walk and run cycles. |
 | `player-actions-v2.webp` | 4×3 | Player directional idle, start, turn, stop, PHÀ ƠI, caught, seated and dance poses. |
 | `chief-talk-v2.webp` | 4×2 | Trưởng bản idle, talk and reaction cycle. |
