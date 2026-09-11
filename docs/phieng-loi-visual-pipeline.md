@@ -62,7 +62,7 @@ All runtime URLs live in `visualAssets.ts`.
 | `hanu-up-v2.webp` | 4×4 | Up/away-view eight-frame phone-walk and food-delivery run cycles. |
 | `support-atlas-v1.webp` | 4×2 | Player idle, chicken, dog and buffalo placeholders. |
 | `player-locomotion-{side,down,up}-v2.webp` | 4×4 each | Composition-B Player full-body walk/run cycles. Frame selection is driven by accumulated travel distance so contact timing survives render-FPS changes without assembling bent limb fragments. |
-| `player-pha-oi-v1.webp` | 4×2 | Dedicated helpless “trời ơi / gọi Bụt” sequence: feet shoulder-width; final hold alternates elbow-low/elbow-high while both palms remain facing the sky. |
+| `player-pha-oi-v1.webp` | 4×2 | Dedicated helpless “trời ơi / gọi Bụt” sequence: feet shoulder-width; final hold alternates elbow-low/elbow-high, resolves on elbow-low, and keeps both palms facing the sky. |
 | `player-actions-v2.webp` | 4×3 | Retained Player caught, seated and dance poses; the old generic shout cell is retired from runtime selection. |
 | `chief-talk-v2.webp` | 4×2 | Trưởng bản idle, talk and reaction cycle. |
 | `feast-loop-v2.webp` | 4×2 | Five-man roadside-table toast and laugh cycle. |

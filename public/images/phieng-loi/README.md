@@ -28,7 +28,7 @@ project owner; the raw references are intentionally not committed.
 - `player-pha-oi-v1.webp`: 1536×1024 transparent 4×2 dedicated PHÀ ƠI sequence:
   shoulder-width anticipation, both elbows opening away from the torso, palms
   raised toward the sky, then a helpless hold alternating elbow-low/elbow-high
-  while both palms remain upward. It is a meme-specific acting cycle rather
+  and resolving on elbow-low while both palms remain upward. It is a meme-specific acting cycle rather
   than a generic one-hand shout; the two former lowering frames stay unused.
 - `player-actions-v2.webp`: 1536×1023 transparent 4×3 retained Player special-pose
   atlas for caught, seated and dance states. Its former generic shout cell is no

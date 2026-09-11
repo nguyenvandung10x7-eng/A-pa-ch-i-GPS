@@ -110,7 +110,7 @@ assert.match(visualSource, /'playerLocomotionDown'/);
 assert.match(visualSource, /'playerLocomotionSide'/);
 assert.match(visualSource, /'playerLocomotionUp'/);
 assert.match(visualSource, /playerPhaOiFrame/);
-assert.match(visualSource, /PLAYER_PHA_OI_HOLD_FRAMES = \[4, 5, 4, 5\]/);
+assert.match(visualSource, /PLAYER_PHA_OI_HOLD_FRAMES = \[4, 5, 4, 5, 4\]/);
 assert.match(visualSource, /playerShouting[\s\S]*\? 'playerPhaOi'/);
 assert.doesNotMatch(visualSource, /playerRig(?:Down|Side|Up)/);
 assert.match(visualSource, /playerActions/);

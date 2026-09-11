@@ -115,7 +115,9 @@ const setData = (node: HTMLDivElement | null, key: string, value: string) => {
   if (node && node.dataset[key] !== value) node.dataset[key] = value;
 };
 
-const PLAYER_PHA_OI_HOLD_FRAMES = [4, 5, 4, 5] as const;
+// Resolve on the lower-elbow pose: both palms stay skyward while the silhouette
+// moves closer to idle before control returns.
+const PLAYER_PHA_OI_HOLD_FRAMES = [4, 5, 4, 5, 4] as const;
 
 const playerPhaOiFrame = (localTime: number, reducedMotion: boolean) => {
   if (reducedMotion) return 4;
@@ -125,7 +127,7 @@ const playerPhaOiFrame = (localTime: number, reducedMotion: boolean) => {
   if (localTime < .4) return 3;
   const holdIndex = Math.min(
     PLAYER_PHA_OI_HOLD_FRAMES.length - 1,
-    Math.floor((localTime - .4) / .16),
+    Math.floor((localTime - .4) / .13),
   );
   return PLAYER_PHA_OI_HOLD_FRAMES[holdIndex];
 };
