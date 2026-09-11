@@ -4,7 +4,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "verify": "node scripts/check-audio-provenance.mjs && npm run typecheck && npm run build",
+    "verify": "node scripts/check-audio-provenance.mjs && npm run verify:phieng-loi && npm run typecheck && npm run build",
+    "verify:phieng-loi": "node --experimental-strip-types scripts/verify-phieng-loi-engine.mjs",
     "lint": "eslint . --ext .ts,.tsx",
     "package": "bash scripts/package.sh",
     "preview": "vite preview --host 0.0.0.0"
@@ -12,12 +13,10 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.110.8",
     "@vitejs/plugin-react": "latest",
-    "i18next": "latest",
     "leaflet": "latest",
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "react-i18next": "latest",
     "react-leaflet": "latest",
     "react-router-dom": "^7.18.2",
     "tailwindcss": "^3.4.17",

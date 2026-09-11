@@ -777,7 +777,7 @@ export const Layout = ({ children, language, setLanguage, t, isAdmin, checkingAd
         <div className="textile-divider absolute inset-x-6 bottom-0 h-2" />
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex min-w-0 items-center gap-4">
-          <Link to="/book" className="flex min-w-0 items-center gap-3 rounded-[1.5rem] pr-2 transition hover:opacity-90">
+          <Link to="/" className="flex min-w-0 items-center gap-3 rounded-[1.5rem] pr-2 transition hover:opacity-90">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.25rem] bg-[rgba(255,248,233,0.72)] text-[var(--earth-800)] shadow-[0_12px_24px_rgba(103,76,44,0.16)] ring-1 ring-[rgba(91,67,38,0.12)]">
             <BookOpen className="h-6 w-6" />
           </span>

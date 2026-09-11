@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { BookOpen, Bookmark, ChevronRight, ChevronUp, Compass, Languages, LogIn, LogOut, Map, MapPin, Music2, Pause, Play, Settings2, ShieldCheck, UserRound, X } from 'lucide-react';
+import { BookOpen, Bookmark, ChevronRight, ChevronUp, Gamepad2, Languages, LogIn, LogOut, MapPin, Music2, Pause, Play, Settings2, ShieldCheck, UserRound, X } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { BookChapterDrawer } from './BookChapterDrawer';
@@ -10,7 +10,6 @@ import {
   readBookSoundEnabled,
   type BookAudioStartDetail,
 } from '../services/bookAudioEvents';
-import { requestChallengeGateReset } from '../services/challengeGateEvents';
 import { getChapter, getPage } from '../services/bookContent';
 import type { LanguageCode } from '../types/task';
 import '../mobile-shell.css';
@@ -147,6 +146,7 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
   const onOpeningSurface = normalizedPathname === '/';
   const onBookSurface = isBookSurface(normalizedPathname);
   const onExploreSurface = normalizedPathname === '/challenge';
+  const embeddedBook = typeof window !== 'undefined' && window.self !== window.top && onBookSurface;
   const readingMode = normalizedPathname.startsWith('/book/chapter/')
     || normalizedPathname.startsWith('/book/page/');
   const userLabel = useMemo(() => getUserLabel(user), [user]);
@@ -403,9 +403,9 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
 
   return (
     <div className={`editorial-shell min-h-dvh ${isFieldSurface(normalizedPathname) ? 'editorial-shell--field' : 'editorial-shell--book'} ${onExploreSurface ? 'editorial-shell--explore' : ''} ${onOpeningSurface ? 'editorial-shell--opening' : ''}`}>
-      <div className={`editorial-shell__frame mx-auto min-h-dvh w-full max-w-[72rem] ${onOpeningSurface ? 'pb-0' : 'pb-[calc(5.6rem+env(safe-area-inset-bottom))]'}`}>
-        {!onOpeningSurface ? <header className="editorial-shell__header">
-          <Link to="/book" className="editorial-shell__brand" aria-label="Book of Dien Bien">
+      <div className={`editorial-shell__frame mx-auto min-h-dvh w-full max-w-[72rem] ${onOpeningSurface || embeddedBook ? 'pb-0' : 'pb-[calc(5.6rem+env(safe-area-inset-bottom))]'}`}>
+        {!onOpeningSurface && !embeddedBook ? <header className="editorial-shell__header">
+          <Link to="/" className="editorial-shell__brand" aria-label="Book of Dien Bien — Experiences">
             BOOK OF DIEN BIEN
           </Link>
           <div className="editorial-shell__header-actions">
@@ -487,19 +487,10 @@ export const MobileAppShell = ({ language, setLanguage, isAdmin, checkingAdmin, 
         {children}
       </div>
 
-      {!onOpeningSurface ? <nav aria-label={language === 'vi' ? 'Điều hướng chính' : 'Primary navigation'} className="editorial-shell__surface-nav">
+      {!onOpeningSurface && !embeddedBook ? <nav aria-label={language === 'vi' ? 'Điều hướng chính' : 'Primary navigation'} className="editorial-shell__surface-nav">
         <div className="editorial-shell__surface-nav-inner">
-          <NavLink
-            to="/challenge"
-            className={({ isActive }) => isActive ? 'is-active' : ''}
-            onClick={() => {
-              if (onExploreSurface) requestChallengeGateReset();
-            }}
-          >
-            <Compass className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
-          </NavLink>
-          <NavLink to="/map" className={({ isActive }) => isActive ? 'is-active' : ''}>
-            <Map className="editorial-shell__nav-icon" aria-hidden="true" /><span>{language === 'vi' ? 'Bản đồ' : 'Map'}</span>
+          <NavLink to="/phieng-loi" className={({ isActive }) => isActive ? 'is-active' : ''}>
+            <Gamepad2 className="editorial-shell__nav-icon" aria-hidden="true" /><span>Phiêng Lơi</span>
           </NavLink>
           <button
             type="button"

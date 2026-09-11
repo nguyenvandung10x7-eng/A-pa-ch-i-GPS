@@ -1,48 +1,88 @@
 # Book of Dien Bien
 
-Book of Dien Bien is a bilingual React/Vite web experience about Điện Biên built around two public surfaces:
+Book of Dien Bien now opens as **Phiêng Lơi**, a compact, mobile-first, landscape
+asset-based 2D comedy game. The player is only trying to cross a small village. Movement
+and one contextual `PHÀ ƠI!` button are the entire control vocabulary; the village
+supplies the consequences.
 
-- **BOOK** — a literary, memory-led digital book with chapters, pages, audio, saved/read state, nearby places, and optional real-world continuations.
-- **CHALLENGE** — GPS-based discovery tasks with progress, points, history, moderation/admin tooling, and location verification.
+Book remains available from the waiting menu and as an in-game overlay. The 1954
+and legacy Explore/Challenge surfaces are no longer part of primary navigation,
+but their source and direct routes remain intact as archived product work.
 
-The former standalone Experiences surface is retired; `/experiences` remains only as a compatibility redirect to `/challenge`.
+## Primary product flow
 
-## Product structure
+- `/` — Phiêng Lơi waiting menu: **CHƠI / TIẾP TỤC**, **BOOK**, **CÀI ĐẶT**.
+- `/phieng-loi` — closed-world comedy game.
+- `/book` — Book of Dien Bien, directly accessible or embedded over the paused
+  game without resetting the player position.
 
-- `/book` — Book contents.
-- `/book/chapter/:chapterId` — chapter entry.
-- `/book/page/:pageId` — full literary page.
-- `/recent` — recent Challenge/history activity.
-- `/saved` — saved Book pages.
-- `/nearby` — nearby Book locations.
-- `/challenge` — public Challenge experience.
-- `/privacy`, `/legal` — legal/safety pages.
-- `/admin`, `/moderation` — staff surfaces.
+Archived direct routes such as `/1954`, `/challenge`, `/map`, `/discover`, and
+`/leaderboard` still resolve. `/journey/1954` and `/experiences` remain compatibility
+redirects. Admin, moderation, legal, authentication, Book, GPS, and Supabase
+contracts are unchanged.
 
-The public mobile shell keeps BOOK and CHALLENGE distinct. Book reading/saved state is stored separately from Challenge progress.
+## Phiêng Lơi
 
-## Book content
+The game uses a DOM/CSS cutout compositor and a small dense village:
+road, layered stilt houses, fields, produce, animated stream, waterwheel, village
+chief, drinking table, animals, everyday props, and shortcuts. The presentation is
+project-owned WebP atlases and a hand-painted 3/4 world plate—not pixel or Canvas
+primitives. It has
+no RPG progression, quest log, XP, combat, crafting, or inventory system.
 
-The canonical Book catalog lives in `src/data/bookCatalog.ts`. Literary copy is layered separately so editorial work does not mutate structural IDs, GPS, media, or Challenge links:
+The loop is deliberately short:
 
-- `src/data/bookLiteraryCopy.ts`
-- `src/data/bookLiteraryPageCopy.ts`
-- `src/data/bookLiteraryMemoryForms.ts`
-- `src/data/bookLiteraryMiddleForms.ts`
+> ĐI → GẶP CHUYỆN NGỚ NGẨN → PHÀ ƠI / CHẠY / ĐỨNG NHÌN → HẬU QUẢ → ĐI TIẾP
 
-The published book currently contains 13 chapters. Chapter 13 intentionally breaks the quieter cadence of the preceding chapters with a short, present-tense, rebellious night-city form.
+HeeSun is the comic threat and capture/reset mechanic. HaNu is an independent
+walking chaos generator. An internal, invisible 0–5 absurdity state makes
+the village progressively less reasonable. The implementation contract and full
+event inventory live in [`docs/phieng-loi-closed-world.md`](docs/phieng-loi-closed-world.md).
 
-## Challenge content and persistence
+### Controls
 
-Challenge defaults live in `src/data/tasks.json`. Browser-local task edits and progress use LocalStorage. Catalog migrations are designed to preserve existing user/admin customizations while filling canonical fields only where required.
+- Mobile: left 360° joystick and one right-side **PHÀ ƠI!** action button.
+- Keyboard: WASD/arrows to move; Space, E, or Q for **PHÀ ƠI!**.
+- Escape pauses. Utility controls for Book, sound, pause, and menu are not gameplay
+  actions.
 
-Book state uses its own storage keys for read pages and saved pages. Challenge migrations and Book state are intentionally separate.
+### Required real voice recording
 
-## Audio and media
+`PHÀ ƠI!` intentionally has no oscillator or TTS substitute. Production requires
+a project-cleared human recording at:
 
-Book chapter audio is mapped independently from Challenge/global gameplay audio. Book playback coordinates with other audio elements so starting one track pauses competing playback.
+`public/audio/phieng-loi/pha-oi-human.mp3`
 
-Static assets are served from `public/`. Images used in production should have confirmed permission/license/source before release; do not remove third-party watermarks to bypass rights requirements.
+Until that file and its rights record are supplied, the visual/camera/NPC response
+still runs and Settings reports the recording as missing. See
+[`public/audio/phieng-loi/README.md`](public/audio/phieng-loi/README.md) and the
+complete [`recording library`](docs/phieng-loi-audio-recording-library.md).
+
+## Book and existing systems
+
+The canonical Book catalog remains in `src/data/bookCatalog.ts`, with literary
+copy in the existing `src/data/bookLiterary*.ts` layers. Book audio, read/saved
+state, nearby places, Auth/Supabase, GPS verification, Challenge persistence, and
+staff tools are preserved. Book is not a quest log and does not mutate game state.
+
+## Rendering, lifecycle, and persistence
+
+- The game route stays lazy-loaded; no game-engine dependency is added.
+- A 640×360 logical camera drives a responsive 16:9 DOM/CSS world compositor;
+  camera and actor transforms run directly on `requestAnimationFrame`, while the
+  lightweight React HUD refreshes separately.
+- Character movement comes from transparent eight-frame WebP cycles, semantic
+  poses come from companion atlases, and the environment comes from one versioned
+  world plate. Asset slots are centralized in `visualAssets.ts`.
+- Authored route corridors in `worldLayout.ts` keep actors on the painted road,
+  garden paths and wooden bridge, with conservative foreground crops providing
+  bridge/foliage/rock occlusion.
+- Motion and presentation effects honor reduced motion.
+- Page hide, blur, and visibility changes clear input and pause safely.
+- Leaving the route cancels animation frames, removes listeners, stops the voice
+  element, and closes the AudioContext.
+- Local save data preserves the player position, encounter state, absurdity,
+  HeeSun/HaNu state, moved table, and necessary world events.
 
 ## Development
 
@@ -55,33 +95,21 @@ npm run dev
 
 ```bash
 npm run verify
-```
-
-`npm run verify` runs strict TypeScript checking first, then the Vite production build. Netlify uses the same command so a deploy cannot pass while TypeScript errors remain.
-
-Other useful commands:
-
-```bash
-npm run typecheck
-npm run build
 npm run lint
-npm run preview
 ```
 
-## Netlify
+`npm run verify` audits public audio provenance, runs strict TypeScript checking,
+and creates the Vite production build. Netlify runs the production-environment
+check plus the same verification before publishing `dist/`; SPA deep links are
+handled by `netlify.toml`.
 
-`netlify.toml` publishes `dist/` and redirects all SPA routes to `index.html` for React Router deep links.
+## Privacy and media
 
-Deploy previews are expected to pass on the exact pull-request head before merge.
+The game itself does not request location. Location is requested only by existing
+Book/Challenge interactions that need it. Game saves, Book state, and Challenge
+progress remain browser-local unless an existing connected service explicitly
+handles a feature.
 
-## Packaging
-
-```bash
-npm run package
-```
-
-The packaging script creates a source archive while excluding generated dependencies, build output, and Git metadata.
-
-## Privacy
-
-Location is requested only for location-based Challenge/Book interactions that need it. Reading state, saved pages, Challenge overrides, and local progress are stored in the browser unless a specific connected service explicitly handles a feature.
+Only media with confirmed project permission may be shipped. Do not add the human
+voice recording—or any replacement audio—without documenting creator, source,
+licence/consent, and redistribution rights.

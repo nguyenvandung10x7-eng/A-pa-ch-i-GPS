@@ -1,0 +1,57 @@
+@import "leaflet/dist/leaflet.css";
+
+.leaflet-container {
+  min-height: 360px;
+  height: 100%;
+  border: 1px solid rgba(73, 58, 41, .12);
+  border-radius: 1.6rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5);
+  z-index: 0;
+}
+
+.leaflet-pane,
+.leaflet-control,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-marker-pane,
+.leaflet-shadow-pane,
+.leaflet-overlay-pane,
+.leaflet-tooltip-pane,
+.leaflet-popup-pane {
+  z-index: 10;
+}
+
+.leaflet-popup-pane { z-index: 20; }
+
+.leaflet-control-container {
+  position: relative;
+  z-index: 15;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  border: 1px solid rgba(87, 68, 45, .14);
+  background: rgba(248, 244, 232, .96);
+  color: var(--forest-950);
+  box-shadow: 0 12px 24px rgba(35, 36, 24, .16);
+}
+
+.leaflet-popup-content {
+  margin: 10px 12px;
+  line-height: 1.35;
+}
+
+.task-map-place-popup strong {
+  display: block;
+  color: #2d1d11;
+  font-weight: 950;
+  letter-spacing: -.01em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .72);
+}
+
+.leaflet-control-zoom a,
+.leaflet-control-attribution {
+  border-color: rgba(87, 68, 45, .14) !important;
+  background: rgba(231, 222, 200, .94) !important;
+  color: var(--forest-900) !important;
+}
