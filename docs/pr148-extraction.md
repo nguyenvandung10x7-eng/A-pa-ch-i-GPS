@@ -118,3 +118,13 @@ Netlify preview hoặc iPhone đã đạt từ test nền. Kiểm tra CI đúng 
 
 Bước triển khai kế tiếp: S02, chỉ route/game loop/input/pause.
 Không ghép tiếp các S03–S15 vào PR S01 để tránh tạo lại một PR khổng lồ.
+
+## S02: route và vòng đời runtime
+
+S02 chỉ nối trực tiếp route `/phieng-loi`, RAF loop có bước thời gian giới hạn,
+input di chuyển bằng bàn phím/joystick trái và pause/resume. Khi mất focus,
+ẩn tab/app hoặc rời trang, input được xóa, RAF và listener được dọn đúng vòng đời.
+
+Không đưa Player, HeeSun, HANU, map art, manga, PHÀ ƠI, audio, save, Book overlay,
+HUD gameplay hoặc event vào lát cắt này. Trang chủ, menu trải nghiệm và các route
+hiện có giữ nguyên; không copy nguyên `PhiengLoiGamePage.tsx` hoặc engine từ #148.
