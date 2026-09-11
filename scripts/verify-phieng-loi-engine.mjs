@@ -107,6 +107,8 @@ assert.doesNotMatch(visualSource, /offsetWidth|clientWidth/);
 assert.match(motionSource, /preEventMotionState/);
 assert.match(motionSource, /motionEnteredAt/);
 assert.match(pageSource, /parsePhiengLoiQaScenario/);
+assert.match(pageSource, /drivePhiengLoiQaScenario/);
+assert.match(qaSource, /qa-feast-chase/);
 for (const scenario of ['locomotion', 'pha-normal', 'pha-nothing', 'heesun-intro', 'heesun-feast', 'capture', 'hanu-delivery', 'signature-chase', 'feast', 'chicken', 'hanu-blocks-heesun', 'disco', 'wife']) {
   assert.match(qaSource, new RegExp(`["']${scenario}["']`), `${scenario} deterministic QA scene must exist`);
 }

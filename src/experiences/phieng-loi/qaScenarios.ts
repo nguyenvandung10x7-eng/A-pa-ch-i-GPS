@@ -1,4 +1,4 @@
-import { stepGame, triggerDirectedEvent, type GameState } from './gameEngine';
+import { stepGame, triggerDirectedEvent, type GameState, type InputState } from './gameEngine';
 import { PHIENG_LOI_LANDMARKS } from './worldLayout';
 
 export const PHIENG_LOI_QA_SCENARIOS = [
@@ -91,7 +91,7 @@ export const applyPhiengLoiQaScenario = (game: GameState, scenario: PhiengLoiQaS
     case 'signature-chase':
       Object.assign(game.hanu, { x: road.x + 112, y: road.y, mode: 'delivering', carryingFood: true, promiseStage: 2, deliveryTimeoutAt: 99_999 });
       Object.assign(game.heesun, { x: road.x - 108, y: road.y, met: true, mode: 'chasing', target: 'player', chaseStartedAt: .001, chaseTimeoutAt: 99_999 });
-      game.feast.x = road.x - 175;
+      game.feast.x = road.x - 235;
       game.feast.y = road.y + 8;
       triggerDirectedEvent(game, 'feast-chase');
       break;
@@ -121,4 +121,37 @@ export const applyPhiengLoiQaScenario = (game: GameState, scenario: PhiengLoiQaS
       break;
   }
   return game;
+};
+
+/** Drives only the hidden deterministic review scenes; normal gameplay never enters here. */
+export const drivePhiengLoiQaScenario = (
+  game: GameState,
+  scenario: PhiengLoiQaScenario | null,
+  input: InputState,
+) => {
+  if (!scenario) return;
+  if (scenario === 'locomotion') {
+    input.left = false;
+    input.right = false;
+    input.up = false;
+    input.down = false;
+    input.moveY = 0;
+    input.moveX = game.elapsed < .55 ? 0 : game.elapsed < 1.45 ? 1 : game.elapsed < 2.15 ? -1 : 0;
+    if (game.elapsed >= 2.55 && game.callCount === 0) input.callQueued = true;
+    return;
+  }
+  if (scenario === 'signature-chase') {
+    input.moveX = 1;
+    input.moveY = 0;
+    return;
+  }
+  if (
+    scenario === 'feast'
+    && game.elapsed >= 2.35
+    && game.feast.mode === 'idle'
+    && !game.recurringFlags.has('qa-feast-chase')
+  ) {
+    game.recurringFlags.add('qa-feast-chase');
+    triggerDirectedEvent(game, 'feast-chase');
+  }
 };

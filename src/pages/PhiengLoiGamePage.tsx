@@ -40,6 +40,7 @@ import {
 import { preloadPhiengLoiVisualAssets } from '../experiences/phieng-loi/visualAssets';
 import {
   applyPhiengLoiQaScenario,
+  drivePhiengLoiQaScenario,
   parsePhiengLoiQaScenario,
   randomForPhiengLoiQaScenario,
 } from '../experiences/phieng-loi/qaScenarios';
@@ -310,6 +311,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
     const frame = (time: number) => {
       if (!active) return;
       const current = gameRef.current;
+      drivePhiengLoiQaScenario(current, qaScenario, inputRef.current);
       const frameDelta = Math.min(MAX_VISIBLE_FRAME_CATCH_UP_SECONDS, Math.max(0.001, (time - previousTime) / 1_000));
       previousTime = time;
       const events: GameEvent[] = [];
@@ -358,7 +360,7 @@ export function PhiengLoiGamePage({ language, setLanguage }: PhiengLoiGamePagePr
       document.removeEventListener('visibilitychange', visibilityChange);
       clearInput();
     };
-  }, [bookOpen, clearInput, saveGame, status, syncUi]);
+  }, [bookOpen, clearInput, qaScenario, saveGame, status, syncUi]);
 
   const updateJoystick = (event: ReactPointerEvent<HTMLDivElement>) => {
     event.preventDefault();
