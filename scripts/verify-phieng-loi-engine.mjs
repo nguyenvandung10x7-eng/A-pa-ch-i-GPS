@@ -124,6 +124,8 @@ assert.match(visualSource, /hanuLocomotionSide/);
 assert.match(visualSource, /hanuLocomotionUp/);
 assert.match(visualSource, /hanuActions/);
 assert.doesNotMatch(visualSource, /hanuWalk|atlasFrameStyle\('hanu'/);
+assert.match(visualSource, /phieng-visual__nameplate is-hanu-name[\s\S]*>HANU</);
+assert.match(visualSource, /phieng-visual__nameplate is-heesun-name[\s\S]*>HEESUN</);
 assert.match(visualSource, /streamAction/);
 assert.doesNotMatch(visualSource, /offsetWidth|clientWidth/);
 assert.match(motionSource, /preEventMotionState/);

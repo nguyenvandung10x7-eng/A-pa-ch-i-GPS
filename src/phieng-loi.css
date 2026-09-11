@@ -1043,6 +1043,55 @@
   will-change: background-position, transform;
 }
 
+.phieng-visual__nameplate {
+  position: absolute;
+  z-index: 5;
+  top: -72px;
+  left: 0;
+  padding: 3px 7px 4px;
+  border: 1.5px solid var(--nameplate-accent, #f4c96e);
+  border-radius: 999px;
+  background: rgba(31, 38, 32, .88);
+  box-shadow:
+    0 2px 0 rgba(37, 27, 19, .54),
+    0 4px 9px rgba(20, 28, 22, .24);
+  color: #fff8df;
+  font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .075em;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(20, 18, 13, .72);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+}
+
+.phieng-visual__nameplate::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid var(--nameplate-accent, #f4c96e);
+  border-bottom: 1.5px solid var(--nameplate-accent, #f4c96e);
+  background: rgba(31, 38, 32, .88);
+  content: "";
+  transform: translate(-50%, -58%) rotate(45deg);
+}
+
+.phieng-visual__nameplate.is-heesun-name {
+  --nameplate-accent: #f0b253;
+}
+
+.phieng-visual__nameplate.is-hanu-name {
+  --nameplate-accent: #72d2b6;
+}
+
+.phieng-visual__actor.is-heesun[data-motion="seated-toast"] > .phieng-visual__nameplate {
+  top: -55px;
+}
+
 /* WebKit can sample the final texel of the preceding atlas row while a scaled
    sprite is composited on a fractional device pixel. Keep a tiny top guard on
    Player frames so shoes from the preceding row never bleed above the head. */

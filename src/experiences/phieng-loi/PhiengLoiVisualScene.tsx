@@ -671,12 +671,15 @@ const VisualScene = forwardRef<PhiengLoiVisualHandle, VisualSceneProps>(({ initi
         ))}
 
         <div ref={hanuRef} className="phieng-visual__actor is-hanu" style={actorStyle(initialGame.hanu.x, initialGame.hanu.y)}>
+          <strong className="phieng-visual__nameplate is-hanu-name" aria-hidden="true">HANU</strong>
           <div ref={hanuSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('hanuActions', 0), width: ACTOR_WIDTH.hanu }} />
         </div>
         <div ref={heesunRef} className="phieng-visual__actor is-heesun" style={actorStyle(initialGame.heesun.x, initialGame.heesun.y)}>
+          <strong className="phieng-visual__nameplate is-heesun-name" aria-hidden="true">HEESUN</strong>
           <div ref={heesunSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('heesunActions', 0), width: ACTOR_WIDTH.heesun }} />
         </div>
         <div ref={heesunTwinRef} className="phieng-visual__actor is-heesun is-heesun-twin" style={actorStyle(initialGame.heesun.x + 42, initialGame.heesun.y + 5)} hidden>
+          <strong className="phieng-visual__nameplate is-heesun-name" aria-hidden="true">HEESUN</strong>
           <div ref={heesunTwinSpriteRef} className="phieng-visual__sprite" style={{ ...atlasFrameStyle('heesunActions', 3), width: ACTOR_WIDTH.heesun }} />
         </div>
         <div ref={wifeRef} className="phieng-visual__actor is-heesun-wife" style={actorStyle(initialGame.wife.x, initialGame.wife.y)} hidden>
