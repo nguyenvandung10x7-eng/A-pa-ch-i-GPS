@@ -115,16 +115,19 @@ const setData = (node: HTMLDivElement | null, key: string, value: string) => {
   if (node && node.dataset[key] !== value) node.dataset[key] = value;
 };
 
+const PLAYER_PHA_OI_HOLD_FRAMES = [4, 5, 4, 5] as const;
+
 const playerPhaOiFrame = (localTime: number, reducedMotion: boolean) => {
   if (reducedMotion) return 4;
-  if (localTime < .11) return 0;
-  if (localTime < .22) return 1;
-  if (localTime < .34) return 2;
-  if (localTime < .48) return 3;
-  if (localTime < .71) return 4;
-  if (localTime < .86) return 5;
-  if (localTime < .98) return 6;
-  return 7;
+  if (localTime < .1) return 0;
+  if (localTime < .2) return 1;
+  if (localTime < .3) return 2;
+  if (localTime < .4) return 3;
+  const holdIndex = Math.min(
+    PLAYER_PHA_OI_HOLD_FRAMES.length - 1,
+    Math.floor((localTime - .4) / .16),
+  );
+  return PLAYER_PHA_OI_HOLD_FRAMES[holdIndex];
 };
 
 const applyMotionPose = (node: HTMLDivElement | null, pose: MotionPose, multiplier = 1) => {
