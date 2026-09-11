@@ -296,10 +296,10 @@
 .phieng-game__call-text {
   position: absolute;
   z-index: 23;
-  top: 38%;
+  top: 24%;
   left: 50%;
   color: #fff5bf;
-  font-size: clamp(2.4rem, 7vw, 6rem);
+  font-size: clamp(1.55rem, 4.2vw, 3.6rem);
   font-weight: 1000;
   line-height: .9;
   letter-spacing: -.055em;
