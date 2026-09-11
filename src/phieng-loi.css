@@ -1043,6 +1043,13 @@
   will-change: background-position, transform;
 }
 
+/* WebKit can sample the final texel of the preceding atlas row while a scaled
+   sprite is composited on a fractional device pixel. Keep a tiny top guard on
+   Player frames so shoes from the preceding row never bleed above the head. */
+.phieng-visual__actor.is-player > .phieng-visual__sprite {
+  clip-path: inset(1.5px 0 0);
+}
+
 .phieng-visual__actor.is-player[data-terrain="wood"]::before {
   background: rgba(52, 35, 23, .2);
 }
