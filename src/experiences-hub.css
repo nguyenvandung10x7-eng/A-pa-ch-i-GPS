@@ -1,0 +1,273 @@
+.experience-hub {
+  --hub-ink: #efe9dc;
+  min-height: 100dvh;
+  overflow: hidden;
+  padding: clamp(1.1rem, 2.5vw, 2.2rem) clamp(1rem, 3vw, 3.5rem) 1rem;
+  color: var(--hub-ink);
+  background:
+    radial-gradient(circle at 78% 8%, rgba(155, 190, 177, 0.16), transparent 28%),
+    linear-gradient(145deg, #101a19 0%, #17231f 46%, #0c1111 100%);
+  isolation: isolate;
+}
+
+.experience-hub::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 4.5rem 4.5rem;
+  content: "";
+  mask-image: linear-gradient(to bottom, black, transparent 82%);
+}
+
+.experience-hub__header,
+.experience-hub__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.experience-hub__brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  letter-spacing: 0.12em;
+}
+
+.experience-hub__brand span {
+  font-size: clamp(0.78rem, 1.2vw, 0.94rem);
+  font-weight: 900;
+}
+
+.experience-hub__brand small,
+.experience-hub__footer,
+.experience-hub__intro > p {
+  color: rgba(239, 233, 220, 0.6);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.19em;
+}
+
+.experience-hub__language {
+  display: inline-flex;
+  min-height: 2.6rem;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.055);
+  cursor: pointer;
+}
+
+.experience-hub__language svg {
+  width: 1rem;
+}
+
+.experience-hub__intro {
+  display: grid;
+  grid-template-columns: minmax(11rem, 0.55fr) minmax(18rem, 1.35fr) minmax(14rem, 0.8fr);
+  align-items: end;
+  gap: clamp(1rem, 3vw, 3.5rem);
+  margin: clamp(2.5rem, 6vh, 5.2rem) 0 clamp(1.7rem, 4vh, 3rem);
+}
+
+.experience-hub__intro > p {
+  margin: 0 0 0.55rem;
+}
+
+.experience-hub__intro h1 {
+  max-width: 14ch;
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.25rem, 4.6vw, 5.25rem);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.experience-hub__intro > div {
+  max-width: 36ch;
+  color: rgba(239, 233, 220, 0.72);
+  font-size: clamp(0.86rem, 1.2vw, 1rem);
+  line-height: 1.6;
+}
+
+.experience-hub__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.7rem, 1.5vw, 1.25rem);
+}
+
+.experience-card {
+  position: relative;
+  min-height: clamp(20rem, 47vh, 34rem);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: clamp(1rem, 1.6vw, 1.55rem);
+  background: #202725;
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+.experience-card__image,
+.experience-card__veil {
+  position: absolute;
+  inset: 0;
+}
+
+.experience-card__image {
+  z-index: -2;
+  background-image: var(--experience-image);
+  background-position: center;
+  background-size: cover;
+  filter: saturate(0.78) contrast(1.04);
+  transition: transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1), filter 500ms ease;
+}
+
+.experience-card__veil {
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(8, 12, 12, 0.04) 18%, rgba(8, 12, 12, 0.22) 46%, rgba(8, 12, 12, 0.94) 100%);
+}
+
+.experience-card--cinematic .experience-card__veil {
+  background: linear-gradient(180deg, rgba(36, 32, 19, 0.08), rgba(18, 17, 14, 0.92) 88%), linear-gradient(100deg, rgba(198, 136, 49, 0.13), transparent 60%);
+}
+
+.experience-card--playful .experience-card__image {
+  image-rendering: auto;
+  filter: saturate(1.05) contrast(1.02);
+}
+
+.experience-card--playful .experience-card__veil {
+  background: linear-gradient(180deg, rgba(16, 43, 44, 0.04), rgba(15, 38, 34, 0.87) 91%);
+}
+
+.experience-card--editorial .experience-card__image {
+  filter: saturate(0.65) sepia(0.08) contrast(0.98);
+}
+
+.experience-card__number {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.2rem;
+  color: rgba(255, 255, 255, 0.72);
+  font: 800 0.66rem/1 'Be Vietnam Pro', sans-serif;
+  letter-spacing: 0.18em;
+}
+
+.experience-card__copy {
+  position: absolute;
+  inset: auto 0 0;
+  padding: clamp(1.25rem, 2.4vw, 2.3rem);
+}
+
+.experience-card__copy p {
+  margin: 0 0 0.65rem;
+  color: rgba(255, 255, 255, 0.63);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+}
+
+.experience-card__copy h2 {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.65rem, 2.6vw, 3rem);
+  font-weight: 500;
+  line-height: 1.03;
+  letter-spacing: -0.035em;
+}
+
+.experience-card__copy > div {
+  max-width: 35ch;
+  min-height: 3.2em;
+  margin-top: 0.75rem;
+  color: rgba(255, 255, 255, 0.73);
+  font-size: clamp(0.76rem, 1vw, 0.91rem);
+  line-height: 1.55;
+}
+
+.experience-card__copy span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 1.2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  padding-bottom: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.035em;
+}
+
+.experience-card__copy svg {
+  width: 0.95rem;
+  transition: transform 220ms ease;
+}
+
+.experience-card:hover .experience-card__image,
+.experience-card:focus-visible .experience-card__image {
+  filter: saturate(1) contrast(1.08);
+  transform: scale(1.035);
+}
+
+.experience-card:hover .experience-card__copy svg,
+.experience-card:focus-visible .experience-card__copy svg {
+  transform: translate(0.16rem, -0.16rem);
+}
+
+.experience-card:focus-visible,
+.experience-hub__language:focus-visible {
+  outline: 3px solid #d9b46d;
+  outline-offset: 3px;
+}
+
+.experience-hub__footer {
+  margin-top: 1rem;
+}
+
+@media (max-width: 800px) {
+  .experience-hub {
+    overflow: visible;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+
+  .experience-hub__brand small {
+    display: none;
+  }
+
+  .experience-hub__intro {
+    display: block;
+    margin: 2.3rem 0 1.4rem;
+  }
+
+  .experience-hub__intro h1 {
+    margin-top: 0.55rem;
+    font-size: clamp(2.2rem, 11vw, 3.65rem);
+  }
+
+  .experience-hub__intro > div {
+    margin-top: 1rem;
+  }
+
+  .experience-hub__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .experience-card {
+    min-height: min(54vh, 28rem);
+  }
+
+  .experience-card__copy > div {
+    min-height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .experience-card__image,
+  .experience-card__copy svg {
+    transition: none;
+  }
+}

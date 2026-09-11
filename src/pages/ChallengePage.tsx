@@ -22,7 +22,12 @@ import {
   isLevelOneTaskId,
 } from '../services/challengeLevels';
 import { CHALLENGE_GATE_RESET_EVENT } from '../services/challengeGateEvents';
-import { getEligibleTasksForExperience, getScopedExperienceModeFromSearch } from '../services/experienceFilters';
+import {
+  getEligibleTasksForExperience,
+  getScopedExperienceModeFromSearch,
+  SPECIALIZED_TASK_IDS,
+} from '../services/experienceFilters';
+import { PHIENG_LOI_EXPERIENCE_MODE, PHIENG_LOI_TASK_ID, TIME_TRAIN_EXPERIENCE_MODE } from '../services/featuredExperiences';
 import {
   GAMEPLAY_MUSIC_ADVANCE_EVENT,
   GAMEPLAY_MUSIC_CANCEL_EVENT,
@@ -137,15 +142,19 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     () => scopedExperienceMode ? getEligibleTasksForExperience(activeTasks, scopedExperienceMode) : activeTasks,
     [activeTasks, scopedExperienceMode],
   );
+  const isOpeningTimeTrainScope = scopedExperienceMode === TIME_TRAIN_EXPERIENCE_MODE;
+  const isOpeningPhiengLoiScope = scopedExperienceMode === PHIENG_LOI_EXPERIENCE_MODE;
+  const isFeaturedExperienceScope = isOpeningTimeTrainScope || isOpeningPhiengLoiScope;
   const eligibleTasks = useMemo(() => {
-    const accessScope = isLevelTwo ? activeTasks : levelOneTasks;
+    const accessScope = isFeaturedExperienceScope || isLevelTwo ? activeTasks : levelOneTasks;
     if (!scopedExperienceMode) return accessScope;
     const accessibleTaskIds = new Set(accessScope.map((candidate) => candidate.id));
     return scopedCatalogTasks.filter((candidate) => accessibleTaskIds.has(candidate.id));
-  }, [activeTasks, isLevelTwo, levelOneTasks, scopedCatalogTasks, scopedExperienceMode]);
+  }, [activeTasks, isFeaturedExperienceScope, isLevelTwo, levelOneTasks, scopedCatalogTasks, scopedExperienceMode]);
   const isScopedMode = scopedExperienceMode !== null;
   const isScopedLocked = Boolean(
     isScopedMode
+    && !isFeaturedExperienceScope
     && !isLevelTwo
     && scopedCatalogTasks.length > 0
     && scopedCatalogTasks.every((candidate) => !isLevelOneTaskId(candidate.id)),
@@ -159,7 +168,12 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const showLevelHome = canPlay && (isScopedLocked || showLevelOneMenu);
   const isFinished = summary.enabledCount > 0 && summary.remainingCount === 0 && !canComplete;
   const isScopedCompleted = isScopedMode && isFinished;
-  const scopeCompletionPrimaryLabel = language === 'vi' ? 'Quay lại Sách' : 'Back to Book';
+  const scopeCompletionPrimaryLabel = isOpeningTimeTrainScope
+    ? (language === 'vi' ? 'Mở Book of Dien Bien' : 'Open Book of Dien Bien')
+    : isOpeningPhiengLoiScope
+      ? (language === 'vi' ? 'Trở lại Phiêng Lơi' : 'Back to Phiêng Lơi')
+    : (language === 'vi' ? 'Quay lại Sách' : 'Back to Book');
+  const scopeCompletionPath = isOpeningPhiengLoiScope ? '/phieng-loi' : '/book';
 
   const scopeContext = useMemo(() => [
     scopedExperienceMode ?? 'all',
@@ -334,7 +348,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     if (isMutating) return;
 
     if (isScopedCompleted) {
-      void navigate('/book');
+      void navigate(scopeCompletionPath);
       return;
     }
 
@@ -482,7 +496,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
   const leaveCompletedExperience = () => {
     setCompletionPanelRunId(null);
     setDetailsOpen(false);
-    if (isScopedMode) void navigate('/book');
+    if (isScopedMode) void navigate(scopeCompletionPath);
   };
 
   const statusBadge = progress.activeRun?.status === 'active'
@@ -522,8 +536,12 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
     return (
       <ChallengeCoolGate
         language={language}
-        onAccept={() => setChallengeGateAccepted(true)}
-        onDecline={() => { void navigate('/book'); }}
+        onAccept={() => {
+          setChallengeGateAccepted(true);
+          if (isOpeningTimeTrainScope) void chooseExperience([SPECIALIZED_TASK_IDS.timeTrain]);
+          if (isOpeningPhiengLoiScope) void chooseExperience([PHIENG_LOI_TASK_ID]);
+        }}
+        onDecline={() => { void navigate(isOpeningTimeTrainScope ? '/1954' : isOpeningPhiengLoiScope ? '/phieng-loi' : '/book'); }}
       />
     );
   }
@@ -544,7 +562,7 @@ export const ChallengePage = ({ tasks, clearVersion, language, t }: { tasks: Cha
         onCloseDetails={() => setDetailsOpen(false)}
         onChoose={(taskIds) => { void chooseExperience(taskIds); }}
         completionActionLabel={isScopedCompleted ? scopeCompletionPrimaryLabel : undefined}
-        onCompletionAction={isScopedCompleted ? () => { void navigate('/book'); } : undefined}
+        onCompletionAction={isScopedCompleted ? () => { void navigate(scopeCompletionPath); } : undefined}
         homeContent={levelHomeContent}
         levelLabel={isLevelTwo ? 'LEVEL 2' : 'LEVEL 1'}
         introAside={isLevelTwo ? <ChallengeLeaderboardPreview language={language} compact /> : undefined}
