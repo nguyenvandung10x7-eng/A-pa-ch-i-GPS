@@ -20,11 +20,11 @@ project owner; the raw references are intentionally not committed.
   1536×1024 transparent 4×4 directional locomotion atlases. Rows 1–2 are an
   eight-frame phone-walk cycle; rows 3–4 are an eight-frame food-delivery run.
 - `support-atlas-v1.webp`: 1776×888 transparent 4×2 pose atlas.
-- `player-rig-side-v1.webp`, `player-rig-down-v1.webp`,
-  `player-rig-up-v1.webp`: 724×543 transparent 4×3 articulated-part sheets for
-  the composition-B Player. Head, torso, upper/lower limbs, hands and sneakers
-  are assembled around stable joints at runtime; walk/run phase is derived from
-  travelled world distance and joints interpolate at render cadence.
+- `player-locomotion-side-v2.webp`, `player-locomotion-down-v2.webp`,
+  `player-locomotion-up-v2.webp`: 1536×1024 transparent 4×4 full-body atlases.
+  Rows 1–2 are walk and rows 3–4 are run. Playback still derives from travelled
+  world distance, but complete poses prevent the bent-limb assembly fault of the
+  retired experimental cutout rig.
 - `player-pha-oi-v1.webp`: 1536×1024 transparent 4×2 dedicated PHÀ ƠI sequence:
   shoulder-width anticipation, both elbows opening away from the torso, palms
   raised toward the sky, helpless pleading hold, then a short settle. It is a

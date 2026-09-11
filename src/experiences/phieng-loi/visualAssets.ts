@@ -11,9 +11,9 @@ export const PHIENG_LOI_VISUAL_ASSETS = {
   hanuLocomotionUpAtlas: '/images/phieng-loi/hanu-up-v2.webp',
   hanuActionsAtlas: '/images/phieng-loi/hanu-actions-v2.webp',
   supportAtlas: '/images/phieng-loi/support-atlas-v1.webp',
-  playerRigSideAtlas: '/images/phieng-loi/player-rig-side-v1.webp',
-  playerRigDownAtlas: '/images/phieng-loi/player-rig-down-v1.webp',
-  playerRigUpAtlas: '/images/phieng-loi/player-rig-up-v1.webp',
+  playerLocomotionSideAtlas: '/images/phieng-loi/player-locomotion-side-v2.webp',
+  playerLocomotionDownAtlas: '/images/phieng-loi/player-locomotion-down-v2.webp',
+  playerLocomotionUpAtlas: '/images/phieng-loi/player-locomotion-up-v2.webp',
   playerPhaOiAtlas: '/images/phieng-loi/player-pha-oi-v1.webp',
   playerActionsAtlas: '/images/phieng-loi/player-actions-v2.webp',
   chiefTalkAtlas: '/images/phieng-loi/chief-talk-v2.webp',
@@ -39,6 +39,9 @@ export type AtlasName =
   | 'hanuLocomotionUp'
   | 'hanuActions'
   | 'support'
+  | 'playerLocomotionSide'
+  | 'playerLocomotionDown'
+  | 'playerLocomotionUp'
   | 'playerPhaOi'
   | 'playerActions'
   | 'chiefTalk'
@@ -59,6 +62,9 @@ const ATLAS_CONFIG = {
   hanuLocomotionUp: { url: PHIENG_LOI_VISUAL_ASSETS.hanuLocomotionUpAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
   hanuActions: { url: PHIENG_LOI_VISUAL_ASSETS.hanuActionsAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
   support: { url: PHIENG_LOI_VISUAL_ASSETS.supportAtlas, columns: 4, rows: 2, frameAspect: 1 },
+  playerLocomotionSide: { url: PHIENG_LOI_VISUAL_ASSETS.playerLocomotionSideAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
+  playerLocomotionDown: { url: PHIENG_LOI_VISUAL_ASSETS.playerLocomotionDownAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
+  playerLocomotionUp: { url: PHIENG_LOI_VISUAL_ASSETS.playerLocomotionUpAtlas, columns: 4, rows: 4, frameAspect: 1.5 },
   playerPhaOi: { url: PHIENG_LOI_VISUAL_ASSETS.playerPhaOiAtlas, columns: 4, rows: 2, frameAspect: .75 },
   playerActions: { url: PHIENG_LOI_VISUAL_ASSETS.playerActionsAtlas, columns: 4, rows: 3, frameAspect: 384 / 341 },
   chiefTalk: { url: PHIENG_LOI_VISUAL_ASSETS.chiefTalkAtlas, columns: 4, rows: 2, frameAspect: 1 },
