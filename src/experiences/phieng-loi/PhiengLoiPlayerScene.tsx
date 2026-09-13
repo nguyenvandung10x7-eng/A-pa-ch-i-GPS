@@ -1,4 +1,5 @@
 import {
+  type CSSProperties,
   forwardRef,
   useCallback,
   useImperativeHandle,
@@ -40,6 +41,7 @@ export const PhiengLoiPlayerScene = forwardRef<
   PhiengLoiPlayerSceneHandle,
   PhiengLoiPlayerSceneProps
 >(({ initialState }, ref) => {
+  const initialVisual = useRef(getPhiengLoiPlayerVisual(initialState)).current;
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const worldRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<HTMLDivElement | null>(null);
@@ -60,6 +62,7 @@ export const PhiengLoiPlayerScene = forwardRef<
     player.style.zIndex = String(Math.round(visual.y / 3) * 3);
     player.dataset.motion = visual.motion;
     player.dataset.view = visual.view;
+    player.dataset.sideWalkVariant = visual.sideWalkVariant;
     player.dataset.terrain = terrainAt(visual.x, visual.y);
     setSpriteFrame(sprite, visual.atlas, visual.frame);
     sprite.style.width = `${visual.width}px`;
@@ -81,7 +84,7 @@ export const PhiengLoiPlayerScene = forwardRef<
     updateScale();
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updateScale);
     observer?.observe(scene);
-    void preloadPhiengLoiPlayerAssets();
+    void preloadPhiengLoiPlayerAssets(initialState.player.sideWalkVariant);
     return () => observer?.disconnect();
   }, [initialState, render]);
 
@@ -101,13 +104,24 @@ export const PhiengLoiPlayerScene = forwardRef<
           ref={playerRef}
           className="phieng-visual__actor is-player"
           style={{
-            transform: `translate3d(${initialState.player.x}px, ${initialState.player.y}px, 0)`,
+            transform: `translate3d(${initialVisual.x}px, ${initialVisual.y}px, 0)`,
+            zIndex: Math.round(initialVisual.y / 3) * 3,
           }}
+          data-motion={initialVisual.motion}
+          data-view={initialVisual.view}
+          data-side-walk-variant={initialVisual.sideWalkVariant}
+          data-terrain={terrainAt(initialVisual.x, initialVisual.y)}
         >
           <div
             ref={spriteRef}
             className="phieng-visual__sprite"
-            style={{ ...playerAtlasFrameStyle('actions', 0), width: 82 }}
+            data-frame={`${initialVisual.atlas}-${initialVisual.frame}`}
+            style={{
+              ...playerAtlasFrameStyle(initialVisual.atlas, initialVisual.frame),
+              width: initialVisual.width,
+              '--sprite-scale': initialVisual.scale.toFixed(3),
+              '--sprite-flip': initialVisual.facing < 0 ? '-1' : '1',
+            } as CSSProperties}
           />
         </div>
       </div>

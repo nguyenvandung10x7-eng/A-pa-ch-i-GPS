@@ -7,7 +7,8 @@ import {
 
 export type PlayerMotionName = 'idle' | 'start' | 'walk' | 'run' | 'turn' | 'stop';
 export type PlayerView = 'side' | 'down' | 'up';
-export type PlayerAtlasName = 'actions' | 'side' | 'down' | 'up';
+export type PlayerSideWalkVariant = 'default' | 'alien_shorts';
+export type PlayerAtlasName = 'actions' | 'side' | 'down' | 'up' | 'alien_shorts_side_walk';
 
 export type PhiengLoiPlayerState = {
   elapsed: number;
@@ -32,6 +33,7 @@ export type PhiengLoiPlayerState = {
     transitionUntil: number;
     settleMotion: PlayerMotionName | null;
     framePhase: number;
+    sideWalkVariant: PlayerSideWalkVariant;
   };
   camera: { x: number; y: number };
 };
@@ -46,6 +48,7 @@ export type PhiengLoiPlayerVisual = {
   scale: number;
   view: PlayerView;
   motion: PlayerMotionName;
+  sideWalkVariant: PlayerSideWalkVariant;
   cameraX: number;
   cameraY: number;
 };
@@ -208,7 +211,10 @@ const updateCamera = (state: PhiengLoiPlayerState, deltaSeconds: number) => {
   camera.y += (targetY - camera.y) * response;
 };
 
-export const createPhiengLoiPlayerState = (reducedMotion = false): PhiengLoiPlayerState => ({
+export const createPhiengLoiPlayerState = (
+  reducedMotion = false,
+  sideWalkVariant: PlayerSideWalkVariant = 'default',
+): PhiengLoiPlayerState => ({
   elapsed: 0,
   reducedMotion,
   player: {
@@ -231,6 +237,7 @@ export const createPhiengLoiPlayerState = (reducedMotion = false): PhiengLoiPlay
     transitionUntil: 0,
     settleMotion: null,
     framePhase: 0,
+    sideWalkVariant,
   },
   camera: {
     x: clamp(
@@ -284,7 +291,11 @@ const locomotionFrame = (state: PhiengLoiPlayerState) => (
 export const getPhiengLoiPlayerVisual = (state: PhiengLoiPlayerState): PhiengLoiPlayerVisual => {
   const { player } = state;
   const locomoting = isLocomotion(player.motion);
-  const atlas: PlayerAtlasName = locomoting ? player.view : 'actions';
+  const atlas: PlayerAtlasName = player.sideWalkVariant === 'alien_shorts'
+    && player.motion === 'walk'
+    && player.view === 'side'
+    ? 'alien_shorts_side_walk'
+    : locomoting ? player.view : 'actions';
   const frame = player.motion === 'walk'
     ? locomotionFrame(state)
     : player.motion === 'run'
@@ -306,7 +317,12 @@ export const getPhiengLoiPlayerVisual = (state: PhiengLoiPlayerState): PhiengLoi
     scale: 0.88 + (player.y / PHIENG_LOI_WORLD.height) * 0.2,
     view: player.view,
     motion: player.motion,
+    sideWalkVariant: player.sideWalkVariant,
     cameraX: state.camera.x,
     cameraY: state.camera.y,
   };
 };
+
+export const playerSideWalkVariantFromSearch = (search: string): PlayerSideWalkVariant => (
+  new URLSearchParams(search).get('playerMode') === 'alien_shorts' ? 'alien_shorts' : 'default'
+);

@@ -10,6 +10,7 @@ import {
 } from '../experiences/phieng-loi/runtime';
 import {
   createPhiengLoiPlayerState,
+  playerSideWalkVariantFromSearch,
   stepPhiengLoiPlayer,
   type PhiengLoiPlayerState,
 } from '../experiences/phieng-loi/playerMotion';
@@ -32,6 +33,7 @@ export function PhiengLoiGamePage({ language }: PhiengLoiGamePageProps) {
   const runtimeRef = useRef<PhiengLoiFrameLoop | null>(null);
   const [initialPlayerState] = useState(() => createPhiengLoiPlayerState(
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    playerSideWalkVariantFromSearch(typeof window === 'undefined' ? '' : window.location.search),
   ));
   const playerStateRef = useRef<PhiengLoiPlayerState>(initialPlayerState);
   const sceneRef = useRef<PhiengLoiPlayerSceneHandle | null>(null);

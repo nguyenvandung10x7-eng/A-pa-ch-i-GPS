@@ -1,0 +1,1799 @@
+{
+  "scope": "alien_shorts walk-side geometry-only rebuild; no sprite, runtime, CSS, gameplay, atlas or contract file modified",
+  "repository": {
+    "remote": "nguyenvandung10x7-eng/A-pa-ch-i-GPS",
+    "branch": "extract/phieng-loi-03-player-motion",
+    "head": "a5696d6f423e1dd9313b44b2dc2477ce04944227",
+    "working_tree_before": "clean",
+    "repository_instruction_files": {
+      "AGENTS.md": "not found",
+      "phieng-loi-player-runtime-contract.md": "not found"
+    }
+  },
+  "source_inventory": [
+    {
+      "file": "player-idle-isometric-study-v3-side.png",
+      "exists": true,
+      "sha256": "7e3cc883dd96a6a6574f47fc8d00fe1faa0557ad575b7fe44ce6a63b3b88c62b",
+      "role": "LOCKED_IDENTITY_AND_GEOMETRY_SOURCE",
+      "note": "complete full-body idle; exactly two arms, two legs, alien shorts, drawstring and two black sandals visible",
+      "size": [
+        574,
+        1197
+      ],
+      "input_mode": "RGBA",
+      "normalized_mode": "RGBA",
+      "has_alpha": true,
+      "alpha_unique_values": 254,
+      "transparent_pixels": 472003,
+      "semi_transparent_pixels": 10135,
+      "opaque_pixels": 204940,
+      "alpha_gt_8_bbox": [
+        112,
+        48,
+        463,
+        1149
+      ],
+      "fully_transparent_rgb_is_uniform_black": true
+    },
+    {
+      "file": "f1-down-a.png",
+      "exists": true,
+      "sha256": "9969bcf8c1da836b8dc7cb9a070ddf0f9fa39f9df50b68973fea0ebd3d420b33",
+      "role": "OLD_ERROR_EVIDENCE_GUIDE_ONLY",
+      "note": "excluded from all new measurements and raster parentage",
+      "size": [
+        574,
+        1197
+      ],
+      "input_mode": "RGB",
+      "normalized_mode": "RGBA",
+      "has_alpha": false,
+      "alpha_unique_values": 1,
+      "transparent_pixels": 0,
+      "semi_transparent_pixels": 0,
+      "opaque_pixels": 687078,
+      "alpha_gt_8_bbox": [
+        0,
+        0,
+        574,
+        1197
+      ],
+      "fully_transparent_rgb_is_uniform_black": false
+    },
+    {
+      "file": "f1-down-a-edit-target.png",
+      "exists": true,
+      "sha256": "8d4e3a0f37976f6c255f480eb349b00876a92bdc04bcdff1ba2cc58b316df92a",
+      "role": "OLD_ERROR_EVIDENCE_RASTER_ONLY",
+      "note": "excluded from all new measurements and raster parentage",
+      "size": [
+        574,
+        1197
+      ],
+      "input_mode": "RGB",
+      "normalized_mode": "RGBA",
+      "has_alpha": false,
+      "alpha_unique_values": 1,
+      "transparent_pixels": 0,
+      "semi_transparent_pixels": 0,
+      "opaque_pixels": 687078,
+      "alpha_gt_8_bbox": [
+        0,
+        0,
+        574,
+        1197
+      ],
+      "fully_transparent_rgb_is_uniform_black": false
+    },
+    {
+      "file": "f1-down-a-edit-mask.png",
+      "exists": true,
+      "sha256": "46e794d02055b42982b5b5fe1e63b80a8684f09dde66d064612aa530befd861d",
+      "role": "OLD_ERROR_EVIDENCE_MASK_ONLY",
+      "note": "not a character source",
+      "size": [
+        574,
+        1197
+      ],
+      "input_mode": "RGBA",
+      "normalized_mode": "RGBA",
+      "has_alpha": true,
+      "alpha_unique_values": 159,
+      "transparent_pixels": 204988,
+      "semi_transparent_pixels": 13035,
+      "opaque_pixels": 469055,
+      "alpha_gt_8_bbox": [
+        0,
+        0,
+        574,
+        1197
+      ],
+      "fully_transparent_rgb_is_uniform_black": false
+    },
+    {
+      "file": "repository alien_shorts raster",
+      "exists": false,
+      "role": "NONE_FOUND_AT_CHECKED_OUT_HEAD",
+      "note": "repository contains normal long-trouser locomotion atlases only; they were inventoried technically but excluded from proportion and gait measurement"
+    }
+  ],
+  "locked_source": {
+    "path": "player-idle-isometric-study-v3-side.png",
+    "sha256": "7e3cc883dd96a6a6574f47fc8d00fe1faa0557ad575b7fe44ce6a63b3b88c62b",
+    "canvas": [
+      574,
+      1197
+    ],
+    "mode": "RGBA",
+    "alpha_gt_8_bbox": [
+      112,
+      48,
+      463,
+      1149
+    ],
+    "anchor_canvas": [
+      287.0,
+      1101.24
+    ],
+    "reference_idle_visible_height_px": 91.0,
+    "canvas_to_reference_scale": 0.08265213442325159,
+    "depth_scale": 0.996,
+    "landmarks_canvas": {
+      "pelvis_center": {
+        "xy": [
+          304.0,
+          672.0
+        ],
+        "class": "under_clothing_socket"
+      },
+      "hip_near": {
+        "xy": [
+          280.0,
+          670.0
+        ],
+        "class": "under_clothing_socket"
+      },
+      "hip_far": {
+        "xy": [
+          329.0,
+          670.0
+        ],
+        "class": "under_clothing_socket"
+      },
+      "shoulder_near": {
+        "xy": [
+          184.0,
+          350.0
+        ],
+        "class": "under_clothing_socket"
+      },
+      "elbow_near": {
+        "xy": [
+          147.0,
+          527.0
+        ],
+        "class": "partly_occluded_joint"
+      },
+      "wrist_near": {
+        "xy": [
+          166.0,
+          681.0
+        ],
+        "class": "visible_landmark"
+      },
+      "shoulder_far": {
+        "xy": [
+          346.0,
+          350.0
+        ],
+        "class": "under_clothing_socket"
+      },
+      "elbow_far": {
+        "xy": [
+          385.0,
+          489.0
+        ],
+        "class": "partly_occluded_joint"
+      },
+      "wrist_far": {
+        "xy": [
+          408.0,
+          605.0
+        ],
+        "class": "visible_landmark"
+      },
+      "knee_near": {
+        "xy": [
+          232.0,
+          853.0
+        ],
+        "class": "partly_occluded_joint"
+      },
+      "ankle_near": {
+        "xy": [
+          190.0,
+          1023.0
+        ],
+        "class": "visible_landmark"
+      },
+      "heel_near": {
+        "xy": [
+          164.0,
+          1064.0
+        ],
+        "class": "visible_landmark"
+      },
+      "pressure_near": {
+        "xy": [
+          250.0,
+          1115.0
+        ],
+        "class": "forefoot_pressure_center"
+      },
+      "toe_near": {
+        "xy": [
+          289.0,
+          1128.0
+        ],
+        "class": "visible_landmark"
+      },
+      "knee_far": {
+        "xy": [
+          324.0,
+          846.0
+        ],
+        "class": "partly_occluded_joint"
+      },
+      "ankle_far": {
+        "xy": [
+          350.0,
+          980.0
+        ],
+        "class": "visible_landmark"
+      },
+      "heel_far": {
+        "xy": [
+          302.0,
+          988.0
+        ],
+        "class": "visible_landmark"
+      },
+      "pressure_far": {
+        "xy": [
+          412.0,
+          1027.0
+        ],
+        "class": "forefoot_pressure_center"
+      },
+      "toe_far": {
+        "xy": [
+          459.0,
+          1021.0
+        ],
+        "class": "visible_landmark"
+      }
+    },
+    "tolerance_policy": {
+      "visible_landmark_canvas_px": 4.0,
+      "partly_occluded_joint_canvas_px": 7.0,
+      "forefoot_pressure_center_canvas_px": 10.0,
+      "under_clothing_socket_canvas_px": 12.0,
+      "visible_landmark_reference_px": 0.33060853769300635,
+      "partly_occluded_joint_reference_px": 0.5785649409627611,
+      "forefoot_pressure_center_reference_px": 0.8265213442325159,
+      "under_clothing_socket_reference_px": 0.9918256130790191,
+      "declared_before_solving": true
+    }
+  },
+  "new_direct_measurements": {
+    "canvas_lengths_px": {
+      "thigh_near": 189.19038030513073,
+      "thigh_far_projected": 176.07100840286,
+      "shin_near": 175.11139311878026,
+      "shin_far_projected": 136.49908424601244,
+      "upper_arm_near": 180.8258831030558,
+      "upper_arm_far_projected": 144.3675863897433,
+      "forearm_near": 155.16765126791086,
+      "forearm_far_projected": 118.25819210524064,
+      "hip_socket_distance": 49.0,
+      "heel_to_pressure_near": 99.98499887483122,
+      "heel_to_pressure_far": 116.70903992407786,
+      "heel_to_toe_near": 140.4314779527724,
+      "heel_to_toe_far": 160.4306703844374,
+      "heel_to_ankle_near": 48.54894437575342,
+      "heel_to_ankle_far": 48.662100242385755
+    },
+    "reference_scale_lengths_px": {
+      "thigh_near": 15.636988744565755,
+      "thigh_far_projected": 14.552644654550646,
+      "shin_near": 14.473330403096279,
+      "shin_far_projected": 11.281940659752165,
+      "upper_arm_near": 14.945645197436946,
+      "upper_arm_far_projected": 11.932289156645451,
+      "forearm_near": 12.824937570735592,
+      "forearm_far_projected": 9.77429199053306,
+      "hip_socket_distance": 4.049954586739328,
+      "heel_to_pressure_near": 8.26397356731121,
+      "heel_to_pressure_far": 9.64625125621352,
+      "heel_to_toe_near": 11.606961393008437,
+      "heel_to_toe_far": 13.259937334226889,
+      "heel_to_ankle_near": 4.012673876651736,
+      "heel_to_ankle_far": 4.022026450551411
+    },
+    "foot_angles_canvas_deg_downward_positive": {
+      "heel_to_pressure_near": 30.66892664971493,
+      "heel_to_pressure_far": 19.52173027592021,
+      "heel_to_toe_near": 27.11244642795574,
+      "heel_to_toe_far": 11.870264531587909
+    },
+    "body_ratio": {
+      "head_top_to_pelvis_reference_px": 51.57493188010899,
+      "pelvis_to_anchor_reference_px": 35.47760217983651,
+      "upper_to_lower_anchor_ratio": 1.453732177802628,
+      "head_top_to_anchor_reference_px": 87.0525340599455
+    },
+    "contract_reference_px": {
+      "thigh": 15.636988744565755,
+      "shin": 14.473330403096279,
+      "upper_arm": 14.945645197436946,
+      "forearm": 12.824937570735592,
+      "hip_socket_distance": 4.049954586739328,
+      "heel_to_forefoot_pressure": 8.955112411762364,
+      "heel_to_toe": 12.433449363617662,
+      "ankle_from_heel_x": 3.0,
+      "ankle_from_ground_y": 5.7
+    },
+    "contract_selection": "near-camera articulated chains used for segment lengths; mean of both visible sandals used for functional foot lengths; far-camera projected lengths retained as foreshortening evidence"
+  },
+  "runtime_evidence_unchanged": {
+    "playerMotion.ts": {
+      "PLAYER_SPEED": 86.0,
+      "PLAYER_WALK_STRIDE_LENGTH": 54.0,
+      "locomotion_frame_count": 8,
+      "locomotion_width_px": 108.0,
+      "action_width_px": 82.0,
+      "frame_rule": "framePhase += movedDistance / strideLength * 8; floor(framePhase) % 8"
+    },
+    "worldLayout.ts": {
+      "view": [
+        640,
+        360
+      ],
+      "world": [
+        2400,
+        1350
+      ]
+    },
+    "phieng-loi.css": {
+      "foot_anchor": [
+        0.5,
+        0.92
+      ],
+      "contact_shadow_px": [
+        24,
+        6
+      ]
+    },
+    "diagnostic_only": {
+      "input_magnitude": 0.5,
+      "derived_speed_world_per_second": 43.0,
+      "phase_distance_world": 6.75,
+      "phase_hold_seconds": 0.1569767441860465,
+      "cycle_seconds": 1.255813953488372,
+      "video_encoder_sample_rate_fps": 60,
+      "video_encoder_note": "duplication/sample rate for MP4 only; not a gameplay FPS or cadence constant",
+      "note": "chosen existing analog input magnitude; not a new gameplay speed/FPS/cadence constant"
+    },
+    "research_width_target_not_applied_px": 109.7816
+  },
+  "cycle_contract": {
+    "phase_order": [
+      "F0 Contact A",
+      "F1 Down A",
+      "F2 Passing A→B",
+      "F3 Up A→B",
+      "F4 Contact B",
+      "F5 Down B",
+      "F6 Passing B→A",
+      "F7 Up B→A"
+    ],
+    "pressure_length_px": 9.0,
+    "toe_length_px": 12.4,
+    "support_model": "heel strike; flat heel/pressure lock; pressure-center pivot during heel rise; opposite heel contact",
+    "same_foot_world_stride": 54.0,
+    "opposite_contact_step_world": 27.0,
+    "support_pressure_world_A": 15.75,
+    "support_pressure_world_B": 42.75,
+    "no_pose_specific_render_offset": true
+  },
+  "phases": [
+    {
+      "index": 0,
+      "name": "F0 Contact A",
+      "actor_world_x": 0.0,
+      "pelvis": [
+        -3.85,
+        33.1
+      ],
+      "shoulder_center": [
+        -7.05,
+        59.6
+      ],
+      "neck": [
+        -6.35,
+        70.0
+      ],
+      "head_center": [
+        -5.55,
+        78.0
+      ],
+      "head_radius": [
+        7.8,
+        9.5
+      ],
+      "legs": {
+        "A": {
+          "hip": [
+            -1.825,
+            33.1
+          ],
+          "knee": [
+            6.345,
+            19.7671
+          ],
+          "ankle": [
+            9.75,
+            5.7
+          ],
+          "heel": [
+            6.75,
+            0.0
+          ],
+          "pressure": [
+            15.75,
+            0.7
+          ],
+          "toe": [
+            19.15,
+            1.0
+          ],
+          "active_contact": "heel",
+          "knee_angle_deg": 162.1083
+        },
+        "B": {
+          "hip": [
+            -5.875,
+            33.1
+          ],
+          "knee": [
+            -6.8787,
+            17.4953
+          ],
+          "ankle": [
+            -17.25,
+            7.4
+          ],
+          "heel": [
+            -20.25,
+            1.7
+          ],
+          "pressure": [
+            -11.25,
+            0.0
+          ],
+          "toe": [
+            -7.85,
+            0.0
+          ],
+          "active_contact": null,
+          "knee_angle_deg": 137.9078
+        }
+      },
+      "arms": {
+        "A": {
+          "shoulder": [
+            -12.05,
+            59.6
+          ],
+          "elbow": [
+            -19.9067,
+            46.8861
+          ],
+          "wrist": [
+            -17.2,
+            34.35
+          ],
+          "elbow_angle_deg": 136.1016
+        },
+        "B": {
+          "shoulder": [
+            -2.05,
+            59.85
+          ],
+          "elbow": [
+            -4.3,
+            45.0747
+          ],
+          "wrist": [
+            3.1,
+            34.6
+          ],
+          "elbow_angle_deg": 136.1016
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "F1 Down A",
+      "actor_world_x": 6.75,
+      "pelvis": [
+        -3.85,
+        32.6
+      ],
+      "shoulder_center": [
+        -6.8025,
+        59.1
+      ],
+      "neck": [
+        -6.1025,
+        69.5
+      ],
+      "head_center": [
+        -5.3025,
+        77.5
+      ],
+      "head_radius": [
+        7.8,
+        9.5
+      ],
+      "legs": {
+        "A": {
+          "hip": [
+            -2.4181,
+            32.6
+          ],
+          "knee": [
+            6.4876,
+            19.7468
+          ],
+          "ankle": [
+            3.0,
+            5.7
+          ],
+          "heel": [
+            0.0,
+            0.0
+          ],
+          "pressure": [
+            9.0,
+            0.0
+          ],
+          "toe": [
+            12.4,
+            0.0
+          ],
+          "active_contact": "pressure",
+          "knee_angle_deg": 131.339
+        },
+        "B": {
+          "hip": [
+            -5.2819,
+            32.6
+          ],
+          "knee": [
+            -2.4065,
+            17.2296
+          ],
+          "ankle": [
+            -12.12,
+            6.5
+          ],
+          "heel": [
+            -15.12,
+            0.8
+          ],
+          "pressure": [
+            -6.12,
+            0.45
+          ],
+          "toe": [
+            -2.72,
+            0.45
+          ],
+          "active_contact": null,
+          "knee_angle_deg": 127.2497
+        }
+      },
+      "arms": {
+        "A": {
+          "shoulder": [
+            -11.8025,
+            59.1
+          ],
+          "elbow": [
+            -19.046,
+            46.027
+          ],
+          "wrist": [
+            -15.4441,
+            33.7182
+          ],
+          "elbow_angle_deg": 134.6993
+        },
+        "B": {
+          "shoulder": [
+            -1.8025,
+            59.35
+          ],
+          "elbow": [
+            -5.0782,
+            44.7677
+          ],
+          "wrist": [
+            1.8391,
+            33.9682
+          ],
+          "elbow_angle_deg": 134.6993
+        }
+      }
+    },
+    {
+      "index": 2,
+      "name": "F2 Passing A→B",
+      "actor_world_x": 13.5,
+      "pelvis": [
+        -3.85,
+        34.8
+      ],
+      "shoulder_center": [
+        -6.7,
+        61.3
+      ],
+      "neck": [
+        -6.0,
+        71.7
+      ],
+      "head_center": [
+        -5.2,
+        79.7
+      ],
+      "head_radius": [
+        7.8,
+        9.5
+      ],
+      "legs": {
+        "A": {
+          "hip": [
+            -3.85,
+            34.8
+          ],
+          "knee": [
+            0.0658,
+            19.6613
+          ],
+          "ankle": [
+            -3.75,
+            5.7
+          ],
+          "heel": [
+            -6.75,
+            0.0
+          ],
+          "pressure": [
+            2.25,
+            0.0
+          ],
+          "toe": [
+            5.65,
+            0.0
+          ],
+          "active_contact": "pressure",
+          "knee_angle_deg": 150.211
+        },
+        "B": {
+          "hip": [
+            -3.85,
+            34.8
+          ],
+          "knee": [
+            1.92,
+            20.2665
+          ],
+          "ankle": [
+            -3.75,
+            6.95
+          ],
+          "heel": [
+            -6.75,
+            1.25
+          ],
+          "pressure": [
+            2.25,
+            1.25
+          ],
+          "toe": [
+            5.65,
+            1.25
+          ],
+          "active_contact": null,
+          "knee_angle_deg": 135.2828
+        }
+      },
+      "arms": {
+        "A": {
+          "shoulder": [
+            -11.7,
+            61.3
+          ],
+          "elbow": [
+            -16.9431,
+            47.3042
+          ],
+          "wrist": [
+            -11.7,
+            35.6
+          ],
+          "elbow_angle_deg": 135.3321
+        },
+        "B": {
+          "shoulder": [
+            -1.7,
+            61.55
+          ],
+          "elbow": [
+            -6.9431,
+            47.5542
+          ],
+          "wrist": [
+            -1.7,
+            35.85
+          ],
+          "elbow_angle_deg": 135.3321
+        }
+      }
+    },
+    {
+      "index": 3,
+      "name": "F3 Up A→B",
+      "actor_world_x": 20.25,
+      "pelvis": [
+        -3.85,
+        34.9
+      ],
+      "shoulder_center": [
+        -6.8025,
+        61.4
+      ],
+      "neck": [
+        -6.1025,
+        71.8
+      ],
+      "head_center": [
+        -5.3025,
+        79.8
+      ],
+      "head_radius": [
+        7.8,
+        9.5
+      ],
+      "legs": {
+        "A": {
+          "hip": [
+            -5.2819,
+            34.9
+          ],
+          "knee": [
+            -3.4954,
+            19.3654
+          ],
+          "ankle": [
+            -10.5,
+            6.7
+          ],
+          "heel": [
+            -13.5,
+            1.0
+          ],
+          "pressure": [
+            -4.5,
+            0.0
+          ],
+          "toe": [
+            -1.1,
+            0.0
+          ],
+          "active_contact": "pressure",
+          "knee_angle_deg": 144.4948
+        },
+        "B": {
+          "hip": [
+            -2.4181,
+            34.9
+          ],
+          "knee": [
+            4.387,
+            20.8215
+          ],
+          "ankle": [
+            4.62,
+            6.35
+          ],
+          "heel": [
+            1.62,
+            0.65
+          ],
+          "pressure": [
+            10.62,
+            1.05
+          ],
+          "toe": [
+            14.02,
+            1.35
+          ],
+          "active_contact": null,
+          "knee_angle_deg": 155.1246
+        }
+      },
+      "arms": {
+        "A": {
+          "shoulder": [
+            -11.8025,
+            61.4
+          ],
+          "elbow": [
+            -15.0782,
+            46.8177
+          ],
+          "wrist": [
+            -8.1609,
+            36.0182
+          ],
+          "elbow_angle_deg": 134.6993
+        },
+        "B": {
+          "shoulder": [
+            -1.8025,
+            61.65
+          ],
+          "elbow": [
+            -9.046,
+            48.577
+          ],
+          "wrist": [
+            -5.4441,
+            36.2682
+          ],
+          "elbow_angle_deg": 134.6993
+        }
+      }
+    },
+    {
+      "index": 4,
+      "name": "F4 Contact B",
+      "actor_world_x": 27.0,
+      "pelvis": [
+        -3.85,
+        33.1
+      ],
+      "shoulder_center": [
+        -7.05,
+        59.6
+      ],
+      "neck": [
+        -6.35,
+        70.0
+      ],
+      "head_center": [
+        -5.55,
+        78.0
+      ],
+      "head_radius": [
+        7.8,
+        9.5
+      ],
+      "legs": {
+        "A": {
+          "hip": [
+            -5.875,
+            33.1
+          ],
+          "knee": [
+            -6.8787,
+            17.4953
+          ],
+          "ankle": [
+            -17.25,
+            7.4
+          ],
+          "heel": [
+            -20.25,
+            1.7
+          ],
+          "pressure": [
+            -11.25,
+            0.0
+          ],
+          "toe": [
+            -7.85,
+            0.0
+          ],
+          "active_contact": "pressure",
+          "knee_angle_deg": 137.9078
+        },
+        "B": {
+          "hip": [
+            -1.825,
+            33.1
+          ],
+          "knee": [
+            6.345,
+            19.7671
+          ],
+          "ankle": [
+            9.75,
+            5.7
+          ],
+          "heel": [
+            6.75,
+            0.0
+          ],
+          "pressure": [
+            15.75,
+            0.7
+          ],
+          "toe": [
+            19.15,
+            1.0
+          ],
+          "active_contact": null,
+          "knee_angle_deg": 162.1083
+        }
+      },
+      "arms": {
+        "A": {
+          "shoulder": [
+            -12.05,
+            59.6
+          ],
+          "elbow": [
+            -14.3,
+            44.8247
+          ],
+          "wrist": [
+            -6.9,
+            34.35
+          ],
+          "elbow_angle_deg": 136.1016
+        },
+        "B": {
+          "shoulder": [
+            -2.05,
+            59.85
+          ],
+          "elbow": [
+            -9.9067,
+            47.1361
+          ],
+          "wrist": [
+            -7.2,
+            34.6
+          ],
+          "elbow_angle_deg": 136.1016
+        }
+      }
+    },
+    {
+      "index": 5,
+      "name": "F5 Down B",
+      "actor_world_x": 33.75,
+      "pelvis": [
+        -3.85,
+        32.6
+      ],
+      "shoulder_center": [
+        -7.2975,
+        59.1
+      ],
+      "neck": [
+        -6.5975,
+        69.5
+      ],
+      "head_center": [
+        -5.7975,
+        77.5
+      ],
+      "head_radius": [
+        7.8,
+        9.5
+      ],
+      "legs": {
+        "A": {
+          "hip": [
+            -5.2819,
+            32.6
+          ],
+          "knee": [
+            -2.4065,
+            17.2296
+          ],
+          "ankle": [
+            -12.12,
+            6.5
+          ],
+          "heel": [
+            -15.12,
+            0.8
+          ],
+          "pressure": [
+            -6.12,
+            0.45
+          ],
+          "toe": [
+            -2.72,
+            0.45
+          ],
+          "active_contact": null,
+          "knee_angle_deg": 127.2497
+        },
+        "B": {
+          "hip": [
+            -2.4181,
+            32.6
+          ],
+          "knee": [
+            6.4876,
+            19.7468
+          ],
+          "ankle": [
+            3.0,
+            5.7
+          ],
+          "heel": [
+            0.0,
+            0.0
+          ],
+          "pressure": [
+            9.0,
+            0.0
+          ],
+          "toe": [
+            12.4,
+            0.0
+          ],
+          "active_contact": "pressure",
+          "knee_angle_deg": 131.339
+        }
+      },
+      "arms": {
+        "A": {
+          "shoulder": [
+            -12.2975,
+            59.1
+          ],
+          "elbow": [
+            -15.5732,
+            44.5177
+          ],
+          "wrist": [
+            -8.6559,
+            33.7182
+          ],
+          "elbow_angle_deg": 134.6993
+        },
+        "B": {
+          "shoulder": [
+            -2.2975,
+            59.35
+          ],
+          "elbow": [
+            -9.541,
+            46.277
+          ],
+          "wrist": [
+            -5.9391,
+            33.9682
+          ],
+          "elbow_angle_deg": 134.6993
+        }
+      }
+    },
+    {
+      "index": 6,
+      "name": "F6 Passing B→A",
+      "actor_world_x": 40.5,
+      "pelvis": [
+        -3.85,
+        34.8
+      ],
+      "shoulder_center": [
+        -7.4,
+        61.3
+      ],
+      "neck": [
+        -6.7,
+        71.7
+      ],
+      "head_center": [
+        -5.9,
+        79.7
+      ],
+      "head_radius": [
+        7.8,
+        9.5
+      ],
+      "legs": {
+        "A": {
+          "hip": [
+            -3.85,
+            34.8
+          ],
+          "knee": [
+            1.92,
+            20.2665
+          ],
+          "ankle": [
+            -3.75,
+            6.95
+          ],
+          "heel": [
+            -6.75,
+            1.25
+          ],
+          "pressure": [
+            2.25,
+            1.25
+          ],
+          "toe": [
+            5.65,
+            1.25
+          ],
+          "active_contact": null,
+          "knee_angle_deg": 135.2828
+        },
+        "B": {
+          "hip": [
+            -3.85,
+            34.8
+          ],
+          "knee": [
+            0.0658,
+            19.6613
+          ],
+          "ankle": [
+            -3.75,
+            5.7
+          ],
+          "heel": [
+            -6.75,
+            0.0
+          ],
+          "pressure": [
+            2.25,
+            0.0
+          ],
+          "toe": [
+            5.65,
+            0.0
+          ],
+          "active_contact": "pressure",
+          "knee_angle_deg": 150.211
+        }
+      },
+      "arms": {
+        "A": {
+          "shoulder": [
+            -12.4,
+            61.3
+          ],
+          "elbow": [
+            -17.6431,
+            47.3042
+          ],
+          "wrist": [
+            -12.4,
+            35.6
+          ],
+          "elbow_angle_deg": 135.3321
+        },
+        "B": {
+          "shoulder": [
+            -2.4,
+            61.55
+          ],
+          "elbow": [
+            -7.6431,
+            47.5542
+          ],
+          "wrist": [
+            -2.4,
+            35.85
+          ],
+          "elbow_angle_deg": 135.3321
+        }
+      }
+    },
+    {
+      "index": 7,
+      "name": "F7 Up B→A",
+      "actor_world_x": 47.25,
+      "pelvis": [
+        -3.85,
+        34.9
+      ],
+      "shoulder_center": [
+        -7.2975,
+        61.4
+      ],
+      "neck": [
+        -6.5975,
+        71.8
+      ],
+      "head_center": [
+        -5.7975,
+        79.8
+      ],
+      "head_radius": [
+        7.8,
+        9.5
+      ],
+      "legs": {
+        "A": {
+          "hip": [
+            -2.4181,
+            34.9
+          ],
+          "knee": [
+            4.387,
+            20.8215
+          ],
+          "ankle": [
+            4.62,
+            6.35
+          ],
+          "heel": [
+            1.62,
+            0.65
+          ],
+          "pressure": [
+            10.62,
+            1.05
+          ],
+          "toe": [
+            14.02,
+            1.35
+          ],
+          "active_contact": null,
+          "knee_angle_deg": 155.1246
+        },
+        "B": {
+          "hip": [
+            -5.2819,
+            34.9
+          ],
+          "knee": [
+            -3.4954,
+            19.3654
+          ],
+          "ankle": [
+            -10.5,
+            6.7
+          ],
+          "heel": [
+            -13.5,
+            1.0
+          ],
+          "pressure": [
+            -4.5,
+            0.0
+          ],
+          "toe": [
+            -1.1,
+            0.0
+          ],
+          "active_contact": "pressure",
+          "knee_angle_deg": 144.4948
+        }
+      },
+      "arms": {
+        "A": {
+          "shoulder": [
+            -12.2975,
+            61.4
+          ],
+          "elbow": [
+            -19.541,
+            48.327
+          ],
+          "wrist": [
+            -15.9391,
+            36.0182
+          ],
+          "elbow_angle_deg": 134.6993
+        },
+        "B": {
+          "shoulder": [
+            -2.2975,
+            61.65
+          ],
+          "elbow": [
+            -5.5732,
+            47.0677
+          ],
+          "wrist": [
+            1.3441,
+            36.2682
+          ],
+          "elbow_angle_deg": 134.6993
+        }
+      }
+    }
+  ],
+  "audit": {
+    "thresholds": {
+      "max_segment_error_px": 0.05,
+      "knee_angle_range_deg": [
+        120.0,
+        172.0
+      ],
+      "max_local_ankle_transition_px": 9.0,
+      "max_local_knee_transition_px": 7.0,
+      "swing_clearance_range_px": [
+        0.35,
+        1.6
+      ],
+      "max_world_lock_residual_px": 0.1,
+      "max_pelvis_bob_px": 3.0,
+      "max_local_wrist_transition_px": 4.2,
+      "max_loop_closure_residual_px": 0.1,
+      "max_contact_shadow_ellipse_norm": 1.0
+    },
+    "leg_segment_error_by_phase_px": {
+      "A_thigh": [
+        3.552713678800501e-15,
+        1.7763568394002505e-15,
+        0.0,
+        0.0,
+        1.7763568394002505e-15,
+        3.552713678800501e-15,
+        3.552713678800501e-15,
+        0.0
+      ],
+      "A_shin": [
+        1.7763568394002505e-15,
+        1.7763568394002505e-15,
+        1.7763568394002505e-15,
+        5.329070518200751e-15,
+        1.7763568394002505e-15,
+        1.7763568394002505e-15,
+        3.552713678800501e-15,
+        3.552713678800501e-15
+      ],
+      "B_thigh": [
+        1.7763568394002505e-15,
+        3.552713678800501e-15,
+        3.552713678800501e-15,
+        0.0,
+        3.552713678800501e-15,
+        1.7763568394002505e-15,
+        0.0,
+        0.0
+      ],
+      "B_shin": [
+        1.7763568394002505e-15,
+        1.7763568394002505e-15,
+        3.552713678800501e-15,
+        3.552713678800501e-15,
+        1.7763568394002505e-15,
+        1.7763568394002505e-15,
+        1.7763568394002505e-15,
+        5.329070518200751e-15
+      ]
+    },
+    "arm_segment_error_by_phase_px": {
+      "A_upper": [
+        0.0,
+        1.7763568394002505e-15,
+        1.7763568394002505e-15,
+        1.7763568394002505e-15,
+        3.552713678800501e-15,
+        3.552713678800501e-15,
+        1.7763568394002505e-15,
+        0.0
+      ],
+      "A_forearm": [
+        1.7763568394002505e-15,
+        5.329070518200751e-15,
+        3.552713678800501e-15,
+        5.329070518200751e-15,
+        1.7763568394002505e-15,
+        5.329070518200751e-15,
+        3.552713678800501e-15,
+        7.105427357601002e-15
+      ],
+      "B_upper": [
+        3.552713678800501e-15,
+        1.7763568394002505e-15,
+        1.7763568394002505e-15,
+        0.0,
+        0.0,
+        0.0,
+        1.7763568394002505e-15,
+        1.7763568394002505e-15
+      ],
+      "B_forearm": [
+        3.552713678800501e-15,
+        5.329070518200751e-15,
+        3.552713678800501e-15,
+        7.105427357601002e-15,
+        0.0,
+        3.552713678800501e-15,
+        3.552713678800501e-15,
+        5.329070518200751e-15
+      ]
+    },
+    "max_leg_segment_error_px": 5.329070518200751e-15,
+    "max_arm_segment_error_px": 7.105427357601002e-15,
+    "knee_angles_deg": {
+      "A": [
+        162.10826878939554,
+        131.33895504217543,
+        150.21099034839182,
+        144.49476897456998,
+        137.90783968090983,
+        127.24965209890341,
+        135.28281743939831,
+        155.12461906260617
+      ],
+      "B": [
+        137.90783968090983,
+        127.24965209890341,
+        135.28281743939831,
+        155.12461906260617,
+        162.10826878939554,
+        131.33895504217543,
+        150.21099034839182,
+        144.49476897456998
+      ]
+    },
+    "knee_angle_range_deg": [
+      127.24965209890341,
+      162.10826878939554
+    ],
+    "elbow_angles_deg": {
+      "A": [
+        136.1016302306543,
+        134.69929773877237,
+        135.3320709925316,
+        134.69929773877237,
+        136.1016302306543,
+        134.69929773877243,
+        135.3320709925316,
+        134.69929773877237
+      ],
+      "B": [
+        136.1016302306543,
+        134.69929773877237,
+        135.3320709925316,
+        134.69929773877237,
+        136.1016302306543,
+        134.69929773877243,
+        135.3320709925316,
+        134.69929773877237
+      ]
+    },
+    "transitions": [
+      {
+        "from": 0,
+        "to": 1,
+        "ankle_A_local_delta_px": 6.75,
+        "knee_A_local_delta_px": 0.1440398661241803,
+        "wrist_A_local_delta_px": 1.8660960426040796,
+        "ankle_B_local_delta_px": 5.208349066642904,
+        "knee_B_local_delta_px": 4.48011413627588,
+        "wrist_B_local_delta_px": 1.4103455420100373
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "ankle_A_local_delta_px": 6.75,
+        "knee_A_local_delta_px": 6.422327008769033,
+        "wrist_A_local_delta_px": 4.190412552247975,
+        "ankle_B_local_delta_px": 8.382088045350036,
+        "knee_B_local_delta_px": 5.285897919378445,
+        "wrist_B_local_delta_px": 4.008281111110145
+      },
+      {
+        "from": 2,
+        "to": 3,
+        "ankle_A_local_delta_px": 6.823672031978091,
+        "knee_A_local_delta_px": 3.5734737692788507,
+        "wrist_A_local_delta_px": 3.563709935269506,
+        "ankle_B_local_delta_px": 8.391477819788363,
+        "knee_B_local_delta_px": 2.528709501470845,
+        "wrist_B_local_delta_px": 3.767395439171948
+      },
+      {
+        "from": 3,
+        "to": 4,
+        "ankle_A_local_delta_px": 6.7861992307918575,
+        "knee_A_local_delta_px": 3.8658335511797444,
+        "wrist_A_local_delta_px": 2.0911206528853663,
+        "ankle_B_local_delta_px": 5.171015374179422,
+        "knee_B_local_delta_px": 2.2238068446769015,
+        "wrist_B_local_delta_px": 2.421987918483231
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "ankle_A_local_delta_px": 5.2083490666429055,
+        "knee_A_local_delta_px": 4.480114136275882,
+        "wrist_A_local_delta_px": 1.8660960426040747,
+        "ankle_B_local_delta_px": 6.75,
+        "knee_B_local_delta_px": 0.1440398661241803,
+        "wrist_B_local_delta_px": 1.4103455420100368
+      },
+      {
+        "from": 5,
+        "to": 6,
+        "ankle_A_local_delta_px": 8.382088045350034,
+        "knee_A_local_delta_px": 5.285897919378443,
+        "wrist_A_local_delta_px": 4.190412552247975,
+        "ankle_B_local_delta_px": 6.75,
+        "knee_B_local_delta_px": 6.422327008769033,
+        "wrist_B_local_delta_px": 4.008281111110146
+      },
+      {
+        "from": 6,
+        "to": 7,
+        "ankle_A_local_delta_px": 8.391477819788363,
+        "knee_A_local_delta_px": 2.528709501470845,
+        "wrist_A_local_delta_px": 3.563709935269508,
+        "ankle_B_local_delta_px": 6.823672031978091,
+        "knee_B_local_delta_px": 3.5734737692788507,
+        "wrist_B_local_delta_px": 3.7673954391719486
+      },
+      {
+        "from": 7,
+        "to": 0,
+        "ankle_A_local_delta_px": 5.171015374179422,
+        "knee_A_local_delta_px": 2.2238068446769015,
+        "wrist_A_local_delta_px": 2.0911206528853685,
+        "ankle_B_local_delta_px": 6.7861992307918575,
+        "knee_B_local_delta_px": 3.8658335511797444,
+        "wrist_B_local_delta_px": 2.4219879184832305
+      }
+    ],
+    "max_local_ankle_transition_px": 8.391477819788363,
+    "max_local_knee_transition_px": 6.422327008769033,
+    "max_local_wrist_transition_px": 4.190412552247975,
+    "arm_phase": {
+      "wrist_relative_x_by_phase_px": {
+        "A": [
+          -5.150000000000002,
+          -3.6415999231107197,
+          0.0,
+          3.6415999231107197,
+          5.15,
+          3.6415999231107214,
+          1.7763568394002505e-15,
+          -3.6415999231107197
+        ],
+        "B": [
+          5.15,
+          3.64159992311072,
+          2.220446049250313e-16,
+          -3.6415999231107197,
+          -5.15,
+          -3.6415999231107214,
+          -8.881784197001252e-16,
+          3.6415999231107192
+        ]
+      },
+      "neutral_middle_phases": [
+        2,
+        6
+      ],
+      "wrist_fore_aft_range_px": {
+        "A": 10.300000000000002,
+        "B": 10.3
+      },
+      "max_opposition_residual_px": 1.7763568394002505e-15,
+      "opposition_pass": true
+    },
+    "swing_clearance": [
+      {
+        "phase": 1,
+        "leg": "B",
+        "minimum_sole_clearance_px": 0.45
+      },
+      {
+        "phase": 2,
+        "leg": "B",
+        "minimum_sole_clearance_px": 1.25
+      },
+      {
+        "phase": 3,
+        "leg": "B",
+        "minimum_sole_clearance_px": 0.65
+      },
+      {
+        "phase": 5,
+        "leg": "A",
+        "minimum_sole_clearance_px": 0.45
+      },
+      {
+        "phase": 6,
+        "leg": "A",
+        "minimum_sole_clearance_px": 1.25
+      },
+      {
+        "phase": 7,
+        "leg": "A",
+        "minimum_sole_clearance_px": 0.65
+      }
+    ],
+    "support_world_lock_checks": [
+      {
+        "leg": "A",
+        "point": "heel",
+        "from_phase": 0,
+        "to_phase": 1,
+        "residual_px": 0.0
+      },
+      {
+        "leg": "A",
+        "point": "heel",
+        "from_phase": 0,
+        "to_phase": 2,
+        "residual_px": 0.0
+      },
+      {
+        "leg": "A",
+        "point": "pressure",
+        "from_phase": 1,
+        "to_phase": 2,
+        "residual_px": 0.0
+      },
+      {
+        "leg": "A",
+        "point": "pressure",
+        "from_phase": 1,
+        "to_phase": 3,
+        "residual_px": 0.0
+      },
+      {
+        "leg": "A",
+        "point": "pressure",
+        "from_phase": 1,
+        "to_phase": 4,
+        "residual_px": 0.0
+      },
+      {
+        "leg": "B",
+        "point": "heel",
+        "from_phase": 4,
+        "to_phase": 5,
+        "residual_px": 0.0
+      },
+      {
+        "leg": "B",
+        "point": "heel",
+        "from_phase": 4,
+        "to_phase": 6,
+        "residual_px": 0.0
+      },
+      {
+        "leg": "B",
+        "point": "pressure",
+        "from_phase": 5,
+        "to_phase": 6,
+        "residual_px": 0.0
+      },
+      {
+        "leg": "B",
+        "point": "pressure",
+        "from_phase": 5,
+        "to_phase": 7,
+        "residual_px": 0.0
+      },
+      {
+        "leg": "B",
+        "point": "pressure",
+        "from_phase": 5,
+        "to_phase": 0,
+        "residual_px": 0.0
+      }
+    ],
+    "max_support_world_lock_residual_px": 0.0,
+    "pelvis_heights_px": [
+      33.1,
+      32.6,
+      34.8,
+      34.9,
+      33.1,
+      32.6,
+      34.8,
+      34.9
+    ],
+    "pelvis_bob_peak_to_peak_px": 2.299999999999997,
+    "loop_closure_residual_px": 0.0,
+    "contact_centers_vs_css_shadow": [
+      {
+        "phase": 0,
+        "leg": "A",
+        "point": "heel",
+        "local_xy": [
+          6.75,
+          0.0
+        ],
+        "shadow_ellipse_norm": 0.5625
+      },
+      {
+        "phase": 0,
+        "leg": "B",
+        "point": "pressure",
+        "local_xy": [
+          -11.25,
+          0.0
+        ],
+        "shadow_ellipse_norm": 0.9375
+      },
+      {
+        "phase": 4,
+        "leg": "B",
+        "point": "heel",
+        "local_xy": [
+          6.75,
+          0.0
+        ],
+        "shadow_ellipse_norm": 0.5625
+      },
+      {
+        "phase": 4,
+        "leg": "A",
+        "point": "pressure",
+        "local_xy": [
+          -11.25,
+          0.0
+        ],
+        "shadow_ellipse_norm": 0.9375
+      }
+    ],
+    "max_contact_shadow_ellipse_norm": 0.9375,
+    "gameplay_visible_height_px_at_depth_0_996": [
+      87.15,
+      86.652,
+      88.84319999999998,
+      88.94279999999999,
+      87.15,
+      86.652,
+      88.84319999999998,
+      88.94279999999999
+    ],
+    "gameplay_visible_height_range_px": [
+      86.652,
+      88.94279999999999
+    ],
+    "idle_reference_height_px": 91.0,
+    "hard_gates": {
+      "leg_segments": true,
+      "arm_segments": true,
+      "knee_angles": true,
+      "ankle_continuity": true,
+      "knee_continuity": true,
+      "swing_clearance": true,
+      "support_world_lock": true,
+      "pelvis_bob": true,
+      "arm_phase_continuity": true,
+      "loop_closure": true,
+      "contact_inside_css_shadow": true
+    },
+    "all_numeric_gates_pass": true,
+    "visual_gate": {
+      "status": "REQUIRES_RENDERED_REVIEW",
+      "rule": "numeric PASS cannot override a visibly broken knee, marching step, arm-phase jump, extra limb, scale jump or F7→F0 discontinuity"
+    }
+  },
+  "raster_status": "NOT_STARTED"
+}

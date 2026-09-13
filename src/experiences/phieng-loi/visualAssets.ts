@@ -1,9 +1,10 @@
 import type { CSSProperties } from 'react';
-import type { PlayerAtlasName } from './playerMotion';
+import type { PlayerAtlasName, PlayerSideWalkVariant } from './playerMotion';
 
 export const PHIENG_LOI_PLAYER_ASSETS = {
   world: '/images/phieng-loi/village-world-v2.webp',
   side: '/images/phieng-loi/player-locomotion-side-v2.webp',
+  alienShortsSideWalk: '/images/phieng-loi/player-alien-shorts-walk-side-v1.webp',
   down: '/images/phieng-loi/player-locomotion-down-v2.webp',
   up: '/images/phieng-loi/player-locomotion-up-v2.webp',
   actions: '/images/phieng-loi/player-actions-v2.webp',
@@ -11,6 +12,12 @@ export const PHIENG_LOI_PLAYER_ASSETS = {
 
 const ATLAS_CONFIG = {
   side: { url: PHIENG_LOI_PLAYER_ASSETS.side, columns: 4, rows: 4, frameAspect: 1.5 },
+  alien_shorts_side_walk: {
+    url: PHIENG_LOI_PLAYER_ASSETS.alienShortsSideWalk,
+    columns: 4,
+    rows: 2,
+    frameAspect: 384 / 341,
+  },
   down: { url: PHIENG_LOI_PLAYER_ASSETS.down, columns: 4, rows: 4, frameAspect: 1.5 },
   up: { url: PHIENG_LOI_PLAYER_ASSETS.up, columns: 4, rows: 4, frameAspect: 1.5 },
   actions: { url: PHIENG_LOI_PLAYER_ASSETS.actions, columns: 4, rows: 3, frameAspect: 384 / 341 },
@@ -35,9 +42,14 @@ export const playerAtlasFrameStyle = (atlas: PlayerAtlasName, frame: number): CS
   };
 };
 
-export const preloadPhiengLoiPlayerAssets = async (): Promise<void> => {
+export const preloadPhiengLoiPlayerAssets = async (
+  sideWalkVariant: PlayerSideWalkVariant = 'default',
+): Promise<void> => {
   if (typeof Image === 'undefined') return;
-  await Promise.all(Object.values(PHIENG_LOI_PLAYER_ASSETS).map((url) => new Promise<void>((resolve) => {
+  const urls = Object.entries(PHIENG_LOI_PLAYER_ASSETS)
+    .filter(([key]) => key !== 'alienShortsSideWalk' || sideWalkVariant === 'alien_shorts')
+    .map(([, url]) => url);
+  await Promise.all(urls.map((url) => new Promise<void>((resolve) => {
     const image = new Image();
     image.decoding = 'async';
     image.onload = () => resolve();
