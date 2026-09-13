@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "result": "PASS",
+  "base_commit": "a5696d6f423e1dd9313b44b2dc2477ce04944227",
+  "locked_inputs": {
+    "identity": {
+      "name": "player-idle-isometric-study-v3-side.png",
+      "width": 574,
+      "height": 1197,
+      "mode": "RGBA",
+      "sha256": "7e3cc883dd96a6a6574f47fc8d00fe1faa0557ad575b7fe44ce6a63b3b88c62b"
+    },
+    "geometry_bundle": {
+      "name": "alien-shorts-walk-side-geometry-v3-bundle.zip",
+      "sha256": "555caf5a36cb8df985eec2dfe4a93af1cddb9f74c0e6e659a1f50c42d6b30287"
+    },
+    "calibration_sha256": "019fcd448d62f1dbc18b1d1559f056e4b939ae45583651d319635f7236feb540"
+  },
+  "normalization": {
+    "cell": [384, 341],
+    "atlas": [1536, 682],
+    "layout": "row-major 4x2",
+    "anchor_percent": [50, 92],
+    "anchor_cell": [192, 313.72],
+    "common_uniform_scale": 0.19875776397515527,
+    "alpha64_support_baseline_y": 328,
+    "resampling": "premultiplied-alpha bicubic affine at 4x, then Lanczos",
+    "transparent_rgb_zeroed": true
+  },
+  "runtime": {
+    "sprite_width": 108,
+    "depth_sample": 0.996,
+    "walk_stride": 54,
+    "phase_distance": 6.75,
+    "diagnostic_speed": 43,
+    "phase_hold_seconds": 0.1569767441860465,
+    "cycle_seconds": 1.255813953488372,
+    "contact_shadow_css": [24, 6]
+  },
+  "thresholds_runtime_pixels": {
+    "visible_height_absolute_error_max": 2.5,
+    "sandal_center_separation_absolute_error_max": 4,
+    "swing_clearance_above_geometry_max": 2,
+    "contact_sole_bottom_delta_max": 3
+  },
+  "frames": [
+    {"index": 0, "phase": "Contact A", "file": "../frames/f0-contact-a.png", "sha256": "6b56b561fc2b4bdc7067e20dc0032a35c22f964d08de2492e94cd8b2891644f3", "height_error": 0.529, "sandal_span_error": -1.558, "sole_bottom_delta": 2.801, "pass": true},
+    {"index": 1, "phase": "Down A", "file": "../frames/f1-down-a.png", "sha256": "818ffb693ef41ef61ee64e3b1c673c9292e1b6d9618dab7cd43f3426843bc835", "height_error": -0.934, "sandal_span_error": 3.661, "sole_bottom_delta": 1.401, "pass": true},
+    {"index": 2, "phase": "Passing A→B", "file": "../frames/f2-passing-a-to-b.png", "sha256": "43352627626663eeb22c3c46dfd7ed14d66cde9971c27448de660885b4ddb4e8", "height_error": 0.797, "sandal_span_error": 0, "sole_bottom_delta": 0, "pass": true},
+    {"index": 3, "phase": "Up A→B", "file": "../frames/f3-up-a-to-b.png", "sha256": "042485891903ffa88f00eb47534246e0aaf3e623f3ea8bdd933bf9c995ad1f31", "height_error": -2.104, "sandal_span_error": 0.559, "sole_bottom_delta": 0.840, "pass": true},
+    {"index": 4, "phase": "Contact B", "file": "../frames/f4-contact-b.png", "sha256": "0d6e347ae8ca3ab9cb6179f4078a4f83cf3acae303e5e11e997849e9acedc4cc", "height_error": -0.591, "sandal_span_error": -1.370, "sole_bottom_delta": 0.560, "pass": true},
+    {"index": 5, "phase": "Down B", "file": "../frames/f5-down-b.png", "sha256": "d20a4f995601e56a44fd514da44c907cba00fc8a3b8e2f6094f1c1f6bad3ce84", "height_error": 1.587, "sandal_span_error": 2.709, "sole_bottom_delta": 0.280, "pass": true},
+    {"index": 6, "phase": "Passing B→A", "file": "../frames/f6-passing-b-to-a.png", "sha256": "6303a40654d41da12f677dad63297f02a0dfa6f377ed011911cf2aeb6968217b", "height_error": 0.797, "sandal_span_error": 0, "sole_bottom_delta": 0, "pass": true},
+    {"index": 7, "phase": "Up B→A", "file": "../frames/f7-up-b-to-a.png", "sha256": "c3c602b496b0bc30a1ec44ce498335609d34fb4bd2868fa7c12641b793ac0c86", "height_error": -2.384, "sandal_span_error": 1.294, "sole_bottom_delta": 0.560, "pass": true}
+  ],
+  "loop_closure_f7_to_f0": {
+    "alpha64_iou": 0.6635416666666667,
+    "centroid_distance_runtime_px": 0.4717964192377799,
+    "premultiplied_rgba_mad": 0.2770804097782904,
+    "better_than_nonclosure_medians": true,
+    "pass": true
+  },
+  "artifacts": {
+    "runtime_atlas": {"file": "../../../../../public/images/phieng-loi/player-alien-shorts-walk-side-v1.webp", "sha256": "f31bf1849228fdb19b0342b5985827522821ba589609b4da833e4ac5bbee060d", "lossless_decode_pixel_difference": 0, "transparent_rgb_exact": true},
+    "static_contact_sheet": {"file": "static-contact-sheet.png", "sha256": "9a6c6ffc41992972347e136c04fa24a55b6a48ae71775fc69d9f0bc6d02cb324"},
+    "geometry_overlay": {"file": "geometry-overlay.png", "sha256": "46795d496db951efcf66f0980ca539894b4a7bfb9e3f85ac40992e2bbc89c0e1"},
+    "gameplay_scale_samples": {"file": "gameplay-scale-samples.png", "sha256": "95f4bcf474a69f9df1c5eb16802b6bd738d900a5f3ce035ded43ec948fe6ad03"},
+    "preview": {"file": "../alien-shorts-walk-side-gameplay-preview.mp4", "sha256": "8c72330fb4dc37d3d3bd1b5d8c8b86af5908f45936dc5aaa885268ef0db893a8", "width": 640, "height": 360, "codec": "h264", "pixel_format": "yuv420p", "fps": 60, "frames": 454, "seconds": 7.566667, "full_decode_pass": true}
+  },
+  "checks": {
+    "phase_geometry": "8/8 PASS",
+    "rgba_alpha_and_clean_edges": "8/8 PASS",
+    "gameplay_scale_review": "PASS",
+    "cadence_holds_9_or_10_video_frames": "PASS",
+    "right_and_mirrored_left_motion_review": "PASS",
+    "f7_to_f0_loop": "PASS",
+    "contact_shadow_separate": "PASS"
+  }
+}

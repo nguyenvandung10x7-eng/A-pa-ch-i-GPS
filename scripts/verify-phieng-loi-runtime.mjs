@@ -110,7 +110,7 @@ check('page owns input listeners, visibility pause, and teardown', () => {
   assert.match(pageSource, /runtime\.dispose\(\)/);
   assert.match(pageSource, /setPointerCapture/);
   assert.match(pageSource, /releasePointerCapture/);
-  assert.doesNotMatch(pageSource, /gameEngine|HeeSun|HANU|PHÀ ƠI|PHA_OI|audio|visualAssets|worldLayout/);
+  assert.doesNotMatch(pageSource, /gameEngine|HeeSun|HANU|PHÀ ƠI|PHA_OI|audio/);
 });
 
 check('application exposes only the direct Phiêng Lơi route in this slice', () => {
@@ -119,4 +119,4 @@ check('application exposes only the direct Phiêng Lơi route in this slice', ()
   assert.match(appSource, /<PhiengLoiGamePage language=\{language\} \/>/);
 });
 
-console.log(`Phiêng Lơi runtime: ${checks} checks passed. No actor, map, audio, or event has been activated.`);
+console.log(`Phiêng Lơi runtime: ${checks} checks passed. No NPC, audio, or event has been activated.`);

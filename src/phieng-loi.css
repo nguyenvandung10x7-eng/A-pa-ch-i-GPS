@@ -49,10 +49,66 @@
   pointer-events: none;
 }
 
-.phieng-game__runtime-surface {
+.phieng-visual {
+  position: relative;
   width: 100%;
+  overflow: hidden;
   aspect-ratio: 16 / 9;
   background: #b9d08c;
+  contain: layout paint style;
+  isolation: isolate;
+}
+
+.phieng-visual__world {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.phieng-visual__actor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.phieng-visual__actor::before {
+  position: absolute;
+  top: -3px;
+  left: -12px;
+  width: 24px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(24, 42, 28, .27);
+  box-shadow: 0 2px 4px rgba(17, 32, 22, .12);
+  content: "";
+}
+
+.phieng-visual__sprite {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-repeat: no-repeat;
+  clip-path: inset(1.5px 0 0);
+  transform:
+    translate(-50%, -92%)
+    scale(var(--sprite-scale, 1))
+    scaleX(var(--sprite-flip, 1));
+  transform-origin: 50% 92%;
+  will-change: background-position, transform;
+}
+
+.phieng-visual__actor.is-player[data-terrain="wood"]::before {
+  background: rgba(52, 35, 23, .2);
 }
 
 .phieng-game__hud {
@@ -316,5 +372,12 @@
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
+  }
+
+  .phieng-visual__world,
+  .phieng-visual__actor,
+  .phieng-visual__sprite {
+    animation: none !important;
+    transition: none !important;
   }
 }

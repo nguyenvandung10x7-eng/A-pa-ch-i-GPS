@@ -128,3 +128,18 @@ input di chuyển bằng bàn phím/joystick trái và pause/resume. Khi mất f
 Không đưa Player, HeeSun, HANU, map art, manga, PHÀ ƠI, audio, save, Book overlay,
 HUD gameplay hoặc event vào lát cắt này. Trang chủ, menu trải nghiệm và các route
 hiện có giữ nguyên; không copy nguyên `PhiengLoiGamePage.tsx` hoặc engine từ #148.
+
+## S03: Player, chuyển động và camera nền
+
+S03 chỉ đưa Player vào runtime S02 bằng đúng `village-world-v2.webp`, ba atlas
+`player-locomotion-{side,down,up}-v2.webp` và `player-actions-v2.webp` từ snapshot
+`f40cb84`. Walk/run lấy frame theo quãng đường thật; start/turn/stop, hysteresis
+đổi hướng, foot anchor 92% và camera đi thường giữ nguyên mapping/thông số đang
+chạy trong nguồn. Không lấy camera chase hoặc camera impulse.
+
+Năm asset được giữ nguyên binary và hash; trạng thái provenance vẫn là
+`UNVERIFIED`, chỉ dùng preview cho đến khi đủ bằng chứng nguồn/quyền hình ảnh.
+Không đưa HeeSun, HANU, NPC khác, event, PHÀ ƠI, audio, save, HUD gameplay,
+foreground/ambient hoặc thay đổi map vào S03. Chưa có nguyên văn khác về tốc độ,
+mapping frame, foot anchor, camera hoặc atlas cuối cùng; lát cắt này không suy đoán
+ngoài các giá trị đã tồn tại ở snapshot.
