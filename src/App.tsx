@@ -159,7 +159,7 @@ export default function App() {
   if (normalizedPathname === '/phieng-loi') {
     return (
       <Suspense fallback={null}>
-        <PhiengLoiGamePage language={language} />
+        <PhiengLoiGamePage language={language} setLanguage={setLanguage} />
       </Suspense>
     );
   }
