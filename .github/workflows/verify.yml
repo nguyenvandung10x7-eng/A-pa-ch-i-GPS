@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+      - remake/phieng-loi-v2
+      - task/pl-00-runtime-foundation
 
 jobs:
   verify:
@@ -22,3 +24,17 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Typecheck and build
         run: npm run verify
+      - name: Install test browser
+        run: npx playwright install --with-deps chromium
+      - name: PL-00 browser lifecycle tests
+        run: npm run test:pl00
+      - name: Upload PL-00 browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pl00-browser-evidence
+          path: |
+            node_modules/.cache/pl00-report
+            node_modules/.cache/pl00-results
+          include-hidden-files: true
+          retention-days: 7

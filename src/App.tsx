@@ -25,8 +25,8 @@ import { SavedBookPage } from './pages/SavedBookPage';
 import { TikTokSubmissionPage } from './pages/TikTokSubmissionPage';
 import { CHALLENGE_CLEAR_VERSION_KEY, getChallengeClearVersion } from './services/tasks';
 
-const PhiengLoiGamePage = lazy(() => import('./pages/PhiengLoiGamePage').then((module) => ({
-  default: module.PhiengLoiGamePage,
+const PhiengLoiV2Page = lazy(() => import('./pages/PhiengLoiV2Page').then((module) => ({
+  default: module.PhiengLoiV2Page,
 })));
 
 const parseClearVersion = (value: string | null): number => {
@@ -159,7 +159,7 @@ export default function App() {
   if (normalizedPathname === '/phieng-loi') {
     return (
       <Suspense fallback={null}>
-        <PhiengLoiGamePage language={language} />
+        <PhiengLoiV2Page />
       </Suspense>
     );
   }
