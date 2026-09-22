@@ -121,9 +121,16 @@ Run from the repository root:
 7. npm run verify
 8. git diff --check
 
-The browser suite needs dist from step 4. It starts dedicated loopback Vite dev
-and preview servers at ports 5173 and 4173; stop existing servers on those ports.
-Server commands do not call verify or install browsers recursively.
+The browser suite starts dedicated loopback Vite dev and preview servers at ports
+5173 and 4173; stop existing servers on those ports. Its preview server rebuilds
+dist with test-only shell configuration, because the existing application client
+throws at module evaluation when Supabase environment values are missing.
+Playwright supplies a reserved .invalid URL and a non-secret test key, and answers
+backend requests with 503. Tests supply no login session or backend gameplay data.
+This does not change the application client, .env files, Netlify configuration or
+production environment guard. The test build is not a deployable artifact; run
+the normal build with deployment configuration before publishing. Server commands
+do not call verify or install browsers recursively.
 
 verify:pl00 audits pins, strictness, route, CI wiring, empty production assets,
 config and the transitive import graph from the new page. It never imports legacy

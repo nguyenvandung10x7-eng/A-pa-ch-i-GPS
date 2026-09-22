@@ -8,6 +8,10 @@ const fixture = '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><r
 const button = (page, name) => page.getByRole('button', { name, exact: true });
 
 test.beforeEach(async ({ page }) => {
+  // No login, credentials or backend gameplay data are supplied to the engine.
+  await page.route('https://pl00.invalid/**', (route) => route.fulfill({
+    status: 503, contentType: 'application/json', body: '{"message":"Backend unavailable in PL-00 test"}',
+  }));
   page.on('pageerror', (error) => console.error('PL00 browser exception:', error.message));
   page.on('console', (message) => {
     if (message.type() === 'error') console.error('PL00 browser console:', message.text());
