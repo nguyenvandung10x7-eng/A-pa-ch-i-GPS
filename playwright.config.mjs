@@ -7,6 +7,7 @@ export default defineConfig({
   expect: { timeout: 10000 },
   workers: 1,
   retries: 0,
+  maxFailures: 2,
   reporter: [
     ['list'],
     ['json', { outputFile: './node_modules/.cache/pl00-report/results.json' }],

@@ -7,6 +7,19 @@ const HARNESS = DEV + '/phieng-loi?dev=foundation';
 const fixture = '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="#ffffff"/></svg>';
 const button = (page, name) => page.getByRole('button', { name, exact: true });
 
+test.beforeEach(async ({ page }) => {
+  page.on('pageerror', (error) => console.error('PL00 browser exception:', error.message));
+  page.on('console', (message) => {
+    if (message.type() === 'error') console.error('PL00 browser console:', message.text());
+  });
+});
+
+test.afterEach(async ({ page }, info) => {
+  if (info.status !== info.expectedStatus) {
+    console.log('PL00 failed page:', await page.locator('body').innerText());
+  }
+});
+
 async function snapshot(page) {
   await button(page, 'Snapshot').click();
   return JSON.parse(await page.getByTestId('foundation-snapshot').textContent());
