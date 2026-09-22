@@ -109,7 +109,12 @@ export function mountPhaser(parent: HTMLElement, options: MountOptions): Foundat
     listenersAttached = true;
     if (diagnostics) diagnostics.adapterListeners += 3;
     observer = new ResizeObserver(() => {
-      if (current() && game?.isBooted) game.scale.refresh();
+      if (current() && game?.isBooted) {
+        // refresh computes display size from cached parent bounds. Update them
+        // first, as Phaser's native scale step does when processing a resize.
+        game.scale.getParentBounds();
+        game.scale.refresh();
+      }
     });
     observer.observe(parent);
     if (diagnostics) diagnostics.observers += 1;

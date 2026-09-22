@@ -274,10 +274,14 @@ test('resize and portrait/landscape preserve aspect and pointer mapping; Canvas 
   await ready(page);
   for (const viewport of [{ width: 844, height: 390 }, { width: 390, height: 844 }, { width: 1280, height: 720 }]) {
     await page.setViewportSize(viewport);
-    await expect.poll(async () => {
+    await expect(async () => {
       const box = await page.locator('[data-testid="canvas-parent"] canvas').boundingBox();
-      return Math.abs(box.width / box.height - 16 / 9);
-    }).toBeLessThan(0.01);
+      expect(Math.abs(box.width / box.height - 16 / 9)).toBeLessThan(0.01);
+      expect(box.width).toBeLessThanOrEqual(viewport.width + 1);
+      expect(box.height).toBeLessThanOrEqual(viewport.height + 1);
+      // The previous viewport also had a 16:9 canvas; wait for the new FIT size.
+      expect(Math.abs(box.width - Math.min(viewport.width, viewport.height * 16 / 9))).toBeLessThan(2);
+    }).toPass({ timeout: 10000 });
     const box = await page.locator('[data-testid="canvas-parent"] canvas').boundingBox();
     expect(box.width).toBeLessThanOrEqual(viewport.width + 1);
     expect(box.height).toBeLessThanOrEqual(viewport.height + 1);
