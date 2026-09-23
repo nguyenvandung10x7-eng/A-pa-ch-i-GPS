@@ -32,10 +32,13 @@ function visit(file) {
   if (visited.has(file)) return;
   assert.ok(file === entry || file.startsWith(root + '/'), 'Import escapes remake boundary: ' + relative(process.cwd(), file));
   visited.add(file);
-  if (file.endsWith('.css')) return;
+  if (file.endsWith('.css') || file.endsWith('.json')) return;
   const text = read(file);
   assert.doesNotMatch(text, /@ts-ignore|@ts-nocheck|requestAnimationFrame|cancelAnimationFrame/);
-  assert.doesNotMatch(text, /HeeSun|HS_REVEAL|worldLayout|PhiengLoiGamePage|PHÀ ƠI/);
+  assert.doesNotMatch(text, /worldLayout|PhiengLoiGamePage|PHÀ ƠI/);
+  // Task 01 is an explicit, independently verified extension. The original
+  // foundation modules remain free of character/gameplay implementation.
+  if (!file.startsWith(root + '/reveal/')) assert.doesNotMatch(text, /HeeSun|HS_REVEAL/);
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
   const follow = (specifier) => {
     if (!specifier.startsWith('.')) {
@@ -72,7 +75,7 @@ assert.match(read('src/game/phieng-loi/assets.ts'), /FOUNDATION_ASSETS[^\n]*Obje
 assert.doesNotMatch(read('src/game/phieng-loi/createGame.ts'), /\bphysics\s*:|\bplugins\s*:/);
 assert.match(read('src/game/phieng-loi/createGame.ts'), /noAudio:\s*true/);
 if (existsSync('public/assets/phieng-loi-v2')) {
-  assert.equal(readdirSync('public/assets/phieng-loi-v2').length, 0, 'PL-00 must not ship artwork');
+  assert.deepEqual(readdirSync('public/assets/phieng-loi-v2'), ['hs-reveal'], 'Only the authorized Task 01 asset extension is allowed');
 }
-console.log('PASS PL-00 pins, strictness, route, pipeline, empty assets, config, and transitive import boundary (' + visited.size + ' files).');
+console.log('PASS PL-00 pins, strictness, route, pipeline, empty foundation manifest, config, and transitive import boundary (' + visited.size + ' files).');
 console.log('Browser lifecycle and device QA are separate gates; this script does not prove them.');

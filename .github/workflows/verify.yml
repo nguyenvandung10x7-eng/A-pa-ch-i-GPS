@@ -7,6 +7,7 @@ on:
       - main
       - remake/phieng-loi-v2
       - task/pl-00-runtime-foundation
+      - task/pl-hs-01-reveal
 
 jobs:
   verify:
@@ -26,7 +27,7 @@ jobs:
         run: npm run verify
       - name: Install test browser
         run: npx playwright install --with-deps chromium
-      - name: PL-00 browser lifecycle tests
+      - name: PL-00 and Task 01 browser lifecycle tests
         run: npm run test:pl00
       - name: Upload PL-00 browser evidence
         if: always()

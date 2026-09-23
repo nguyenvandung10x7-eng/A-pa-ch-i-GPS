@@ -48,6 +48,8 @@ export interface ProbeSnapshot {
 export interface FoundationDevOptions {
   diagnostics: FoundationDiagnostics;
   renderer: 'auto' | 'canvas';
+  /** Optional isolated task harness; replaces the technical foundation probe. */
+  attachScene?: (scene: Phaser.Scene, context: SceneContext) => void;
 }
 
 export interface MountOptions {

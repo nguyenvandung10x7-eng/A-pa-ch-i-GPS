@@ -1,0 +1,74 @@
+{
+  "block_id": "PL-HS-01",
+  "state_id": "HS_REVEAL_BEER_SAINT",
+  "summary": "HeeSun beer-saint reveal before manga and chase.",
+  "phases": [
+    "REVEAL",
+    "MANGA",
+    "CHASE",
+    "CAPTURE_TRANSITION",
+    "RECOVERY",
+    "COMPLETE"
+  ],
+  "reveal": {
+    "sprite_sheet_source": "assets/heesun_reveal_25f/frames",
+    "frame_count": 25,
+    "fps_min": 12,
+    "fps_max": 15,
+    "fps_default": 15,
+    "loop": false,
+    "character_scale_peak": 1.12,
+    "voice_cue": "AST-VOICE-HS-OI-BAN-OI",
+    "next_phase_on_complete": "MANGA",
+    "voice_cue_time_sec": null,
+    "voice_cue_proposal_sec": 0.45,
+    "voice_cue_status": "CẦN_CHỐT; chỉ map khi asset voice đã được xác minh"
+  },
+  "layer_order": [
+    "hs_beer_tower_back.png",
+    "hs_halo_glow.png",
+    "hs_ribbon_back.png",
+    "HeeSunSprite25F",
+    "hs_ribbon_front_optional.png"
+  ],
+  "aura_tween": {
+    "fade_in_sec": 0.2,
+    "fade_out_sec": 0.2,
+    "bob_px": 3,
+    "bob_period_sec": 1.1,
+    "pulse_scale_min": 1.0,
+    "pulse_scale_max": 1.03,
+    "pulse_period_sec": 0.9,
+    "rotation_deg": 0,
+    "notes": [
+      "Use tween/pulse/bob for aura, do not animate 25 aura frames.",
+      "RibbonFront is optional; keep face and upper torso clear.",
+      "Cleanup/fade aura fully before manga opens."
+    ]
+  },
+  "flow": {
+    "trigger": "enter_zone",
+    "manga_after_reveal": true,
+    "chase_after_manga_close": true,
+    "heesun_chase_speed_multiplier": 2.0,
+    "capture_on_contact": true,
+    "capture_hold_sec": 0.5,
+    "capture_reveal_hidden_night": false,
+    "drink_sequence_in_hs01": false,
+    "drunk_state_in_hs01": false,
+    "recovery_visual": [
+      "PIEU",
+      "CURRENT_PUMPKIN"
+    ],
+    "current_pumpkin_memory_echo": "LATENT",
+    "next_phase_after_capture": "RECOVERY"
+  },
+  "task_01_boundary": {
+    "completion_event": "reveal_complete",
+    "completion_event_max_per_run": 1,
+    "cleanup_before_event": true,
+    "downstream_phases_are_reference_only": true,
+    "do_not_open_manga_or_chase": true,
+    "foundation_gate": "QA conditional start; F12 real Android still NOT PROVEN; no merge or release"
+  }
+}

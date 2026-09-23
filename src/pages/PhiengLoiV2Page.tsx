@@ -4,8 +4,14 @@ import { PhaserHost } from '../game/phieng-loi/PhaserHost';
 const DevHarness = import.meta.env.DEV
   ? lazy(() => import('../game/phieng-loi/dev/FoundationHarness'))
   : null;
+const RevealHarness = import.meta.env.DEV
+  ? lazy(() => import('../game/phieng-loi/reveal/RevealHarness'))
+  : null;
 
 export function PhiengLoiV2Page() {
+  if (RevealHarness && new URLSearchParams(window.location.search).get('dev') === 'hs-reveal') {
+    return <Suspense fallback={null}><RevealHarness /></Suspense>;
+  }
   if (DevHarness && new URLSearchParams(window.location.search).get('dev') === 'foundation') {
     return <Suspense fallback={null}><DevHarness /></Suspense>;
   }

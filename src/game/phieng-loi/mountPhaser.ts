@@ -82,7 +82,7 @@ export function mountPhaser(parent: HTMLElement, options: MountOptions): Foundat
       manifest,
       isCurrent: current,
       diagnostics,
-      attachProbe: probe?.attachFoundationProbe,
+      attachProbe: dev?.attachScene ?? probe?.attachFoundationProbe,
       ready: () => queueMicrotask(() => {
         if (!current() || error || ready) return;
         ready = true;

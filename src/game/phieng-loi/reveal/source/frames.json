@@ -1,0 +1,37 @@
+{
+  "id": "HS_REVEAL_BEER_SAINT",
+  "source_sheet": "sprite-max-px-frames-25-rows-5-cols-5 idle.png",
+  "source_size": {
+    "width": 1050,
+    "height": 1560
+  },
+  "grid": {
+    "cols": 5,
+    "rows": 5,
+    "cell_width": 210,
+    "cell_height": 312
+  },
+  "frame_order": "row-major",
+  "frame_count": 25,
+  "fps": {
+    "min": 12,
+    "max": 15,
+    "default_playtest": 15
+  },
+  "loop": false,
+  "next_phase": "MANGA",
+  "layer_order": [
+    "BeerTowerBack",
+    "HaloGlow",
+    "RibbonBack",
+    "HeeSunSprite25F",
+    "RibbonFront_optional"
+  ],
+  "notes": [
+    "Do not bake aura into HeeSun frames.",
+    "Keep all 25 cell canvases unchanged for first import.",
+    "QA foot/root anchor and silhouette jitter before release.",
+    "Reveal completion should come from frame/animation completion callback, not an independent timer.",
+    "After reveal: fade/cleanup aura -> manga; chase starts only after manga closes."
+  ]
+}
