@@ -8,7 +8,14 @@ const RevealHarness = import.meta.env.DEV
   ? lazy(() => import('../game/phieng-loi/reveal/RevealHarness'))
   : null;
 
+const MangaHarness = import.meta.env.DEV
+  ? lazy(() => import('../game/phieng-loi/manga/MangaHarness'))
+  : null;
+
 export function PhiengLoiV2Page() {
+  if (MangaHarness && new URLSearchParams(window.location.search).get('dev') === 'hs-manga') {
+    return <Suspense fallback={null}><MangaHarness /></Suspense>;
+  }
   if (RevealHarness && new URLSearchParams(window.location.search).get('dev') === 'hs-reveal') {
     return <Suspense fallback={null}><RevealHarness /></Suspense>;
   }
