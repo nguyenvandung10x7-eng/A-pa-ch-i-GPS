@@ -106,16 +106,24 @@ test('pause/resume freezes frames and aura; fade pause does not complete early',
   await button(page, 'Resume').click();
   // Observe and pause in the same browser task. A protocol round trip plus
   // actionability checks can otherwise outlast the authored 200ms fade.
-  await page.waitForFunction(async () => {
+  await page.evaluate(async () => {
     const control = (name) => [...document.querySelectorAll('button')]
       .find((element) => element.textContent === name);
-    control('Snapshot').click();
-    await Promise.resolve();
-    const value = JSON.parse(document.querySelector('[data-testid="reveal-snapshot"]').textContent);
-    if (value.reveal.phase !== 'finishing') return false;
-    control('Pause').click();
-    return true;
-  }, null, { polling: 'raf', timeout: 10000 });
+    // Playwright's waitForFunction treats a returned Promise as truthy. Own
+    // this asynchronous observation loop and await its actual condition.
+    const deadline = performance.now() + 10000;
+    while (performance.now() < deadline) {
+      await new Promise(requestAnimationFrame);
+      control('Snapshot').click();
+      await Promise.resolve();
+      const value = JSON.parse(document.querySelector('[data-testid="reveal-snapshot"]').textContent);
+      if (value.reveal.phase === 'finishing') {
+        control('Pause').click();
+        return;
+      }
+    }
+    throw new Error('Reveal did not enter finishing within 10s');
+  });
   const fadePaused = await snapshot(page);
   expect(fadePaused.reveal.phase).toBe('finishing');
   await page.waitForTimeout(500);
