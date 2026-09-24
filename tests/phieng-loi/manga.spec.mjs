@@ -57,7 +57,7 @@ test('touch and resize preserve page and contain entire image', async ({ browser
 test('failed image cannot complete and reopen recovers', async ({ page }) => {
   await page.route('**/heesun-02.png', route => route.abort());
   await page.goto(url); await open(page); await button(page, 'Khung tiếp').click();
-  await expect(page.getByRole('status')).toContainText('Không tải được ảnh');
+  await expect(dialog(page).getByRole('status')).toContainText('Không tải được ảnh');
   await expect(button(page, 'Khung tiếp')).toBeDisabled();
   await expect(page.getByTestId('manga-events')).toHaveText('[]');
   await button(page, 'Unmount (cancel)').click(); await page.unroute('**/heesun-02.png');
