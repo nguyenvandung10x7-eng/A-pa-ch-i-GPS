@@ -1,0 +1,11 @@
+.hs-manga-harness { position: fixed; inset: 0; background: #131117; color: #fff; display: flex; flex-direction: column; z-index: 50; }
+.hs-manga-harness header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 16px; font-size: 12px; }
+.hs-manga-harness button { border: 1px solid #81758c; border-radius: 6px; background: #29222f; color: #fff; padding: 10px 16px; min-height: 44px; cursor: pointer; }
+.hs-manga-harness button:disabled { opacity: .4; cursor: default; }
+.hs-manga-harness button:focus-visible { outline: 3px solid #f9c644; outline-offset: 2px; }
+.hs-manga-harness output { max-width: 280px; overflow: auto; font-size: 10px; }
+.hs-manga-viewer { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.hs-manga-art { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.hs-manga-art img { width: 100%; height: 100%; object-fit: contain; }
+.hs-manga-viewer nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; padding: 8px 12px max(8px, env(safe-area-inset-bottom)); }
+.hs-manga-viewer [role=status] { font-size: 12px; }

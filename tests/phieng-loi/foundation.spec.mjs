@@ -30,6 +30,9 @@ async function snapshot(page) {
 }
 
 async function ready(page, expectedLive = 1) {
+  // Route/chunk loading is not engine readiness. Keep the existing 10s engine
+  // predicate budget, starting after the lazy harness can actually be sampled.
+  await button(page, 'Snapshot').waitFor({ state: 'visible' });
   await expect.poll(async () => {
     const value = await snapshot(page);
     return value.live === expectedLive && value.runtime?.probe !== null && value.runtime?.renderer !== 'pending';
@@ -205,8 +208,22 @@ test('short and long pauses freeze native tween and timer without wall-time catc
     expect(paused.runtime.probe.x).toBe(before.runtime.probe.x);
     expect(paused.runtime.probe.elapsed).toBe(before.runtime.probe.elapsed);
     expect(paused.updates).toBe(before.updates);
-    await button(page, 'Resume').click();
-    const resumed = await snapshot(page);
+    // Sample the first native update, not a later Playwright click after 200ms
+    // of legitimate movement. No clock stepping and no threshold relaxation.
+    const resumed = await page.evaluate(async (updatesBefore) => {
+      const control = (name) => [...document.querySelectorAll('button')]
+        .find((element) => element.textContent === name);
+      control('Resume').click();
+      const deadline = performance.now() + 10000;
+      while (performance.now() < deadline) {
+        await new Promise(requestAnimationFrame);
+        control('Snapshot').click();
+        await Promise.resolve(); // flush the React snapshot update
+        const value = JSON.parse(document.querySelector('[data-testid="foundation-snapshot"]').textContent);
+        if (value.updates > updatesBefore) return value;
+      }
+      throw new Error('No native update after resume');
+    }, paused.updates);
     expect(resumed.runtime.paused).toBe(false);
     expect(resumed.runtime.probe.x - paused.runtime.probe.x).toBeLessThan(8);
     expect(resumed.runtime.probe.elapsed - paused.runtime.probe.elapsed).toBeLessThan(160);

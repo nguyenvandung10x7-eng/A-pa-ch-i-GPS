@@ -33,19 +33,23 @@ function visit(file) {
   assert.ok(file === entry || file.startsWith(root + '/'), 'Import escapes remake boundary: ' + relative(process.cwd(), file));
   visited.add(file);
   if (file.endsWith('.css') || file.endsWith('.json')) return;
+  if (file.endsWith('.png')) {
+    assert.ok(file.startsWith(root + '/manga/assets/'), 'PNG outside authorized manga assets');
+    return;
+  }
   const text = read(file);
   assert.doesNotMatch(text, /@ts-ignore|@ts-nocheck|requestAnimationFrame|cancelAnimationFrame/);
   assert.doesNotMatch(text, /worldLayout|PhiengLoiGamePage|PHÀ ƠI/);
   // Task 01 is an explicit, independently verified extension. The original
   // foundation modules remain free of character/gameplay implementation.
-  if (!file.startsWith(root + '/reveal/')) assert.doesNotMatch(text, /HeeSun|HS_REVEAL/);
+  if (!file.startsWith(root + '/reveal/') && !file.startsWith(root + '/manga/')) assert.doesNotMatch(text, /HeeSun|HS_REVEAL/);
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
   const follow = (specifier) => {
     if (!specifier.startsWith('.')) {
       assert.ok(externals.has(specifier), 'Unexpected dependency: ' + specifier);
       return;
     }
-    if (specifier.endsWith('.css')) {
+    if (specifier.endsWith('.css') || specifier.endsWith('.png')) {
       const path = resolve(dirname(file), specifier);
       assert.ok(existsSync(path));
       visit(path);

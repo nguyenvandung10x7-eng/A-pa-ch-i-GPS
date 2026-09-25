@@ -8,6 +8,7 @@ on:
       - remake/phieng-loi-v2
       - task/pl-00-runtime-foundation
       - task/pl-hs-01-reveal
+      - task/pl-hs-02-manga
 
 jobs:
   verify:

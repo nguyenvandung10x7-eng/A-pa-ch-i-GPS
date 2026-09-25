@@ -9,6 +9,7 @@ async function snapshot(page) {
   return JSON.parse(await page.getByTestId('reveal-snapshot').textContent());
 }
 async function ready(page) {
+  await button(page, 'Snapshot').waitFor({ state: 'visible' });
   await expect.poll(async () => {
     const s = await snapshot(page);
     return s.foundation.live === 1 && s.status?.state === 'ready' && s.reveal?.phase === 'idle';
@@ -103,8 +104,26 @@ test('pause/resume freezes frames and aura; fade pause does not complete early',
   expect(held.reveal).toEqual(paused.reveal);
   expect(held.events).toHaveLength(0);
   await button(page, 'Resume').click();
-  await expect.poll(async () => (await snapshot(page)).reveal.phase, { intervals: [10] }).toBe('finishing');
-  await button(page, 'Pause').click();
+  // Observe and pause in the same browser task. A protocol round trip plus
+  // actionability checks can otherwise outlast the authored 200ms fade.
+  await page.evaluate(async () => {
+    const control = (name) => [...document.querySelectorAll('button')]
+      .find((element) => element.textContent === name);
+    // Playwright's waitForFunction treats a returned Promise as truthy. Own
+    // this asynchronous observation loop and await its actual condition.
+    const deadline = performance.now() + 10000;
+    while (performance.now() < deadline) {
+      await new Promise(requestAnimationFrame);
+      control('Snapshot').click();
+      await Promise.resolve();
+      const value = JSON.parse(document.querySelector('[data-testid="reveal-snapshot"]').textContent);
+      if (value.reveal.phase === 'finishing') {
+        control('Pause').click();
+        return;
+      }
+    }
+    throw new Error('Reveal did not enter finishing within 10s');
+  });
   const fadePaused = await snapshot(page);
   expect(fadePaused.reveal.phase).toBe('finishing');
   await page.waitForTimeout(500);
