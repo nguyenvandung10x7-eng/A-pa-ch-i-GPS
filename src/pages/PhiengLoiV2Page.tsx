@@ -12,7 +12,14 @@ const MangaHarness = import.meta.env.DEV
   ? lazy(() => import('../game/phieng-loi/manga/MangaHarness'))
   : null;
 
+const FlowHarness = import.meta.env.DEV
+  ? lazy(() => import('../game/phieng-loi/flow/FlowHarness'))
+  : null;
+
 export function PhiengLoiV2Page() {
+  if (FlowHarness && new URLSearchParams(window.location.search).get('dev') === 'hs-flow') {
+    return <Suspense fallback={null}><FlowHarness /></Suspense>;
+  }
   if (MangaHarness && new URLSearchParams(window.location.search).get('dev') === 'hs-manga') {
     return <Suspense fallback={null}><MangaHarness /></Suspense>;
   }

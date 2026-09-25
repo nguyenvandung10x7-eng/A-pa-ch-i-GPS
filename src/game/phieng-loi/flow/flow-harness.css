@@ -1,0 +1,14 @@
+.hs-flow-shell { position: fixed; z-index: 90; inset: 0; display: flex; flex-direction: column; pointer-events: none; }
+.hs-flow-panel { flex-shrink: 0; margin: 8px; width: min(470px, calc(100vw - 16px)); padding: 10px; color: #ecf6f2; background: #132520ed; border: 1px solid #699c89; font: 12px/1.4 system-ui, sans-serif; pointer-events: auto; }
+.hs-flow-panel p { margin: 5px 0; }
+.hs-flow-controls { display: flex; flex-wrap: wrap; gap: 5px; }
+.hs-flow-controls button, .hs-flow-controls select { background: #204136; border: 1px solid #8ab9a6; padding: 5px; color: white; }
+.hs-flow-controls button:disabled { opacity: .45; }
+.hs-flow-controls a { color: #b1f0d4; }
+.hs-flow-panel output { display: block; max-height: 56px; overflow: auto; font-size: 10px; overflow-wrap: anywhere; }
+/* Flex layout reserves actual panel space without covering the manga artwork. */
+.hs-flow-panel ~ .hs-manga-viewer { min-width: 0; background: #131117; color: white; pointer-events: auto; }
+.hs-flow-panel ~ .hs-manga-viewer button { border: 1px solid #81758c; border-radius: 6px; background: #29222f; color: white; padding: 8px 12px; min-height: 44px; }
+.hs-flow-panel ~ .hs-manga-viewer button:disabled { opacity: .4; }
+.hs-flow-panel ~ .hs-manga-viewer button:focus-visible { outline: 3px solid #f9c644; outline-offset: 2px; }
+@media (max-height: 500px) { .hs-flow-shell { flex-direction: row; } .hs-flow-panel { width: 260px; max-height: calc(100dvh - 16px); overflow: auto; } }
