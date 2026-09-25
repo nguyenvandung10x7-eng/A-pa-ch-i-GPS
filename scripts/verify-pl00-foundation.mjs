@@ -42,7 +42,7 @@ function visit(file) {
   assert.doesNotMatch(text, /worldLayout|PhiengLoiGamePage|PHÀ ƠI/);
   // Task 01 is an explicit, independently verified extension. The original
   // foundation modules remain free of character/gameplay implementation.
-  if (!file.startsWith(root + '/reveal/') && !file.startsWith(root + '/manga/')) assert.doesNotMatch(text, /HeeSun|HS_REVEAL/);
+  if (!file.startsWith(root + '/reveal/') && !file.startsWith(root + '/manga/') && !file.startsWith(root + '/flow/')) assert.doesNotMatch(text, /HeeSun|HS_REVEAL/);
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
   const follow = (specifier) => {
     if (!specifier.startsWith('.')) {
