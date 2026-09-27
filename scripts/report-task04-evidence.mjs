@@ -15,7 +15,7 @@ const manifest={head:git('rev-parse','HEAD'),tree:git('rev-parse','HEAD^{tree}')
 configId:'T04-DEV-WM-CFG-P01',oldCandidate:'54541131b20b9b1e6f65dbcfbf7dff0a26ba7943',oldCandidateQA:'NEVER_PASSED_INDEPENDENT_QA',qaVerdict:'PENDING_INDEPENDENT_QA',F12:'ACCEPTED_WITH_OWNER_WAIVER',
 validationEnvironment:process.env.GITHUB_ACTIONS?'CI':'local',runId:process.env.GITHUB_RUN_ID??null,githubSha:process.env.GITHUB_SHA??null,
 acCount:sourceAC.length,acUnchanged:JSON.stringify(sourceAC)===JSON.stringify(copyAC),baselineFiles,baseline,world,newScenarios:22,newTestCount:24,
-recoveredTestSHA256:hash(readFileSync('tests/phieng-loi/world-move.spec.mjs'))};
+recoveredInputTestSHA256:'915f64ea428d645438e456dd859bd482adf5a4701ae16f993ecbefb395618380',candidateTestSHA256:hash(readFileSync('tests/phieng-loi/world-move.spec.mjs'))};
 mkdirSync(dir,{recursive:true});writeFileSync(`${dir}/manifest.json`,JSON.stringify(manifest,null,2));
 writeFileSync(`${dir}/candidate.diff`,execFileSync('git',['diff','--binary',base,'HEAD']));
 for(const name of ['AC-MATRIX','APPROVED-CONFIG'])copyFileSync(`docs/TASK-04-WORLD-MOVE-${name}.md`,`${dir}/${name}.md`);

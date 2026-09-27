@@ -346,7 +346,11 @@ test('T04-N18 cancel unmount route-exit BOOTING ACTIVE PAUSED no completion',asy
     expect(boot.foundation.created).toBe(0);expect(boot.foundation.readyEvents).toBe(0);
     await info.attach(`boot-${mode}`,{body:JSON.stringify(boot),contentType:'application/json'});
     for(const paused of [false,true]) {
-      await open(page);await nativeDrag(page,{x:196,y:632},50);if(paused) await action(page,'pause',[true]);
+      // Exercise actual same-document re-entry after teardown, rather than
+      // discarding the application and its teardown barrier via full reload.
+      if(mode==='route') { await page.goBack(); await ready(page); }
+      else await reenter(page);
+      await nativeDrag(page,{x:196,y:632},50);if(paused) await action(page,'pause',[true]);
       // Capture a read-only closure so route-exit cleanup can be observed after API deletion.
       await page.evaluate(()=>window.__t04Read=window.__TASK04_WORLD_DEV__.snapshot);
       if(mode==='route') { await page.getByRole('link',{name:'Exit world route',exact:true}).click();
