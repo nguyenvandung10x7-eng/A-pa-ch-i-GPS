@@ -13,7 +13,8 @@
     "verify:phieng-loi:runtime": "node scripts/verify-phieng-loi-runtime.mjs",
     "lint": "eslint . --ext .ts,.tsx",
     "package": "bash scripts/package.sh",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "test:world": "playwright test --config playwright.world.config.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.8",

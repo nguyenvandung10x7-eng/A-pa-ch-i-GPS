@@ -10,6 +10,7 @@ on:
       - task/pl-hs-01-reveal
       - task/pl-hs-02-manga
       - task/pl-hs-03-reveal-manga
+      - task/pl-world-04-move-rebuild
 
 jobs:
   verify:
@@ -18,6 +19,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -31,6 +35,21 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: PL-00 and Tasks 01-03 browser lifecycle tests
         run: npm run test:pl00
+      - name: Task 04 separate browser tests
+        run: npm run test:world
+      - name: Record candidate evidence
+        if: always()
+        run: node scripts/report-task04-evidence.mjs
+      - name: Upload Task 04 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: task04-world-move-evidence
+          path: |
+            node_modules/.cache/task04-report
+            node_modules/.cache/task04-results
+          include-hidden-files: true
+          retention-days: 7
       - name: Upload PL-00 browser evidence
         if: always()
         uses: actions/upload-artifact@v4
