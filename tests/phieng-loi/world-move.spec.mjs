@@ -89,9 +89,9 @@ async function synthetic(page,p,d) {
 async function hidden(page,value) {
   await page.evaluate(value=>{Object.defineProperty(document,'hidden',{configurable:true,value});document.dispatchEvent(new Event('visibilitychange'));},value);
 }
-async function disposed(page) {
-  await expect.poll(async()=> (await snapshot(page)).foundation.live).toBe(0);
-  const s=await snapshot(page);
+async function disposed(page, read=snapshot) {
+  await expect.poll(async()=> (await read(page)).foundation.live).toBe(0);
+  const s=await read(page);
   for(const key of ['live','objects','probes','sceneListeners','adapterListeners','observers','timers','tweens','orphanCallbacks']) expect(s.foundation[key],key).toBe(0);
   for(const world of s.history) { expect(world.lifecycle).toBe('DISPOSED'); expect(world.owned).toEqual({objects:0,domListeners:0,sceneBindings:0}); expect(world.actorPosition).toBeNull(); }
   expect(s.foundation.created).toBe(s.foundation.destroyed);
@@ -339,7 +339,7 @@ test('T04-N18 cancel unmount route-exit BOOTING ACTIVE PAUSED no completion',asy
     await page.evaluate(()=>window.__t04BootRead=window.__TASK04_WORLD_DEV__.snapshot);
     if(mode==='route') await page.getByRole('link',{name:'Exit world route',exact:true}).click(); else await action(page,mode);
     release();await page.unroute('**/src/game/phieng-loi/createGame.ts*');
-    if(mode==='route') {await expect(page.getByTestId('world-harness')).toHaveCount(0);expect(await snapshot(page)).toBeUndefined();}
+    if(mode==='route') {await expect(page.getByTestId('world-harness')).toHaveCount(0);expect(await snapshot(page)).toBeUndefined();await disposed(page,p=>p.evaluate(()=>window.__t04BootRead()));}
     else await disposed(page);
     await expect.poll(()=>page.evaluate(()=>window.__t04BootRead().runtime.disposed)).toBe(true);
     const boot=await page.evaluate(()=>window.__t04BootRead());
@@ -352,10 +352,15 @@ test('T04-N18 cancel unmount route-exit BOOTING ACTIVE PAUSED no completion',asy
       else await reenter(page);
       await nativeDrag(page,{x:196,y:632},50);if(paused) await action(page,'pause',[true]);
       // Capture a read-only closure so route-exit cleanup can be observed after API deletion.
-      await page.evaluate(()=>window.__t04Read=window.__TASK04_WORLD_DEV__.snapshot);
+      await page.evaluate(()=>{window.__t04Read=window.__TASK04_WORLD_DEV__.snapshot;window.__t04Late=window.__TASK04_WORLD_DEV__.staleDelivery();});
       if(mode==='route') { await page.getByRole('link',{name:'Exit world route',exact:true}).click();
-        await expect.poll(async()=>page.evaluate(()=>window.__t04Read().foundation.live)).toBe(0);
-        const s=await page.evaluate(()=>window.__t04Read());expect(s.foundation.objects).toBe(0);expect(s.world.owned.domListeners).toBe(0);
+        await expect.poll(()=>snapshot(page)).toBeUndefined();
+        const s=await disposed(page,p=>p.evaluate(()=>window.__t04Read()));
+        await page.evaluate(()=>{window.__t04Late();window.dispatchEvent(new Event('resize'));window.dispatchEvent(new Event('pageshow'));});
+        await page.mouse.move(200,632);await page.waitForTimeout(40);
+        const after=await disposed(page,p=>p.evaluate(()=>window.__t04Read()));
+        near(after.world.position,s.world.position);expect(after.world.updates).toBe(s.world.updates);
+        expect(after.world.staleRejected).toBe(s.world.staleRejected+1);expect(after.events).toEqual(s.events);
         await info.attach(`route-${paused}`,{body:JSON.stringify(s),contentType:'application/json'});
       } else {await action(page,mode);await disposed(page);}
     }
@@ -410,4 +415,22 @@ for(const renderer of ['auto','canvas','fallback']) test(`T04-N22 ${renderer} na
   await nativeDrag(page,{x:96,y:632},2400);near((await snapshot(page)).world.actorPosition,{x:94,y:300});
   near(await synthetic(page,{x:500,y:150},{x:120,y:120}),{x:586,y:236});
   await page.screenshot({path:info.outputPath(`renderer-${renderer}.png`)});
+});
+
+// Exact QA precondition is synthetic; subsequent updates and pointer gestures use
+// the real Phaser Scene/actor. A second run reaches a bound with pointer only.
+test('T04-N26 QA-04-001 browser contact next frame held tangent away and native approach',async({page},info)=>{
+  await open(page);
+  await page.evaluate(()=>{const api=window.__TASK04_WORLD_DEV__,w=api.snapshot().world;
+    api.synthetic({position:{x:181.6552741508931,y:177.56106850225478},pointer:{x:117.73380093449262,y:680.0579693344913},delta:1000,session:w.session,run:w.run});});
+  const contact=(await snapshot(page)).world;
+  await expect.poll(async()=>(await snapshot(page)).world.updates).toBeGreaterThan(contact.updates);
+  expect((await snapshot(page)).world.lifecycle).toBe('ACTIVE');near((await snapshot(page)).world.actorPosition,{x:94,y:277.2278133311697});
+  const held=await nativeDrag(page,{x:117.73380093449262,y:680.0579693344913},150);near(held.after.world.actorPosition,held.before.world.actorPosition);
+  const tangent=await nativeDrag(page,{x:160,y:696},150);expect(tangent.after.world.position.y).toBeGreaterThan(tangent.before.world.position.y);expect(tangent.after.world.position.x).toBe(94);
+  const away=await nativeDrag(page,{x:224,y:632},150);expect(away.after.world.position.x).toBeGreaterThan(94);expect(away.after.world.lifecycle).toBe('ACTIVE');
+  await reenter(page);const approach=await nativeDrag(page,{x:117.73380093449262,y:583.9420306655087},1200);
+  expect(approach.after.world.lifecycle).toBe('ACTIVE');expect(approach.after.world.position.x).toBe(94);
+  await still(page);await nativeDrag(page,{x:160,y:696},100);await nativeDrag(page,{x:224,y:632},100);
+  await info.attach('qa-contact-real-actor',{body:JSON.stringify({contact,held:held.after.world,tangent:tangent.after.world,away:away.after.world,approach:approach.after.world}),contentType:'application/json'});
 });

@@ -17,6 +17,9 @@ export function geometry(c: WorldConfig): {bounds:Rect; obstacle:Rect} {
   return {bounds:{left:c.bounds.left+x,right:c.bounds.right-x,top:c.bounds.top+y,bottom:c.bounds.bottom-y},
     obstacle:{left:c.obstacle.left-x,right:c.obstacle.right+x,top:c.obstacle.top-y,bottom:c.obstacle.bottom+y}};
 }
+// C07 bounds the correction of computed contacts, not the walkable geometry.
+export const CONTACT_TOLERANCE_WU = 1e-6;
+// Keep validation strict: invalid spawn/injected positions must never be clamped.
 export function legal(p:Point, g:ReturnType<typeof geometry>):boolean {
   return Number.isFinite(p.x) && Number.isFinite(p.y) && p.x>=g.bounds.left && p.x<=g.bounds.right && p.y>=g.bounds.top && p.y<=g.bounds.bottom
     && !(p.x>g.obstacle.left && p.x<g.obstacle.right && p.y>g.obstacle.top && p.y<g.obstacle.bottom);

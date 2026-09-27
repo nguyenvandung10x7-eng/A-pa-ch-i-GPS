@@ -112,6 +112,9 @@ export class WorldController {
     if(vector.x===0 && vector.y===0)return;
     const start={...this.position},desired={x:vector.x*this.config.maxSpeed*delta/1000,y:vector.y*this.config.maxSpeed*delta/1000};
     const result=sweep(start,desired,g.bounds,g.obstacle);
+    // The resolver must publish a strictly legal contact, including next-frame validation.
+    // Do not rescue a genuinely invalid result with a clamp or a wider legal() region.
+    if(!legal(result.position,g)) {this.fail('Invalid resolved position');return;}
     this.position=result.position;this.actor?.setPosition(this.position.x,this.position.y);
     this.event('movement',{source,delta,start,desired,end:{...this.position},fraction:result.fraction,vector:{...vector}});
   }

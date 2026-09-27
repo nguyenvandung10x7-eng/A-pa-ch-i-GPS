@@ -63,3 +63,15 @@ Native Phaser 4.2.1 Scene UPDATE clock is consumed unchanged. Browser waiting me
 Before implementation, Task04_Recovery_Preflight.zip was saved and downloaded again with matching SHA256 0efebe5a769fd3ef50a8dcdbd4a9f1897a19e176a886fbfee3c19b79f42e5d28. Final source bundle and new evidence must be persisted and re-downloaded, then restored in a separate checkout with matching HEAD and tree. A baseline-relative bundle requires the exact base above; this prerequisite must be verified during restoration.
 
 Local browser results and CI must be reported separately. No QA PASS is claimed. CI remains BLOCKED when authenticated Git push is unavailable. No PR, merge or release authorized.
+
+## QA-04-001 correction (27/09/2026)
+
+Candidate 1c9c039 received independent QA FAIL / NEEDS_FIX (AC07 numerical contact); CI remained missing. See TASK-04-QA-04-001-FIX.md for the correction and evidence requirements. Config C01–C07 is APPROVED under the opening 27/09 record; historical PROPOSED labels do not reopen it. The 18 AC above remain verbatim.
+
+| AC | Added/strengthened evidence |
+|---|---|
+|03,07,08|N23 exact QA contact then next update/held/tangent/away; N24 all bounds/obstacle faces/corners; N25 genuine invalid input/runtime positions; N26 real Phaser browser/pointer path|
+|13|N18 route exit now shares full disposed resource assertions; delivers old callback and subsequent events without reviving actor, updates or completions|
+|18|New exact-SHA results and recovery package required; QA PENDING, CI separately reported|
+
+Current expected count: 26 scenario IDs / 28 Task04 tests (three controlled-controller tests and one new browser test added). Keep 44 baseline tests unchanged. Original 24-test and N18 timing paragraphs above are historical provenance, not current-candidate evidence. No assertions or timeouts relaxed.
