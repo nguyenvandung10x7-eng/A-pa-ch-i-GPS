@@ -16,7 +16,12 @@ const FlowHarness = import.meta.env.DEV
   ? lazy(() => import('../game/phieng-loi/flow/FlowHarness'))
   : null;
 
+const WorldHarness = import.meta.env.DEV ? lazy(() => import('../game/phieng-loi/world/WorldHarness')) : null;
+
 export function PhiengLoiV2Page() {
+  if (WorldHarness && new URLSearchParams(window.location.search).get('dev') === 'world-move') {
+    return <Suspense fallback={null}><WorldHarness /></Suspense>;
+  }
   if (FlowHarness && new URLSearchParams(window.location.search).get('dev') === 'hs-flow') {
     return <Suspense fallback={null}><FlowHarness /></Suspense>;
   }

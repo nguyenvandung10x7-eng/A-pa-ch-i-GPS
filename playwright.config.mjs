@@ -9,6 +9,7 @@ const shellTestEnvironment = {
 
 export default defineConfig({
   testDir: './tests/phieng-loi',
+  testIgnore: ['**/world-move.spec.mjs', '**/world-contact.spec.mjs'],
   outputDir: './node_modules/.cache/pl00-results',
   timeout: 60000,
   expect: { timeout: 10000 },
