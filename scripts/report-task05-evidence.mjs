@@ -18,7 +18,7 @@ const counts={total:tests.length,passed:tests.filter(t=>t.status==='expected'&&t
 const matrix=JSON.parse(readFileSync('docs/task05/ac-matrix.json'));
 const checks=new Map(tests.map(t=>[t.title.split(' ')[0],t]));
 for(const row of matrix)for(const id of row.checks)if(id!=='report-task05-evidence')assert.ok(checks.has(id),'Missing mapped check '+id);
-const observedMatrix=matrix.map(row=>({...row,status:'LOCAL_CHECKS_RECORDED_QA_PENDING',
+const observedMatrix=matrix.map(row=>({...row,status:(process.env.GITHUB_ACTIONS?'CI':'LOCAL')+'_CHECKS_RECORDED_QA_PENDING',
  checks:row.checks.map(id=>({id,status:id==='report-task05-evidence'?'REPORT_ASSERTIONS':checks.get(id).status})),
  limitation:row.id==='T05-AC24'&&!process.env.GITHUB_ACTIONS?'CI_NOT_RUN; local evidence is not CI or independent QA':null}));
 const manifest={scope:'DEV HS01 playtest; QA independent PENDING',base,sha,tree,dirty:Boolean(dirty),configId:'T05-DEV-HS01-CFG-A01',technicalRevision:1,

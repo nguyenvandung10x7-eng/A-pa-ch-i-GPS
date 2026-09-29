@@ -195,7 +195,7 @@ test('B23 denied audio unlock requires user retry real ended [AC03,11,16]',async
 });
 test('B24 asset preload and invalid entry cannot become ready or complete [AC03,12]',async({page},info)=>{
  let reject=true;await page.route('**/assets/player-stand.png',r=>reject?r.fulfill({status:503,body:''}):r.continue());
- await page.goto(URL);await expect(page.getByRole('alert')).toBeVisible();expect(await button(page,'Start').isDisabled()).toBe(true);expect((await snap(page)).encounter).toBeNull();
+ await page.goto(URL);await expect(page.getByTestId('phaser-host').getByRole('alert')).toBeVisible();expect(await button(page,'Start').isDisabled()).toBe(true);expect((await snap(page)).encounter).toBeNull();
  reject=false;await button(page,'Re-enter').click();await expect(button(page,'Start')).toBeEnabled();
  await page.evaluate(()=>window.__TASK05_DEV__.reenter({entry:{player:{x:0,y:0},npc:{x:1000,y:300},balance:10}}));await expect(button(page,'Start')).toBeEnabled();await upstream(page);await phase(page,'ERROR');
  const invalid=await state(page);expect(invalid.captureId).toBe(0);expect(invalid.completions).toBe(0);await button(page,'Re-enter').click();await expect(button(page,'Start')).toBeEnabled();await upstream(page);await phase(page,'DRUNK');await evidence(page,info);
