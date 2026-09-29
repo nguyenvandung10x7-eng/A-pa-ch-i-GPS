@@ -48,3 +48,5 @@ Development runs are separate from the final candidate run. One early manga wrap
 CI workflow includes a separate Task05 job/artifact, while preserving the existing44+28 job. A prepared workflow is not a CI result. No Task05 branch is pushed or PR created by this handoff. Independent QA verdict: PENDING.
 
 The missing-asset test initially selected two identical error messages (engine and DEV toolbar). Its locator is now scoped to the PhaserHost error; the visible-error, disabled-Start and no-encounter assertions remain intact. This is a test locator correction, not a relaxed runtime/error requirement. Candidate verification is rerun after committing it.
+
+M15 also guards shared active-clock continuity: the native delta before the animation/control gate advances cooldown but does not enter the drunk duration; an update crossing5000ms counts its remainder as normal active time with cleared input. This prevents phase boundaries from silently extending cooldown while keeping the drunk interval exactly5000ms. The correction is confined to the new Encounter; foundation and Task04 clocks remain unchanged.

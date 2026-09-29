@@ -51,7 +51,9 @@ export class Encounter {
     if(!validDelta(delta)){this.fail('Invalid DEV active delta');return;}
     if(!validPoint(this.player)||!validPoint(this.npc)){this.fail('Invalid runtime position');return;}
     if(!Number.isFinite(raw.x)||!Number.isFinite(raw.y)||Math.hypot(raw.x,raw.y)>1+1e-12){this.fail('Invalid input vector');return;}
-    if(this.deferDrunk){this.deferDrunk=false;this.log('drunk_clock_ready');return;}
+    // The current native delta precedes the animation/control gate. It belongs
+    // to the shared active/cooldown clock, but not to the new drunk duration.
+    if(this.deferDrunk){this.deferDrunk=false;this.activeMs+=delta;this.log('drunk_clock_ready');this.log('drunk_started');return;}
     let left=delta;
     if(this.phase==='CHASE') {
       const pp=playerPath(this.player,raw,delta), np=npcPath(this.npc,this.player,delta), touch=contactTime(pp,np);
@@ -81,7 +83,13 @@ export class Encounter {
         const vector=phase==='DRUNK'?{x:-raw.x,y:-raw.y}:raw;
         const path=playerPath(this.player,vector,used);this.player=positionAt(path,used);
         this.log('player_move',{source,raw,vector,delta:used,path});this.phaseMs+=used;this.activeMs+=used;left-=used;
-        if(phase==='DRUNK'&&this.phaseMs>=CONFIG.drunkMs){this.log('recovery');this.completions++;this.transition('COMPLETE');this.log('hs01_playtest_complete');return;}
+        if(phase==='DRUNK'&&this.phaseMs>=CONFIG.drunkMs){
+          this.log('recovery');this.completions++;this.transition('COMPLETE');this.log('hs01_playtest_complete');
+          // Input ownership was cleared by the phase transition. Count the
+          // remainder as active normal time without reusing the old gesture.
+          this.activeMs+=left;this.phaseMs+=left;
+          if(left)this.log('recovery_remainder',{delta:left,inputCleared:true});return;
+        }
         continue;
       }
       this.activeMs+=left;left=0;
@@ -102,7 +110,7 @@ export class Encounter {
   }
   enableControl():void {if(this.phase==='STAND_UP'){this.controlReady=true;this.log('control_ready');this.tryDrunk();}}
   private tryDrunk():void {
-    if(this.phase==='STAND_UP'&&this.animationReady&&this.controlReady&&!this.paused){this.transition('DRUNK');this.deferDrunk=true;this.log('drunk_started');}
+    if(this.phase==='STAND_UP'&&this.animationReady&&this.controlReady&&!this.paused){this.transition('DRUNK');this.deferDrunk=true;}
   }
   fail(message:string):void {if(['CANCELLED','DISPOSED'].includes(this.phase))return;if(this.phase!=='ERROR')this.failedPhase=this.phase;this.error=message;this.call=null;this.phase='ERROR';this.log('error',{message,failedPhase:this.failedPhase});}
   retry():void {if(this.phase!=='ERROR'||this.paused)return;const p=this.failedPhase;this.error='';this.phase=p;this.log('retry',{phase:p});}

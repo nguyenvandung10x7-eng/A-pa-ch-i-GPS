@@ -131,6 +131,13 @@ test('M14 hold fade slices external audio gate no timer substitute [AC10,11,18]'
 });
 test('M15 standup/control gate 4999/5000 idle pause duplicate [AC12,13]',()=>{
  const m=caught();m.advance(1000,zero,'synthetic');m.audioEnded(9,1);m.wakeReady();m.advance(500,zero,'synthetic');m.standComplete(9,1);m.advance(1000,zero,'synthetic');expect(m.phase).toBe('STAND_UP');m.enableControl();m.advance(0,zero,'synthetic');for(let i=0;i<4;i++)m.advance(1000,zero,'synthetic');m.advance(999,zero,'synthetic');expect(m.phase).toBe('DRUNK');m.standComplete(9,1);m.setPause('hidden',true);m.advance(1000,zero,'synthetic');expect(m.phaseMs).toBe(4999);m.setPause('hidden',false);m.advance(1,zero,'synthetic');expect(m.phase).toBe('COMPLETE');expect(m.completions).toBe(1);
+ // Regression: phase boundaries must not discard active/cooldown time.
+ const n=atPhase('STAND_UP');n.standComplete(9,1);n.enableControl();const before=n.activeMs;
+ n.advance(16,zero,'synthetic');expect(n.activeMs).toBe(before+16);expect(n.phaseMs).toBe(0);
+ const started=n.inspect().events.find(e=>e.type==='drunk_started').at;
+ for(let i=0;i<4;i++)n.advance(1000,zero,'synthetic');n.advance(999,zero,'synthetic');const active=n.activeMs,pos={...n.player};n.advance(1000,zero,'synthetic');
+ expect(n.phase).toBe('COMPLETE');expect(n.activeMs).toBe(active+1000);expect(n.phaseMs).toBe(999);expect(n.player).toEqual(pos);
+ expect(n.inspect().events.find(e=>e.type==='recovery').at-started).toBe(5000);
 });
 test('M16 inversion magnitude restored and no recapture [AC14]',()=>{
  const m=drunk();m.advance(100,{x:.5,y:0},'synthetic');near(m.player.x,228);for(let i=0;i<4;i++)m.advance(1000,zero,'synthetic');m.advance(900,zero,'synthetic');expect(m.phase).toBe('COMPLETE');const x=m.player.x;m.advance(100,{x:.5,y:0},'synthetic');near(m.player.x,x+12);expect(m.captureId).toBe(1);expect(m.completions).toBe(1);
