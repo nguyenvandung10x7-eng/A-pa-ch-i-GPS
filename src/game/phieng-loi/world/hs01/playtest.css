@@ -1,0 +1,8 @@
+.t05-tools{position:fixed;z-index:4;top:6px;left:8px;right:8px;display:flex;flex-wrap:wrap;align-items:center;gap:7px;color:#eee;font:12px system-ui}
+.t05-tools button,.t05-tools a{padding:4px 7px;border:1px solid #677a84;background:#14232b;color:#fff;border-radius:4px}
+.t05-tools p{background:#651f30;padding:5px}.t05-hud{position:fixed;right:7%;bottom:17%;z-index:2;display:flex;gap:15px;color:#f1d98a;font:16px system-ui;pointer-events:none}
+.t05-call{position:fixed;right:max(7%,env(safe-area-inset-right));bottom:max(4%,env(safe-area-inset-bottom));z-index:3;width:110px;height:75px;border-radius:40px;border:2px solid #f0bd66;background:#392b4b;color:#fff;font:bold 18px system-ui;touch-action:manipulation}
+.t05-call:disabled{opacity:.45}
+.t05-manga{position:fixed;inset:55px 0 0;z-index:3;background:#090e12;color:white;display:flex;flex-direction:column}
+.t05-manga button{padding:8px 16px;border:1px solid #81758c;border-radius:6px;background:#29222f;color:white;min-height:44px}
+.t05-manga button:disabled{opacity:.4}

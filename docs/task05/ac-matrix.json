@@ -1,0 +1,268 @@
+[
+  {
+    "id": "T05-AC01",
+    "checks": [
+      "B01",
+      "B02",
+      "B17"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC02",
+    "checks": [
+      "M01",
+      "B16"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC03",
+    "checks": [
+      "M02",
+      "M17",
+      "B08",
+      "B23",
+      "B24"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC04",
+    "checks": [
+      "M03",
+      "B03",
+      "B15",
+      "B20"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC05",
+    "checks": [
+      "M03",
+      "B03"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC06",
+    "checks": [
+      "M04",
+      "M05",
+      "B01",
+      "M21",
+      "M22"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC07",
+    "checks": [
+      "M06",
+      "M07",
+      "M10",
+      "M21"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC08",
+    "checks": [
+      "M08",
+      "M09",
+      "B01",
+      "B02"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC09",
+    "checks": [
+      "M13",
+      "B01",
+      "B02",
+      "B18"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC10",
+    "checks": [
+      "M14",
+      "B01"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC11",
+    "checks": [
+      "M14",
+      "B01",
+      "B04",
+      "B08",
+      "B23"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC12",
+    "checks": [
+      "M15",
+      "B01",
+      "B05",
+      "B24"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC13",
+    "checks": [
+      "M15",
+      "B01"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC14",
+    "checks": [
+      "M05",
+      "M16",
+      "B01",
+      "M22"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC15",
+    "checks": [
+      "M09",
+      "M10",
+      "M11",
+      "M12",
+      "B02",
+      "B07"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC16",
+    "checks": [
+      "M12",
+      "M15",
+      "B04",
+      "B05",
+      "B15",
+      "B17",
+      "M19",
+      "B21",
+      "B23"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC17",
+    "checks": [
+      "B06",
+      "B20",
+      "B21"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC18",
+    "checks": [
+      "M06",
+      "M12",
+      "M14",
+      "M15",
+      "M17",
+      "M19",
+      "M22"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC19",
+    "checks": [
+      "M01",
+      "M18",
+      "B09",
+      "B10",
+      "M20",
+      "B22"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC20",
+    "checks": [
+      "M18",
+      "B10",
+      "B11",
+      "M20",
+      "B22"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC21",
+    "checks": [
+      "B12",
+      "B13",
+      "B19"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC22",
+    "checks": [
+      "M11",
+      "M13",
+      "B01",
+      "B02",
+      "B07",
+      "B18"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC23",
+    "checks": [
+      "B14"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  },
+  {
+    "id": "T05-AC24",
+    "checks": [
+      "B14",
+      "report-task05-evidence"
+    ],
+    "status": "PENDING_CANDIDATE_RUN",
+    "qa": "PENDING"
+  }
+]

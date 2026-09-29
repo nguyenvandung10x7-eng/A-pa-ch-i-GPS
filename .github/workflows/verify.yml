@@ -11,6 +11,7 @@ on:
       - task/pl-hs-02-manga
       - task/pl-hs-03-reveal-manga
       - task/pl-world-04-move-rebuild
+      - task/pl-hs-05-chase-recovery
 
 jobs:
   verify:
@@ -58,5 +59,33 @@ jobs:
           path: |
             node_modules/.cache/pl00-report
             node_modules/.cache/pl00-results
+          include-hidden-files: true
+          retention-days: 7
+
+  task05:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:hs01-play
+      - name: Record Task 05 evidence
+        if: always()
+        run: node scripts/report-task05-evidence.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: task05-hs01-playtest-evidence
+          path: |
+            node_modules/.cache/task05-report
+            node_modules/.cache/task05-results
           include-hidden-files: true
           retention-days: 7

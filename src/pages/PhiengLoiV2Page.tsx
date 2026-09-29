@@ -17,8 +17,12 @@ const FlowHarness = import.meta.env.DEV
   : null;
 
 const WorldHarness = import.meta.env.DEV ? lazy(() => import('../game/phieng-loi/world/WorldHarness')) : null;
+const EncounterPlaytest = import.meta.env.DEV ? lazy(() => import('../game/phieng-loi/world/hs01/Playtest')) : null;
 
 export function PhiengLoiV2Page() {
+  if (EncounterPlaytest && new URLSearchParams(window.location.search).get('dev') === 'hs01-play') {
+    return <Suspense fallback={null}><EncounterPlaytest /></Suspense>;
+  }
   if (WorldHarness && new URLSearchParams(window.location.search).get('dev') === 'world-move') {
     return <Suspense fallback={null}><WorldHarness /></Suspense>;
   }
