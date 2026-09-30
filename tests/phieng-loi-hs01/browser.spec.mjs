@@ -49,11 +49,54 @@ test('B01 native contact E2E pointer audio wake animation drunk recovery [AC01,0
  await page.screenshot({path:info.outputPath('recovered.png')});
 });
 test('B02 native call E2E same story no contact fiction [AC08,09,15,22]',async({page},info)=>{
- await open(page,{rng:.8,entry:{player:{x:240,y:150},npc:{x:500,y:150},balance:10}});await upstream(page);
- await expect.poll(async()=>{const m=await state(page);return Math.hypot(m.player.x-m.npc.x,m.player.y-m.npc.y);},{intervals:[5,5,10]}).toBeLessThanOrEqual(96);
- await button(page,'PHÀ ƠI').click();await phase(page,'COMPLETE');const s=await evidence(page,info);
+ // Install before navigation. Only the pre-capture browser clock is controlled;
+ // the runtime, input handler, pursuit, collision and audio are not replaced.
+ await page.clock.install();
+ await open(page,{rng:.8,entry:{player:{x:240,y:150},npc:{x:500,y:150},balance:10}});
+ await button(page,'Start').click();
+ await button(page,'Khung tiếp').click();await button(page,'Khung tiếp').click();
+ await expect(button(page,'Đóng sau khi xem xong')).toBeEnabled();
+ expect((await snap(page)).flow.phase).toBe('MANGA');
+ expect((await snap(page)).runtime.paused).toBe(true);
+ // Freeze before the handoff, when the manga already holds the engine.
+ // A future clock instant avoids racing the clock-control IPC itself.
+ await page.clock.pauseAt(await page.evaluate(()=>Date.now()+60000));
+ await button(page,'Đóng sau khi xem xong').click();await phase(page,'CHASE');
+ let ready=await state(page);
+ for(let frame=0;frame<64&&Math.hypot(ready.player.x-ready.npc.x,ready.player.y-ready.npc.y)>96;frame++) {
+  await page.clock.runFor(16);ready=await state(page);
+  expect(ready.phase).toBe('CHASE');
+ }
+ const distance=Math.hypot(ready.player.x-ready.npc.x,ready.player.y-ready.npc.y);
+ expect(distance).toBeLessThanOrEqual(96);expect(distance).toBeGreaterThan(24);
+ expect(ready.player.y).toBe(150);expect(ready.npc.y).toBe(150);
+ expect(ready.paused).toBe(false);expect(ready.captureId).toBe(0);
+ await evidence(page,info,'call-ready-clock-held');
+ // Actionability may take arbitrary wall time: it must not advance the chase.
+ // 250 ms exceeds the <=150 ms left before contact at 96 WU and 480 WU/s.
+ await page.waitForTimeout(250);
+ await button(page,'PHÀ ƠI').click();
+ const accepted=await evidence(page,info,'call-accepted-before-next-frame');
+ const calls=accepted.encounter.model.events.filter(e=>e.type==='call_accepted');
+ expect(calls).toHaveLength(1);
+ expect(calls[0].phase).toBe('CHASE');
+ expect(calls[0].data).toMatchObject({trusted:true,outcome:'normal',rng:.8});
+ expect(accepted.encounter.model.activeMs).toBe(ready.activeMs);
+ expect(accepted.encounter.model.player).toEqual(ready.player);
+ expect(accepted.encounter.model.npc).toEqual(ready.npc);
+ expect(accepted.encounter.model.captureId).toBe(0);
+ await page.clock.resume();
+ await phase(page,'COMPLETE');const s=await evidence(page,info);
  expect(s.encounter.model.cause).toBe('phao_heesun');expect(s.encounter.model.balance).toBe(0);expect(s.encounter.model.captureId).toBe(1);expect(s.encounter.model.completions).toBe(1);
  expect(s.encounter.model.events.find(e=>e.type==='call_accepted').data.trusted).toBe(true);
+ const events=s.encounter.model.events,captures=events.filter(e=>e.type==='capture');
+ expect(captures).toHaveLength(1);expect(calls[0].seq).toBeLessThan(captures[0].seq);
+ const trajectory=events.find(e=>e.type==='trajectory'&&e.seq>calls[0].seq&&e.seq<captures[0].seq);
+ expect(trajectory.data).toMatchObject({source:'native',call:.8,blocked:false,until:0});
+ expect(trajectory.data.distance).toBeLessThanOrEqual(96);expect(trajectory.data.touch).not.toBe(0);
+ for(const type of ['call_accepted','audio_native_ended','wake_commit','recovery','hs01_playtest_complete'])expect(events.filter(e=>e.type===type),type).toHaveLength(1);
+ expect(events.filter(e=>e.type==='call_rejected')).toHaveLength(0);
+ expect(s.clean).toBe(true);expect(s.encounter.model.phase).toBe('COMPLETE');
  expect(s.encounter.sprite.frame).toBe('stand-24');await page.screenshot({path:info.outputPath('call-recovery.png')});
 });
 test('B03 pointer oracle native motion before contact [AC04,05]',async({page},info)=>{
