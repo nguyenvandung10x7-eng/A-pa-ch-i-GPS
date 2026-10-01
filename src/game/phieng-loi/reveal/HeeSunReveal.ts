@@ -92,12 +92,20 @@ export class HeeSunReveal {
     this.sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, this.finish);
     this.scene.events.on(Phaser.Scenes.Events.PRE_UPDATE, this.tick);
     this.scene.game.events.on(Phaser.Core.Events.POST_RENDER, this.recordRenderedFrame);
-    this.sprite.play(REVEAL_CONFIG.id);
+    // Start after this native scene update has finished. Starting between RAFs
+    // lets Sprite.preUpdate consume a long delta and advance to frame 2 before
+    // frame 1 has ever been drawn. POST_UPDATE starts frame 1 immediately before
+    // the native render; no timer, fabricated probe entry or FPS change is used.
+    this.scene.events.once(Phaser.Scenes.Events.POST_UPDATE, this.startAnimation);
     return true;
   };
 
+  private startAnimation = (): void => {
+    if (this.phase === 'playing') this.sprite?.play(REVEAL_CONFIG.id);
+  };
+
   private tick = (_time: number, delta: number): void => {
-    if (this.phase === 'playing') this.elapsedMs += delta;
+    if (this.phase === 'playing' && this.sprite?.anims.isPlaying) this.elapsedMs += delta;
   };
 
   private recordFrame = (_animation: Phaser.Animations.Animation, frame: Phaser.Animations.AnimationFrame): void => {
@@ -149,6 +157,7 @@ export class HeeSunReveal {
 
   private clearVisuals(): void {
     this.scene.events.off(Phaser.Scenes.Events.PRE_UPDATE, this.tick);
+    this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.startAnimation);
     this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.complete);
     this.scene.game.events.off(Phaser.Core.Events.POST_RENDER, this.recordRenderedFrame);
     for (const tween of this.scene.tweens.getTweensOf(this.aura)) {

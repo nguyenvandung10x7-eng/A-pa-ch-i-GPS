@@ -18,7 +18,9 @@ acCount:sourceAC.length,acUnchanged:JSON.stringify(sourceAC)===JSON.stringify(co
 regressionSources:['tests/phieng-loi/world-contact.spec.mjs','scripts/regress-task04-contact.mjs'].map(path=>({path,sha256:hash(readFileSync(path))})),
 recoveredInputTestSHA256:'915f64ea428d645438e456dd859bd482adf5a4701ae16f993ecbefb395618380',candidateTestSHA256:hash(readFileSync('tests/phieng-loi/world-move.spec.mjs'))};
 mkdirSync(dir,{recursive:true});writeFileSync(`${dir}/manifest.json`,JSON.stringify(manifest,null,2));
-writeFileSync(`${dir}/candidate.diff`,execFileSync('git',['diff','--binary',base,'HEAD']));
+// Task05 adds approved binary assets; preserve the complete diff instead of
+// hitting Node's default 1 MiB capture limit. All acceptance gates stay intact.
+writeFileSync(`${dir}/candidate.diff`,execFileSync('git',['diff','--binary',base,'HEAD'],{maxBuffer:16*1024*1024}));
 for(const name of ['AC-MATRIX','APPROVED-CONFIG'])copyFileSync(`docs/TASK-04-WORLD-MOVE-${name}.md`,`${dir}/${name}.md`);
 copyFileSync('docs/TASK-04-QA-04-001-FIX.md',`${dir}/QA-04-001-FIX.md`);
 console.log(JSON.stringify({head:manifest.head,baseline:baseline.stats,world:world.stats,qa:manifest.qaVerdict}));

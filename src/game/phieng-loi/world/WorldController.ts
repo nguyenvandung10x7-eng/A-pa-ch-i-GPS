@@ -21,6 +21,9 @@ export class WorldController {
   private activeMs=0;
   private updates=0;
   private staleRejected=0;
+  // Opt-in gameplay driver. Default Task04 path and fixture remain unchanged.
+  private driver:((delta:number,vector:Point)=>void)|null=null;
+  private inputEnabled=true;
   constructor(private scene:Phaser.Scene,private context:SceneContext,readonly run:number,private config:WorldConfig,
     private emit:(type:string,data:Record<string,unknown>,controller:WorldController)=>void) {
     this.session=context.sessionId;this.position={...config.spawn};
@@ -72,7 +75,7 @@ export class WorldController {
     const m=Math.min(1,(r-s.dead)/(s.radius-s.dead));return {x:x/r*m,y:y/r*m};
   }
   private down(e:PointerEvent):void {
-    if(!this.active() || this.pointer!==null || e.button!==0)return;
+    if(!this.active() || !this.inputEnabled || this.pointer!==null || e.button!==0)return;
     const q=this.map(e);if(!q || Math.hypot(q.x-this.config.stick.x,q.y-this.config.stick.y)>this.config.stick.hit)return;
     e.preventDefault();this.pointer=e.pointerId;this.vector=this.analog(q);
     this.scene.game.canvas.setPointerCapture(e.pointerId);
@@ -80,7 +83,7 @@ export class WorldController {
   }
   private move(e:PointerEvent):void {
     if(e.pointerId!==this.pointer)return;
-    const q=this.map(e);if(!this.active() || !q || Math.hypot(q.x-this.config.stick.x,q.y-this.config.stick.y)>this.config.stick.hit) {this.clear('outside_or_inactive');return;}
+    const q=this.map(e);if(!this.active() || !this.inputEnabled || !q || Math.hypot(q.x-this.config.stick.x,q.y-this.config.stick.y)>this.config.stick.hit) {this.clear('outside_or_inactive');return;}
     this.vector=this.analog(q);this.event('input_changed',{raw:q,trusted:e.isTrusted,vector:{...this.vector}});
   }
   private release(e:PointerEvent):void {if(e.pointerId===this.pointer)this.clear(e.type);}
@@ -103,8 +106,22 @@ export class WorldController {
     if(value)this.clear('lock');this.event('lock_changed',{owners:[...this.locks]});
   }
   private fail(message:string):void {this.error=message;this.clear('error');this.event('world_error',{message});}
+  setDriver(driver:(delta:number,vector:Point)=>void):void {if(this.driver)throw Error('World already has a driver');this.driver=driver;}
+  setInputEnabled(enabled:boolean):void {this.inputEnabled=enabled;if(!enabled)this.clear('gameplay_lock');}
+  clearInput():void {this.clear('gameplay_transition');}
+  placeFromDriver(position:Point):void {
+    if(!this.driver||!this.current())return;
+    if(!legal(position,geometry(this.config))) {this.fail('Invalid driven position');return;}
+    this.position={...position};this.actor?.setPosition(position.x,position.y);
+  }
+  setMarkerVisible(visible:boolean):void {if(this.driver)this.actor?.setVisible(visible);}
   private step(delta:number,source:'native'|'synthetic',vector=this.vector):void {
     if(!this.active())return;
+    if(this.driver){
+      this.updates++;
+      if(Number.isFinite(delta)&&delta>=0&&delta<=1000)this.activeMs+=delta;
+      this.driver(delta,{...vector});return;
+    }
     if(!Number.isFinite(delta)||delta<0||delta>1000) {this.fail('Invalid DEV active delta');return;}
     const g=geometry(this.config);
     if(!legal(this.position,g)) {this.fail('Invalid runtime position');return;}
@@ -132,6 +149,7 @@ export class WorldController {
   dispose():void {
     if(!this.alive)return;
     this.alive=false;this.event('world_invalidated');this.clear('dispose');
+    this.driver=null;
     for(const remove of this.dom)remove();this.dom=[];
     for(const remove of this.bindings) {remove();if(this.context.diagnostics)this.context.diagnostics.sceneListeners--;}
     this.bindings=[];

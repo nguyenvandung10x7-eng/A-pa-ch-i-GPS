@@ -11,6 +11,7 @@ on:
       - task/pl-hs-02-manga
       - task/pl-hs-03-reveal-manga
       - task/pl-world-04-move-rebuild
+      - task/pl-hs-05-chase-recovery
 
 jobs:
   verify:
@@ -33,6 +34,8 @@ jobs:
         run: npm run verify
       - name: Install test browser
         run: npx playwright install --with-deps chromium
+      - name: PR 161 reveal first-render regressions (separate from baseline)
+        run: npx playwright test --config playwright.pr161.config.mjs
       - name: PL-00 and Tasks 01-03 browser lifecycle tests
         run: npm run test:pl00
       - name: Task 04 separate browser tests
@@ -58,5 +61,43 @@ jobs:
           path: |
             node_modules/.cache/pl00-report
             node_modules/.cache/pl00-results
+            node_modules/.cache/pr161-report
+            node_modules/.cache/pr161-results
+          include-hidden-files: true
+          retention-days: 7
+
+  task05:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Fetch exact PR merge object for evidence identity
+        if: github.event_name == 'pull_request'
+        run: git fetch --no-tags origin "$GITHUB_SHA"
+      - name: Task 05 reporter publication and Git context regressions
+        run: |
+          mkdir -p node_modules/.cache
+          node scripts/regress-task05-reporter.mjs > node_modules/.cache/task05-reporter-regression.json
+      - run: npm run test:hs01-play
+      - name: Record Task 05 evidence
+        if: always()
+        run: node scripts/report-task05-evidence.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: task05-hs01-playtest-evidence
+          path: |
+            node_modules/.cache/task05-report
+            node_modules/.cache/task05-results
+            node_modules/.cache/task05-reporter-regression.json
           include-hidden-files: true
           retention-days: 7

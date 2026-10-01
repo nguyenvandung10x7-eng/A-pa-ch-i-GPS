@@ -24,6 +24,8 @@ assert.doesNotMatch(read('src/App.tsx'), /PhiengLoiGamePage/);
 
 const root = resolve('src/game/phieng-loi');
 const entry = resolve('src/pages/PhiengLoiV2Page.tsx');
+const task05 = root + '/world/hs01/';
+const task05Assets = new Set([task05 + 'assets/player-stand.png', task05 + 'assets/blackout.wav']);
 const visited = new Set();
 const externals = new Set(['react', 'react-router-dom', 'phaser']);
 const options = { moduleResolution: ts.ModuleResolutionKind.Bundler, resolveJsonModule: true };
@@ -33,23 +35,24 @@ function visit(file) {
   assert.ok(file === entry || file.startsWith(root + '/'), 'Import escapes remake boundary: ' + relative(process.cwd(), file));
   visited.add(file);
   if (file.endsWith('.css') || file.endsWith('.json')) return;
-  if (file.endsWith('.png')) {
-    assert.ok(file.startsWith(root + '/manga/assets/'), 'PNG outside authorized manga assets');
+  if (file.endsWith('.png') || file.endsWith('.wav')) {
+    assert.ok((file.endsWith('.png') && file.startsWith(root + '/manga/assets/')) || task05Assets.has(file), 'Asset outside authorized task assets');
     return;
   }
   const text = read(file);
   assert.doesNotMatch(text, /@ts-ignore|@ts-nocheck|requestAnimationFrame|cancelAnimationFrame/);
-  assert.doesNotMatch(text, /worldLayout|PhiengLoiGamePage|PHÀ ƠI/);
+  assert.doesNotMatch(text, /worldLayout|PhiengLoiGamePage/);
+  if (!file.startsWith(task05)) assert.doesNotMatch(text, /PHÀ ƠI|AudioContext|createBufferSource/);
   // Task 01 is an explicit, independently verified extension. The original
   // foundation modules remain free of character/gameplay implementation.
-  if (!file.startsWith(root + '/reveal/') && !file.startsWith(root + '/manga/') && !file.startsWith(root + '/flow/')) assert.doesNotMatch(text, /HeeSun|HS_REVEAL/);
+  if (!file.startsWith(task05) && !file.startsWith(root + '/reveal/') && !file.startsWith(root + '/manga/') && !file.startsWith(root + '/flow/')) assert.doesNotMatch(text, /HeeSun|HS_REVEAL/);
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
   const follow = (specifier) => {
     if (!specifier.startsWith('.')) {
       assert.ok(externals.has(specifier), 'Unexpected dependency: ' + specifier);
       return;
     }
-    if (specifier.endsWith('.css') || specifier.endsWith('.png')) {
+    if (specifier.endsWith('.css') || specifier.endsWith('.png') || specifier.endsWith('.wav')) {
       const path = resolve(dirname(file), specifier);
       assert.ok(existsSync(path));
       visit(path);
