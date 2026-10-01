@@ -1,0 +1,7 @@
+{
+  "path": "src/game/phieng-loi/reveal/HeeSunReveal.ts",
+  "referenceSha": "e0c096a56c18b159a51692c65aa2bb16e7efd910",
+  "originalSha256": "f16fe8251d4130ad2767e827b76f6b21efd0d4dc77690a7a497d31cbc44bb17a",
+  "fixedSha256": "3aae951b77a41e1a349d6e340ac9e4ffaac15cba933bc238ac0be11118c54a72",
+  "reason": "Owner-requested PR161 blocker repair: start native animation at POST_UPDATE so first update cannot advance frame 1 before its first draw. Authored 25 frames/FPS/probe/completion unchanged."
+}

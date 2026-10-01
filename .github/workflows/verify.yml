@@ -34,6 +34,8 @@ jobs:
         run: npm run verify
       - name: Install test browser
         run: npx playwright install --with-deps chromium
+      - name: PR 161 reveal first-render regressions (separate from baseline)
+        run: npx playwright test --config playwright.pr161.config.mjs
       - name: PL-00 and Tasks 01-03 browser lifecycle tests
         run: npm run test:pl00
       - name: Task 04 separate browser tests
@@ -59,6 +61,8 @@ jobs:
           path: |
             node_modules/.cache/pl00-report
             node_modules/.cache/pl00-results
+            node_modules/.cache/pr161-report
+            node_modules/.cache/pr161-results
           include-hidden-files: true
           retention-days: 7
 
@@ -76,6 +80,13 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
+      - name: Fetch exact PR merge object for evidence identity
+        if: github.event_name == 'pull_request'
+        run: git fetch --no-tags origin "$GITHUB_SHA"
+      - name: Task 05 reporter publication and Git context regressions
+        run: |
+          mkdir -p node_modules/.cache
+          node scripts/regress-task05-reporter.mjs > node_modules/.cache/task05-reporter-regression.json
       - run: npm run test:hs01-play
       - name: Record Task 05 evidence
         if: always()
@@ -87,5 +98,6 @@ jobs:
           path: |
             node_modules/.cache/task05-report
             node_modules/.cache/task05-results
+            node_modules/.cache/task05-reporter-regression.json
           include-hidden-files: true
           retention-days: 7
