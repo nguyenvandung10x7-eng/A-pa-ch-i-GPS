@@ -48,15 +48,20 @@ try {
 
   const baseline=json('docs/task05/baseline-sha256.json');
   // Keep the original baseline pins. Only this owner-requested upstream bug fix
-  // may differ, and it must match both old and new exact hashes.
+  // and its dependent N01 boundary guard may differ, with exact old/new hashes.
   const repair=json('docs/task05/pr161-reveal-repair.json');
   assert.equal(repair.path,'src/game/phieng-loi/reveal/HeeSunReveal.ts');
-  assert.equal(repair.referenceSha,'e0c096a56c18b159a51692c65aa2bb16e7efd910');
-  assert.equal(repair.originalSha256,baseline[repair.path]);
-  assert.equal(createHash('sha256').update(execFileSync('git',['show',repair.referenceSha+':'+repair.path])).digest('hex'),repair.originalSha256);
+  assert.equal(repair.dependentBoundaryGuard.path,'tests/phieng-loi/world-move.spec.mjs');
+  const repairs=[repair,repair.dependentBoundaryGuard];
+  for(const r of repairs){
+    assert.equal(r.referenceSha,'e0c096a56c18b159a51692c65aa2bb16e7efd910');
+    assert.equal(r.originalSha256,baseline[r.path]);
+    assert.equal(createHash('sha256').update(execFileSync('git',['show',r.referenceSha+':'+r.path])).digest('hex'),r.originalSha256);
+  }
+  const repairByPath=new Map(repairs.map(r=>[r.path,r]));
   const baselineChecks=Object.entries(baseline).map(([path,original])=>({path,
-    originalSha256:original,expectedSha256:path===repair.path?repair.fixedSha256:original,
-    actualSha256:existsSync(path)?hash(path):null,authorizedRepair:path===repair.path}));
+    originalSha256:original,expectedSha256:repairByPath.get(path)?.fixedSha256??original,
+    actualSha256:existsSync(path)?hash(path):null,authorizedRepair:repairByPath.has(path)}));
   assert.ok(baselineChecks.every(r=>r.actualSha256===r.expectedSha256),'Baseline integrity or exact repair hash changed');
   const unchanged=baselineChecks.every(r=>r.actualSha256===r.originalSha256);
   const report=json(output+'/results.json');
@@ -91,7 +96,7 @@ try {
     gitContext:context,node:process.version,playwright:json('node_modules/@playwright/test/package.json').version,
     expectedTask05Tests:46,counts,baselineCounts:{pl00:44,world:28},
     baselineUnchanged:unchanged,baselineIntegrityPassed:true,baselineSha256:baseline,
-    authorizedUpstreamRepairs:[repair],baselineChecks,
+    authorizedUpstreamRepairs:repairs,baselineChecks,
     assets:{png:hash('src/game/phieng-loi/world/hs01/assets/player-stand.png'),wav:hash('src/game/phieng-loi/world/hs01/assets/blackout.wav'),frames:hash('src/game/phieng-loi/world/hs01/assets/frames.json')},
     resultsSha256:hash(output+'/results.json'),acMatrix:observedMatrix,tests,F12:'ACCEPTED_WITH_OWNER_WAIVER'};
   // Publish atomically only after every context, integrity, count and AC gate.

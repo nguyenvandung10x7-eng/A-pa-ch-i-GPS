@@ -1,7 +1,9 @@
 # PR #161 — reveal replay / CI manifest repairs
 
 Scope: two owner-requested blockers only. Gameplay, A01 configuration, assets,
-24 Task05 AC and existing 44 + 28 + 46 test sources/assertions are unchanged.
+24 Task05 AC and existing 44 + 28 + 46 counts are unchanged. Baseline 44 and
+Task05 46 test sources/assertions are unchanged. Task04 N01's boundary guard
+is adapted narrowly as described below; MOVE tests and 18 Task04 AC stay intact.
 F12 remains `ACCEPTED_WITH_OWNER_WAIVER`. Independent QA is pending.
 
 ## Reveal first render
@@ -29,9 +31,25 @@ visited `[1,2]`, rendered `[2]` at first draw, and pass after the fix.
 
 Original baseline SHA-256 pins are retained. `pr161-reveal-repair.json`
 records the exact old/new hash of the one authorized upstream runtime repair.
-Reporter verifies that exception and all other original pins. Manifest states
+Reporter verifies that exception, its dependent N01 guard and every other pin. Manifest states
 `baselineUnchanged: false`, `baselineIntegrityPassed: true`; it does not
 describe the repaired upstream file as unchanged.
+
+### Dependent N01 guard
+
+Candidate 7143caa passed 44 baseline but failed Task04 N01 (27/28) because
+its historical Task04-only scope guard rejects any non-world source change,
+including the now-requested reveal repair. This is a scope-guard conflict,
+not a MOVE runtime regression. Preserve that failed local evidence.
+
+N01 still requires the four original baseline test files to equal c45f3b2d,
+and still rejects every other upstream/legacy path. Its only new exception
+is exactly `HeeSunReveal.ts`, with both original and repaired SHA-256 hard
+pinned. No directory exclusion, collider/input/timing tolerance change, test
+skip, count relaxation or legacy code import is introduced. Reporter retains
+the original world test source hash and verifies the exact dependent test
+repair hash separately. All acceptance evidence must be rerun on the final
+candidate after this adjustment; 7143caa results are not reused as green evidence.
 
 ## Reporter identity and publication
 
