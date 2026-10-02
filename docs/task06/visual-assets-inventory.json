@@ -1,0 +1,240 @@
+{
+  "baseline": "4c711bbc7909add7f7d34a7062f12df7bdc7a3ac",
+  "purpose": "inventory only; no approval to repurpose reveal frames as walking sprites",
+  "files": [
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_aura_layers/hs_beer_tower_back.png",
+      "sha256": "ff01a9f08cab95603a63f8be1c4475b8f1ea07b201f72d9700ec38469c8713fe",
+      "bytes": 2077264,
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_aura_layers/hs_halo_glow.png",
+      "sha256": "8647468d24f51a816b186281e51517c72227ede0a1c2de550b72d0d8a72ab82f",
+      "bytes": 1487584,
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_aura_layers/hs_ribbon_back.png",
+      "sha256": "274500c126aedcf40c33f12d7384117922b8313bca96d55a4d4db202e6a5ec08",
+      "bytes": 864906,
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_01.png",
+      "sha256": "914906fe2d448a27e9e9937ab4ef87ed43109c89ee2df4c7953a9c1fabbbc172",
+      "bytes": 53348,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_02.png",
+      "sha256": "2ac099b74b35c03ad061d4fee6b324c3d63d11723f19638d0822a136f3f4f683",
+      "bytes": 55136,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_03.png",
+      "sha256": "bc17a610bf450296da6f65c98889c5dc54a3b349ae7746e80c0a84dcdf53d8ac",
+      "bytes": 55451,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_04.png",
+      "sha256": "aba0de8766830a65c301e2e57810b027115de2a3dca76d84224326c291a009b8",
+      "bytes": 56599,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_05.png",
+      "sha256": "f478967b0f76012179230b02149bfb00483fa6d1933fbc8bc1402e92344bd17d",
+      "bytes": 57641,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_06.png",
+      "sha256": "1a31342c05d42d33000c0ef645beab3ef6847610968b8bbbe7048e865de8f1bb",
+      "bytes": 57891,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_07.png",
+      "sha256": "a65a135da6031c96653532f67cf461b76234974cca64869a362af0f24b2f67a5",
+      "bytes": 57115,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_08.png",
+      "sha256": "128dbc671a1e7a62d3eaa8cc722c28b6d8d3e000869bb5d1552ff0ecaff4b88a",
+      "bytes": 56393,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_09.png",
+      "sha256": "d3480596ac7d913d971267f51eaf291e0dd9743e205c4c51bb07442a02950d8f",
+      "bytes": 56748,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_10.png",
+      "sha256": "4543a0a342c539a0c406f2af0a9c7deb700c3172a463152b7bfacca8de0fe932",
+      "bytes": 57070,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_11.png",
+      "sha256": "19e7a29f52cfd0d8ad253764453bc7bdecf72908996a36c6850aa63879b94994",
+      "bytes": 56240,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_12.png",
+      "sha256": "2579bb96ca46057223ac8ea48bf1aefeb8902c061e8901d324e0f744137c439f",
+      "bytes": 55274,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_13.png",
+      "sha256": "372082b82e82d6057017c6c4d68025cb2c9477ae84ae1dd535cf04dfa43ffcde",
+      "bytes": 54301,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_14.png",
+      "sha256": "1d5cd730f9ef468cbcfcd112dd5cf752efcebbad2690c6b662f2353eccd30527",
+      "bytes": 53639,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_15.png",
+      "sha256": "97a0770e40bf51c836948b7315f8d43589b5732a250b487e4b3c11c88715e5c9",
+      "bytes": 54684,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_16.png",
+      "sha256": "405ee91aad08284affe85a7ed264b0b8341dffcc91dcf075e958640f50c50ead",
+      "bytes": 55277,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_17.png",
+      "sha256": "8e05c02bfa9fc7ea2bbc8be7f55c79778f50ef8b232bcee9c33ea33136ab2b48",
+      "bytes": 56060,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_18.png",
+      "sha256": "a9bb1b9f714ab54fa43626e9e8a4ff2ba4c57d55cee358bd774058fa8683b01e",
+      "bytes": 56317,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_19.png",
+      "sha256": "3416a2940ad54a955d0061706dddead1ae43bea6113aeb340ccc52617c51fb36",
+      "bytes": 56137,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_20.png",
+      "sha256": "0a226f5dd8168d04f8d40db7f653bfaf9542d1826520b29869c32da3ca5726a2",
+      "bytes": 56263,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_21.png",
+      "sha256": "fffcbb0f8ddfc2e1c08d3c7629590a005803bfbe7bb8e6de5e1b8ca3151110b0",
+      "bytes": 56788,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_22.png",
+      "sha256": "e392e0034390c41194de6e7237dab456df52fc56825905afdc82cdf8e171289d",
+      "bytes": 58251,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_23.png",
+      "sha256": "d1f16bfbf936cd95b2c25b72872fe26368408ecbce56382ffbfd128d53cf3243",
+      "bytes": 60094,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_24.png",
+      "sha256": "e96bb3db5f3c461818329f333a4946ab6908d27ad3d3fb86b7e7ebeb2154c63d",
+      "bytes": 58208,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "public/assets/phieng-loi-v2/hs-reveal/heesun_reveal_25f/frames/hs_beer_saint_25.png",
+      "sha256": "37450bc2405b69dc4cc47d0ed72a5c3abf688738dc4fba14961e69f39f2b241a",
+      "bytes": 55478,
+      "width": 210,
+      "height": 312
+    },
+    {
+      "path": "src/game/phieng-loi/manga/assets/heesun-01.png",
+      "sha256": "bdebe61d9ea86b7a6469bca37eaab91564f9632a9d1d94f47fc29bb157195a9f",
+      "bytes": 3846643,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "path": "src/game/phieng-loi/manga/assets/heesun-02.png",
+      "sha256": "e2671bf75e0df1d3fc0b984d5da4f104e3a79a8283772f5759db65d6bcb7433b",
+      "bytes": 3867215,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "path": "src/game/phieng-loi/manga/assets/heesun-03.png",
+      "sha256": "8cfb901637c343443cc64f9f41ce944c9152752f54c4e76d07fb2a8b6ccf79dd",
+      "bytes": 4303789,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "path": "src/game/phieng-loi/world/hs01/assets/blackout.wav",
+      "sha256": "09209c63a4d9cf16adb5bd8f3cde50d635c4a27530210dc5fabe96c9f72080b4",
+      "bytes": 288078
+    },
+    {
+      "path": "src/game/phieng-loi/world/hs01/assets/frames.json",
+      "sha256": "8819ad5621fedbd7d3ae40e27a76b71c2cba03115c5c247d969af66ba27caf70",
+      "bytes": 5551
+    },
+    {
+      "path": "src/game/phieng-loi/world/hs01/assets/player-stand.png",
+      "sha256": "9be0bcdd0c76741bd60e674e2473b57b034269003488457c25365c162d07c089",
+      "bytes": 1790341,
+      "width": 1395,
+      "height": 2048
+    }
+  ]
+}

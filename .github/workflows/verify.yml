@@ -131,3 +131,32 @@ jobs:
             node_modules/.cache/task06-results
           include-hidden-files: true
           retention-days: 7
+
+  task06-mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Separate mobile player feedback checks (old 44+28+46+12 unchanged)
+        run: npx playwright test --config playwright.player-mobile.config.mjs
+      - name: Bind mobile evidence after all assertions
+        if: always()
+        run: node scripts/report-task06-mobile.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: task06-mobile-feedback-evidence
+          path: |
+            node_modules/.cache/task06-mobile-report
+            node_modules/.cache/task06-mobile-results
+          include-hidden-files: true
+          retention-days: 7

@@ -4,7 +4,7 @@
     "checks": [
       "Q01"
     ],
-    "status": "NOT_RUN_QA_PENDING"
+    "status": "BLOCKED_BY_PLAYER_PLAYTEST_FEEDBACK"
   },
   {
     "id": "P02",
@@ -12,14 +12,14 @@
       "Q02",
       "Q12"
     ],
-    "status": "NOT_RUN_QA_PENDING"
+    "status": "BLOCKED_BY_PLAYER_PLAYTEST_FEEDBACK"
   },
   {
     "id": "P03",
     "checks": [
       "Q03"
     ],
-    "status": "NOT_RUN_QA_PENDING"
+    "status": "BLOCKED_BY_PLAYER_PLAYTEST_FEEDBACK"
   },
   {
     "id": "P04",
@@ -28,15 +28,16 @@
       "Q09",
       "baseline reveal/flow"
     ],
-    "status": "NOT_RUN_QA_PENDING"
+    "status": "BLOCKED_BY_PLAYER_PLAYTEST_FEEDBACK"
   },
   {
     "id": "P05",
     "checks": [
       "Q05",
-      "Task05 B02/contact/tie/late-call"
+      "Task05 B02/contact/tie/late-call",
+      "M01 (4 mobile projects)"
     ],
-    "status": "NOT_RUN_QA_PENDING"
+    "status": "BLOCKED_BY_PLAYER_PLAYTEST_FEEDBACK"
   },
   {
     "id": "P06",
@@ -44,23 +45,26 @@
       "Q05",
       "Task05 native audio/stand"
     ],
-    "status": "NOT_RUN_QA_PENDING"
+    "status": "BLOCKED_BY_PLAYER_PLAYTEST_FEEDBACK"
   },
   {
     "id": "P07",
     "checks": [
       "Q05",
-      "Task05 active-clock/MOVE"
+      "Task05 active-clock/MOVE",
+      "M02",
+      "M03"
     ],
-    "status": "NOT_RUN_QA_PENDING"
+    "status": "BLOCKED_BY_PLAYER_PLAYTEST_FEEDBACK"
   },
   {
     "id": "P08",
     "checks": [
       "Q06",
-      "Task05 pause/hidden/audio"
+      "Task05 pause/hidden/audio",
+      "M03 synthetic hidden supplemental"
     ],
-    "status": "NOT_RUN_QA_PENDING"
+    "status": "BLOCKED_BY_PLAYER_PLAYTEST_FEEDBACK"
   },
   {
     "id": "P09",
@@ -68,7 +72,7 @@
       "Q07",
       "Q08"
     ],
-    "status": "NOT_RUN_QA_PENDING"
+    "status": "BLOCKED_BY_PLAYER_PLAYTEST_FEEDBACK"
   },
   {
     "id": "P10",
@@ -76,15 +80,18 @@
       "Q09",
       "Q10"
     ],
-    "status": "NOT_RUN_QA_PENDING"
+    "status": "BLOCKED_BY_PLAYER_PLAYTEST_FEEDBACK"
   },
   {
     "id": "P11",
     "checks": [
       "Q11",
-      "Task04 pointer/resize"
+      "Task04 pointer/resize",
+      "M01",
+      "M03",
+      "physical owner Safari retest OPEN"
     ],
-    "status": "NOT_RUN_QA_PENDING"
+    "status": "BLOCKED_BY_PLAYER_PLAYTEST_FEEDBACK"
   },
   {
     "id": "P12",
@@ -94,6 +101,6 @@
       "CI 44+28+46",
       "deployed smoke"
     ],
-    "status": "NOT_RUN_QA_PENDING"
+    "status": "BLOCKED_BY_PLAYER_PLAYTEST_FEEDBACK"
   }
 ]

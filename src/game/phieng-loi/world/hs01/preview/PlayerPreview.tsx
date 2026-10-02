@@ -21,6 +21,7 @@ const manifest=[...REVEAL_ASSETS,{key:PLAYER_TEXTURE,path:stand.replace(/^\//,''
 export default function PlayerPreview() {
   const [generation,setGeneration]=useState(0),[mounted,setMounted]=useState(true),[ready,setReady]=useState(false);
   const [,refresh]=useState(0);const [engineError,setEngineError]=useState('');
+  const [canvasRect,setCanvasRect]=useState({left:0,top:0,width:0,height:0});
   const current=useRef<Binding|null>(null),handle=useRef<FoundationHandle|null>(null),last=useRef<FoundationHandle|null>(null);
   const reasons=useRef({manual:false,hidden:document.hidden});
   const alive=useRef(true),lastRefresh=useRef(0);
@@ -70,13 +71,29 @@ export default function PlayerPreview() {
       const b=current.current;b?.flow.dispose();b?.reveal.dispose();b?.encounter?.dispose();b?.audio.dispose();
     };
   },[]);
+  // Labels follow Phaser FIT, including letterboxing and Safari's visual viewport.
+  // They never receive input or change the approved joystick/world coordinates.
+  useEffect(()=>{
+    const canvas=document.querySelector<HTMLCanvasElement>('.t06-preview canvas');if(!canvas)return;
+    const measure=():void=>{const r=canvas.getBoundingClientRect();setCanvasRect({left:r.left,top:r.top,width:r.width,height:r.height});};
+    const observer=new ResizeObserver(measure);observer.observe(canvas);window.addEventListener('resize',measure);window.visualViewport?.addEventListener('resize',measure);window.visualViewport?.addEventListener('scroll',measure);measure();
+    return()=>{observer.disconnect();window.removeEventListener('resize',measure);window.visualViewport?.removeEventListener('resize',measure);window.visualViewport?.removeEventListener('scroll',measure);};
+  },[ready,generation]);
   const start=():void=>{const b=current.current;if(!ready||!b||b.flow.inspect().phase!=='IDLE'||b.flow.inspect().paused)return;
     b.audio.unlock();handle.current?.resume();try{if(b.reveal.play())b.flow.start(b.reveal.inspect().runId);}catch(e){b.flow.fail(String(e));}sync();};
   const b=current.current,f=b?.flow.inspect(),m=b?.encounter?.model;
   const paused=reasons.current.manual||reasons.current.hidden;
   const blackout=m&&['BLACK_AUDIO','BLACK_PREPARE','FADE_OUT','FADE_IN'].includes(m.phase);
   const error=engineError||m?.error||b?.audio.error||(f?.phase==='ERROR'?'Không thể tiếp tục phiên này.':'');
-  return <main className="t06-preview" data-phase={m?.phase??f?.phase??'BOOTING'} data-session={f?.sessionId??0}>
+  const observed=b?.encounter?.inspect(),lastCall=observed?.model.events.filter(e=>e.type==='call_accepted').at(-1);
+  const callLocked=!!m&&m.activeMs<m.cooldownUntil;
+  const labelAt=(x:number,y:number)=>({left:canvasRect.left+x*canvasRect.width/1280,top:canvasRect.top+y*canvasRect.height/720});
+  return <main className="t06-preview" data-phase={m?.phase??f?.phase??'BOOTING'} data-session={f?.sessionId??0}
+    data-player-x={m?.player.x} data-player-y={m?.player.y} data-npc-x={m?.npc.x} data-npc-y={m?.npc.y}
+    data-active-ms={m?.activeMs} data-phase-ms={m?.phaseMs} data-paused={paused}
+    data-input-x={observed?.world.vector.x} data-input-y={observed?.world.vector.y} data-pointer-active={observed?.world.pointer!==null&&!!observed}
+    data-capture-id={m?.captureId} data-capture-cause={m?.cause} data-capture-at={observed?.model.events.find(e=>e.type==='capture')?.at} data-recovery-count={m?.completions}
+    data-call-at={lastCall?.at} data-call-trusted={lastCall?.data.trusted as boolean|undefined} data-call-outcome={lastCall?.data.outcome as string|undefined}>
     {mounted&&<PhaserHost key={generation} options={{manifest,preview:{attachScene}}}
       onHandle={h=>{handle.current=h;if(h)last.current=h;}}
       onStatus={s=>{if(s.state==='ready'){setReady(true);sync();}if(s.state==='error'){setEngineError(s.message??'Engine failed');setReady(false);}}}/>}
@@ -98,9 +115,14 @@ export default function PlayerPreview() {
     }}>Thử lại</button></section>}
     {paused&&<div className="t06-paused" role="status">Đã tạm dừng</div>}
     {m&&!blackout&&<div className="t05-hud"><span data-testid="preview-balance">{m.balance} xu · DEV fixture</span>
-      <span>{m.phase==='DRUNK'?'Đang say · MOVE đảo hướng':m.phase==='COMPLETE'?'Đã hồi phục':m.phase==='CHASE'?'HeeSun đang đuổi':'Đang tỉnh dậy'}</span></div>}
-    {m?.phase==='CHASE'&&<button className="t05-call" disabled={paused} onClick={e=>{b?.encounter?.call(e.nativeEvent.isTrusted);changed(true);}}>PHÀ ƠI</button>}
-    {f?.phase==='MANGA'&&b&&<div className="t05-manga"><button className="t06-reload-manga" disabled={paused} onClick={()=>b.flow.retryManga()}>Tải lại manga từ trang 1</button><MangaViewer key={`${f.sessionId}:${f.mangaRun}`} pages={pages} runId={f.mangaRun} paused={f.paused}
+      <span>{m.phase==='DRUNK'?'Đang say · MOVE đảo hướng':m.phase==='COMPLETE'?'Đã hồi phục':m.phase==='CHASE'?'HeeSun đang đuổi':m.phase==='CAPTURE_HOLD'?'Đã bị bắt · PHÀ ƠI đã đóng':'Đang tỉnh dậy'}</span>
+      {m.phase==='CHASE'&&lastCall&&<span role="status">Đã nhận PHÀ ƠI · {lastCall.data.outcome==='TRUE_NOTHING'?'lần này không có tác dụng · ':''}khóa {Math.ceil((m.cooldownUntil-m.activeMs)/1000)} giây</span>}</div>}
+    {m&&!blackout&&canvasRect.width>0&&<>
+      <div className="t06-move-label" style={labelAt(160,548)}>{paused?'MOVE · tạm dừng':m.movable?'MOVE · kéo vòng tròn':'MOVE · chờ đứng dậy'}</div>
+      {m.phase==='CHASE'&&<div className="t06-player-label" style={labelAt(m.player.x,m.player.y-30)}>Bạn · DEV</div>}
+    </>}
+    {m?.phase==='CHASE'&&<button className="t05-call" disabled={paused||callLocked} onClick={e=>{b?.encounter?.call(e.nativeEvent.isTrusted);changed(true);}}>PHÀ ƠI</button>}
+    {f?.phase==='MANGA'&&b&&<div className="t05-manga"><div className="t06-controls-guide">Đóng trang cuối là bắt đầu bị đuổi ngay. MOVE: kéo vòng tròn bên trái. PHÀ ƠI: nút vàng bên phải, dùng khi HeeSun đến gần; lời gọi có thể không có tác dụng.</div><button className="t06-reload-manga" disabled={paused} onClick={()=>b.flow.retryManga()}>Tải lại manga từ trang 1</button><MangaViewer key={`${f.sessionId}:${f.mangaRun}`} pages={pages} runId={f.mangaRun} paused={f.paused}
       onComplete={event=>deliver(b,{...event,flowSessionId:b.context.sessionId,clean:!document.querySelector('.hs-manga-viewer')})}/></div>}
     <footer className="t06-note">Sân thử / marker DEV · A01 · PREVIEW</footer>
   </main>;
