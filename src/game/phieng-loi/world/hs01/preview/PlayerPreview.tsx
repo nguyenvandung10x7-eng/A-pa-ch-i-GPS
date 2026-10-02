@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type Phaser from 'phaser';
 import { PhaserHost } from '../../../PhaserHost';
@@ -85,14 +85,20 @@ export default function PlayerPreview() {
   const paused=reasons.current.manual||reasons.current.hidden;
   const blackout=m&&['BLACK_AUDIO','BLACK_PREPARE','FADE_OUT','FADE_IN'].includes(m.phase);
   const error=engineError||m?.error||b?.audio.error||(f?.phase==='ERROR'?'Không thể tiếp tục phiên này.':'');
-  const observed=b?.encounter?.inspect(),lastCall=observed?.model.events.filter(e=>e.type==='call_accepted').at(-1);
+  // Read only bounded live input on each repaint. Copy the event history only
+  // at a phase/call boundary, not ten times per second as COMPLETE accumulates it.
+  const observed=b?.encounter?.world.inspect();
+  const history=useMemo(()=>{const events=m?.inspect().events??[];return {
+    lastCall:events.filter(e=>e.type==='call_accepted').at(-1),captureAt:events.find(e=>e.type==='capture')?.at,
+  };},[m,m?.phase,m?.cooldownUntil]);
+  const lastCall=history.lastCall;
   const callLocked=!!m&&m.activeMs<m.cooldownUntil;
   const labelAt=(x:number,y:number)=>({left:canvasRect.left+x*canvasRect.width/1280,top:canvasRect.top+y*canvasRect.height/720});
   return <main className="t06-preview" data-phase={m?.phase??f?.phase??'BOOTING'} data-session={f?.sessionId??0}
     data-player-x={m?.player.x} data-player-y={m?.player.y} data-npc-x={m?.npc.x} data-npc-y={m?.npc.y}
     data-active-ms={m?.activeMs} data-phase-ms={m?.phaseMs} data-paused={paused}
-    data-input-x={observed?.world.vector.x} data-input-y={observed?.world.vector.y} data-pointer-active={observed?.world.pointer!==null&&!!observed}
-    data-capture-id={m?.captureId} data-capture-cause={m?.cause} data-capture-at={observed?.model.events.find(e=>e.type==='capture')?.at} data-recovery-count={m?.completions}
+    data-input-x={observed?.vector.x} data-input-y={observed?.vector.y} data-pointer-active={observed?.pointer!==null&&!!observed}
+    data-capture-id={m?.captureId} data-capture-cause={m?.cause} data-capture-at={history.captureAt} data-recovery-count={m?.completions}
     data-call-at={lastCall?.at} data-call-trusted={lastCall?.data.trusted as boolean|undefined} data-call-outcome={lastCall?.data.outcome as string|undefined}>
     {mounted&&<PhaserHost key={generation} options={{manifest,preview:{attachScene}}}
       onHandle={h=>{handle.current=h;if(h)last.current=h;}}
