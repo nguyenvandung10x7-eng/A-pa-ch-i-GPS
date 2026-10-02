@@ -19,7 +19,11 @@ const FlowHarness = import.meta.env.DEV
 const WorldHarness = import.meta.env.DEV ? lazy(() => import('../game/phieng-loi/world/WorldHarness')) : null;
 const EncounterPlaytest = import.meta.env.DEV ? lazy(() => import('../game/phieng-loi/world/hs01/Playtest')) : null;
 
+const PlayerPreview = import.meta.env.MODE === 'hs01-preview'
+  ? lazy(() => import('../game/phieng-loi/world/hs01/preview/PlayerPreview')) : null;
+
 export function PhiengLoiV2Page() {
+  if (PlayerPreview) return <Suspense fallback={<p>Đang tải preview…</p>}><PlayerPreview /></Suspense>;
   if (EncounterPlaytest && new URLSearchParams(window.location.search).get('dev') === 'hs01-play') {
     return <Suspense fallback={null}><EncounterPlaytest /></Suspense>;
   }

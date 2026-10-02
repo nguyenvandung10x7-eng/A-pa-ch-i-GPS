@@ -12,6 +12,7 @@ on:
       - task/pl-hs-03-reveal-manga
       - task/pl-world-04-move-rebuild
       - task/pl-hs-05-chase-recovery
+      - task/pl-hs-06-player-preview
 
 jobs:
   verify:
@@ -99,5 +100,34 @@ jobs:
             node_modules/.cache/task05-report
             node_modules/.cache/task05-results
             node_modules/.cache/task05-reporter-regression.json
+          include-hidden-files: true
+          retention-days: 7
+
+  task06:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npm run verify
+      - run: npm run test:player-preview
+      - name: Record Task06 evidence only after all assertions
+        if: always()
+        run: node scripts/report-task06-evidence.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: task06-player-preview-evidence
+          path: |
+            node_modules/.cache/task06-report
+            node_modules/.cache/task06-results
           include-hidden-files: true
           retention-days: 7

@@ -1,0 +1,99 @@
+[
+  {
+    "id": "P01",
+    "checks": [
+      "Q01"
+    ],
+    "status": "NOT_RUN_QA_PENDING"
+  },
+  {
+    "id": "P02",
+    "checks": [
+      "Q02",
+      "Q12"
+    ],
+    "status": "NOT_RUN_QA_PENDING"
+  },
+  {
+    "id": "P03",
+    "checks": [
+      "Q03"
+    ],
+    "status": "NOT_RUN_QA_PENDING"
+  },
+  {
+    "id": "P04",
+    "checks": [
+      "Q04",
+      "Q09",
+      "baseline reveal/flow"
+    ],
+    "status": "NOT_RUN_QA_PENDING"
+  },
+  {
+    "id": "P05",
+    "checks": [
+      "Q05",
+      "Task05 B02/contact/tie/late-call"
+    ],
+    "status": "NOT_RUN_QA_PENDING"
+  },
+  {
+    "id": "P06",
+    "checks": [
+      "Q05",
+      "Task05 native audio/stand"
+    ],
+    "status": "NOT_RUN_QA_PENDING"
+  },
+  {
+    "id": "P07",
+    "checks": [
+      "Q05",
+      "Task05 active-clock/MOVE"
+    ],
+    "status": "NOT_RUN_QA_PENDING"
+  },
+  {
+    "id": "P08",
+    "checks": [
+      "Q06",
+      "Task05 pause/hidden/audio"
+    ],
+    "status": "NOT_RUN_QA_PENDING"
+  },
+  {
+    "id": "P09",
+    "checks": [
+      "Q07",
+      "Q08"
+    ],
+    "status": "NOT_RUN_QA_PENDING"
+  },
+  {
+    "id": "P10",
+    "checks": [
+      "Q09",
+      "Q10"
+    ],
+    "status": "NOT_RUN_QA_PENDING"
+  },
+  {
+    "id": "P11",
+    "checks": [
+      "Q11",
+      "Task04 pointer/resize"
+    ],
+    "status": "NOT_RUN_QA_PENDING"
+  },
+  {
+    "id": "P12",
+    "checks": [
+      "Q01",
+      "report-task06-evidence",
+      "CI 44+28+46",
+      "deployed smoke"
+    ],
+    "status": "NOT_RUN_QA_PENDING"
+  }
+]

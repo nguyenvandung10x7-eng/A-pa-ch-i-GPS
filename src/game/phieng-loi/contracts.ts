@@ -56,6 +56,8 @@ export interface MountOptions {
   onStatus: (status: FoundationStatus) => void;
   manifest?: AssetManifest;
   dev?: FoundationDevOptions;
+  /** Separate build-only player preview; never enables diagnostics or restart. */
+  preview?: { attachScene: (scene: Phaser.Scene, context: SceneContext) => void };
 }
 
 export interface FoundationHandle {

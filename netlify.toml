@@ -9,3 +9,8 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Only this named branch builds the player-facing preview. Production unchanged.
+[context."task/pl-hs-06-player-preview"]
+  command = "npm run verify && npm run build:player-preview"
+  publish = "dist-player-preview"

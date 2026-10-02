@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { assertTask06Boundary } from '../../scripts/task06-boundary.mjs';
 
 const DEV_URL = 'http://localhost:5173/phieng-loi?dev=world-move';
 const BASE = 'c45f3b2d860db1f92efc038d0a94532f818f0f69';
@@ -129,11 +130,11 @@ test('T04-N01 DEV production exclusion and unchanged baseline/legacy boundary',a
   const diff=execFileSync('git',['diff',BASE,'--name-only'],{encoding:'utf8'}).split('\n');
   const upstream=diff.filter(p=>p.startsWith('src/')&&!p.startsWith('src/game/phieng-loi/world/')&&p!=='src/pages/PhiengLoiV2Page.tsx');
   // Task04 remains closed. PR161's owner-requested reveal repair is the only
-  // subsequent upstream exception, pinned to exact original/repaired bytes.
+  // reveal exception, plus two owner-authorized preview adapter files pinned below.
   // Do not allow an entire directory or discard the baseline/legacy boundary.
   const revealPath='src/game/phieng-loi/reveal/HeeSunReveal.ts';
   const sha256=bytes=>createHash('sha256').update(bytes).digest('hex');
-  expect(upstream).toEqual([revealPath]);
+  assertTask06Boundary(upstream);
   expect(sha256(execFileSync('git',['show',`${BASE}:${revealPath}`]))).toBe('f16fe8251d4130ad2767e827b76f6b21efd0d4dc77690a7a497d31cbc44bb17a');
   expect(sha256(readFileSync(revealPath))).toBe('3aae951b77a41e1a349d6e340ac9e4ffaac15cba933bc238ac0be11118c54a72');
   const requests=[];page.on('request',r=>requests.push(r.url()));

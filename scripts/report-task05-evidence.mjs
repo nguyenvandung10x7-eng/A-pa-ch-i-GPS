@@ -58,7 +58,14 @@ try {
     assert.equal(r.originalSha256,baseline[r.path]);
     assert.equal(createHash('sha256').update(execFileSync('git',['show',r.referenceSha+':'+r.path])).digest('hex'),r.originalSha256);
   }
+  // Task06 explicitly authorizes only the next N01 guard revision. Keep PR161 pins intact.
+  const previewApproval=json('docs/task06/upstream-exceptions.json');
+  assert.equal(previewApproval.base,'b59d50578e1268a0d6c9c8569e596fafae88229b');
+  assert.equal(previewApproval.n01.path,repair.dependentBoundaryGuard.path);
+  assert.equal(previewApproval.n01.before,repair.dependentBoundaryGuard.fixedSha256);
+  assert.equal(createHash('sha256').update(execFileSync('git',['show',previewApproval.base+':'+previewApproval.n01.path])).digest('hex'),previewApproval.n01.before);
   const repairByPath=new Map(repairs.map(r=>[r.path,r]));
+  repairByPath.set(previewApproval.n01.path,{...repair.dependentBoundaryGuard,fixedSha256:previewApproval.n01.after});
   const baselineChecks=Object.entries(baseline).map(([path,original])=>({path,
     originalSha256:original,expectedSha256:repairByPath.get(path)?.fixedSha256??original,
     actualSha256:existsSync(path)?hash(path):null,authorizedRepair:repairByPath.has(path)}));
@@ -96,7 +103,7 @@ try {
     gitContext:context,node:process.version,playwright:json('node_modules/@playwright/test/package.json').version,
     expectedTask05Tests:46,counts,baselineCounts:{pl00:44,world:28},
     baselineUnchanged:unchanged,baselineIntegrityPassed:true,baselineSha256:baseline,
-    authorizedUpstreamRepairs:repairs,baselineChecks,
+    authorizedUpstreamRepairs:repairs,task06BoundaryExtension:previewApproval,baselineChecks,
     assets:{png:hash('src/game/phieng-loi/world/hs01/assets/player-stand.png'),wav:hash('src/game/phieng-loi/world/hs01/assets/blackout.wav'),frames:hash('src/game/phieng-loi/world/hs01/assets/frames.json')},
     resultsSha256:hash(output+'/results.json'),acMatrix:observedMatrix,tests,F12:'ACCEPTED_WITH_OWNER_WAIVER'};
   // Publish atomically only after every context, integrity, count and AC gate.

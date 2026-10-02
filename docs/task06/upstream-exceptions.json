@@ -1,0 +1,21 @@
+{
+  "base": "b59d50578e1268a0d6c9c8569e596fafae88229b",
+  "reason": "Owner-approved Task06 preview-only scene and manifest injection; ordinary DEV behavior unchanged; no diagnostic/restart enabled in preview.",
+  "files": [
+    {
+      "path": "src/game/phieng-loi/contracts.ts",
+      "before": "4563176943b75bec2b06bf12c558343c06ca2db24f405728df8f51d3e3815f1a",
+      "after": "0b21077da7fc450be5f73fbb4a9985fc12f18dfa746e5167e2c9032548511e36"
+    },
+    {
+      "path": "src/game/phieng-loi/mountPhaser.ts",
+      "before": "412c311b8c2ccd3e37bbaed65b4073894cab9ce62d387f95e4047bd08f6512cf",
+      "after": "3fa1eded22e4669e04c7a2ed8b0b3bd0638b60e3b3bcfb33b92daa853d526a14"
+    }
+  ],
+  "n01": {
+    "path": "tests/phieng-loi/world-move.spec.mjs",
+    "before": "c2e222ca2bb90334689e20040480577e38988e4ca0a5ce57482bc5a166532351",
+    "after": "b4c209f76a15ace9943cd94994929894989b0188da072c967b6332f8139c6c06"
+  }
+}

@@ -14,6 +14,7 @@ export function mountPhaser(parent: HTMLElement, options: MountOptions): Foundat
   const previousTeardown = teardownBarrier;
   const sessionId = ++nextSession;
   const dev = import.meta.env.DEV ? options.dev : undefined;
+  const preview = import.meta.env.MODE === 'hs01-preview' ? options.preview : undefined;
   const diagnostics = dev?.diagnostics;
   if (diagnostics) diagnostics.mounts += 1;
   const reasons = new Set<PauseReason>();
@@ -75,14 +76,14 @@ export function mountPhaser(parent: HTMLElement, options: MountOptions): Foundat
     if (parent.clientWidth <= 0 || parent.clientHeight <= 0) {
       throw new Error('Phaser host must have a non-zero size');
     }
-    const manifest = import.meta.env.DEV ? options.manifest ?? FOUNDATION_ASSETS : FOUNDATION_ASSETS;
+    const manifest = (import.meta.env.DEV || preview) ? options.manifest ?? FOUNDATION_ASSETS : FOUNDATION_ASSETS;
     validateManifest(manifest);
     const context: SceneContext = {
       sessionId,
       manifest,
       isCurrent: current,
       diagnostics,
-      attachProbe: dev?.attachScene ?? probe?.attachFoundationProbe,
+      attachProbe: preview?.attachScene ?? dev?.attachScene ?? probe?.attachFoundationProbe,
       ready: () => queueMicrotask(() => {
         if (!current() || error || ready) return;
         ready = true;
