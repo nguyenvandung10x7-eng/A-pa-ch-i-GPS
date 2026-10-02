@@ -83,9 +83,10 @@ export default function PlayerPreview() {
     <header className="t06-bar">
       <strong>PHIÊNG LƠI · PREVIEW</strong>
       <small title={import.meta.env.VITE_PREVIEW_SHA}>Bản {import.meta.env.VITE_PREVIEW_SHA?.slice(0,7)}</small>
-      <button onClick={start} disabled={!ready||f?.phase!=='IDLE'||paused}>Bắt đầu</button>
       {f&&f.phase!=='IDLE'&&<button onClick={()=>pause('manual',!reasons.current.manual)}>{reasons.current.manual?'Tiếp tục':'Tạm dừng'}</button>}
       {m?.phase==='COMPLETE'&&<button onClick={reenter}>Chơi lại</button>}
+      {/* Keep Start next to the fixed Exit link: adding Pause must not move its hit target. */}
+      <button style={{flexShrink:0}} onClick={start} disabled={!ready||f?.phase!=='IDLE'||paused}>Bắt đầu</button>
       <Link to="/" onClick={cancel}>Thoát</Link>
     </header>
     {f?.phase==='IDLE'&&<section className="t06-intro"><h1>Một lượt ở Phiêng Lơi</h1>
