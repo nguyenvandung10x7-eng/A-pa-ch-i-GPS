@@ -22,7 +22,7 @@ test('Q02 preview has no harness APIs and ordinary build stays excluded',async({
  for(const f of readdirSync('dist/assets').filter(f=>f.endsWith('.js')))expect(readFileSync('dist/assets/'+f,'utf8')).not.toMatch(/__TASK05_DEV__|t06-preview|task04-player-footpoint/);
 });
 test('Q03 double Start still presents one manga and one canvas',async({page})=>{
- await open(page);await button(page,'Bắt đầu').dblclick();await at(page,'MANGA');await expect(page.locator('canvas')).toHaveCount(1);await expect(page.getByRole('dialog',{name:'Manga HeeSun'})).toHaveCount(1);
+ await open(page);await button(page,'Bắt đầu').dblclick();await expect(button(page,'Bắt đầu')).toBeDisabled();await expect(button(page,'Tiếp tục')).toHaveCount(0);await at(page,'MANGA');await expect(page.locator('canvas')).toHaveCount(1);await expect(page.getByRole('dialog',{name:'Manga HeeSun'})).toHaveCount(1);
 });
 test('Q04 manga manual back navigation and pause',async({page})=>{
  await manga(page);await page.waitForTimeout(1500);await expect(page.getByText('1 / 3',{exact:true})).toBeVisible();
